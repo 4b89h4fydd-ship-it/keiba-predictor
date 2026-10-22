@@ -181,7 +181,7 @@ def _vector(report, centers, scales):
     return [(float(v)-c)/s if v is not None else 0. for v,c,s in zip(values,centers,scales)] + [float(v is None) for v in values]
 
 
-def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01, winner_pair_weight=1.0):
+def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01, winner_pair_weight=1.0, research_max_unknown_history=0):
     """Pairwise logistic ranking. Fixed optimizer settings are not ability weights.
 
     This is training code, not validation: fit only on a prespecified earlier
@@ -191,6 +191,9 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
         raise ValueError('explicit circuit required')
     if not 1.0 <= float(winner_pair_weight) <= 5.0:
         raise ValueError('winner pair weight outside research range')
+    if (not isinstance(research_max_unknown_history, int) or isinstance(research_max_unknown_history, bool)
+            or not 0 <= research_max_unknown_history <= 2):
+        raise ValueError('unknown history allowance outside research range')
     samples, ids, dates = [], [], []
     for detail in sorted(details, key=lambda d: (d.get('date',''), d.get('id',''))):
         if detail.get('circuit') != circuit or race_family(detail) != family:
@@ -231,7 +234,7 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
                 or len(set(finish_numbers)) != len(finish_numbers)
                 or sum(rank == 1 for rank in labels.values()) != 1
                 or any(rank > len(rows) for rank in labels.values())
-                or any(not r['observedStarts'] for r in rows)):
+                or sum(not r['observedStarts'] for r in rows) > research_max_unknown_history):
             continue
         samples.append((rows, labels))
         ids.append(rid); dates.append(detail['date'])
@@ -276,6 +279,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
                 'optimizer': {'epochs': epochs, 'learningRate': learning_rate, 'l2': l2}}
     if winner_pair_weight != 1.0:
         artifact['optimizer']['researchWinnerPairWeight'] = float(winner_pair_weight)
+    if research_max_unknown_history:
+        artifact['optimizer']['researchMaxUnknownHistory'] = research_max_unknown_history
     artifact['modelHash'] = sha256(json.dumps(artifact,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     return artifact
 
