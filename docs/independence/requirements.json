@@ -1100,7 +1100,9 @@
       "files": [
         "arvexq/ingest/entry_fields/body_weight.py",
         "arvexq/ingest/nar_fields/body_weight.py",
-        "arvexq/ingest/nar_official_card.py"
+        "arvexq/ingest/nar_official_card.py",
+        "arvexq/ingest/jra_fields/body_weight.py",
+        "app.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -1114,9 +1116,10 @@
       "storage": null,
       "tests": [
         "tests/test_entry_field_contracts.py",
-        "tests/test_nar_official_fields_independent.py"
+        "tests/test_nar_official_fields_independent.py",
+        "tests/test_jra_official_weight_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence. JRA official accessD runner info delegates to its own observed-only fact extractor, with original output/missing semantics; no model changes. Unchecked other providers and production validation remain.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
@@ -1136,7 +1139,9 @@
       "files": [
         "arvexq/ingest/entry_fields/body_weight_change.py",
         "arvexq/ingest/nar_fields/body_weight_change.py",
-        "arvexq/ingest/nar_official_card.py"
+        "arvexq/ingest/nar_official_card.py",
+        "arvexq/ingest/jra_fields/body_weight_change.py",
+        "app.py"
       ],
       "callers": [
         "arvexq/ingest/entry_fields/netkeiba.py",
@@ -1150,9 +1155,10 @@
       "storage": null,
       "tests": [
         "tests/test_entry_field_contracts.py",
-        "tests/test_nar_official_fields_independent.py"
+        "tests/test_nar_official_fields_independent.py",
+        "tests/test_jra_official_weight_independent.py"
       ],
-      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence.",
+      "implementation_scope": "netkeiba経路の分離と単体・呼出し検証済。JRA公式・NAR公式等の全経路分離は残る NAR official HTML now delegates to independent carried-weight, body-weight and weight-change extractors; their original interpretations and output schema are preserved. Other provider paths and production verification still require independent evidence. JRA official accessD runner info delegates to its own observed-only fact extractor, with original output/missing semantics; no model changes. Unchecked other providers and production validation remain.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
