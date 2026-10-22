@@ -8,6 +8,8 @@ import hashlib
 import json
 import os
 import urllib.request
+import urllib.error
+import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
@@ -17,8 +19,15 @@ BASE=os.environ.get("ARVEXQ_API_URL","https://kraiz-api.4b89h4fydd.workers.dev")
 def fetch_day(day: str) -> list[dict]:
     url=BASE+"/api/day?"+urlencode({"date":day,"details":"1"})
     req=urllib.request.Request(url,headers={"User-Agent":"ARVEXQ-Analytics-ReadOnly/1.0","Accept":"application/json"})
-    with urllib.request.urlopen(req,timeout=75) as res:
-        obj=json.loads(res.read(25_000_000))
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req,timeout=75) as res:
+                obj=json.loads(res.read(25_000_000))
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code not in (429,500,502,503,504) or attempt==2:
+                raise
+            time.sleep(1.5 * (attempt+1))
     if not isinstance(obj,dict) or not isinstance(obj.get("details"),list):
         raise RuntimeError("day API schema invalid")
     return [d for d in obj["details"] if isinstance(d,dict)]
@@ -43,13 +52,23 @@ def main() -> None:
         p.error("days must be 1..7")
     today=datetime.now(JST).date()
     rows=[]
+    failed_days=[]
     for offset in range(1,args.days+1):
         day=(today-timedelta(days=offset)).isoformat()
-        subset=normalize(fetch_day(day),day)
+        try:
+            subset=normalize(fetch_day(day),day)
+        except urllib.error.HTTPError as exc:
+            failed_days.append(day)
+            print("SOURCE_DAY_UNAVAILABLE",day,"http_status="+str(exc.code))
+            continue
         print("SOURCE_DAY",day,"races",len(subset))
         rows.extend(subset)
+    if failed_days:
+        print("ANALYTICS_MISSING_DAYS",",".join(failed_days))
+    if not rows:
+        raise RuntimeError("No source days available; refusing sync")
     if not args.apply:
-        print("ANALYTICS_DRY_RUN_OK", "races="+str(len(rows)), "source_writes=0", "destination_writes=0")
+        print("ANALYTICS_DRY_RUN_OK", "races="+str(len(rows)), "missing_days="+str(len(failed_days)), "source_writes=0", "destination_writes=0")
         return
     if not os.environ.get("motherduck_token"):
         raise RuntimeError("motherduck_token missing")
@@ -83,7 +102,7 @@ def main() -> None:
         except Exception:
             db.execute("ROLLBACK")
             raise
-        print("ANALYTICS_MOTHERDUCK_SYNC_OK","verified_races="+str(len(rows)),"cloudflare_writes=0")
+        print("ANALYTICS_MOTHERDUCK_SYNC_OK","verified_races="+str(len(rows)),"missing_days="+str(len(failed_days)),"cloudflare_writes=0")
     finally:
         db.close()
 
