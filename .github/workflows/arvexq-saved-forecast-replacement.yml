@@ -3,7 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['.github/workflows/arvexq-saved-forecast-replacement.yml']
+    paths:
+      - '.github/workflows/arvexq-saved-forecast-replacement.yml'
+      - 'scripts/arvexq_rebuild_saved_forecasts.py'
   workflow_run:
     workflows: ['ARVEXQ API Private Storage Audit Deploy', 'ARVEXQ Web Deploy']
     types: [completed]
