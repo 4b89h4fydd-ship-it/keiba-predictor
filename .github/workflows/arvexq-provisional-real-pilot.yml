@@ -4,6 +4,7 @@ name: ARVEXQ Provisional Real-Race Pilot
     branches: [fix/arvexq-new-engine-complete-field-20261022]
     paths:
       - scripts/arvexq_provisional_real_pilot.py
+      - scripts/arvexq_existing_model_tuning_pilot.py
       - .github/workflows/arvexq-provisional-real-pilot.yml
   workflow_dispatch:
 permissions:
@@ -27,3 +28,6 @@ jobs:
         run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
       - name: Actual earlier-data training, original provisional marks and confirmed results
         run: PYTHONPATH=. python -u scripts/arvexq_provisional_real_pilot.py
+
+      - name: Same model regularization comparison on unseen next-day races
+        run: PYTHONPATH=. python -u scripts/arvexq_existing_model_tuning_pilot.py
