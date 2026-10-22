@@ -42,6 +42,7 @@ jobs:
           if not reports: raise SystemExit('Missing real-race replay output')
           result=json.loads(reports[-1])
           research=result.get('provisionalResearchReplay') or {}
+          print('EXISTING_CORE_REPLAY',json.dumps({'replayedRaces':result.get('replayedRaces'),'currentFourPillarReplay':result.get('currentFourPillarReplay'),'replayByCircuit':result.get('replayByCircuit'),'publishedHonmeiReplay':result.get('publishedHonmeiReplay')},ensure_ascii=False))
           for circuit in ('中央','地方'):
               r=research.get(circuit) or {}
               n=r.get('scoredRaces') or 0
