@@ -140,21 +140,21 @@ jobs:
               # Additive wrapper: every other live route executes its deployed
               # handler byte-for-byte. No use of outdated GitHub legacy worker.
               (directory/'worker-entry-overlay.mjs').write_text("""
-import liveWorker from './worker-entry.js';
-import {forecastRevisions} from './api_forecast_revisions.mjs';
-import {storageAudit} from './api_storage_audit.mjs';
-import {snapshotExport} from './api_snapshot_export.mjs';
-import {compressStoredSnapshot} from './api_full_snapshot.mjs';
-export default {async fetch(request,env,ctx){
-  const path=new URL(request.url).pathname;
-  if(path.startsWith('/api/forecast-revisions/') ||
-     path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
-  if(path==='/api/admin/storage-audit')return storageAudit(request,env);
-  if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
-  if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
-  return liveWorker.fetch(request,env,ctx);
-}};
-""",encoding='utf-8')
+          import liveWorker from './worker-entry.js';
+          import {forecastRevisions} from './api_forecast_revisions.mjs';
+          import {storageAudit} from './api_storage_audit.mjs';
+          import {snapshotExport} from './api_snapshot_export.mjs';
+          import {compressStoredSnapshot} from './api_full_snapshot.mjs';
+          export default {async fetch(request,env,ctx){
+            const path=new URL(request.url).pathname;
+            if(path.startsWith('/api/forecast-revisions/') ||
+               path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
+            if(path==='/api/admin/storage-audit')return storageAudit(request,env);
+            if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
+            if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+            return liveWorker.fetch(request,env,ctx);
+          }};
+                    """,encoding='utf-8')
               (directory/'original-worker-source.multipart').write_bytes(raw)
               preserve_live=True
               print('LIVE_API_PRESERVATION_VERIFIED',actual,'modules',len(expected_modules))
