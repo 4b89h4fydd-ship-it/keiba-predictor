@@ -44,7 +44,9 @@ jobs:
           import os,json,urllib.request
           base='https://kraiz-api.4b89h4fydd.workers.dev'
           try:
-              req=urllib.request.Request(base+'/api/forecast-revisions/__readiness__')
+              req=urllib.request.Request(base+'/api/forecast-revisions/__readiness__',headers={
+                  'User-Agent':'Mozilla/5.0 ARVEXQ-ReadOnlyAudit/1.0',
+                  'Accept':'application/json','Cache-Control':'no-cache'})
               with urllib.request.urlopen(req,timeout=20) as r:forecast=json.load(r)
           except (OSError,ValueError) as exc:
               print('PREEXISTING_REVISION_API_NOT_READY',type(exc).__name__,getattr(exc,'code',None))
