@@ -74,3 +74,10 @@ jobs:
 
       - name: Dry-run analytics extraction and transformation without database writes
         run: python scripts/arvexq_analytics_sync.py --days 1
+
+      - name: One-day MotherDuck analytics copy and hash readback (test branch only)
+        if: github.ref == 'refs/heads/arvexq-data-integration-test'
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+          ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
+        run: python scripts/arvexq_analytics_sync.py --days 1 --apply
