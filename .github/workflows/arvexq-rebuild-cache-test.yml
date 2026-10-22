@@ -1,0 +1,23 @@
+name: ARVEXQ Forecast Rebuild Cache Regression
+"on":
+  push:
+    branches: [fix/forecast-rebuild-training-cache-20261022]
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_rebuild_saved_forecasts.py
+      - tests/test_forecast_rebuild_cached_training.py
+      - .github/workflows/arvexq-rebuild-cache-test.yml
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - run: PYTHONPATH=. python -m pytest -q tests/test_forecast_rebuild_cached_training.py tests/test_forecast_revisions.py
