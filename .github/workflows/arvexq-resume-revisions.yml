@@ -44,7 +44,7 @@ jobs:
           unsafe={'Check D1 capacity and add only new revision tables',
                   'Publish all revisions and verify every saved revision by reloading API',
                   'Catch up races saved during recalculation and verify the complete current roster'}
-          assert not any(step['name'] in unsafe and step['status']!='pending'
+          assert not any(step['name'] in unsafe and step['status']!='pending' and step.get('conclusion')!='skipped'
                          for job in jobs for step in job.get('steps') or []),'STALE_RUN_MAY_HAVE_WRITTEN_DB'
           if run['status']!='completed':
               subprocess.run(['gh','run','cancel',str(run_id)],check=True)
@@ -86,7 +86,13 @@ jobs:
           base_passed=passed(baseline)
           assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=base_passed,('BASE_RELEASE_CI_NOT_READY',base_passed)
           current_passed=passed(sha)
+          for _ in range(120):
+              if 'ARVEXQ Validation' in current_passed:break
+              import time
+              time.sleep(5)
+              current_passed=passed(sha)
           assert 'ARVEXQ Validation' in current_passed,('CURRENT_WORKFLOW_CI_NOT_READY',current_passed)
+          assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
           print('EXACT_MAIN_AND_VERIFIED_ANCESTOR_CI_PASSED',baseline,sorted(changed))
           PY
       - name: Download already rebuilt official-history revisions and its source backup
