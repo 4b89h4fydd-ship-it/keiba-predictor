@@ -24,7 +24,8 @@ def _history_rates(horse, race):
                 continue
             if not (finish.is_integer() and 1 <= finish <= 100):
                 continue
-            runs.append(run)
+            # Copy, never rewrite source evidence, and normalize only validated ranks.
+            runs.append({**run, "finish": int(finish)})
     runs.sort(key=lambda x: _observed_day(x.get("date") or x.get("raceDate")), reverse=True)
     # An unknown target must never silently become a local/NAR race.
     same = [r for r in runs if _run_circuit(r) == target] if target else []
