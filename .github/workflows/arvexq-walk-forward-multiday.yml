@@ -1,0 +1,40 @@
+name: ARVEXQ Multi-Day Walk Forward
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_walk_forward_multiday.py
+      - .github/workflows/arvexq-walk-forward-multiday.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  walk-forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install existing dependencies
+        run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Existing leakage chronological guard
+        run: PYTHONPATH=. python -m pytest -q tests/test_research_provisional_replay.py
+      - name: Seven-day sequential JRA and NAR train predict score diagnose and adjust
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_walk_forward_multiday.py | tee walk-forward-research.log
+      - name: Preserve research diagnostics only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-walk-forward-${{ github.run_id }}
+          path: walk-forward-research.log
+          retention-days: 14
+          if-no-files-found: warn
