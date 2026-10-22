@@ -7,6 +7,7 @@ on:
       - arvexq-data-integration-test
     paths:
       - .github/workflows/arvexq-analytics-test.yml
+      - scripts/arvexq_analytics_source_probe.py
 
 permissions:
   contents: read
@@ -60,3 +61,12 @@ jobs:
               print("::error::FIRECRAWL_HTTP_STATUS_"+str(error.code))
               raise SystemExit(1)
           PY
+
+      - name: Checkout D1 read-only probe
+        uses: actions/checkout@v4
+
+      - name: Verify existing D1 analytics export path (no writes)
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
+        run: python scripts/arvexq_analytics_source_probe.py
