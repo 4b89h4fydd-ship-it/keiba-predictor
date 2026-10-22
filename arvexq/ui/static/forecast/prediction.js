@@ -56,7 +56,11 @@
     }
     if(count!==1)return null;
     // Revision models are research-only; a preoff-candidate is NOT a saved original.
-    return {marks:marks,kind:rev.analysisType,scenarios:rev.scenarioSummaries||[],
+    var expectedPost=Date.parse(String(race.date)+'T'+String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00');
+    var createdAt=Date.parse(String(rev.createdAt||''));
+    var verifiedPreoff=rev.analysisType==='preoff-candidate'&&
+      Number.isFinite(expectedPost)&&Number.isFinite(createdAt)&&createdAt<expectedPost;
+    return {marks:marks,kind:verifiedPreoff?'preoff-candidate':'retrospective',scenarios:rev.scenarioSummaries||[],
             modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
   }
 
