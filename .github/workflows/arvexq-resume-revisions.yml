@@ -1,0 +1,133 @@
+name: ARVEXQ Resume Existing Revision Publish
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/arvexq-resume-revisions.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: arvexq-saved-forecast-production
+  cancel-in-progress: false
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      ARVEXQ_DATA_CORE: '0'
+      ARVEXQ_BOOTSTRAP_WARM: '0'
+      RACEDB_AUTO_UPDATE: '0'
+      PYTHONPATH: .
+      SOURCE_RUN: '39754739813'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require exact main and verified CI / deployed Web
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          base='https://api.github.com/repos/'+os.environ['GITHUB_REPOSITORY']
+          def read(path):
+              req=urllib.request.Request(base+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN']})
+              with urllib.request.urlopen(req,timeout=30) as response:return json.load(response)
+          sha=os.environ['GITHUB_SHA']
+          assert read('/branches/main')['commit']['sha']==sha,'MAIN_MOVED_REFUSING_PUBLICATION'
+          runs=read('/actions/runs?head_sha='+sha+'&per_page=100')['workflow_runs']
+          passed={r['name'] for r in runs if r['conclusion']=='success' and r['head_branch']=='main'}
+          assert {'ARVEXQ Validation','ARVEXQ Recovery Regression','ARVEXQ Web Deploy'}<=passed,('CI_NOT_READY',passed)
+          print('EXACT_MAIN_AND_ALL_CI_PASSED')
+          PY
+      - name: Download already rebuilt official-history revisions and its source backup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/forecast-revisions /tmp/revision-source-artifact
+          gh run download "$SOURCE_RUN" -n "saved-forecast-revisions-and-readback-$SOURCE_RUN" -D /tmp/forecast-revisions
+          gh run download "$SOURCE_RUN" -n "saved-forecast-original-backup-$SOURCE_RUN" -D /tmp/revision-source-artifact
+          find /tmp/forecast-revisions -maxdepth 2 -type f -printf '%p %s bytes\n'
+          find /tmp/revision-source-artifact -maxdepth 2 -type f -printf '%p %s bytes\n'
+          test -s /tmp/forecast-revisions/revisions.sqlite3
+          test -s /tmp/forecast-revisions/rebuild-summary.json
+          test -s /tmp/revision-source-artifact/arvexq-complete-d1.sqlite3.gz
+          gzip -dc /tmp/revision-source-artifact/arvexq-complete-d1.sqlite3.gz > /tmp/revision-original-source.sqlite3
+      - name: Check precomputed revisions against their original immutable backup
+        run: |
+          python - <<'PY'
+          import json,sqlite3,hashlib
+          report=json.load(open('/tmp/forecast-revisions/rebuild-summary.json'))
+          assert report['allSavedRebuilt'] and not report['errors']
+          with sqlite3.connect('/tmp/revision-original-source.sqlite3') as source,sqlite3.connect('/tmp/forecast-revisions/revisions.sqlite3') as revisions:
+              count=source.execute('SELECT COUNT(*) FROM race_details').fetchone()[0]
+              rows=revisions.execute('SELECT race_id,payload_json,payload_sha256 FROM revisions').fetchall()
+              assert count==report['targetRaces']==report['revisions']==len(rows)
+              assert all(hashlib.sha256(raw.encode()).hexdigest()==digest for _,raw,digest in rows),'IMMUTABLE_REVISION_CHECKSUM_MISMATCH'
+          print('REBUILT_REVISIONS_VERIFIED',count,report['statuses'])
+          PY
+      - name: Fresh live D1 logical backup, with independent restore verification
+        run: python -u scripts/arvexq_backup_live_d1.py
+      - name: Verify every live race still equals the complete calculation source
+        run: |
+          python - <<'PY'
+          import sqlite3,hashlib
+          def digest(path):
+              db=sqlite3.connect('file:'+path+'?mode=ro',uri=True)
+              h=hashlib.sha256();count=0
+              for rid,payload in db.execute('SELECT race_id,payload FROM race_details ORDER BY race_id'):
+                  h.update(len(rid).to_bytes(4,'big'));h.update(rid.encode())
+                  h.update(len(payload).to_bytes(8,'big'));h.update(payload.encode())
+                  count+=1
+              db.close()
+              return count,h.hexdigest()
+          from pathlib import Path
+          old=digest('/tmp/revision-original-source.sqlite3')
+          current=digest('/tmp/arvexq-complete-d1.sqlite3')
+          assert old==current,('LIVE_RACE_DETAILS_CHANGED_NO_STALE_FORECAST_PUBLICATION',old[0],current[0])
+          print('ALL_LIVE_FORECAST_INPUTS_MATCH_REBUILT_ORIGINALS',old)
+          PY
+      - name: Measure D1 capacity on a disposable copy before any production writes
+        run: |
+          python - <<'PY'
+          import json,os,urllib.request
+          from scripts.arvexq_rebuild_saved_forecasts import capacity_preview
+          base='https://kraiz-api.4b89h4fydd.workers.dev'
+          def request(path,data=None):
+              req=urllib.request.Request(base+path,data=data,headers={'Authorization':'Bearer '+os.environ['SYNC_TOKEN'],'Content-Type':'application/json'})
+              with urllib.request.urlopen(req,timeout=60) as res:return json.load(res)
+          audit=request('/api/admin/storage-audit')
+          assert audit['ok'] and audit['sql_writes']==0
+          d=audit['queries'];page_size=d['page_size'];size=page_size['results'][0]['page_size']
+          counted=d.get('page_count') or {}
+          used=(counted['results'][0]['page_count']*size if counted.get('results') else (page_size.get('meta') or {}).get('size_after'))
+          assert type(used) is int and used>0,'UNVERIFIED_LIVE_CAPACITY'
+          preview=capacity_preview('/tmp/arvexq-complete-d1.sqlite3','/tmp/forecast-revisions/revisions.sqlite3','/tmp/revision-resume-capacity-preview.sqlite3')
+          assert preview['originalsUnchanged'] and preview['revisionRows']>0
+          print('CAPACITY_VERIFIED',json.dumps({'used':used,'required':preview['additionalBytes'],'revisions':preview['revisionRows']}),flush=True)
+          assert used+preview['additionalBytes']*1.2+20000000<500000000,'INSUFFICIENT_VERIFIED_D1_HEADROOM'
+          result=request('/api/admin/forecast-revisions/migrate',b'{}')
+          assert result.get('ok') and result.get('original_tables_modified') is False
+          print('EXISTING_REVISION_SCHEMA_MIGRATED_WITH_ORIGINALS_UNCHANGED')
+          PY
+      - name: Publish existing revisions and read every one back
+        run: |
+          python - <<'PY'
+          import os
+          from scripts.arvexq_rebuild_saved_forecasts import publish
+          report=publish('/tmp/forecast-revisions/revisions.sqlite3','https://kraiz-api.4b89h4fydd.workers.dev',os.environ['SYNC_TOKEN'])
+          print(report,flush=True)
+          assert report['allPublished'] and not report['failures'],'REVISION_PUBLISH_READBACK_FAILED'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validated-revision-resume-${{ github.run_id }}
+          path: |
+            /tmp/forecast-revisions/rebuild-summary.json
+            /tmp/forecast-revisions/revisions.sqlite3.publish.json
+          retention-days: 30
