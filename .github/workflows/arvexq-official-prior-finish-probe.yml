@@ -1,0 +1,37 @@
+name: ARVEXQ Official Prior Finish Probe
+"on":
+  push:
+    branches: [fix/arvexq-new-engine-complete-field-20261022]
+    paths:
+      - scripts/arvexq_official_prior_finish_probe.py
+      - .github/workflows/arvexq-official-prior-finish-probe.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARVEXQ_DATA_CORE: "0"
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      ARVEXQ_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q -r requirements.txt pytest==9.1.1
+      - name: Existing official past result verification
+        run: PYTHONPATH=. python -m pytest -q tests/test_nar_official_historical_result.py
+      - name: Real past race official prior position reconciliation
+        run: |
+          set -o pipefail
+          PYTHONPATH=. python -u scripts/arvexq_official_prior_finish_probe.py | tee official-finish-probe.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-prior-finish-probe-${{ github.run_id }}
+          path: official-finish-probe.log
+          retention-days: 14
