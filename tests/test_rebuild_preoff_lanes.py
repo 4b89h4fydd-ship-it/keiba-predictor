@@ -193,6 +193,39 @@ def test_leaky_market_is_never_treated_as_ability_or_probability():
     assert result["lanes"]["probabilities"]["win"] is None
 
 
+
+def test_readonly_coverage_cli_counts_circuits_and_rejects_duplicates():
+    from scripts.arvexq_six_lane_readiness import audit
+    jra = sample("中央", "東京")
+    nar = sample("地方", "大井")
+    payloads = [
+        {"snapshot": jra[0], "receipt": jra[1]},
+        {"snapshot": nar[0], "receipt": nar[1]},
+    ]
+    rows = [json.dumps(p, ensure_ascii=False) for p in payloads]
+    result = audit(rows)
+    assert result["acceptedRaces"] == 2
+    assert result["jra"]["acceptedRaces"] == 1
+    assert result["nar"]["acceptedRaces"] == 1
+    assert result["jra"]["distinctCaptureDates"] == 1
+    assert result["jra"]["horsesWithAbilityEvidence"] == 2
+    assert result["marksAndTicketsEnabled"] is False
+    assert result["externalTimestampVerification"] == "not_performed"
+
+    rejected = audit(rows + [rows[0], "{bad json", json.dumps({"snapshot": jra[0]})])
+    assert rejected["acceptedRaces"] == 2
+    assert rejected["rejectedRecords"] == 3
+    assert len(rejected["rejects"]) == 3
+
+
+def test_receipt_and_snapshot_not_a_proof_of_external_timestamp_signing():
+    s, r = sample()
+    response = inspect_jra(s, r)
+    assert response["independentStorageTimestampVerified"] is False
+    assert response["status"] == "research_only_not_publishable"
+    assert not any(x in response for x in ("winProbability", "betRecommendations"))
+
+
 def test_receipt_checks_finite_and_valid_numeric_history_features():
     s, r = sample()
     s["rows"][0]["features"]["history::all::w5::finish_quality::mean"] = float("nan")
