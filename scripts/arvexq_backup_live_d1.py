@@ -100,7 +100,20 @@ def main():
         for attempt in range(5):
             try:
                 with urllib.request.urlopen(req,timeout=60) as response:return json.load(response)
-            except Exception:
+            except urllib.error.HTTPError as exc:
+                # Capture the existing authenticated export endpoint's diagnostic
+                # without ever logging the bearer token or request headers.
+                body=exc.read(2048).decode('utf-8','replace')
+                print('D1_SNAPSHOT_EXPORT_HTTP_ERROR',exc.code,
+                      'table',params.get('table','manifest'),
+                      'attempt',attempt+1,
+                      'response',body,flush=True)
+                if attempt==4 or exc.code not in (429,500,502,503,504):raise
+                time.sleep(attempt+1)
+            except Exception as exc:
+                print('D1_SNAPSHOT_EXPORT_TRANSPORT_ERROR',type(exc).__name__,
+                      'table',params.get('table','manifest'),
+                      'attempt',attempt+1,flush=True)
                 if attempt==4:raise
                 time.sleep(attempt+1)
     summary=backup(fetch,'/tmp/arvexq-complete-d1.sqlite3')
