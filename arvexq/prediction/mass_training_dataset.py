@@ -14,9 +14,14 @@ def _finish_map(result: dict[str, Any]) -> dict[int, int]:
         if not isinstance(row, dict):
             return {}
         try:
-            no = int(row.get("horseNumber") or row.get("number") or 0)
-            finish = int(row.get("finish") or row.get("rank") or 0)
-        except (TypeError, ValueError):
+            raw_no = row.get("horseNumber") or row.get("number") or 0
+            raw_finish = row.get("finish") or row.get("rank") or 0
+            if isinstance(raw_no, bool) or isinstance(raw_finish, bool):
+                return {}
+            no, finish = int(raw_no), int(raw_finish)
+            if float(raw_no) != no or float(raw_finish) != finish:
+                return {}
+        except (TypeError, ValueError, OverflowError):
             return {}
         # Conflicting duplicated runner labels must never be silently
         # overwritten: doing so could reassign a known winner to another horse.
@@ -48,7 +53,11 @@ def rows_from_frozen_snapshot(snapshot: dict[str, Any], final_result: dict[str, 
         return []
     try:
         frozen_numbers = [int(h["horseNumber"]) for h in frozen_rows]
-    except (TypeError, ValueError, KeyError):
+        if any(isinstance(h["horseNumber"], bool)
+               or float(h["horseNumber"]) != n
+               for h, n in zip(frozen_rows, frozen_numbers)):
+            return []
+    except (TypeError, ValueError, KeyError, OverflowError):
         return []
     if (any(n <= 0 for n in frozen_numbers)
             or len(set(frozen_numbers)) != len(frozen_numbers)
