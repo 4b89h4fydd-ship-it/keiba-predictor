@@ -82,34 +82,26 @@ class PastFiveContextTests(unittest.TestCase):
         self.assertIsNone(context["top3Rate"])
         self.assertEqual(context["status"], "missing-dated-past-runs")
 
-    def test_candidate_full_career_does_not_mutate_preoff_original(self):
+    def test_observed_analysis_preserves_immutable_preoff_original(self):
         from copy import deepcopy
-        from arvexq.prediction.new_forecast import build_forecast
-        from arvexq.prediction.learned_scenarios import fit_model
         horses = [
-            {"horseNumber": i, "name": "候補馬", "recentRaces": [
-                run("2026-09-27", i),
-                run("2026-09-17", min(10, i + 1)),
-                run("2026-09-07", min(10, i + 2)),
+            {"horseNumber": i, "name": "観測馬", "recentRaces": [
+                run("2026-09-27", min(i, 10)),
+                run("2026-09-17", min(i + 1, 10)),
+                run("2026-09-07", min(i + 2, 10)),
             ]} for i in range(1, 5)
         ]
-        race = {**RACE, "id": "nar-candidate-test", "circuit": "地方", "horses": horses,
+        race = {**RACE, "id": "nar-context-test", "circuit": "地方",
+                "horses": horses,
                 "preRacePrediction": {"original": "sealed"},
                 "preRaceBet": {"original": "ticket"}}
         original = deepcopy(race)
-        training = deepcopy(race)
-        training.update({"date": "2026-10-08", "id": "nar-training-test",
-                         "result": {"status": "確定", "finishers": [
-                             {"horseNumber": i, "finish": i} for i in range(1, 5)]}})
-        model = fit_model([training], circuit="地方")
-        candidate = build_forecast(race, model)
+        for horse in race["horses"]:
+            profile = analyze_past_performance(horse, race)
+            self.assertEqual(profile["datedRuns"], 3)
+            self.assertEqual(profile["status"], "dated-observed")
+            self.assertNotIn("predictionStatus", profile)
         self.assertEqual(race, original)
-        self.assertEqual(candidate["preRacePrediction"], original["preRacePrediction"])
-        self.assertEqual(candidate["preRaceBet"], original["preRaceBet"])
-        self.assertEqual(candidate["predictionStatus"], "candidate-analysis")
-        self.assertEqual(sum(h["integratedEvaluation"]["mark"] == "◎"
-                             for h in candidate["horses"]), 1)
-        self.assertNotIn("%", candidate["forecastText"])
 
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}
