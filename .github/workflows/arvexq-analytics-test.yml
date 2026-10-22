@@ -13,6 +13,7 @@ on:
       - scripts/arvexq_prediction_schema_audit.py
       - scripts/arvexq_frozen_prediction_eval.py
       - scripts/arvexq_frozen_diagnostics.py
+      - scripts/arvexq_frozen_miss_attribution.py
 
 permissions:
   contents: read
@@ -105,3 +106,8 @@ jobs:
         env:
           motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python scripts/arvexq_frozen_diagnostics.py
+
+      - name: Attribute frozen winner misses to existing evaluation fields
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python scripts/arvexq_frozen_miss_attribution.py
