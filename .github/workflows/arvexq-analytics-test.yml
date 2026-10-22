@@ -9,6 +9,7 @@ on:
       - .github/workflows/arvexq-analytics-test.yml
       - scripts/arvexq_analytics_source_probe.py
       - scripts/arvexq_analytics_sync.py
+      - scripts/arvexq_analytics_quality.py
 
 permissions:
   contents: read
@@ -16,7 +17,7 @@ permissions:
 jobs:
   check-remote-connections:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Check credentials without exposing values
         env:
@@ -80,4 +81,9 @@ jobs:
         env:
           motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
           ARVEXQ_API_URL: https://kraiz-api.4b89h4fydd.workers.dev
-        run: python scripts/arvexq_analytics_sync.py --days 1 --apply
+        run: python scripts/arvexq_analytics_sync.py --days 7 --apply
+
+      - name: Audit MotherDuck saved records without writes
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python scripts/arvexq_analytics_quality.py
