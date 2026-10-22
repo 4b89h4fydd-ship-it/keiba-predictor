@@ -23,6 +23,11 @@ predtypes=collections.Counter()
 pred_keys=collections.Counter()
 bet_keys=collections.Counter()
 horse_keys=collections.Counter()
+plan_keys=collections.Counter()
+pace_keys=collections.Counter()
+status_values=collections.Counter()
+plan_types=collections.Counter()
+marks_keys=collections.Counter()
 bad=0
 valid=0
 for rid,txt in rows:
@@ -39,6 +44,15 @@ for rid,txt in rows:
         bad+=1
         continue
     top.update(full.keys())
+    plan=full.get("recommendedBetPlan")
+    plan_types[type(plan).__name__]+=1
+    if isinstance(plan,dict):plan_keys.update(plan.keys())
+    pace=full.get("pacePredictionView")
+    if isinstance(pace,dict):pace_keys.update(pace.keys())
+    status_values[str(full.get("predictionStatus"))[:70]]+=1
+    for horse in (full.get("horses") or [])[:2]:
+        if isinstance(horse,dict):
+            marks_keys.update(k for k in horse if any(t in k.lower() for t in ("mark","role","probab","rank","score")))
     pre=full.get("preRacePrediction")
     predtypes[type(pre).__name__]+=1
     if isinstance(pre,dict):
@@ -51,3 +65,5 @@ for rid,txt in rows:
 print("ORIGINAL_SNAPSHOT_DECODE",json.dumps({"checked":len(rows),"verified":valid,"decode_errors":bad}))
 print("ORIGINAL_PREDICTION_SCHEMA",json.dumps({"preRacePrediction_types":predtypes,"preRacePrediction_keys":pred_keys,"preRacePrediction_horse_keys":horse_keys,"preRaceBet_keys":bet_keys,"relevant_root_keys":{k:v for k,v in top.items() if any(t in k.lower() for t in ("predict","bet","pick","model","morning","revision"))}},ensure_ascii=False,default=dict))
 if bad:raise SystemExit("Snapshot integrity errors")
+
+print("ORIGINAL_PREDICTION_ALTERNATES",json.dumps({"recommendedBetPlan_types":plan_types,"recommendedBetPlan_keys":plan_keys,"pacePredictionView_keys":pace_keys,"predictionStatus_values":status_values,"horse_prediction_like_keys":marks_keys},ensure_ascii=False,default=dict))
