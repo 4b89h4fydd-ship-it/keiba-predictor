@@ -135,7 +135,39 @@ jobs:
           # original static worker, never overwrite those modules with api.mjs.
           # Preserve the verified deployed module source verbatim and wrap ONLY
           # the pre-existing authenticated forecast-revision and audit routes.
-          if actual!='901b08e119a1b8e71b2b29cb4dc1e1ad4043601dd90f0cacf5bc4cd055a427ca':
+          # Current production is a single Cloudflare bundle, not the older
+          # six-module source-map release. Preserve its exact verified bytes.
+          if actual=='ce3fdf05cc0708a11ad4f633e7cbc008397a7870b687ab10b5f6317f8cca56cf':
+              assert len(modules)==1, 'CURRENT_BUNDLE_MODULE_COUNT_CHANGED'
+              assert b'worker-entry-overlay.js' in modules[0][0], 'CURRENT_BUNDLE_NAME_CHANGED'
+              assert b'export default' in source or b'as default' in source, 'CURRENT_BUNDLE_DEFAULT_EXPORT_MISSING'
+              directory=Path('.arvexq-production-overlay');directory.mkdir(exist_ok=True)
+              (directory/'preserved-live-worker.mjs').write_bytes(source)
+              for name in ('api_forecast_revisions.mjs','api_storage_audit.mjs',
+                           'api_snapshot_export.mjs','api_full_snapshot.mjs'):
+                  (directory/name).write_bytes((Path('workers')/name).read_bytes())
+              # Only explicitly named existing APIs are added; the exact current
+              # deployed Worker continues handling every other request.
+              (directory/'worker-entry-overlay.mjs').write_text("""
+          import liveWorker from './preserved-live-worker.mjs';
+          import {forecastRevisions} from './api_forecast_revisions.mjs';
+          import {storageAudit} from './api_storage_audit.mjs';
+          import {snapshotExport} from './api_snapshot_export.mjs';
+          import {compressStoredSnapshot} from './api_full_snapshot.mjs';
+          export default {async fetch(request,env,ctx){
+            const path=new URL(request.url).pathname;
+            if(path.startsWith('/api/forecast-revisions/') ||
+               path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
+            if(path==='/api/admin/storage-audit')return storageAudit(request,env);
+            if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
+            if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+            return liveWorker.fetch(request,env,ctx);
+          }};
+                    """,encoding='utf-8')
+              (directory/'original-worker-source.multipart').write_bytes(raw)
+              preserve_live=True
+              print('CURRENT_BUNDLED_API_PRESERVATION_VERIFIED',actual,'source_bytes',len(source))
+          elif actual!='901b08e119a1b8e71b2b29cb4dc1e1ad4043601dd90f0cacf5bc4cd055a427ca':
               assert actual=='a0566c29acc986a1804a17b01b91fa0afde2fe70111f6483cfc3a216f18fd6ba', (
                   'API_SOURCE_CHANGED_REFUSING_OVERWRITE actual='+actual)
               expected_modules={
