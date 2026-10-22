@@ -11,6 +11,7 @@ on:
       - scripts/arvexq_analytics_sync.py
       - scripts/arvexq_analytics_quality.py
       - scripts/arvexq_prediction_schema_audit.py
+      - scripts/arvexq_frozen_prediction_eval.py
 
 permissions:
   contents: read
@@ -93,3 +94,8 @@ jobs:
         env:
           motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python scripts/arvexq_prediction_schema_audit.py
+
+      - name: Evaluate only sealed pre-race picks on finalized races
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python scripts/arvexq_frozen_prediction_eval.py
