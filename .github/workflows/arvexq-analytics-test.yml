@@ -12,6 +12,7 @@ on:
       - scripts/arvexq_analytics_quality.py
       - scripts/arvexq_prediction_schema_audit.py
       - scripts/arvexq_frozen_prediction_eval.py
+      - scripts/arvexq_frozen_diagnostics.py
 
 permissions:
   contents: read
@@ -99,3 +100,8 @@ jobs:
         env:
           motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python scripts/arvexq_frozen_prediction_eval.py
+
+      - name: Diagnose frozen-pick misses against race and popularity baselines
+        env:
+          motherduck_token: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python scripts/arvexq_frozen_diagnostics.py
