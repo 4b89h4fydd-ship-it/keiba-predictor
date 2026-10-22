@@ -128,8 +128,12 @@ class LearnedScenariosTests(TestCase):
         empty_finishers = deepcopy(good)
         empty_finishers['id'] = 'empty-finishers'
         empty_finishers['result']['finishers'] = []
+        out_of_field_rank = deepcopy(good)
+        out_of_field_rank['id'] = 'out-of-field-rank'
+        out_of_field_rank['result']['finishers'][-1]['finish'] = 999
         for corrupt in (partial, duplicate, no_history, invalid_finish, missing_finish,
-                        fractional_rank, fractional_number, multiple_winners, empty_finishers):
+                        fractional_rank, fractional_number, multiple_winners, empty_finishers,
+                        out_of_field_rank):
             with self.subTest(race_id=corrupt['id']):
                 with self.assertRaisesRegex(ValueError, 'no observed, labelled training races'):
                     fit_model([corrupt], circuit='地方')
