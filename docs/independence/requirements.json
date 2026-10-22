@@ -2012,16 +2012,23 @@
     {
       "id": 63,
       "name": "JRAオッズ解析",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
+      "status": "解析済",
+      "module": "arvexq.ingest.odds_fields.jra_official",
+      "files": [
+        "arvexq/ingest/odds_fields/jra_official.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:_jra_parse_race"
+      ],
       "dependencies": [],
-      "input": null,
-      "output": null,
+      "input": "Existing JRA official accessD race-card published odds and popularity text",
+      "output": "Observed winOdds and popularity or original missing sentinels",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_jra_official_odds_independent.py"
+      ],
+      "implementation_scope": "Existing app JRA official race-card regex moved unchanged to an independent factual parser and its call site rewired. JRA alternative live-odds sources, NAR separation and production readback remain unverified.",
       "evidence": {
         "commit_sha": null,
         "unit": null,
