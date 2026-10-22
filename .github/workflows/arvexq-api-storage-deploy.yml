@@ -140,7 +140,8 @@ jobs:
           # the pre-existing authenticated forecast-revision and audit routes.
           # Current production is a single Cloudflare bundle, not the older
           # six-module source-map release. Preserve its exact verified bytes.
-          if actual=='ce3fdf05cc0708a11ad4f633e7cbc008397a7870b687ab10b5f6317f8cca56cf':
+          if actual in ('ce3fdf05cc0708a11ad4f633e7cbc008397a7870b687ab10b5f6317f8cca56cf',
+                        '31cca428ec3814e58aa641779d0ead386b372e4d239aadee3547f92ee0956e79'):
               assert len(modules)==1, 'CURRENT_BUNDLE_MODULE_COUNT_CHANGED'
               assert b'worker-entry-overlay.js' in modules[0][0], 'CURRENT_BUNDLE_NAME_CHANGED'
               assert b'export default' in source or b'as default' in source, 'CURRENT_BUNDLE_DEFAULT_EXPORT_MISSING'
