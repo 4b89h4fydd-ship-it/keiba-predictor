@@ -64,9 +64,17 @@ def rows_from_frozen_snapshot(snapshot: dict[str, Any], final_result: dict[str, 
             or set(finishes) != set(frozen_numbers)
             or sum(finishes[n] == 1 for n in frozen_numbers) != 1):
         return []
+    # A frozen feature vector must not contain current-race outcome labels.
+    # Historical results remain legitimate only inside the pre-existing
+    # namespaced history features; do not rebuild them from final_result.
+    forbidden_outcomes = {"finish", "rank", "result", "results", "winner",
+                          "labelWin", "labelTop2", "labelTop3", "payout", "payouts"}
     for horse in frozen_rows:
         if not isinstance(horse, dict):
-            continue
+            return []
+        features = horse.get("features")
+        if not isinstance(features, dict) or forbidden_outcomes.intersection(features):
+            return []
         try:
             no = int(horse.get("horseNumber") or 0)
         except (TypeError, ValueError):
