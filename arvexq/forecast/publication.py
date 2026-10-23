@@ -4,6 +4,9 @@ Stored evidence is never mutated. This projection applies at delivery boundaries
 including nested additive API views and saved revision payloads.
 """
 from copy import deepcopy
+from .engine import build_prediction
+from .marks import generate_marks
+from .tickets import generate_tickets
 RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking', 'honmeiDecision',
     'preRacePrediction', 'preRaceBet', 'predictionAudit', 'frozenPredictionAudit',
     'winnerLearningProfile', 'betRecommendations', 'recommendedBets', 'tickets', 'buyList', 'bets',
@@ -22,7 +25,19 @@ def public_race(detail):
         return deepcopy(value)
     if not isinstance(detail, dict): return detail
     result = project(detail)
-    # User has withdrawn permission for assistant-created prediction algorithms.
-    # Do not compute, publish or resurrect model-generated marks, probabilities or tickets.
-    result['predictionStatus'] = 'disabled'
+    prediction = build_prediction(detail)
+    if prediction is None:
+        result['predictionStatus'] = 'disabled'
+        return result
+    marks = generate_marks(prediction)
+    result['predictionStatus'] = 'ready'
+    result['predictionModelVersion'] = prediction['modelVersion']
+    result['prediction'] = prediction
+    result['predictionMarks'] = marks
+    result['recommendedBets'] = generate_tickets(prediction, marks)
+    by_no = {row['horseNumber']: row['mark'] for row in marks}
+    for horse in result.get('horses') or []:
+        no = horse.get('horseNumber')
+        if no in by_no:
+            horse['predMark'] = by_no[no]
     return result

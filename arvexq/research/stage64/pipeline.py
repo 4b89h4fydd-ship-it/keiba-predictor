@@ -73,8 +73,11 @@ def predict(race, *, expected_circuit, ability_method=None):
     probs=distribution(ability,deltas,config["temperature"])
     podium={no:sum(p for combo,p in probs["trifecta"].items() if no in combo)
             for no in ability}
+    trifecta=[{"combo":list(combo),"probability":prob}
+              for combo,prob in sorted(probs["trifecta"].items())]
     stages["probability"]={"status":"research-only-uncalibrated",
-                          "value":{"win":probs["win"],"top3":podium},
+                          "value":{"win":probs["win"],"top3":podium,
+                                   "trifecta":trifecta},
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
     stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium)}

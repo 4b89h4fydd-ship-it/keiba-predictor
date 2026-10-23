@@ -1245,7 +1245,7 @@
     {
       "id": 38,
       "name": "出馬表更新",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -1301,7 +1301,7 @@
     {
       "id": 40,
       "name": "欠損値補完",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -1835,7 +1835,7 @@
     {
       "id": 57,
       "name": "全競走履歴取得・補修",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2087,7 +2087,7 @@
     {
       "id": 65,
       "name": "外部サイトオッズ解析",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2142,7 +2142,7 @@
     {
       "id": 67,
       "name": "オッズ保存・復元",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2166,7 +2166,7 @@
     {
       "id": 68,
       "name": "オッズ表示",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2221,7 +2221,7 @@
     {
       "id": 70,
       "name": "着順取得",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2245,7 +2245,7 @@
     {
       "id": 71,
       "name": "着差取得",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2269,7 +2269,7 @@
     {
       "id": 72,
       "name": "走破時計取得",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2324,7 +2324,7 @@
     {
       "id": 74,
       "name": "速報結果判定",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2348,7 +2348,7 @@
     {
       "id": 75,
       "name": "コーナー通過順位取得",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2372,7 +2372,7 @@
     {
       "id": 76,
       "name": "単勝払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2396,7 +2396,7 @@
     {
       "id": 77,
       "name": "複勝払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2420,7 +2420,7 @@
     {
       "id": 78,
       "name": "枠連払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2444,7 +2444,7 @@
     {
       "id": 79,
       "name": "馬連払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2468,7 +2468,7 @@
     {
       "id": 80,
       "name": "ワイド払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2492,7 +2492,7 @@
     {
       "id": 81,
       "name": "馬単払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2516,7 +2516,7 @@
     {
       "id": 82,
       "name": "3連複払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2540,7 +2540,7 @@
     {
       "id": 83,
       "name": "3連単払戻",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2564,7 +2564,7 @@
     {
       "id": 84,
       "name": "結果欠損補修",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2588,7 +2588,7 @@
     {
       "id": 85,
       "name": "払戻欠損補修",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -2612,7 +2612,7 @@
     {
       "id": 86,
       "name": "確定結果上書き防止",
-      "status": "未着手",
+      "status": "解析済",
       "module": null,
       "files": [],
       "callers": [],
@@ -3710,16 +3710,30 @@
     {
       "id": 128,
       "name": "中央・地方開催区分",
-      "status": "未着手",
-      "module": null,
-      "files": [],
-      "callers": [],
-      "dependencies": [],
-      "input": null,
-      "output": null,
+      "status": "分離済",
+      "module": "arvexq.ingest.circuit_boundary",
+      "files": [
+        "arvexq/ingest/circuit_boundary.py",
+        "app.py"
+      ],
+      "callers": [
+        "app.py:normalize_central_race",
+        "arvexq.ingest.transfer_history._history_rates"
+      ],
+      "dependencies": [
+        "arvexq.ingest.circuit_transfer.race_circuit",
+        "arvexq.ingest.circuit_transfer._observed_day"
+      ],
+      "input": "Explicit circuit/organization, known venue and dated observed race records",
+      "output": "Central/local compatibility decision and copied strictly pre-off records; unknown circuit stays unknown",
       "storage": null,
-      "tests": [],
-      "implementation_scope": "全取得元・全ランタイムの確認が必要",
+      "tests": [
+        "tests/test_circuit_boundary.py",
+        "tests/test_central_normalization_boundary.py",
+        "tests/test_circuit_transfer_independent.py",
+        "tests/test_transfer_history_rates.py"
+      ],
+      "implementation_scope": "Central normalization rejects explicitly local payloads; shared factual boundary filters same-day/future/invalid dates without mutating or imputing evidence. Other retrieval paths and production verification remain unverified.",
       "evidence": {
         "commit_sha": null,
         "unit": null,

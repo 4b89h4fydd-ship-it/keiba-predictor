@@ -65,6 +65,35 @@
   }
 
   function build(race){
+    var server=race&&race.predictionStatus==='ready'&&race.prediction;
+    if(server&&server.predictionStatus==='ready'&&Array.isArray(race.horses)){
+      var stage=server.stages||{}, prob=(stage.probability&&stage.probability.value)||{}, marks=race.predictionMarks||[], by={};
+      marks.forEach(function(x){by[String(Number(x.horseNumber))]=x});
+      var rows=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
+        var no=Number(h.horseNumber),m=by[String(no)]||{};
+        return {horse:h,predMark:String(m.mark||''),serverPreoffMark:!!m.mark,
+          originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:false,
+          predRank:marks.findIndex(function(x){return Number(x.horseNumber)===no})+1,
+          winProbability:prob.win&&prob.win[no]!=null?prob.win[no]:null,
+          p1Probability:prob.win&&prob.win[no]!=null?prob.win[no]:null,p2Probability:null,
+          p3Probability:prob.top3&&prob.top3[no]!=null?prob.top3[no]:null,overallGrade:'',coverage:1};
+      });
+      // Stage64 pace is an array of scenarios, each keyed by actual horse number.
+      // The array index is not a horse number and the correction is not a calibrated pace prediction.
+      var pace=(stage.pace&&stage.pace.value)||[],paceRows=[];
+      if(Array.isArray(pace))pace.forEach(function(deltas,index){
+        if(!deltas||typeof deltas!=='object'||Array.isArray(deltas))return;
+        Object.keys(deltas).forEach(function(key){
+          var no=Number(key),delta=Number(deltas[key]);
+          if(Number.isInteger(no)&&no>0&&Number.isFinite(delta))
+            paceRows.push({scenarioIndex:index+1,horseNumber:no,delta:delta});
+        });
+      });
+      last={active:marks.length>0,source:'stage64-preoff',scenarios:[],pace:paceRows,forecastText:'',
+        modelVersion:server.modelVersion||'',uncalibrated:!(stage.probability&&stage.probability.calibrationVerified===true),unavailable:!marks.length,
+        marks:marks.map(function(x){var h=race.horses.find(function(y){return Number(y.horseNumber)===Number(x.horseNumber)})||{};return {horseNumber:Number(x.horseNumber),name:String(h.name||''),mark:String(x.mark||'')}})};
+      return {rows:rows,legacyEngineDisabled:false,scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:1};
+    }
     if(root.ARVEXQProductionTickets)root.ARVEXQProductionTickets.build(race);
     var originals=originalMarks(race),revision=originals?null:revisionMarks(race),
         marks=originals||(revision&&revision.marks),rows=((race&&race.horses)||[])
@@ -88,7 +117,7 @@
   }
   function current(){
     return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,
-      scenarios:(last.scenarios||[]).slice(),forecastText:last.forecastText||'',modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
+      scenarios:(last.scenarios||[]).slice(),pace:(last.pace||[]).slice(),forecastText:last.forecastText||'',modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
       marks:last.marks.map(function(x){return Object.assign({},x)})};
   }
   root.ARVEXQProductionPrediction=Object.freeze({build:build,current:current});
