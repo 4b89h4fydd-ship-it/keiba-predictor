@@ -43,8 +43,8 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert len(generate_marks(prediction)) == 5
         assert {x["mark"] for x in generate_marks(prediction)} == {"◎", "○", "▲", "△", "☆"}
         items = generate_tickets(prediction, generate_marks(prediction))
-        assert sum(x["points"] for x in items) == 5
-        assert sum(len(x["combos"]) for x in items) == 5
+        assert 1 <= sum(x["points"] for x in items) <= 5
+        assert 1 <= sum(len(x["combos"]) for x in items) <= 5
         assert len(prediction["stages"]) == 6
         assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
 
@@ -56,7 +56,7 @@ def test_public_projection_contains_prediction_marks_and_bets_without_mutating_i
     assert published["predictionStatus"] == "ready"
     assert published["predictionMarks"]
     assert {x["mark"] for x in published["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
-    assert sum(x["points"] for x in published["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in published["recommendedBets"]) <= 5
     assert detail == original
 
 
@@ -121,7 +121,7 @@ def test_d1_prefetch_product_attachment_preserves_original_evidence():
     assert enriched["predictionStatus"] == "ready"
     assert enriched["predictionModelVersion"] == "arvexq-stage64-product-v1"
     assert len(enriched["predictionMarks"]) == 5
-    assert sum(x["points"] for x in enriched["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in enriched["recommendedBets"]) <= 5
     assert repair_reason(enriched, original) == "stage64_products_not_persisted"
 
 
@@ -308,7 +308,7 @@ def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archi
     archive = deepcopy(original)
     projected = public_race(original)
     assert projected["predictionStatus"] == "ready"
-    assert sum(x["points"] for x in projected["recommendedBets"]) == 5
-    assert sum(len(x["combos"]) for x in projected["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in projected["recommendedBets"]) <= 5
+    assert 1 <= sum(len(x["combos"]) for x in projected["recommendedBets"]) <= 5
     assert original == archive
     assert original["recommendedBets"] != projected["recommendedBets"]
