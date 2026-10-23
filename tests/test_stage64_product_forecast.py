@@ -102,3 +102,38 @@ def test_pending_placeholder_is_not_confused_with_a_confirmed_result():
     assert build_prediction(detail, now=NOW) is None
     detail["result"] = {"status": "確定", "finishers": [], "payouts": []}
     assert build_prediction(detail, now=NOW) is None
+
+
+def test_d1_prefetch_product_attachment_preserves_original_evidence():
+    from scripts.arvexq_prefetch import _attach_existing_stage64_products
+    from scripts.arvexq_select_prefetch_repairs import repair_reason
+
+    original = race("地方")
+    original["predictionStatus"] = "disabled"
+    original["predictionModelVersion"] = "arvexq-prediction-removed"
+    original["preRacePrediction"] = {"frozen": True, "horses": [{"horseNumber": 1, "mark": "◎"}]}
+    original["arvexqFullPayload"] = {"version": "retained-test-envelope"}
+    snapshot = deepcopy(original)
+    enriched = with_preoff_clock(_attach_existing_stage64_products, original)
+    assert original == snapshot
+    assert enriched["preRacePrediction"] == snapshot["preRacePrediction"]
+    assert enriched["arvexqFullPayload"] == snapshot["arvexqFullPayload"]
+    assert enriched["predictionStatus"] == "ready"
+    assert enriched["predictionModelVersion"] == "arvexq-stage64-product-v1"
+    assert len(enriched["predictionMarks"]) == 5
+    assert len(enriched["recommendedBets"]) == 4
+    assert repair_reason(enriched, original) == "stage64_products_not_persisted"
+
+
+def test_d1_product_projection_never_retroactively_creates_off_predictions():
+    from scripts.arvexq_prefetch import _attach_existing_stage64_products
+
+    finished = race("中央")
+    finished["result"] = {"status": "確定", "finishers": [{"horseNumber": 1, "finish": 1}]}
+    finished["preRacePrediction"] = {"frozen": True}
+    snapshot = deepcopy(finished)
+    projected = with_preoff_clock(_attach_existing_stage64_products, finished)
+    assert projected == snapshot
+    assert finished == snapshot
+    assert "predictionMarks" not in projected
+    assert "recommendedBets" not in projected
