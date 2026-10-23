@@ -90,7 +90,7 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertEqual(nk._birth_year({"age": "牡4"}, "2026-10-11"), 2022)
 
     def test_partial_listing_with_verified_birth_year_retains_observed_runs(self):
-        horse_id = "2023100001"
+        horse_id = "2022100001"
         actual = nk.fetch_verified_career(
             site(listing(5), 16, search=source(hid=horse_id),
                  pages={horse_id: (listing(5), 16)}),
