@@ -56,7 +56,11 @@ def public_race(detail):
             result['predictionModelVersion'] = original['modelVersion']
             result['prediction'] = deepcopy(original)
             result['predictionMarks'] = deepcopy(original_marks)
-            result['recommendedBets'] = deepcopy(original_tickets)
+            # Reproject only the existing sealed pre-off probability evidence.
+            # Keep the D1 archived ticket list untouched for audit/history.
+            # Never use post-race outcomes to select a ticket.
+            revised = generate_tickets(original, original_marks)
+            result['recommendedBets'] = revised if revised else deepcopy(original_tickets)
             by_no = {m['horseNumber']: m['mark'] for m in original_marks}
             for horse in result.get('horses') or []:
                 if horse.get('horseNumber') in by_no:
