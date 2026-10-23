@@ -68,7 +68,7 @@ def test_started_or_result_race_never_gets_a_forecast():
 
 
 def test_api_compact_projection_keeps_ready_products_for_the_detail_ui():
-    compact = _compact_display_snapshot(race("中央"))
+    compact = with_preoff_clock(_compact_display_snapshot, race("中央"))
     assert compact["predictionStatus"] == "ready"
     assert compact["predictionModelVersion"] == "arvexq-stage64-product-v1"
     assert compact["predictionMarks"]
