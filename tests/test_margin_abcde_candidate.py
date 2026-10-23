@@ -37,6 +37,27 @@ class MarginABCDETests(unittest.TestCase):
         self.assertIsNotNone(result["factors"]["D"])
         self.assertGreater(result["factors"]["D"], 0.5)
 
+    def test_hyphenated_passing_is_real_pace_evidence(self):
+        run = {"marginSeconds": 0.2, "finish": 2, "fieldSize": 10,
+               "distance": 1400, "track": "園田", "surface": "ダート",
+               "passing": "7-4-2"}
+        with patch("arvexq.research.margin_abcde_candidate.observed_runs",
+                   return_value=[run]):
+            report = score({}, {"distance": 1400, "track": "園田",
+                                "surface": "ダート"})
+        self.assertIsNotNone(report["factors"]["D"])
+        self.assertGreater(report["factors"]["D"], 0.5)
+
+    def test_unknown_passing_is_not_synthetic_evidence(self):
+        run = {"marginSeconds": 0.2, "finish": 2, "fieldSize": 10,
+               "distance": 1400, "track": "園田", "surface": "ダート",
+               "passing": "unknown"}
+        with patch("arvexq.research.margin_abcde_candidate.observed_runs",
+                   return_value=[run]):
+            report = score({}, {"distance": 1400, "track": "園田",
+                                "surface": "ダート"})
+        self.assertIsNone(report["factors"]["D"])
+
     def test_impossible_finish_not_used_as_opponent_or_suitability(self):
         run = {"marginSeconds": 0.4, "finish": 15, "fieldSize": 10,
                "opponentLevel": 0.8, "distance": 1400,
