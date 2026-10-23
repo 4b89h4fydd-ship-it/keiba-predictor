@@ -56,6 +56,18 @@ def apply(bundle, models):
         if not isinstance(detail, dict) or not detail.get('id'):
             details.append(detail)
             continue
+        # The currently approved, independently computed Stage64 product
+        # is authoritative for this pre-off publication. A research-only
+        # learned overlay must never replace its marks, tickets or pace.
+        if (detail.get('predictionStatus') == 'ready'
+                and detail.get('predictionModelVersion') == 'arvexq-stage64-product-v1'
+                and isinstance(detail.get('prediction'), dict)
+                and isinstance(detail.get('predictionMarks'), list)
+                and detail.get('predictionMarks')
+                and isinstance(detail.get('recommendedBets'), list)):
+            details.append(detail)
+            skipped[str(detail['id'])] = 'approved-stage64-product-preserved'
+            continue
         circuit = detail.get('circuit')
         model = models.get(circuit)
         if not isinstance(model, dict):
