@@ -11,12 +11,14 @@
       ?'<p class="muted">過去レースの事後再分析です。発走前の予想成績には含めません。</p>'
       :'<p class="muted">このレースの学習済み予想印は未取得です。確認できない印は生成しません。</p>';
     var text=String(live&&live.forecastText||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});
+    var pace=live&&Array.isArray(live.pace)?live.pace:[], paceText=pace.length?'展開予想：'+pace.map(function(x){return String(x.horseNumber)+'番 '+(Number(x.delta)>=0?'前有利':'差し有利')}).join('／'):'';
+    if(paceText)text=paceText+(text?'。'+text:'');
     var prose=text?'<p class="forecast-text">'+text+'</p>':'';
     var scenarios=live&&live.scenarios||[];
     var extra=scenarios.length?'<p class="muted">比較展開：'+scenarios.map(function(s){
       return String(s.label||s.id||'').replace(/[&<>"']/g,'');
     }).filter(Boolean).join('／')+'</p>':'';
-    return '<section id="section-prediction" class="card"><h2>AI予想</h2><div class="ai-prediction-list">'+note+extra+prose+'</div></section>';
+    return '<section id="section-prediction" class="card"><h2>展開予想</h2><div class="ai-prediction-list">'+note+(live&&live.modelVersion?'<p class="muted">モデル：'+String(live.modelVersion).replace(/[&<>"']/g,'')+'</p>':'')+extra+prose+'</div></section>';
   }
   root.ARVEXQPredictionFrame=Object.freeze({render:render});
 })(typeof window!=='undefined'?window:globalThis);

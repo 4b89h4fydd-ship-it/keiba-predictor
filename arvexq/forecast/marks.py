@@ -1,7 +1,15 @@
-"""Retired assistant-generated marks. Pre-off user originals are read elsewhere."""
+"""Stage64 product marks; no ranking or probability is calculated in the UI."""
 
 def generate_marks(prediction):
-    return []
+    if not isinstance(prediction, dict) or prediction.get("predictionStatus") != "ready":
+        return []
+    stages = prediction.get("stages") or {}
+    value = ((stages.get("marks") or {}).get("value") or {})
+    order = value.get("orderedWinCandidates") or []
+    win = ((stages.get("probability") or {}).get("value") or {}).get("win") or {}
+    labels = ("◎", "○", "▲", "△", "☆")
+    return [{"horseNumber": int(no), "mark": labels[i], "winProbability": win.get(no)}
+            for i, no in enumerate(order[:5])]
 
 def clear_marks(detail):
     if not isinstance(detail, dict):
