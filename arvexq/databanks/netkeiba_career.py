@@ -60,6 +60,58 @@ def parse_search(html: str, name: str) -> list[dict[str, Any]]:
     return out
 
 
+def paginated_search(get: Callable[[str], str], name: str, birth_year: int | None = None) -> list[dict[str, Any]]:
+    """Follow only advertised pages of the same registered horse search.
+
+    Broad substring searches are paginated; an exact-name horse can be absent
+    from page one. Never infer an identity from substring matches or construct
+    an independent provider. Stop on malformed pagination or a network error.
+    """
+    first = get(search_url(name))
+    candidates = parse_search(first, name)
+    seen = {c["id"] for c in candidates}
+    if len(candidates) == 1 and (birth_year is None or candidates[0]["birthYear"] == birth_year):
+        return candidates
+
+    pending: set[int] = set()
+    visited = {1}
+    def advertised_pages(html: str) -> None:
+        for a in _soup(html).find_all("a", href=True):
+            url = urllib.parse.urljoin(BASE, str(a["href"]))
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.scheme != "https" or parsed.netloc != "db.netkeiba.com" or parsed.path != "/horse/list.html":
+                continue
+            params = urllib.parse.parse_qs(parsed.query, encoding="euc-jp", errors="replace")
+            if params.get("pid") != ["horse_list"] or params.get("word") != [name]:
+                continue
+            raw_page = params.get("page", [""])[0]
+            if raw_page.isdigit() and 2 <= int(raw_page) <= 12 and int(raw_page) not in visited:
+                pending.add(int(raw_page))
+
+    advertised_pages(first)
+    while pending and len(visited) < 12:
+        page = min(pending)
+        pending.remove(page)
+        if page in visited:
+            continue
+        visited.add(page)
+        url = BASE + "/horse/list.html?" + urllib.parse.urlencode(
+            {"pid": "horse_list", "word": name, "page": page}, encoding="euc-jp")
+        try:
+            html = get(url)
+        except Exception:
+            # Partial search coverage is not proof that an identity is unique.
+            return []
+        for candidate in parse_search(html, name):
+            if candidate["id"] not in seen:
+                seen.add(candidate["id"])
+                candidates.append(candidate)
+        advertised_pages(html)
+    # A matching birth year can still have multiple namesakes, which the
+    # existing resolver rejects rather than contaminating another career.
+    return candidates
+
+
 def parse_total(html: str) -> int | None:
     text = _soup(html).get_text(" ", strip=True)
     m = re.search(r"通算成績\s*(\d+)\s*戦", text)
@@ -217,8 +269,8 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
     cutoff = date_key(race.get("date") or race.get("raceDate"))
     if not name or not cutoff:
         return {}
-    candidates = parse_search(get(search_url(name)), name)
     born = _birth_year(horse, cutoff)
+    candidates = paginated_search(get, name, born)
     if born:
         candidates = [c for c in candidates if c["birthYear"] == born]
     known = {r["date"] for r in merge_career(

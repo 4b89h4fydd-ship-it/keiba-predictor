@@ -99,6 +99,47 @@ class VerifiedCareerTests(unittest.TestCase):
         self.assertNotIn("careerStartEvidence", actual)
         self.assertTrue(all(r["date"] < RACE["date"] for r in actual["recentRaces"]))
 
+    def test_existing_paged_search_recovers_exact_horse_after_substring_matches(self):
+        from urllib.parse import parse_qs, urlsplit
+        calls = []
+        target = "2023105348"
+        # The first real result page for ジョーカー is dominated by
+        # substring matches; its exact-name 2023 horse appears on a later page.
+        def paged_get(url):
+            calls.append(url)
+            query = parse_qs(urlsplit(url).query, encoding="euc-jp")
+            if query.get("pid") == ["horse_list"]:
+                page = int(query.get("page", ["1"])[0])
+                nav = ('<a href="/horse/list.html?pid=horse_list&word=%A5%B8%A5%E7%A1%BC%A5%AB%A1%BC&page=2">2</a>'
+                       '<a href="/horse/list.html?pid=horse_list&word=%A5%B8%A5%E7%A1%BC%A5%AB%A1%BC&page=3">3</a>')
+                if page == 1:
+                    return nav + '<table><tr><td><a href="https://db.netkeiba.com/horse/2000104304/">マイジョーカー</a></td></tr></table>'
+                if page == 2:
+                    return nav + '<table><tr><td><a href="https://db.netkeiba.com/horse/2019100009/">ジョーカー</a></td></tr></table>'
+                if page == 3:
+                    return '<table><tr><td><a href="https://db.netkeiba.com/horse/'+target+'/">ジョーカー</a></td></tr></table>'
+            if url.endswith("/horse/result/"+target+"/"):
+                return listing(3)
+            if url.endswith("/horse/"+target+"/"):
+                return '<p>通算成績 3戦</p>'
+            raise AssertionError(url)
+        recovered = nk.fetch_verified_career(paged_get, {"name":"ジョーカー","age":3},
+                                             RACE, 100)
+        self.assertEqual(len(recovered["allPastRuns"]), 3)
+        self.assertEqual(recovered["careerStartEvidence"]["sourceHorseId"], target)
+        self.assertTrue(any("page=3" in u for u in calls))
+
+    def test_paginated_search_rejects_same_year_ambiguous_namesakes(self):
+        name = "ジョーカー"
+        nav = '<a href="/horse/list.html?pid=horse_list&word=%A5%B8%A5%E7%A1%BC%A5%AB%A1%BC&page=2">2</a>'
+        def get(url):
+            return (nav + '<tr><td><a href="https://db.netkeiba.com/horse/2023100001/">ジョーカー</a></td></tr>'
+                    if "page=2" not in url else
+                    '<tr><td><a href="https://db.netkeiba.com/horse/2023100002/">ジョーカー</a></td></tr>')
+        self.assertEqual(len(nk.paginated_search(get,name,2023)),1)
+        # The first independently verified candidate keeps the existing
+        # fast path, and the resolver never guesses from multiple candidates.
+
     def test_missing_page_row_never_proves_entire_career(self):
         self.assertEqual(nk.fetch_verified_career(site(listing(15),16),
                          {"name":NAME},RACE,200),{})
