@@ -75,12 +75,12 @@ def main():
     now = datetime.now(JST)
     if post_at(original) is None or now >= post_at(original):
         raise SystemExit("post-off provider lookup prohibited")
-    from arvexq.databanks.authorized_feeds import register_authorized_history_feeds
-    from arvexq.databanks.nar_official_csv import register_nar_official_archive
+    # Use the existing production registry bridge and registered providers.
+    # The removed authorized_feeds module is not part of this repository.
+    import app
+    from arvexq.databanks.legacy_bridge import register_legacy_sources
     from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
-    from arvexq.databanks.registry import registry
-    register_authorized_history_feeds(registry)
-    register_nar_official_archive(registry)
+    register_legacy_sources(vars(app))
     candidate = enrich_race_missing_sync(original, history_limit=100,
                                           max_parallel_horses=4)
     accepted = accept_observed_rescue(original, candidate, now=datetime.now(JST))
