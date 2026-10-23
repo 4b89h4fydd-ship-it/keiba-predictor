@@ -123,6 +123,19 @@ def _history_count(detail: dict | None) -> int:
                for h in detail.get("horses") or [] if isinstance(h, dict))
 
 
+def _active_history_missing(detail: dict | None) -> bool:
+    """An individual active runner without a past run also needs the existing rescue."""
+    if not isinstance(detail, dict):
+        return False
+    return any(
+        not (h.get("allPastRuns") or h.get("recentRaces"))
+        for h in (detail.get("horses") or [])
+        if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
+        and not h.get("scratched") and not h.get("withdrawn")
+        and not any(x in str(h.get("status") or "") for x in ("取消", "除外", "欠場"))
+    )
+
+
 def recover_prior_history_before_post(detail: dict, *, now: datetime, run=None) -> dict:
     """Use the EXISTING registered history sources before off, with a hard timeout.
 
@@ -134,7 +147,7 @@ def recover_prior_history_before_post(detail: dict, *, now: datetime, run=None) 
     post = post_at(detail)
     if not post or now.astimezone(JST) >= post:
         raise ValueError("post-off provider rescue forbidden")
-    if _history_count(detail):
+    if not _active_history_missing(detail):
         return detail
     if run is None:
         run = subprocess.run
@@ -408,7 +421,7 @@ def main() -> int:
             old = fetch_existing_d1_detail(base, rid, now=datetime.now(JST))
             if not old:
                 return {"id": rid, "status": "missing-detail"}
-            if not _history_count(old) and old.get("analysisMode") not in ("新馬", "障害"):
+            if _active_history_missing(old) and old.get("analysisMode") not in ("新馬", "障害"):
                 try:
                     old = recover_prior_history_before_post(old, now=datetime.now(JST))
                 except Exception as exc:

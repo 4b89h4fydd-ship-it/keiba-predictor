@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from arvexq.prediction.prerace_archive import (
     JST, SEALED_VERSION, post_at, pre_off, seal_detail, sealed_lock, restore_seal,
 )
-from scripts.arvexq_freeze_predictions import prepare_seal
+from scripts.arvexq_freeze_predictions import prepare_seal, _active_history_missing
 
 
 def race(now, minutes=20):
@@ -391,3 +391,25 @@ class ServerSealTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PartialHistoryRescueTriggerTests(unittest.TestCase):
+    def test_one_active_runner_without_history_uses_existing_rescue(self):
+        now = datetime(2026, 10, 23, 16, 0, tzinfo=JST)
+        detail = race(now, minutes=35)
+        self.assertFalse(_active_history_missing(detail))
+        detail["horses"][1]["recentRaces"] = []
+        self.assertTrue(_active_history_missing(detail))
+        detail["horses"][1]["scratched"] = True
+        self.assertFalse(_active_history_missing(detail))
+
+    def test_partial_missing_history_does_not_fake_observations(self):
+        from scripts.arvexq_freeze_predictions import recover_prior_history_before_post
+        from unittest.mock import Mock
+        now = datetime(2026, 10, 23, 16, 0, tzinfo=JST)
+        detail = race(now, minutes=35)
+        detail["horses"][1]["recentRaces"] = []
+        proc = Mock(returncode=1, stderr="no verified historical runs", stdout="")
+        with self.assertRaisesRegex(RuntimeError, "no verified historical runs"):
+            recover_prior_history_before_post(detail, now=now, run=Mock(return_value=proc))
+        self.assertEqual(detail["horses"][1]["recentRaces"], [])
