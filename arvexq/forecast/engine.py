@@ -12,10 +12,23 @@ VERSION = "arvexq-stage64-product-v1"
 JST = ZoneInfo("Asia/Tokyo")
 
 
+def _has_result_evidence(value):
+    """Allow only empty, explicitly pending result placeholders before the off."""
+    if not value:
+        return False
+    if not isinstance(value, dict):
+        return True
+    if set(value) - {"status", "finishers", "payouts"}:
+        return True
+    if value.get("finishers") or value.get("payouts"):
+        return True
+    return str(value.get("status") or "").strip() not in {"", "未確定", "未取得", "発走前", "未発走"}
+
+
 def _preoff(facts, now):
     if not isinstance(facts, dict) or not isinstance(facts.get("date"), str):
         return False
-    if facts.get("result") or str(facts.get("raceStatus") or "") in {"速報", "確定", "終了"}:
+    if _has_result_evidence(facts.get("result")) or str(facts.get("raceStatus") or "") in {"速報", "確定", "終了"}:
         return False
     start = facts.get("scheduledStartTime") or facts.get("startTime")
     if not isinstance(start, str) or len(start) < 5:
