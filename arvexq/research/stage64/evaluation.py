@@ -38,8 +38,13 @@ def summarize(rows):
             "top2ReturnShare":sum(sorted(returns,reverse=True)[:2])/returned if returned else None,
             "roiWithoutTwoLargestReturnsPct":100*reduced_return/reduced_stake if payout_complete and reduced_stake else None,
             "concentrationDiagnosticOnly":True,
-            "target80Observed":hits/n>=.8 if n else False,
-            "target90Observed":hits/n>=.9 if n else False}
+            # User target is the marked axis horse finishing in the podium,
+            # not the much harder exact-order trifecta ticket hit rate.
+            "axisTop3Rate":axis/n if n else None,
+            "trifectaTarget80Observed":hits/n>=.8 if n else False,
+            "target80Observed":axis/n>=.8 if n else False,
+            "target90Observed":axis/n>=.9 if n else False,
+            "returnTarget100Observed":returned>=stake if payout_complete and stake else None}
 
 
 def evaluate(batch, results, *, independently_verified=False):
