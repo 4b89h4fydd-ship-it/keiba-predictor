@@ -32,7 +32,8 @@ def score(horse, race):
     for run in runs:
         level = num(run.get("opponentLevel"))
         finish, field = num(run.get("finish")), num(run.get("fieldSize"))
-        if level is not None and 0 <= level <= 1 and finish is not None and field and field > 1:
+        if (level is not None and 0 <= level <= 1 and finish is not None
+                and field is not None and field > 1 and 1 <= finish <= field):
             ability.append(((field-finish)/(field-1))*(.5+.5*level))
     # C: observed course/distance/surface evidence only.
     suitable = []
@@ -42,14 +43,15 @@ def score(horse, race):
         if (dist is not None and target is not None and abs(dist-target)<=150
                 and run.get("surface") and run.get("surface")==race.get("surface")
                 and run.get("track")==race.get("track")
-                and finish is not None and field and field>1):
+                and finish is not None and field is not None and field>1
+                and 1 <= finish <= field):
             suitable.append((field-finish)/(field-1))
     # D: recorded corner-position progression; no synthetic pace forecast.
     pace = []
     for run in runs:
-        positions = run.get("cornerPositions")
+        positions = run.get("cornerPositions") or run.get("passing")
         field = num(run.get("fieldSize"))
-        if isinstance(positions,list) and len(positions)>=2 and field and field>1:
+        if isinstance(positions,list) and len(positions)>=2 and field is not None and field>1:
             first,last = num(positions[0]),num(positions[-1])
             if first is not None and last is not None and 1<=first<=field and 1<=last<=field:
                 pace.append(.5+(first-last)/(2*(field-1)))
