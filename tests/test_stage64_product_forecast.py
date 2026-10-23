@@ -199,3 +199,41 @@ def test_nar_history_alias_does_not_change_central_or_started_races():
     for horse in nar["horses"]:
         horse["allPastRuns"] = horse.pop("recentRaces")
     assert build_prediction(nar, now=datetime(2026, 10, 23, 13, 0, tzinfo=ZoneInfo("Asia/Tokyo"))) is None
+
+
+def test_existing_server_seal_uses_stage64_marks_and_tickets_without_new_pipeline():
+    from scripts.arvexq_freeze_predictions import prepare_seal, capture_original_bet
+    from arvexq.prediction.prerace_archive import sealed_lock
+    detail = race("地方")
+    for i, horse in enumerate(detail["horses"], 1):
+        horse["name"] = f"H{i}"
+    original = deepcopy(detail)
+    sealed = prepare_seal(detail, now=NOW)
+    assert sealed["status"] == "sealed", sealed
+    stored = sealed["detail"]
+    assert detail == original
+    assert sealed_lock(stored)
+    assert stored["predictionModelVersion"] == "arvexq-stage64-product-v1"
+    assert {m["mark"] for m in stored["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
+    lock_marks = {m["horseNumber"]: m["mark"] for m in stored["preRacePrediction"]["horses"]}
+    assert {m["horseNumber"]: m["mark"] for m in stored["predictionMarks"]} == {
+        n: m for n, m in lock_marks.items() if m}
+    ticket = capture_original_bet(stored, NOW)
+    assert ticket["items"] == stored["recommendedBets"]
+    assert ticket["modelVersion"] == "arvexq-stage64-product-v1"
+    assert ticket["fixedBeforePost"]
+    from scripts.arvexq_prerace_bet_integrity import has_valid_original
+    from arvexq.prediction.prerace_archive import post_at
+    assert has_valid_original(ticket, race_id=detail["id"], start_at=post_at(detail))
+
+
+def test_server_seal_does_not_backfill_after_post_or_missing_stage64_evidence():
+    from scripts.arvexq_freeze_predictions import prepare_seal
+    detail = race("地方")
+    for i, horse in enumerate(detail["horses"], 1):
+        horse["name"] = f"H{i}"
+    later = datetime(2026, 10, 23, 13, 0, tzinfo=ZoneInfo("Asia/Tokyo"))
+    assert prepare_seal(detail, now=later)["status"] == "started-no-new-lock"
+    detail["horses"][0]["recentRaces"] = []
+    assert prepare_seal(detail, now=NOW)["status"] == "incomplete-prediction"
+    assert "preRacePrediction" not in detail
