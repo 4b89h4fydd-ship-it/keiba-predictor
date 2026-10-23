@@ -73,3 +73,31 @@ def test_api_compact_projection_keeps_ready_products_for_the_detail_ui():
     assert compact["predictionModelVersion"] == "arvexq-stage64-product-v1"
     assert compact["predictionMarks"]
     assert compact["recommendedBets"]
+
+
+def test_stage64_wager_marginals_are_from_existing_three-place_joint():
+    from arvexq.forecast.tickets import _score
+
+    probs = {"win": {1: 0.4, 2: 0.4, 3: 0.1, 4: 0.1}, "trifecta": [
+        {"combo": [1, 2, 3], "probability": 0.4},
+        {"combo": [2, 1, 4], "probability": 0.1},
+        {"combo": [2, 3, 4], "probability": 0.3},
+        {"combo": [4, 3, 1], "probability": 0.2},
+    ]}
+    assert abs(_score(probs, (1, 2), "馬連") - 0.5) < 1e-12
+    assert abs(_score(probs, (1, 2), "馬単") - 0.4) < 1e-12
+    assert abs(_score(probs, (2, 3), "ワイド") - 0.7) < 1e-12
+    assert abs(_score(probs, (1, 2, 3), "3連複") - 0.4) < 1e-12
+    assert _score(probs, (3, 4), "馬連") == 0.0
+
+
+def test_pending_placeholder_is_not_confused_with_a_confirmed_result():
+    detail = race("地方")
+    detail["result"] = {"status": "未確定", "finishers": [], "payouts": []}
+    assert build_prediction(detail, now=NOW)["predictionStatus"] == "ready"
+    detail["result"]["finishers"] = [{"horseNumber": 1, "finish": 1}]
+    assert build_prediction(detail, now=NOW) is None
+    detail["result"] = {"status": "未確定", "finishers": [], "payouts": [{"type": "単勝"}]}
+    assert build_prediction(detail, now=NOW) is None
+    detail["result"] = {"status": "確定", "finishers": [], "payouts": []}
+    assert build_prediction(detail, now=NOW) is None
