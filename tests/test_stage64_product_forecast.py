@@ -182,7 +182,7 @@ def test_supplemental_race_analysis_uses_only_existing_evidence():
     assert unknown["oddsTimeline"]["status"] == "unverified"
     assert prediction["raceReading"]["expertFusionStatus"] == "methodology-only-no-expert-picks"
 
- 
+
 def test_existing_marks_expose_race_reading_and_course_evidence():
     detail = race("地方")
     detail["horses"][0]["recentRaces"][0]["track"] = "大井"
@@ -212,3 +212,22 @@ def test_stage64_marks_follow_selected_pace_scenarios():
     assert local["stages"]["marks"]["value"]["decisionMethod"] == "scenario-robust-win"
     assert central["stages"]["marks"]["value"]["decisionMethod"] == "aggregate-win"
     assert generate_marks(local)[0]["horseNumber"] == local["stages"]["marks"]["value"]["orderedWinCandidates"][0]
+
+
+def test_unsaved_external_race_input_is_accepted_without_motherduck():
+    """Research calculation must not require a stored snapshot or DB record."""
+    from arvexq.research.stage64.pipeline import predict
+    from arvexq.research.stage63.probability import distribution
+    from arvexq.research.stage64.marks import roles
+    for day in ("2026-09-15", "2026-09-22", "2026-10-02"):
+        detail = race("地方")
+        detail["id"] = f"nar-{day}-架空場-01"
+        detail["date"] = day
+        for horse in detail["horses"]:
+            horse["recentRaces"][0]["date"] = "2026-08-10"
+        # In-memory pre-race inputs: no database connection, no future outcomes.
+        result = predict(detail, expected_circuit="nar")
+        assert not result["blockers"]
+        assert len(result["stages"]) == 6
+        assert result["stages"]["marks"]["value"]["orderedWinCandidates"]
+        assert result["raceReading"]["horses"]
