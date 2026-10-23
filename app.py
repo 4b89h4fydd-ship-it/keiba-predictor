@@ -3231,16 +3231,17 @@ def _compact_display_snapshot(detail: dict) -> dict:
     out=public_race(detail)
     detail=out
     active_marks={}
-    if out.get("predictionStatus")=="provisional":
+    if out.get("predictionStatus")=="ready":
         active_marks={
             str(m.get("horseNumber")):m for m in (out.get("predictionMarks") or [])
             if isinstance(m,dict) and m.get("mark") in {"◎","○","▲","△","☆"}
         }
-    for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
-                "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
-                "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
-                "markMethod", "markEngineVersion", "predictionModelVersion"):
-        out.pop(key, None)
+    if out.get("predictionStatus") != "ready":
+        for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
+                    "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
+                    "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
+                    "markMethod", "markEngineVersion", "predictionModelVersion"):
+            out.pop(key, None)
     horses=[]
     for h in detail.get("horses",[]) or []:
         if not isinstance(h,dict):continue

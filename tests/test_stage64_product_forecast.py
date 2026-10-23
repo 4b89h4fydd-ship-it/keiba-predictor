@@ -6,6 +6,7 @@ from arvexq.forecast.engine import build_prediction
 from arvexq.forecast.marks import generate_marks
 from arvexq.forecast.publication import public_race
 from arvexq.forecast.tickets import generate_tickets
+from app import _compact_display_snapshot
 
 
 def race(circuit):
@@ -55,3 +56,11 @@ def test_started_or_result_race_never_gets_a_forecast():
     assert build_prediction(detail, now=datetime(2026, 10, 23, 13, 0, tzinfo=ZoneInfo("Asia/Tokyo"))) is None
     detail["result"] = {"finishers": [{"horseNumber": 1, "finish": 1}]}
     assert public_race(detail)["predictionStatus"] == "disabled"
+
+
+def test_api_compact_projection_keeps_ready_products_for_the_detail_ui():
+    compact = _compact_display_snapshot(race("中央"))
+    assert compact["predictionStatus"] == "ready"
+    assert compact["predictionModelVersion"] == "arvexq-stage64-product-v1"
+    assert compact["predictionMarks"]
+    assert compact["recommendedBets"]
