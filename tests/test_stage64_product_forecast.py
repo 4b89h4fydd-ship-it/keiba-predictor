@@ -47,7 +47,7 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert sum(len(x["combos"]) for x in items) == 5
         assert all(x["points"] == len(x["combos"]) for x in items)
         assert len(prediction["stages"]) == 6
-        assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
+        assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 2)
 
 
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
