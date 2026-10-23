@@ -131,6 +131,37 @@ def repair_reason(prepared: Any, existing: Any) -> str:
             return "career_history_missing_observations"
     return ""
 
+
+def retain_frozen_mass_context(prepared: dict[str, Any], existing: Any) -> dict[str, Any] | None:
+    """Keep exact previously frozen evidence on a history-only repair.
+
+    The canonical collector does not create predictions. Reuse a historical
+    forecast only when its original frozen matrix is the same matrix already
+    present in the proposed repair; otherwise leave the D1 original untouched.
+    """
+    snapshot = prepared.get("massFeatureSnapshot")
+    if not isinstance(snapshot, dict) or isinstance(prepared.get("preRacePrediction"), dict):
+        return prepared
+    if not isinstance(existing, dict):
+        return None
+    original_prediction = existing.get("preRacePrediction")
+    old_snapshot = existing.get("massFeatureSnapshot")
+    old_archive = existing.get("massFeatureArchive")
+    matching_hash = str(snapshot.get("featureHash") or "")
+    old_hash = (old_snapshot.get("featureHash") if isinstance(old_snapshot, dict)
+                else old_archive.get("featureHash") if isinstance(old_archive, dict) else None)
+    if (not isinstance(original_prediction, dict) or not matching_hash
+            or matching_hash != old_hash
+            or str(prepared.get("id")) != str(existing.get("id"))
+            or str(prepared.get("date")) != str(existing.get("date"))
+            or str(snapshot.get("raceId")) != str(prepared.get("id"))
+            or str(snapshot.get("date")) != str(prepared.get("date"))):
+        return None
+    # The prediction is a byte-for-byte saved original for transport integrity,
+    # not a freshly published model output.
+    return {**prepared, "preRacePrediction": original_prediction}
+
+
 MORNING_FIELDS = ("morningPickVersion", "morningPickFixedAt", "morningPickScope",
                   "morningSelected", "morningSelectedScore", "morningSpecial")
 
@@ -223,7 +254,11 @@ def main() -> int:
             if len(new_roster) < 2:
                 reasons.append({"race_id": rid, "reason": "source_missing_named_runners"})
                 continue
-            selected.append(detail)
+            preserved = retain_frozen_mass_context(detail, old)
+            if preserved is None:
+                reasons.append({"race_id": rid, "reason": "frozen_mass_context_not_verified"})
+                continue
+            selected.append(preserved)
             reasons.append({"race_id": rid, "reason": reason})
 
     meta = dict(prepared.get("meta") or {})
