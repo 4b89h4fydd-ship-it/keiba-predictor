@@ -474,6 +474,26 @@ def prepare(
     return 0
 
 
+
+def _attach_existing_stage64_products(detail: dict[str, Any]) -> dict[str, Any]:
+    """Publish Stage64 through the existing projection without touching stored facts.
+
+    Prefetch D1 payloads previously bypassed public_race, unlike HTTP snapshots.
+    Keep the original D1 record (including sealed pre-off archives and every
+    career observation); only attach the approved server-computed product fields.
+    A blocked/incomplete forecast must never become a synthetic prediction.
+    """
+    from arvexq.forecast.publication import public_race
+    published = public_race(detail)
+    if published.get("predictionStatus") != "ready":
+        return detail
+    result = copy.deepcopy(detail)
+    for key in ("predictionStatus", "predictionModelVersion", "prediction",
+                "predictionMarks", "recommendedBets"):
+        result[key] = copy.deepcopy(published[key])
+    return result
+
+
 def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> int:
     """Analyze D1 readback only, via the SAME diagnosis engine as before.
 
@@ -549,6 +569,20 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         except Exception as exc:
             analyzed[rid] = fact
             errors[rid] = f"{type(exc).__name__}: {exc}"
+    # The previous diagnosis-ready flag does not attest to Stage64 products.
+    # Attach only products actually computed from the read-back, pre-off facts.
+    from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
+    eligible = 0
+    products_ready = 0
+    for rid, detail in list(analyzed.items()):
+        if not may_create_prerace_prediction(detail):
+            continue
+        eligible += 1
+        published = _attach_existing_stage64_products(detail)
+        if published.get("predictionStatus") == "ready" and published.get("predictionMarks"):
+            analyzed[rid] = published
+            products_ready += 1
+    print("PERSISTED_D1_STAGE64_PRODUCTS", "preoff=", eligible, "ready=", products_ready)
     payload = {
         "summaries": rows,
         "details": [analyzed[str(r["id"])] for r in rows if str(r["id"]) in analyzed],
