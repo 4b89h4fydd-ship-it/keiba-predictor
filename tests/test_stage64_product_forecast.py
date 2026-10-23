@@ -181,3 +181,14 @@ def test_supplemental_race_analysis_uses_only_existing_evidence():
     assert unknown["trackBias"]["status"] == "unverified"
     assert unknown["oddsTimeline"]["status"] == "unverified"
     assert prediction["raceReading"]["expertFusionStatus"] == "methodology-only-no-expert-picks"
+
+ 
+def test_existing_marks_expose_race_reading_and_course_evidence():
+    detail = race("地方")
+    detail["horses"][0]["recentRaces"][0]["track"] = "大井"
+    prediction = build_prediction(detail, now=NOW)
+    first = next(row for row in generate_marks(prediction) if row["horseNumber"] == 1)
+    assert first["raceReason"] == "先手を確保して粘り込む展開"
+    assert first["predictedPosition"] == "逃げ"
+    assert first["observedEvidence"]["trackComparison"]["sameTrackRuns"] == 1
+    assert prediction["stages"]["marks"]["reasoning"][1]["supplementalEvidence"]
