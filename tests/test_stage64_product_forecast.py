@@ -88,7 +88,8 @@ def test_stage64_wager_marginals_are_from_existing_three_place_joint():
     assert abs(_score(probs, (1, 2), "馬単") - 0.4) < 1e-12
     assert abs(_score(probs, (2, 3), "ワイド") - 0.7) < 1e-12
     assert abs(_score(probs, (1, 2, 3), "3連複") - 0.4) < 1e-12
-    assert _score(probs, (3, 4), "馬連") == 0.0
+    assert abs(_score(probs, (3, 4), "馬連") - 0.2) < 1e-12
+    assert _score(probs, (1, 4), "馬連") == 0.0
 
 
 def test_pending_placeholder_is_not_confused_with_a_confirmed_result():
