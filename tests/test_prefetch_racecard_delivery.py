@@ -119,6 +119,29 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(len(merged["horses"][0]["recentRaces"]), 1)
         self.assertEqual(merged["preRaceBet"], incoming["preRaceBet"])
 
+    def test_horse_number_reassignment_never_mixes_past_runs(self) -> None:
+        original = race(self.id, (1, 2))
+        original["horses"][0]["allPastRuns"] = [{"date": "2026-09-01", "finish": 1}]
+        original["horses"][0]["careerArchive"] = {"encoding": "original-archive"}
+        incoming = race(self.id, (1, 2))
+        incoming["horses"][0]["name"] = "別の馬"
+        incoming["horses"][0]["allPastRuns"] = [{"date": "2026-09-02", "finish": 2}]
+        merged = prefetch._merge_detail(original, incoming)
+        first = merged["horses"][0]
+        self.assertEqual(first["name"], "別の馬")
+        self.assertEqual([r["date"] for r in first["allPastRuns"]], ["2026-09-02"])
+        self.assertNotIn("careerArchive", first)
+        self.assertEqual(original["horses"][0]["allPastRuns"][0]["date"], "2026-09-01")
+
+    def test_same_runner_keeps_observed_old_and_new_runs(self) -> None:
+        original = race(self.id, (1, 2))
+        original["horses"][0]["allPastRuns"] = [{"date": "2026-09-01", "finish": 1}]
+        incoming = race(self.id, (1, 2))
+        incoming["horses"][0]["recentRaces"] = [{"date": "2026-09-02", "finish": 2}]
+        merged = prefetch._merge_detail(original, incoming)
+        self.assertEqual([r["date"] for r in merged["horses"][0]["allPastRuns"]],
+                         ["2026-09-02", "2026-09-01"])
+
     def test_fully_observed_nar_6040_is_current_without_full_lifetime(self) -> None:
         from arvexq.prediction.observed_model import apply_nar_marks, MODEL_VERSION
         rows = []

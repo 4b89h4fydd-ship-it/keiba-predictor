@@ -1773,7 +1773,7 @@ def nar_race_detail(race_id: str) -> dict | None:
                 "jockeyStats":store.stats("jockey",e["jockey"],iso_date),"trainerStats":store.stats("trainer",e["trainer"],iso_date),
                 "jockeyProfile":store.role_profile("jockey",e["jockey"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
                 "trainerProfile":store.role_profile("trainer",e["trainer"],iso_date,track,int(race["distance"] or 0),race["condition"] or "不明"),
-                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5),
+                "prizeMoneyAtRace":store.prize_before(e["name"],iso_date),"recentRaces":store.recent_races(e["name"],iso_date,5,int(e["age"] or 0),e["sex"] or ""),
             })
         finishers=[]
         for e in entries:
@@ -1810,7 +1810,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
     try:
         ph=",".join("?" for _ in names)
         sql=f"""
-        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,
+        SELECT e.name,e.date,e.track,e.race_no,e.finish,e.time_seconds,e.corner_positions_json,e.age,e.sex,
                e.carried_weight,e.jockey,e.trainer,
                r.title,r.distance,r.weather,r.condition,r.field_size,r.prize1
         FROM entries e
@@ -1829,7 +1829,10 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
         if arr is None:continue
         try:cp=json.loads(row["corner_positions_json"] or "[]")
         except Exception:cp=[]
-        arr.append({
+        # The source's race-date age is a birth-year proxy, not a unique ID.
+        # Use it and observed sex to reject obvious same-name collisions.
+        src_birth=int(str(row["date"])[:4])-int(row["age"] or 0) if int(row["age"] or 0)>0 else None
+        arr.append(({
             "date":row["date"],"track":row["track"],"raceNumber":int(row["race_no"] or 0),
             "raceId":f"nar-{row['date']}-{row['track']}-{int(row['race_no'] or 0):02d}",
             "title":row["title"] or f"{int(row['race_no'] or 0)}R",
@@ -1840,7 +1843,7 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             "carriedWeight":float(row["carried_weight"] or 0),
             "jockey":row["jockey"] or "","trainer":row["trainer"] or "",
             "source":"NAR公式ローカル履歴",
-        })
+        },src_birth,str(row["sex"] or "").strip()))
     from arvexq.ingest.full_career import merge_career
     from arvexq.ingest.career_transport import recover_horse
     for h in horses:
@@ -1855,7 +1858,26 @@ def _nar_attach_recent_batch(detail: dict, limit: int = 5) -> dict:
             previous=h
             h.setdefault("careerHistoryWarnings",[]).append("archive-recovery:"+type(exc).__name__)
         old_runs=[*(previous.get("allPastRuns") or []),*(previous.get("recentRaces") or [])]
-        full=merge_career(old_runs,grouped.get(str(h.get("name") or ""),[]),cutoff)
+        candidate_runs=grouped.get(str(h.get("name") or ""),[])
+        try:
+            age=int(h.get("age") or 0)
+        except (TypeError,ValueError):
+            age=0
+        target_birth=int(cutoff[:4])-age if age>0 and cutoff[:4].isdigit() else None
+        target_sex=str(h.get("sex") or "").strip()
+        known_births={birth for _,birth,_ in candidate_runs if birth}
+        # If the runner lacks an age, mixed birth years cannot be resolved.
+        # Keep the previously verified/archived evidence; reject ambiguous
+        # newly fetched name-only rows instead of grafting a different horse.
+        if target_birth is None and len(known_births)>1:
+            new_runs=[]
+            h.setdefault("careerHistoryWarnings",[]).append("nar-name-birth-year-ambiguous")
+        else:
+            new_runs=[run for run,birth,sex in candidate_runs
+                      if (target_birth is None or birth is None or birth==target_birth)
+                      and (not target_sex or not sex or sex==target_sex)
+                      and (birth is not None or len(known_births)<=1)]
+        full=merge_career(old_runs,new_runs,cutoff)
         h["allPastRuns"]=full
         h["recentRaces"]=full[:max(1,int(limit))]
         # Do not change _careerHistoryAudit.complete: an observed list alone
@@ -2285,8 +2307,21 @@ from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_ne
 
 
 def _netkeiba_current_result(detail:dict)->dict|None:
-    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
-    if not rid:return None
+    # The same existing result endpoint also serves the established NAR fallback.
+    # Resolve race identity through the correct circuit; JRA's program resolver
+    # never discovers NAR races and silently skipped missing NAR result rows.
+    rid=str(detail.get("netkeibaRaceId") or "")
+    if not rid:
+        date=str(detail.get("date") or "")
+        track=str(detail.get("track") or "")
+        race_no=int(detail.get("raceNumber") or 0)
+        if str(detail.get("id") or "").startswith("nar-") or str(detail.get("circuit") or "") in ("NAR","地方"):
+            rid=_nar_netkeiba_race_id(date,track,race_no)
+        else:
+            rid=_netkeiba_race_id(date,track,race_no)
+    if not rid:
+        print("NETKEIBA_RESULT_ID_UNAVAILABLE",detail.get("id"),detail.get("track"),detail.get("raceNumber"))
+        return None
     try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
     except Exception as exc:
         print("netkeiba result failed",rid,exc);return None
@@ -2831,6 +2866,13 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
         with _detail_cache_lock:_detail_cache.pop(race_id,None)
     threading.Thread(target=worker,daemon=True).start();return _enrichment_status(race_id)
 
+def _verified_debut_no_history(horse:dict,detail:dict)->bool:
+    if detail.get("analysisMode")!="新馬":
+        return False
+    from arvexq.career_missing import build_career_analysis
+    return build_career_analysis(horse,detail).get("career_state")=="complete-no-starts"
+
+
 def _apply_enrichment(race_id:str,detail:dict)->dict:
     with _enrich_data_lock:data=_enrich_data.get(race_id)
     if data:_merge_enrichment(detail,data)
@@ -2838,9 +2880,11 @@ def _apply_enrichment(race_id:str,detail:dict)->dict:
     title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
     mode="障害" if (surface=="障害" or "障害" in title or re.search(r"(?:J[･・.]?G[ⅠⅡⅢ123]|\\bJS\\b|ジャンプ)",title,re.I)) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
     detail["analysisMode"]=mode
-    if mode=="新馬":
-        for h in detail.get("horses",[]) or []:
-            if not (h.get("recentRaces") or []):h["debutNoHistory"]=True
+    for h in detail.get("horses",[]) or []:
+        if _verified_debut_no_history(h,detail):
+            h["debutNoHistory"]=True
+        else:
+            h.pop("debutNoHistory",None)
     return detail
 
 
@@ -4010,7 +4054,10 @@ def _precompute_detail_metrics(detail: dict) -> dict:
     except Exception:detail["trackSpeed"]={"version":"track-speed-v300","score":0.5,"ratio":1.0,"evidence":0.0,"completed":0,"label":"基準","source":"fallback"}
     for horse in detail.get("horses",[]) or []:
         runs=horse.get("allPastRuns") or horse.get("recentRaces") or []
-        if detail.get("analysisMode")=="新馬" and not runs:horse["debutNoHistory"]=True
+        if _verified_debut_no_history(horse,detail):
+            horse["debutNoHistory"]=True
+        else:
+            horse.pop("debutNoHistory",None)
         horse["collectionState"]={"status":"complete" if runs or horse.get("debutNoHistory") else "basic" if horse.get("name") else "missing", "history":"not_applicable" if horse.get("debutNoHistory") and not runs else "available" if runs else "missing", "pastRunCount":len(runs)}
         metric_horse=dict(horse,recentRaces=[r for r in runs if _is_jump_run(r)]) if detail.get("analysisMode")=="障害" else dict(horse,recentRaces=runs)
         try:
@@ -4514,6 +4561,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
     ]
     known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name")}
     last_err=""
+    source_reasons=[]
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
@@ -4524,11 +4572,17 @@ def _nar_official_result_fast(detail:dict)->dict|None:
             with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","4.0"))) as res:
                 html=_jra_decode(res.read())
         except Exception as exc:
-            last_err=str(exc);continue
-        if not html:continue
+            last_err=str(exc)
+            source_reasons.append("fetch_error:"+type(exc).__name__)
+            continue
+        if not html:
+            source_reasons.append("empty_html")
+            continue
         soup=BeautifulSoup(html,"html.parser")
         full=_clean(soup.get_text(" ",strip=True))
-        if "競走成績" not in full and "着順" not in full:continue
+        if "競走成績" not in full and "着順" not in full:
+            source_reasons.append("result_marker_missing")
+            continue
         wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
         cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
         finishers=[]
@@ -4618,7 +4672,9 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
         # Do not call a partial page final until at least the podium is visible.
         classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
-        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
+        if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:
+            source_reasons.append("podium_incomplete" if classified else "result_table_unrecognized")
+            continue
         payouts=_parse_payouts(soup)
         explicit_final=official_confirmed(full)
         out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
@@ -4626,7 +4682,8 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         if cm:out["condition"]=_env_clean_condition(cm.group(1))
         out["sourceUrl"]=url
         return out
-    if last_err:print("NAR official result unavailable",detail.get("id"),last_err)
+    print("NAR_RESULT_UNRESOLVED",detail.get("id"),"reasons="+",".join(source_reasons or ["not_parsed"]),
+          "last_fetch_error="+last_err[:100] if last_err else "")
     return None
 
 

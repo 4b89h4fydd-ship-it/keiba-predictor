@@ -100,8 +100,9 @@ class FetchTests(unittest.TestCase):
         get = fake_site(search_list(("2023100001", "テスト"), ("2019100009", "テスト")),
                         {"2023100001": (listing_html(ROWS), top_html(4)),
                          "2019100009": (listing_html(ROWS), top_html(4))})
-        out = nk.fetch_verified_career(get, {"name": "テスト", "age": "4"}, RACE)
+        out = nk.fetch_verified_career(get, {"name": "テスト", "age": "3"}, RACE)
         self.assertEqual(out["careerStartEvidence"]["sourceHorseId"], "2023100001")
+        self.assertEqual(nk.fetch_verified_career(get, {"name": "テスト", "age": "4"}, RACE), {})
 
     def test_known_run_absent_from_source_is_not_evidence(self):
         get = fake_site(horse_page("2022100001"), {"2022100001": (listing_html(ROWS), top_html(4))})
