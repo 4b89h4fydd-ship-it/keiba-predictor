@@ -20,7 +20,24 @@ def parse_weight_cell(value):
     return weight, change
 
 
-def extract(values, row_text, weight_index, change_index):
+def extract(values, row_text, weight_index, change_index, *, banei=False):
+    # Banei horses may weigh over 1,000 kg; read only the labelled body
+    # weight column to avoid treating the separate 600 kg load as body mass.
+    if banei:
+        if not 0 <= weight_index < len(values):
+            return None, None
+        cell = str(values[weight_index]).strip()
+        match = re.fullmatch(
+            r"(\d{3,4})(?:\s*kg)?(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",
+            cell, re.I,
+        )
+        if not match:
+            return None, None
+        value = int(match.group(1))
+        if not 700 <= value <= 1500:
+            return None, None
+        change = int(match.group(2)) if match.group(2) is not None else from_separate_column(values, change_index)
+        return value, change
     weight = change = None
     if 0 <= weight_index < len(values):
         weight, change = parse_weight_cell(values[weight_index])
