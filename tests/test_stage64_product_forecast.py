@@ -130,3 +130,24 @@ def test_recommended_tickets_rank_across_wager_types_not_five_per_kind():
     actual = [(kind, tuple(combo)) for bet in bets for kind in [bet["kind"]]
               for combo in bet["combos"]]
     assert sorted(actual) == sorted((kind, combo) for _, kind, combo in expected)
+
+
+def test_race_reading_uses_runner_relations_without_fake_expert_votes():
+    detail = race("地方")
+    prediction = build_prediction(detail, now=NOW)
+    reading = prediction["raceReading"]
+    assert reading["expertFusionStatus"] == "unverified-no-expert-observations"
+    assert reading["raceSituation"] == "単騎逃げ・先行負荷軽め"
+    assert len(prediction["stages"]["pace"]["value"]) == 2
+    assert reading["horses"][1]["predictedPosition"] == "逃げ"
+    assert reading["horses"][1]["winningScenario"] == "先手を確保して粘り込む展開"
+    assert prediction["stages"]["marks"]["reasoning"][1]["winScenario"]
+    assert prediction["stages"]["tickets"]["constructionRule"]
+
+
+def test_race_reading_does_not_cross_jra_nar_baselines():
+    central = build_prediction(race("中央"), now=NOW)
+    local = build_prediction(race("地方"), now=NOW)
+    assert len(central["stages"]["pace"]["value"]) == 1
+    assert len(local["stages"]["pace"]["value"]) == 2
+    assert central["raceReading"]["raceSituation"] != local["raceReading"]["raceSituation"]
