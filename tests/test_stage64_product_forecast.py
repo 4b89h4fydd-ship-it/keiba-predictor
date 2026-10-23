@@ -237,3 +237,21 @@ def test_server_seal_does_not_backfill_after_post_or_missing_stage64_evidence():
     detail["horses"][0]["recentRaces"] = []
     assert prepare_seal(detail, now=NOW)["status"] == "incomplete-prediction"
     assert "preRacePrediction" not in detail
+
+
+def test_stage64_seal_transport_retains_integer_probability_keys_losslessly():
+    import json
+    from scripts.arvexq_freeze_predictions import prepare_seal, encode_sealed_d1_sync_detail
+    from arvexq.ingest.full_snapshot_codec import unpack_detail
+    detail = race("地方")
+    for i, horse in enumerate(detail["horses"], 1):
+        horse["name"] = f"H{i}"
+    sealed = prepare_seal(detail, now=NOW)
+    assert sealed["status"] == "sealed"
+    source = sealed["detail"]
+    packed = encode_sealed_d1_sync_detail(source)
+    restored = unpack_detail(packed)
+    assert restored == json.loads(json.dumps(source, ensure_ascii=False))
+    assert restored["predictionMarks"] == source["predictionMarks"]
+    assert restored["recommendedBets"] == source["recommendedBets"]
+    assert restored["preRacePrediction"] == source["preRacePrediction"]
