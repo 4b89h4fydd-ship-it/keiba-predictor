@@ -773,7 +773,16 @@ function savedRevisionOriginalHtml(r){
 }
 function predict(r){
   // No assistant-created historical/reference forecast is allowed to be shown.
-  return window.ARVEXQProductionPrediction.build(r);
+  var p=window.ARVEXQProductionPrediction.build(r);
+  if(!p||!Array.isArray(p.rows))return p;
+  // Preserve the approved horse detail layout while recovering missing AI rows.
+  // A row without model evidence carries facts only, never a fabricated score.
+  (r.horses||[]).forEach(function(h){
+    if(!h||!n(h.horseNumber,0)||p.rows.some(function(x){return n(x.horse&&x.horse.horseNumber)===n(h.horseNumber)}))return;
+    p.rows.push({horse:h,overallGrade:'',predMark:'',threeFactorCoverage:0,
+      finishEvidence:{holdWins:'—',holdSamples:'—',closingWins:'—',closingSamples:'—'}})
+  });
+  return p;
 }
 
 function nextRace(){var a=state.races.filter(function(r){return r.circuit===state.circuit&&!isFinal(r)&&r.startTime});a.sort(function(x,y){var ax=mins(x.startTime),ay=mins(y.startTime),now=nowMins(),kx=ax>=now?ax:ax+1440,ky=ay>=now?ay:ay+1440;return kx-ky});return a.length?a[0]:null}
@@ -2436,14 +2445,7 @@ function raceSubpageTopBar(r,title){
     +'</header>'
 }
 function horseDetailPage(r,p){
-  var rows=sortedHorseRows(p.rows||[]),no=n(state.detailHorseNo,0);
-  // A missing AI row must never hide a horse already present on the racecard.
-  (r.horses||[]).forEach(function(h){
-    if(!h||!n(h.horseNumber,0)||rows.some(function(z){return n(z.horse&&z.horse.horseNumber)===n(h.horseNumber)}))return;
-    rows.push({horse:h,overallGrade:'',threeFactorCoverage:0,finishEvidence:{holdWins:0,holdSamples:0,closingWins:0,closingSamples:0}})
-  });
-  rows=sortedHorseRows(rows);
-  var idx=rows.findIndex(function(z){return n(z.horse&&z.horse.horseNumber)===no});
+  var rows=sortedHorseRows(p.rows||[]),no=n(state.detailHorseNo,0),idx=rows.findIndex(function(z){return n(z.horse&&z.horse.horseNumber)===no});
   if(idx<0&&rows.length){idx=0;state.detailHorseNo=n(rows[0].horse.horseNumber)}
   var x=idx>=0?rows[idx]:null,h=x&&x.horse||null,title=h?horseDisplayName(r,h):'馬詳細';
   return '<div class="smart-shell horse-detail-page-shell">'
