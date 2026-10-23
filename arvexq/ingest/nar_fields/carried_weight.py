@@ -5,10 +5,10 @@ import re
 def extract(values, index, *, banei=False):
     if not 0 <= index < len(values):
         return None
-    cell = str(cell).strip()
+    cell = str(values[index]).strip()
     if banei:
         # Only parse an explicit three-digit weight from the official column.
-        match = re.fullmatch(r"(\\d{3})(?:\\.0)?\\s*(?:kg|㎏)?", cell, re.IGNORECASE)
+        match = re.fullmatch(r"(\d{3})(?:\.0)?\s*(?:kg|㎏)?", cell, re.IGNORECASE)
         if not match:
             return None
         observed = int(match.group(1))
