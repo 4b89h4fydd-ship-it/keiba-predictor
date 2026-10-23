@@ -13,7 +13,10 @@
       ?'<p class="muted">Stage64発走前の展開仮説（確率・補正は未校正）です。</p>'
       :'<p class="muted">このレースの学習済み予想印は未取得です。確認できない印は生成しません。</p>';
     var text=String(live&&live.forecastText||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});
-    var pace=live&&Array.isArray(live.pace)?live.pace:[], paceText=pace.length?'展開予想：'+pace.map(function(x){return String(x.horseNumber)+'番 '+(Number(x.delta)>=0?'前有利':'差し有利')}).join('／'):'';
+    var pace=live&&Array.isArray(live.pace)?live.pace:[], paceText=pace.length?'展開仮説：'+pace.map(function(x){
+      var delta=Number(x.delta);
+      return '仮説'+String(x.scenarioIndex)+' '+String(x.horseNumber)+'番 補正'+(delta>0?'+':'')+delta.toFixed(3);
+    }).join('／'):'';
     if(paceText)text=paceText+(text?'。'+text:'');
     var prose=text?'<p class="forecast-text">'+text+'</p>':'';
     var scenarios=live&&live.scenarios||[];
