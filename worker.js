@@ -1,3 +1,5 @@
+import {restoreDisplaySnapshot} from './racecard.js';
+import {stage64Archive, retainStage64Archive} from './preoff-persistence.js';
 import {needsHistoryPreservation, mergeStoredHorseHistory} from './history-preservation.js';
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -709,9 +711,22 @@ if (path === "/api/day") {
 
           const savedHorses = previousHorsesByRace.get(raceId);
           if (savedHorses) payloadObject = mergeStoredHorseHistory(payloadObject,savedHorses);
-          const payloadText = savedHorses
-            ? JSON.stringify(payloadObject)
-            : (typeof row.payload === "string" ? row.payload : JSON.stringify(payloadObject));
+          // A post-race result/odds refresh must not overwrite the original
+          // pre-off Stage64 bets. The full snapshot stays byte-for-byte intact;
+          // the verified sidecar is stored only in the existing D1 detail row.
+          const beforeRow = await env.DB.prepare(
+            "SELECT payload FROM race_details WHERE race_id = ? LIMIT 1"
+          ).bind(raceId).first();
+          const before = safeJson(beforeRow?.payload);
+          let newOriginal = null;
+          try { newOriginal = stage64Archive(await restoreDisplaySnapshot(payloadObject)); }
+          catch { /* never infer a forecast from damaged or absent evidence */ }
+          if (!newOriginal && before) {
+            try { newOriginal = stage64Archive(await restoreDisplaySnapshot(before)); }
+            catch { /* an older verified sidecar may still be retained */ }
+          }
+          payloadObject = retainStage64Archive(payloadObject,before,newOriginal);
+          const payloadText = JSON.stringify(payloadObject);
 
           detailStatements.push(
             env.DB.prepare(`

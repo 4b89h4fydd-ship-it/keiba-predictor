@@ -7,13 +7,13 @@ export const RETIRED_KEYS = new Set([
   'winnerLearningProfile','betRecommendations','recommendedBets','tickets','buyList','bets',
   'markMethod','markEngineVersion','predictionModelVersion','mark','predMark','印',
   'honmeiRole','modelProbabilities','forecastRevisions','currentForecastRevisionId',
-  'morningMarkSnapshot','officialMarkRevisions','modelMarkRevisions','savedForecastRevision',
+  'preoffStage64Archive','morningMarkSnapshot','officialMarkRevisions','modelMarkRevisions','savedForecastRevision',
   '_savedPreoffOriginal','legacyPredictionAudit','preRaceAudit','observedModelCoverage'
 ]);
 
 // Keep only previously computed, race-bound Stage64 products. Do not recompute
 // predictions, revive retired models, or promote incomplete saved candidate marks.
-function authorizedStage64(race) {
+export function authorizedStage64(race) {
   const p = race.prediction;
   if (race.predictionStatus !== 'ready' || !p ||
       p.predictionStatus !== 'ready' || p.productionEligible !== true ||
