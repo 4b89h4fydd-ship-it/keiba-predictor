@@ -27,6 +27,14 @@ def race(circuit):
 NOW = datetime(2026, 10, 23, 10, 0, tzinfo=ZoneInfo("Asia/Tokyo"))
 
 
+def with_preoff_clock(fn, detail):
+    """Keep the October 23 start-date contract independent of CI wall-clock."""
+    with patch("arvexq.forecast.engine.datetime") as clock:
+        clock.now.return_value = NOW
+        clock.fromisoformat.side_effect = datetime.fromisoformat
+        return fn(detail)
+
+
 def test_jra_and_nar_are_separate_and_publish_all_six_products():
     for circuit in ("中央", "地方"):
         prediction = build_prediction(race(circuit), now=NOW)
