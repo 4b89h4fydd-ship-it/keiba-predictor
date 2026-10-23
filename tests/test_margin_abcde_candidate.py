@@ -26,5 +26,27 @@ class MarginABCDETests(unittest.TestCase):
         self.assertGreater(near["score"], far["score"])
         self.assertIn("E",near["missing"])
 
+    def test_passing_positions_are_used_without_new_source(self):
+        run = {"marginSeconds": 0.2, "finish": 2, "fieldSize": 10,
+               "distance": 1400, "track": "園田", "surface": "ダート",
+               "passing": [7, 2]}
+        with patch("arvexq.research.margin_abcde_candidate.observed_runs",
+                   return_value=[run]):
+            result = score({}, {"distance": 1400, "track": "園田",
+                                "surface": "ダート"})
+        self.assertIsNotNone(result["factors"]["D"])
+        self.assertGreater(result["factors"]["D"], 0.5)
+
+    def test_impossible_finish_not_used_as_opponent_or_suitability(self):
+        run = {"marginSeconds": 0.4, "finish": 15, "fieldSize": 10,
+               "opponentLevel": 0.8, "distance": 1400,
+               "track": "園田", "surface": "ダート"}
+        with patch("arvexq.research.margin_abcde_candidate.observed_runs",
+                   return_value=[run]):
+            result = score({}, {"distance": 1400, "track": "園田",
+                                "surface": "ダート"})
+        self.assertIsNone(result["factors"]["B"])
+        self.assertIsNone(result["factors"]["C"])
+
 if __name__ == "__main__":
     unittest.main()
