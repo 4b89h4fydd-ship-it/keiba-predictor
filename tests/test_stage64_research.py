@@ -77,10 +77,14 @@ class Pipeline(unittest.TestCase):
     def test_circuit_isolation(self):
         with self.assertRaises(ValueError):predict(race("jra"),expected_circuit="nar")
 
-    def test_no_jra_tactical_weight_transfer(self):
-        p=predict(race("jra"),expected_circuit="jra")
-        self.assertEqual(len(p["stages"]["pace"]["value"]),1)
-        self.assertEqual(len(predict(race(),expected_circuit="nar")["stages"]["pace"]["value"]),4)
+    def test_both_circuits_use_separate_positional_scenarios(self):
+        jra=predict(race("jra"),expected_circuit="jra")
+        nar=predict(race(),expected_circuit="nar")
+        self.assertEqual(len(jra["stages"]["pace"]["value"]),4)
+        self.assertEqual(len(nar["stages"]["pace"]["value"]),4)
+        self.assertNotEqual(jra["modelVersion"],nar["modelVersion"])
+        self.assertEqual(jra["circuit"],"jra")
+        self.assertEqual(nar["circuit"],"nar")
 
     def test_status_only_scratch(self):
         r=race();r["horses"][0]["status"]="競走除外"
