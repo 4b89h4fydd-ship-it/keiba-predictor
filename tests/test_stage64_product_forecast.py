@@ -165,6 +165,7 @@ def test_handicapping_methods_have_observed_evidence_and_no_fabricated_votes():
 
 def test_supplemental_race_analysis_uses_only_existing_evidence():
     detail = race("地方")
+    detail["horses"][0]["jockey"] = "騎手C"
     detail["horses"][0]["recentRaces"] = [
         {"date": "2026-10-15", "finish": 1, "fieldSize": 5,
          "passing": [1], "track": "大井", "first3F": 36.4, "jockey": "騎手A"},
@@ -177,6 +178,7 @@ def test_supplemental_race_analysis_uses_only_existing_evidence():
     assert observed["pastPaceEvidence"]["observedFirst3F"] == [36.4, 37.1]
     assert observed["trackComparison"]["sameTrackRuns"] == 2
     assert observed["jockeyChangeEvidence"]["status"] == "changed"
+    assert unknown["jockeyChangeEvidence"]["status"] == "unknown"
     assert unknown["pastPaceEvidence"]["status"] == "missing"
     assert unknown["trackBias"]["status"] == "unverified"
     assert unknown["oddsTimeline"]["status"] == "unverified"
