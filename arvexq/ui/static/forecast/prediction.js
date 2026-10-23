@@ -89,7 +89,8 @@
             paceRows.push({scenarioIndex:index+1,horseNumber:no,delta:delta});
         });
       });
-      last={active:marks.length>0,source:'stage64-preoff',scenarios:[],pace:paceRows,forecastText:'',
+      last={active:marks.length>0,source:'stage64-preoff',scenarios:[],pace:paceRows,
+        forecastText:String(server.forecastText||''),
         modelVersion:server.modelVersion||'',uncalibrated:!(stage.probability&&stage.probability.calibrationVerified===true),unavailable:!marks.length,
         marks:marks.map(function(x){var h=race.horses.find(function(y){return Number(y.horseNumber)===Number(x.horseNumber)})||{};return {horseNumber:Number(x.horseNumber),name:String(h.name||''),mark:String(x.mark||'')}})};
       return {rows:rows,legacyEngineDisabled:false,scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:1};
