@@ -1,8 +1,8 @@
 """Six independent shadow stages from saved observations through candidate bets."""
 from copy import deepcopy
+from math import isfinite
 from arvexq.research.stage63.ability import prior_runs, score_field
 from arvexq.research.stage63.running_style import style_field
-from arvexq.research.stage63.pace import adjustments
 from arvexq.research.stage63.probability import distribution
 from .circuits import CONFIGS, circuit, discipline, active as is_active
 from .marks import roles
@@ -67,9 +67,38 @@ def predict(race, *, expected_circuit, ability_method=None):
     # Conservative full-field evidence gate remains shared by all candidates.
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
-    deltas=adjustments(style,config["pace"])
+    # Replacement: Mineta-inspired positional race dynamics, not the old
+    # independent four fixed pace adjustments. Data must be known pre-off.
+    # Training weights/scenario occurrence rates have NOT been calibrated.
+    positional = {no: tuple(vals) for no, vals in style.items()}
+    front = {no: vals[0] + 0.5 * vals[1] for no, vals in positional.items()}
+    pursuit = {no: vals[2] + vals[3] for no, vals in positional.items()}
+    pressure = sum(front.values())
+    competition = max(0.0, pressure - 1.0)
+    # A contested lead affects all front-runners; late movers can benefit.
+    neutral = {no: 0.0 for no in positional}
+    contested = {no: 0.18 * competition * (pursuit[no] - front[no])
+                 for no in positional}
+    easy_lead = {no: 0.16 * front[no] / max(1.0, pressure)
+                 - 0.08 * pursuit[no] for no in positional}
+    closer_friendly = {no: 0.12 * pursuit[no] - 0.06 * front[no]
+                       for no in positional}
+    deltas = [neutral, contested, easy_lead, closer_friendly]
+    result["paceEvidence"] = {
+        "frontPressure": pressure,
+        "frontCompetition": competition,
+        "source": "preoff-prior-corner-positions",
+        "scenarioOccurrenceCalibrated": False,
+        "expertMethod": "mineta-public-position-and-pace-principles",
+        "otherExpertFeaturesVerified": False,
+        "aiEnsembleTrained": False,
+    }
     stages["pace"]={"status":"research-hypotheses-not-calibrated","value":deltas,
-                    "scenarioWeightsVerified":False}
+                    "scenarioWeightsVerified":False,
+                    "frontCompetition":competition,
+                    "model":"mineta-position-competition-rewrite"}
+    # The six stages are one causal chain. Keep expert corroboration separate
+    # until track/pedigree/training evidence is verified and backtested.
     probs=distribution(ability,deltas,config["temperature"])
     podium={no:sum(p for combo,p in probs["trifecta"].items() if no in combo)
             for no in ability}
