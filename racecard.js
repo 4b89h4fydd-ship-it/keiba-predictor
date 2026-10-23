@@ -67,6 +67,53 @@ export const DISPLAY_SQL = `SELECT
   json_remove(payload, '$.massFeatureSnapshot') AS payload,
   analysis_ready, updated_at
   FROM race_details WHERE race_id = ? AND json_valid(payload) = 1 LIMIT 1`;
+// Restore the existing lossless full-snapshot envelope for the display-only read.
+// The D1 original and the legacy/raw API retain their existing packed shape.
+export async function restoreDisplaySnapshot(detail) {
+  const envelope = detail?.arvexqFullPayload;
+  if (!envelope) return detail;
+  const expectedBytes = Number(envelope.bytes);
+  if (envelope.version !== 'arvexq-full-payload-v1' ||
+      !Number.isInteger(expectedBytes) || expectedBytes <= 0 ||
+      expectedBytes > 100_000_000 ||
+      !/^[0-9a-f]{64}$/.test(String(envelope.sha256 || '')) ||
+      typeof envelope.gzipBase64 !== 'string' ||
+      !/^[A-Za-z0-9+/]*={0,2}$/.test(envelope.gzipBase64)) {
+    throw new Error('invalid full snapshot envelope');
+  }
+  const compressed = Uint8Array.from(atob(envelope.gzipBase64), c => c.charCodeAt(0));
+  const reader = new Blob([compressed]).stream()
+    .pipeThrough(new DecompressionStream('gzip')).getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const {value, done} = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > expectedBytes) throw new Error('full snapshot exceeds declared size');
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  if (total !== expectedBytes) throw new Error('full snapshot size mismatch');
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  const actualSha = Array.from(digest, b => b.toString(16).padStart(2, '0')).join('');
+  if (actualSha !== envelope.sha256) throw new Error('full snapshot digest mismatch');
+  const restored = JSON.parse(new TextDecoder('utf-8', {fatal:true}).decode(bytes));
+  if (!restored || typeof restored !== 'object' || Array.isArray(restored) ||
+      restored.id !== detail.id || !Array.isArray(restored.horses)) {
+    throw new Error('full snapshot race identity mismatch');
+  }
+  // Match the prior display projection; the large frozen feature archive stays in D1.
+  delete restored.massFeatureSnapshot;
+  return restored;
+}
+
 export async function readRaceDisplay(env, raceId) {
   const response = (body, status = 200) => new Response(JSON.stringify(body), {
     status, headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store'}
@@ -75,7 +122,7 @@ export async function readRaceDisplay(env, raceId) {
   try {
     const row = await env.DB.prepare(DISPLAY_SQL).bind(raceId).first();
     if (!row) return response({ok:false,error:'race not found',race_id:raceId},404);
-    const detail = JSON.parse(row.payload);
+    const detail = await restoreDisplaySnapshot(JSON.parse(row.payload));
     let odds = [];
     try {
       const result = await env.DB.prepare(`SELECT horse_no, win_odds, popularity,
