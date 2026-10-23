@@ -66,10 +66,12 @@ def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
             if not horse_number:
                 continue
 
-            weight, change = observed_body_weight(values, row_text, body_weight_idx, change_idx)
+            is_banei = (detail.get("track") == "帯広ば" or detail.get("analysisMode") == "ばんえい")
+            weight, change = observed_body_weight(
+                values, row_text, body_weight_idx, change_idx, banei=is_banei,
+            )
             carried = observed_carried_weight(
-                values, carried_weight_idx,
-                banei=(detail.get("track") == "帯広ば" or detail.get("analysisMode") == "ばんえい"),
+                values, carried_weight_idx, banei=is_banei,
             )
 
             if not weight and carried is None:
