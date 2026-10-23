@@ -222,6 +222,23 @@ class Scoring(unittest.TestCase):
         self.assertEqual(m["roiPct"],200.)
         self.assertFalse(report["independentlyVerifiedPreoff"])
 
+    def test_target_rates_are_axis_podium_not_trifecta(self):
+        from arvexq.research.stage64.evaluation import summarize
+        rows = [{"raceId": str(i), "date": "2026-10-20", "scored": True,
+                 "stakeYen": 500, "returnYen": 500,
+                 "logloss": None, "brier": None,
+                 "trifectaHit": False, "winnerTop1": False,
+                 "winnerTop3": False, "axisTop3Hit": i < 4}
+                for i in range(5)]
+        report = summarize(rows)
+        self.assertEqual(report["axisTop3Rate"], 0.8)
+        self.assertTrue(report["target80Observed"])
+        self.assertFalse(report["target90Observed"])
+        self.assertFalse(report["trifectaTarget80Observed"])
+        self.assertTrue(report["returnTarget100Observed"])
+        rows[0]["returnYen"] = None
+        self.assertIsNone(summarize(rows)["returnTarget100Observed"])
+
     def test_missing_payout_unknown_roi(self):
         self.results[0]["payouts"][0]["amount"]=None
         m=evaluate(self.batch,self.results)["byCircuit"]["nar"]["baseline"]
