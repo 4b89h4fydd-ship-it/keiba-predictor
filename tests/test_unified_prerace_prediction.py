@@ -31,7 +31,9 @@ class UnifiedScheduledPredictionTests(TestCase):
             with self.subTest(circuit=circuit):
                 detail=complete_fixture(circuit);original=deepcopy(detail)
                 with patch('app._prediction_clock_state',return_value=('pre',20)):
-                    result=prepare_seal(detail,now=datetime.now(JST))
+                    result=prepare_seal(detail, now=datetime.now(JST),
+                        assign=__import__('arvexq.prediction.final_marks', fromlist=['apply_core_marks']).apply_core_marks,
+                        build=__import__('app')._build_prerace_prediction)
                 self.assertEqual(result['status'],'incomplete-prediction',result)
                 self.assertEqual(result['predictionStatus'],'disabled')
                 self.assertEqual(detail,original)
@@ -47,7 +49,9 @@ class UnifiedScheduledPredictionTests(TestCase):
                     else:
                         run.pop("marginEvidence", None)
                 with patch("app._prediction_clock_state", return_value=("pre", 20)):
-                    result = prepare_seal(detail, now=datetime.now(JST))
+                    result = prepare_seal(detail, now=datetime.now(JST),
+                        assign=__import__('arvexq.prediction.final_marks', fromlist=['apply_core_marks']).apply_core_marks,
+                        build=__import__('app')._build_prerace_prediction)
                 self.assertEqual(result["status"], "incomplete-prediction", result)
                 self.assertFalse(detail.get("preRacePrediction"))
 
