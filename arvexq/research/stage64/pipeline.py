@@ -11,7 +11,6 @@ from .tickets import select
 
 def _qualitative_reading(histories, styles, horses):
     """Evidence-led race reading; never invent observations or expert opinions."""
-    by_no = {h["horseNumber"]: h for h in horses}
     reading = {}
     for no, runs in histories.items():
         observed = [r for r in runs if isinstance(r.get("finish"), (int, float))
@@ -128,8 +127,25 @@ def predict(race, *, expected_circuit, ability_method=None):
     stages["ability"]["raceReading"]={no: reading[no]["pastRunReading"] for no in reading}
     stages["runningStyle"]["positions"]={no: reading[no]["predictedPosition"] for no in reading}
     deltas=adjustments(style,config["pace"])
+    # Select among the EXISTING tactical scenarios using opposing runners.
+    # Do not fabricate outside experts or assign unvalidated scenario likelihoods.
+    front=sum(style[n][0]+style[n][1] for n in style)
+    leaders=sum(1 for n in reading if reading[n]["predictedPosition"]=="逃げ")
+    if len(deltas)>1:
+        if leaders==1 and front<=2:
+            situation="単騎逃げ・先行負荷軽め"
+            deltas=[deltas[0],deltas[2]]
+        elif front>=3:
+            situation="先行圧力高め"
+            deltas=[deltas[0],deltas[1],deltas[3]]
+        else:
+            situation="隊列不確定・複数展開"
+    else:
+        situation="既存中央中立設定・展開補正未適用"
+    result["raceReading"]["raceSituation"]=situation
+    result["raceReading"]["scenarioSelection"]="出走馬の過去位置取りの相互関係で既存シナリオを選択"
     stages["pace"]={"status":"research-hypotheses-not-calibrated","value":deltas,
-                    "scenarioWeightsVerified":False}
+                    "scenarioWeightsVerified":False,"raceSituation":situation}
     probs=distribution(ability,deltas,config["temperature"])
     podium={no:sum(p for combo,p in probs["trifecta"].items() if no in combo)
             for no in ability}
@@ -145,5 +161,6 @@ def predict(race, *, expected_circuit, ability_method=None):
                                       "winScenario":reading[no]["winningScenario"],
                                       "advantageDisadvantage":reading[no]["advantageDisadvantage"]}
                                   for no in reading}}
-    stages["tickets"]={"status":"research-only-unvalidated","value":select(probs)}
+    stages["tickets"]={"status":"research-only-unvalidated","value":select(probs),
+                       "constructionRule":"展開別の既存3着内同時分布から券種横断で選定。オッズ未検証"}
     return result
