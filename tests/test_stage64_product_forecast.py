@@ -75,7 +75,7 @@ def test_api_compact_projection_keeps_ready_products_for_the_detail_ui():
     assert compact["recommendedBets"]
 
 
-def test_stage64_wager_marginals_are_from_existing_three-place_joint():
+def test_stage64_wager_marginals_are_from_existing_three_place_joint():
     from arvexq.forecast.tickets import _score
 
     probs = {"win": {1: 0.4, 2: 0.4, 3: 0.1, 4: 0.1}, "trifecta": [
