@@ -43,8 +43,9 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert len(generate_marks(prediction)) == 5
         assert {x["mark"] for x in generate_marks(prediction)} == {"◎", "○", "▲", "△", "☆"}
         items = generate_tickets(prediction, generate_marks(prediction))
-        assert [x["kind"] for x in items] == ["馬連", "ワイド", "馬単", "3連複"]
-        assert all(0 < len(x["combos"]) <= 5 for x in items)
+        assert sum(x["points"] for x in items) == 5
+        assert sum(len(x["combos"]) for x in items) == 5
+        assert all(x["points"] == len(x["combos"]) for x in items)
         assert len(prediction["stages"]) == 6
         assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
 
@@ -56,7 +57,7 @@ def test_public_projection_contains_prediction_marks_and_bets_without_mutating_i
     assert published["predictionStatus"] == "ready"
     assert published["predictionMarks"]
     assert {x["mark"] for x in published["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
-    assert {x["kind"] for x in published["recommendedBets"]} == {"馬連", "ワイド", "馬単", "3連複"}
+    assert sum(x["points"] for x in published["recommendedBets"]) == 5
     assert detail == original
 
 
@@ -102,3 +103,30 @@ def test_pending_placeholder_is_not_confused_with_a_confirmed_result():
     assert build_prediction(detail, now=NOW) is None
     detail["result"] = {"status": "確定", "finishers": [], "payouts": []}
     assert build_prediction(detail, now=NOW) is None
+
+
+def test_recommended_tickets_rank_across_wager_types_not_five_per_kind():
+    prediction = {"predictionStatus": "ready", "stages": {"probability": {"value": {
+        "trifecta": [
+            {"combo": [1, 2, 3], "probability": 0.55},
+            {"combo": [2, 1, 3], "probability": 0.25},
+            {"combo": [3, 2, 1], "probability": 0.20},
+        ],
+    }}}}
+    marks = [{"horseNumber": n, "mark": mark} for n, mark in
+             [(1, "◎"), (2, "○"), (3, "▲")]]
+    bets = generate_tickets(prediction, marks)
+    assert sum(bet["points"] for bet in bets) == 5
+    all_candidates = []
+    from itertools import combinations, permutations
+    from arvexq.forecast.tickets import _score
+    for kind, size in (("馬連", 2), ("ワイド", 2), ("馬単", 2), ("3連複", 3)):
+        for combo in (permutations([1, 2, 3], size) if kind == "馬単"
+                      else combinations([1, 2, 3], size)):
+            score = _score(prediction["stages"]["probability"]["value"], combo, kind)
+            if score > 0:
+                all_candidates.append((-score, kind, combo))
+    expected = sorted(all_candidates)[:5]
+    actual = [(kind, tuple(combo)) for bet in bets for kind in [bet["kind"]]
+              for combo in bet["combos"]]
+    assert sorted(actual) == sorted((kind, combo) for _, kind, combo in expected)
