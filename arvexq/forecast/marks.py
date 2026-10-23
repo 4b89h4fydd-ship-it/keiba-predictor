@@ -8,7 +8,13 @@ def generate_marks(prediction):
     order = value.get("orderedWinCandidates") or []
     win = ((stages.get("probability") or {}).get("value") or {}).get("win") or {}
     labels = ("◎", "○", "▲", "△", "☆")
-    return [{"horseNumber": int(no), "mark": labels[i], "winProbability": win.get(no)}
+    reasoning = (stages.get("marks") or {}).get("reasoning") or {}
+    return [{"horseNumber": int(no), "mark": labels[i],
+             "winProbability": win.get(no),
+             "raceReason": reasoning.get(no, {}).get("winScenario"),
+             "predictedPosition": reasoning.get(no, {}).get("position"),
+             "advantageDisadvantage": reasoning.get(no, {}).get("advantageDisadvantage", []),
+             "observedEvidence": reasoning.get(no, {}).get("supplementalEvidence")}
             for i, no in enumerate(order[:5])]
 
 def clear_marks(detail):
