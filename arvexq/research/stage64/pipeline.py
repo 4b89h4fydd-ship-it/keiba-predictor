@@ -9,7 +9,7 @@ from .marks import roles
 from .tickets import select
 
 
-def _qualitative_reading(histories, styles, horses):
+def _qualitative_reading(histories, styles, horses, race_track=None):
     """Evidence-led race reading; never invent observations or expert opinions."""
     reading = {}
     for no, runs in histories.items():
@@ -26,8 +26,7 @@ def _qualitative_reading(histories, styles, horses):
             position = ("逃げ", "先行", "差し", "追込")[style.index(maximum)] if maximum > 0 else "不明"
         # Multiple handicapping lenses use only existing observed history fields.
         # They are methodologies, NOT assertions of real forecasters' picks.
-        course = [r for r in observed if r.get("track") == horse_track] if (horse_track := next(
-            (h.get("track") for h in horses if h["horseNumber"] == no), None)) else []
+        course = [r for r in observed if race_track and r.get("track") == race_track]
         recent3 = observed[:3]
         direction = ("改善傾向" if len(recent3) >= 2 and recent3[0]["finish"] < recent3[-1]["finish"]
                      else "悪化傾向" if len(recent3) >= 2 and recent3[0]["finish"] > recent3[-1]["finish"]
@@ -171,7 +170,7 @@ def predict(race, *, expected_circuit, ability_method=None):
     # Conservative full-field evidence gate remains shared by all candidates.
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
-    reading=_qualitative_reading(histories,style,active)
+    reading=_qualitative_reading(histories,style,active,race.get("track"))
     comparisons=_yukochi_method_evidence(race,histories)
     for no in reading:
         reading[no]["supplementalEvidence"]=comparisons[no]
@@ -214,7 +213,8 @@ def predict(race, *, expected_circuit, ability_method=None):
     stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium),
                      "reasoning":{no:{"position":reading[no]["predictedPosition"],
                                       "winScenario":reading[no]["winningScenario"],
-                                      "advantageDisadvantage":reading[no]["advantageDisadvantage"]}
+                                      "advantageDisadvantage":reading[no]["advantageDisadvantage"],
+                                      "supplementalEvidence":reading[no]["supplementalEvidence"]}
                                   for no in reading}}
     stages["tickets"]={"status":"research-only-unvalidated","value":select(probs),
                        "constructionRule":"展開別の既存3着内同時分布から券種横断で選定。オッズ未検証"}
