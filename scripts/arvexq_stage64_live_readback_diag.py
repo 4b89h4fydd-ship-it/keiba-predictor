@@ -8,6 +8,11 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from pathlib import Path
+import sys
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from arvexq.forecast.engine import _preoff, build_prediction
 from arvexq.research.stage64.pipeline import predict
