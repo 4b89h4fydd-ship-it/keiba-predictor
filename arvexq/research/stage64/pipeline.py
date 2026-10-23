@@ -83,6 +83,35 @@ def _qualitative_reading(histories, styles, horses):
             v["winningScenario"] = "通過位置の根拠不足で判定不可"
     return reading
 
+
+def _yukochi_method_evidence(race, histories):
+    """Compare public analytical ideas against already supplied observations.
+
+    Does not request yukochi.com, copy its proprietary measurements, or invent
+    measured sectional times, odds snapshots, or bias figures.
+    """
+    track = race.get("track")
+    result = {}
+    for no, runs in histories.items():
+        same_track = [r for r in runs if track and r.get("track") == track]
+        sections = [r.get("first3F") for r in same_track
+                    if type(r.get("first3F")) in (int, float) and r["first3F"] > 0]
+        changes = [r.get("jockey") for r in runs[:2] if r.get("jockey")]
+        result[no] = {
+            "pastPaceEvidence": {"observedFirst3F": sections[:5],
+                                  "status": "observed" if sections else "missing"},
+            "trackComparison": {"sameTrackRuns": len(same_track),
+                                 "status": "observed" if same_track else "missing"},
+            "jockeyChangeEvidence": {
+                "status": "changed" if len(changes) == 2 and changes[0] != changes[1]
+                          else "unchanged" if len(changes) == 2 else "unknown",
+                "basis": "過去2走の騎手名。今回の騎手との差は別途確認が必要"},
+            "trackBias": {"status": "unverified", "note": "当日馬場の内外・前後傾向は未取得"},
+            "oddsTimeline": {"status": "unverified", "note": "時刻付きオッズ履歴は未取得"},
+            "sourcePolicy": "既存レースデータのみ。外部サイト独自計測値は取得・複製しない",
+        }
+    return result
+
 STAGES=("ability","runningStyle","pace","probability","marks","tickets")
 
 
@@ -143,9 +172,13 @@ def predict(race, *, expected_circuit, ability_method=None):
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
     reading=_qualitative_reading(histories,style,active)
+    comparisons=_yukochi_method_evidence(race,histories)
+    for no in reading:
+        reading[no]["supplementalEvidence"]=comparisons[no]
     result["raceReading"]={"approach":"展開主体・根拠明示","horses":reading,
                            "expertFusionStatus":"methodology-only-no-expert-picks",
-                           "fusionPolicy":"展開を主体に回顧・能力・適性の根拠を並列確認。実在予想家の印は捏造しない"}
+                           "fusionPolicy":"展開を主体に回顧・能力・適性の根拠を並列確認。実在予想家の印は捏造しない",
+                           "referenceMethod":"地方競馬ウォッチの公開分析観点（ラップ・馬場・騎手・オッズ）のうち、既存観測だけ照合。予測への未較正の加点はしない"}
     stages["ability"]["raceReading"]={no: reading[no]["pastRunReading"] for no in reading}
     stages["runningStyle"]["positions"]={no: reading[no]["predictedPosition"] for no in reading}
     deltas=adjustments(style,config["pace"])
