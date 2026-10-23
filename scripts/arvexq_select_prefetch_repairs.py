@@ -77,6 +77,14 @@ def repair_reason(prepared: Any, existing: Any) -> str:
     old = named_roster(existing)
     if len(new) > len(old) and set(old).issubset(new):
         return "roster_incomplete"
+    # A prepared Stage64 product must reach D1 even when legacy diagnosis
+    # flags and observation hashes are unchanged. Do not recompute products here.
+    if prepared.get("predictionStatus") == "ready" and prepared.get("predictionModelVersion") == "arvexq-stage64-product-v1":
+        if (existing.get("predictionStatus") != "ready"
+                or existing.get("predictionModelVersion") != prepared.get("predictionModelVersion")
+                or existing.get("predictionMarks") != prepared.get("predictionMarks")
+                or existing.get("recommendedBets") != prepared.get("recommendedBets")):
+            return "stage64_products_not_persisted"
     # A rich old card is not equivalent to the current learned forecast.
     # Never skip replacement solely because the retired analysis was ready.
     new_version = str(prepared.get("predictionModelVersion") or "")
