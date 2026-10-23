@@ -27,6 +27,41 @@ def public_race(detail):
     result = project(detail)
     prediction = build_prediction(detail)
     if prediction is None:
+        # A stored, verified pre-off Stage64 product is immutable race evidence.
+        # Publishing its original marks/tickets after the off is NOT a new
+        # prediction. Never create a product retroactively for an empty row.
+        original = detail.get('prediction')
+        original_marks = detail.get('predictionMarks')
+        original_tickets = detail.get('recommendedBets')
+        labels = ('◎', '○', '▲', '△', '☆')
+        roster = {h.get('horseNumber') for h in detail.get('horses') or []
+                  if isinstance(h, dict)}
+        valid = (isinstance(original, dict)
+                 and detail.get('predictionStatus') == 'ready'
+                 and detail.get('predictionModelVersion') == 'arvexq-stage64-product-v1'
+                 and original.get('modelVersion') == 'arvexq-stage64-product-v1'
+                 and original.get('predictionStatus') == 'ready'
+                 and original.get('productionEligible') is True
+                 and original.get('raceId') == detail.get('id')
+                 and original.get('date') == detail.get('date')
+                 and isinstance(original_marks, list) and len(original_marks) == 5
+                 and isinstance(original_tickets, list)
+                 and all(isinstance(m, dict) and m.get('mark') == labels[i]
+                         and type(m.get('horseNumber')) is int
+                         and m['horseNumber'] in roster
+                         for i, m in enumerate(original_marks))
+                 and len({m['horseNumber'] for m in original_marks}) == 5)
+        if valid:
+            result['predictionStatus'] = 'ready'
+            result['predictionModelVersion'] = original['modelVersion']
+            result['prediction'] = deepcopy(original)
+            result['predictionMarks'] = deepcopy(original_marks)
+            result['recommendedBets'] = deepcopy(original_tickets)
+            by_no = {m['horseNumber']: m['mark'] for m in original_marks}
+            for horse in result.get('horses') or []:
+                if horse.get('horseNumber') in by_no:
+                    horse['predMark'] = by_no[horse['horseNumber']]
+            return result
         result['predictionStatus'] = 'disabled'
         return result
     marks = generate_marks(prediction)
