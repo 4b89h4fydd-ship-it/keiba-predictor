@@ -313,7 +313,10 @@ def encode_sealed_d1_sync_detail(detail: dict, *, max_row_bytes: int = 1_800_000
     if not isinstance(detail, dict) or not detail.get("id"):
         raise ValueError("race identity required for pre-race sync")
     packed = pack_detail(detail)
-    if unpack_detail(packed) != detail or KEY not in packed:
+    # JSON object keys are strings. Stage64 probability maps may hold integer
+    # horse-number keys in memory; compare the actual JSON transport contract.
+    expected = json.loads(json.dumps(detail, ensure_ascii=False, allow_nan=False))
+    if unpack_detail(packed) != expected or KEY not in packed:
         raise ValueError("lossless seal transport verification failed")
     row_size = len(json.dumps(packed, ensure_ascii=False, separators=(",", ":"),
                               allow_nan=False).encode("utf-8"))
