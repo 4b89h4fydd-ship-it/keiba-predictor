@@ -64,6 +64,24 @@ def audit_day(bundle):
                     errors.append({"raceId": detail["id"], "horseNumber": number,
                                    "error": "duplicate runner identity"})
                 seen.add(identity)
+            # Banei must not inherit flat-racing weight interpretations.
+            # Audit the observed values without inventing replacements.
+            if detail.get("track") == "帯広ば" or detail.get("analysisMode") == "ばんえい":
+                load = horse.get("carriedWeight")
+                body = horse.get("bodyWeight")
+                for name, value, lower, upper in (
+                    ("carriedWeight", load, 400, 800),
+                    ("bodyWeight", body, 400, 1500),
+                ):
+                    if value not in (None, ""):
+                        try:
+                            measure = float(value)
+                        except (TypeError, ValueError):
+                            measure = float("nan")
+                        if not math.isfinite(measure) or not lower <= measure <= upper:
+                            errors.append({"raceId": detail["id"], "horseNumber": number,
+                                           "field": name, "observedValue": value,
+                                           "error": "invalid banei weight"})
             frame = horse.get("frameNumber")
             if observed("frameNumber", frame):
                 numeric = float(frame)
