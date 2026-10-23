@@ -13,7 +13,7 @@ export const RETIRED_KEYS = new Set([
 
 // Keep only previously computed, race-bound Stage64 products. Do not recompute
 // predictions, revive retired models, or promote incomplete saved candidate marks.
-function authorizedStage64(race) {
+export function authorizedStage64(race) {
   const p = race.prediction;
   if (race.predictionStatus !== 'ready' || !p ||
       p.predictionStatus !== 'ready' || p.productionEligible !== true ||
