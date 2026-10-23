@@ -78,9 +78,19 @@
           p1Probability:prob.win&&prob.win[no]!=null?prob.win[no]:null,p2Probability:null,
           p3Probability:prob.top3&&prob.top3[no]!=null?prob.top3[no]:null,overallGrade:'',coverage:1};
       });
-      var pace=(stage.pace&&stage.pace.value)||[], paceRows=Object.keys(pace).map(function(no){return {horseNumber:Number(no),delta:pace[no]};});
+      // Stage64 pace is an array of scenarios, each keyed by actual horse number.
+      // The array index is not a horse number and the correction is not a calibrated pace prediction.
+      var pace=(stage.pace&&stage.pace.value)||[],paceRows=[];
+      if(Array.isArray(pace))pace.forEach(function(deltas,index){
+        if(!deltas||typeof deltas!=='object'||Array.isArray(deltas))return;
+        Object.keys(deltas).forEach(function(key){
+          var no=Number(key),delta=Number(deltas[key]);
+          if(Number.isInteger(no)&&no>0&&Number.isFinite(delta))
+            paceRows.push({scenarioIndex:index+1,horseNumber:no,delta:delta});
+        });
+      });
       last={active:marks.length>0,source:'stage64-preoff',scenarios:[],pace:paceRows,forecastText:'',
-        modelVersion:server.modelVersion||'',uncalibrated:false,unavailable:!marks.length,
+        modelVersion:server.modelVersion||'',uncalibrated:!(stage.probability&&stage.probability.calibrationVerified===true),unavailable:!marks.length,
         marks:marks.map(function(x){var h=race.horses.find(function(y){return Number(y.horseNumber)===Number(x.horseNumber)})||{};return {horseNumber:Number(x.horseNumber),name:String(h.name||''),mark:String(x.mark||'')}})};
       return {rows:rows,legacyEngineDisabled:false,scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:1};
     }
