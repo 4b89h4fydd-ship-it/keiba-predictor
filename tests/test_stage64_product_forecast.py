@@ -256,9 +256,7 @@ def test_stage64_seal_transport_retains_integer_probability_keys_losslessly():
     assert restored["recommendedBets"] == source["recommendedBets"]
     assert restored["preRacePrediction"] == source["preRacePrediction"]
 
-def test_all_wager_kinds_compete_for_a_single_five_point_limit():
-    from itertools import combinations, permutations
-    from arvexq.forecast.tickets import _score
+def test_wager_portfolio_counts_only_new_finish_coverage():
     values = {"trifecta": [
         {"combo": [1, 2, 3], "probability": 0.55},
         {"combo": [2, 1, 3], "probability": 0.25},
@@ -268,17 +266,32 @@ def test_all_wager_kinds_compete_for_a_single_five_point_limit():
     marks = [{"horseNumber": n, "mark": m} for n, m in
              [(1, "◎"), (2, "○"), (3, "▲")]]
     result = generate_tickets(prediction, marks)
-    actual = {(entry["kind"], tuple(combo)) for entry in result for combo in entry["combos"]}
-    candidates = []
-    for kind, size in (("馬連", 2), ("ワイド", 2), ("馬単", 2), ("3連複", 3)):
-        combos = permutations((1, 2, 3), size) if kind == "馬単" else combinations((1, 2, 3), size)
-        for combo in combos:
-            probability = _score(values, combo, kind)
-            if probability > 0:
-                candidates.append((-probability, kind, combo))
-    expected = {(kind, combo) for _, kind, combo in sorted(candidates)[:5]}
-    assert actual == expected
-    assert sum(entry["points"] for entry in result) == 5
+    # All actual top-three sets are identical in this synthetic example:
+    # buying the same complete coverage five times is not better than one.
+    assert sum(entry["points"] for entry in result) == 1
+    assert result[0]["kind"] == "3連複"
+    assert result[0]["combos"] == [[1, 2, 3]]
+
+
+def test_stage64_outputs_share_one_prediction_and_pace_explanation():
+    source = race("地方")
+    for h in source["horses"]:
+        h["name"] = "馬" + str(h["horseNumber"])
+    published = with_preoff_clock(public_race, source)
+    forecast = published["forecastText"]
+    model = published["prediction"]
+    marks = published["predictionMarks"]
+    tickets = published["recommendedBets"]
+    assert model["forecastText"] == forecast
+    assert model["modelVersion"] == published["predictionModelVersion"]
+    assert str(marks[0]["horseNumber"]) in forecast
+    assert "前走" in forecast and "展開仮説" in forecast
+    assert "未校正" in forecast
+    selected = {n for item in tickets for pair in item["combos"] for n in pair}
+    assert selected.issubset({m["horseNumber"] for m in marks})
+    assert len(model["stages"]) == 6
+
+
 
 def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archive():
     detail = race("地方")
