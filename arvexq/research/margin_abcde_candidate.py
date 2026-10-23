@@ -1,6 +1,7 @@
 """Research-only margin-led A/B/C/D/E challenger; never a live prediction."""
 from __future__ import annotations
 from math import exp
+import re
 from statistics import mean
 from arvexq.prediction.past_performance import observed_runs
 
@@ -12,6 +13,18 @@ def num(value):
         return x if x == x and abs(x) != float("inf") else None
     except (TypeError, ValueError):
         return None
+
+def observed_positions(run):
+    """Use the existing history fields without inventing unavailable corners."""
+    raw = run.get("cornerPositions") or run.get("passing")
+    if isinstance(raw, (list, tuple)):
+        values = [num(v) for v in raw]
+    elif isinstance(raw, str) and re.fullmatch(r"\\s*\\d+(?:\\s*[-,→]\\s*\\d+)+\\s*", raw):
+        values = [num(v) for v in re.split(r"\\s*[-,→]\\s*", raw.strip())]
+    else:
+        return []
+    return values if len(values) >= 2 and all(v is not None for v in values) else []
+
 
 def score(horse, race):
     runs = observed_runs(horse, race, limit=5)
@@ -49,9 +62,9 @@ def score(horse, race):
     # D: recorded corner-position progression; no synthetic pace forecast.
     pace = []
     for run in runs:
-        positions = run.get("cornerPositions") or run.get("passing")
+        positions = observed_positions(run)
         field = num(run.get("fieldSize"))
-        if isinstance(positions,list) and len(positions)>=2 and field is not None and field>1:
+        if positions and field is not None and field > 1:
             first,last = num(positions[0]),num(positions[-1])
             if first is not None and last is not None and 1<=first<=field and 1<=last<=field:
                 pace.append(.5+(first-last)/(2*(field-1)))
