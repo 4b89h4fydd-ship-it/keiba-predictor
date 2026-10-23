@@ -413,3 +413,11 @@ class PartialHistoryRescueTriggerTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "no verified historical runs"):
             recover_prior_history_before_post(detail, now=now, run=Mock(return_value=proc))
         self.assertEqual(detail["horses"][1]["recentRaces"], [])
+
+
+def test_rescue_entrypoint_registers_only_existing_production_sources():
+    from pathlib import Path
+    source = Path("scripts/arvexq_preoff_history_rescue.py").read_text(encoding="utf-8")
+    assert "from arvexq.databanks.legacy_bridge import register_legacy_sources" in source
+    assert "register_legacy_sources(vars(app))" in source
+    assert "arvexq.databanks.authorized_feeds" not in source
