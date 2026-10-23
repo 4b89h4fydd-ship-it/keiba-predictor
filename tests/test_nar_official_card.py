@@ -48,6 +48,8 @@ def test_banei_three_digit_carried_load_from_existing_official_column():
     rows = parse_card_html(detail, html, clean)
     assert len(rows) == 1
     assert rows[0]["carriedWeight"] == 620.0
+    assert rows[0]["bodyWeight"] == 1050
+    assert rows[0]["bodyWeightChange"] == 5
 
 
 def test_flat_race_cannot_consume_banei_carried_load():
@@ -64,7 +66,5 @@ def test_banei_rejects_invalid_flat_weight_not_body_mass():
     html = """<table><tr><th>馬番</th><th>馬名</th><th>負担重量</th><th>馬体重</th></tr>
     <tr><td>1</td><td>確認馬</td><td>59</td><td>1050kg</td></tr></table>"""
     detail = {"track": "帯広ば", "horses": [{"horseNumber": 1, "name": "確認馬"}]}
-    rows = parse_card_html(detail, html, clean)
-    assert len(rows) == 1
-    assert rows[0]["carriedWeight"] is None
+    assert parse_card_html(detail, html, clean) == []
 
