@@ -175,3 +175,28 @@ def test_same_named_runner_single_race_not_reported_as_cross_race():
               "details": [{"id": RID, "date": DAY, "horses": [
                   {"name": "重複馬", "horseNumber": 12, "frameNumber": 7}]}]}
     assert audit_day(bundle)["validationErrors"] == []
+
+def test_banei_invalid_weight_not_accepted_as_flat_weight():
+    detail = {"id": "nar-2026-10-19-帯広ば-01", "date": "2026-10-19",
+              "track": "帯広ば", "analysisMode": "ばんえい",
+              "horses": [{"horseNumber": 1, "name": "実測異常馬",
+                          "carriedWeight": 59, "bodyWeight": 101}]}
+    bundle = {"date": "2026-10-19", "races": [{"id": detail["id"]}],
+              "details": [detail], "readErrors": []}
+    before = deepcopy(bundle)
+    report = audit_day(bundle)
+    invalid = [row for row in report["validationErrors"]
+               if row.get("error") == "invalid banei weight"]
+    assert {row["field"] for row in invalid} == {"bodyWeight", "carriedWeight"}
+    assert bundle == before
+
+
+def test_flat_weight_55_remains_legal():
+    detail = {"id": RID, "date": DAY, "track": "名古屋",
+              "horses": [{"horseNumber": 1, "name": "平地馬",
+                          "carriedWeight": 55, "bodyWeight": 450}]}
+    bundle = {"date": DAY, "races": [{"id": RID}],
+              "details": [detail], "readErrors": []}
+    report = audit_day(bundle)
+    assert not any(row.get("error") == "invalid banei weight"
+                   for row in report["validationErrors"])
