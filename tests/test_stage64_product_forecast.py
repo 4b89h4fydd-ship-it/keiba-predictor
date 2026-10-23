@@ -46,7 +46,7 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert 1 <= sum(x["points"] for x in items) <= 5
         assert 1 <= sum(len(x["combos"]) for x in items) <= 5
         assert len(prediction["stages"]) == 6
-        assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
+        assert len(prediction["stages"]["pace"]["value"]) == 4
 
 
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
@@ -312,3 +312,19 @@ def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archi
     assert 1 <= sum(len(x["combos"]) for x in projected["recommendedBets"]) <= 5
     assert original == archive
     assert original["recommendedBets"] != projected["recommendedBets"]
+
+
+def test_new_pace_rewrite_accounts_for_front_competition_in_both_circuits():
+    for owner in ("中央", "地方"):
+        p = build_prediction(race(owner), now=NOW)
+        assert p is not None
+        stages = p["stages"]
+        evidence = p["paceEvidence"]
+        assert evidence["source"] == "preoff-prior-corner-positions"
+        assert evidence["frontCompetition"] >= 0
+        assert evidence["scenarioOccurrenceCalibrated"] is False
+        assert evidence["aiEnsembleTrained"] is False
+        assert stages["pace"]["model"] == "mineta-position-competition-rewrite"
+        assert len(stages["pace"]["value"]) == 4
+        assert set(stages) == {"ability","runningStyle","pace","probability","marks","tickets"}
+        assert set(stages["pace"]["value"][0]) == set(stages["ability"]["value"])
