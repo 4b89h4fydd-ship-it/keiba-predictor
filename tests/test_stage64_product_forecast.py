@@ -192,3 +192,23 @@ def test_existing_marks_expose_race_reading_and_course_evidence():
     assert first["predictedPosition"] == "逃げ"
     assert first["observedEvidence"]["trackComparison"]["sameTrackRuns"] == 1
     assert prediction["stages"]["marks"]["reasoning"][1]["supplementalEvidence"]
+
+
+def test_marks_prioritize_viable_win_paths_across_pace_scenarios():
+    from arvexq.research.stage64.marks import roles
+    win = {1: 0.46, 2: 0.39, 3: 0.15}
+    top3 = {1: 0.8, 2: 0.7, 3: 0.5}
+    scenario_wins = [{1: 0.8, 2: 0.15, 3: 0.05},
+                     {1: 0.12, 2: 0.63, 3: 0.25}]
+    result = roles(win, top3, scenario_wins)
+    assert result["decisionMethod"] == "scenario-robust-win"
+    assert result["orderedWinCandidates"][0] == 2
+    assert roles(win, top3, [scenario_wins[0]])["orderedWinCandidates"][0] == 1
+
+
+def test_stage64_marks_follow_selected_pace_scenarios():
+    local = build_prediction(race("地方"), now=NOW)
+    central = build_prediction(race("中央"), now=NOW)
+    assert local["stages"]["marks"]["value"]["decisionMethod"] == "scenario-robust-win"
+    assert central["stages"]["marks"]["value"]["decisionMethod"] == "aggregate-win"
+    assert generate_marks(local)[0]["horseNumber"] == local["stages"]["marks"]["value"]["orderedWinCandidates"][0]
