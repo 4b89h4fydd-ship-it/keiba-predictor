@@ -67,7 +67,10 @@ def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
                 continue
 
             weight, change = observed_body_weight(values, row_text, body_weight_idx, change_idx)
-            carried = observed_carried_weight(values, carried_weight_idx)
+            carried = observed_carried_weight(
+                values, carried_weight_idx,
+                banei=(detail.get("track") == "帯広ば" or detail.get("analysisMode") == "ばんえい"),
+            )
 
             if not weight and carried is None:
                 continue
