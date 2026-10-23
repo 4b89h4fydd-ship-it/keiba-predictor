@@ -52,7 +52,7 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
     detail = race("地方")
     original = deepcopy(detail)
-    published = public_race(detail)
+    published = with_preoff_clock(public_race, detail)
     assert published["predictionStatus"] == "ready"
     assert published["predictionMarks"]
     assert {x["mark"] for x in published["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
