@@ -9,6 +9,8 @@
       ?'<p class="muted">既存の学習モデルによる発走前の仮予想（未検証）。保存済みの発走前原本・確定買い目ではありません。</p>'
       :live&&live.source==='learned-revision-retrospective'
       ?'<p class="muted">過去レースの事後再分析です。発走前の予想成績には含めません。</p>'
+      :live&&live.source==='stage64-preoff'
+      ?'<p class="muted">Stage64発走前の展開仮説（確率・補正は未校正）です。</p>'
       :'<p class="muted">このレースの学習済み予想印は未取得です。確認できない印は生成しません。</p>';
     var text=String(live&&live.forecastText||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});
     var pace=live&&Array.isArray(live.pace)?live.pace:[], paceText=pace.length?'展開予想：'+pace.map(function(x){return String(x.horseNumber)+'番 '+(Number(x.delta)>=0?'前有利':'差し有利')}).join('／'):'';
