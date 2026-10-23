@@ -24,6 +24,26 @@ def _qualitative_reading(histories, styles, horses):
             leading, stalking, midpack, closing = style
             maximum = max(style)
             position = ("逃げ", "先行", "差し", "追込")[style.index(maximum)] if maximum > 0 else "不明"
+        # Multiple handicapping lenses use only existing observed history fields.
+        # They are methodologies, NOT assertions of real forecasters' picks.
+        course = [r for r in observed if r.get("track") == horse_track] if (horse_track := next(
+            (h.get("track") for h in horses if h["horseNumber"] == no), None)) else []
+        recent3 = observed[:3]
+        direction = ("改善傾向" if len(recent3) >= 2 and recent3[0]["finish"] < recent3[-1]["finish"]
+                     else "悪化傾向" if len(recent3) >= 2 and recent3[0]["finish"] > recent3[-1]["finish"]
+                     else "横ばい・判断材料不足")
+        methodology = {
+            "回顧型": {"finding": direction, "evidenceRuns": len(recent3),
+                      "limitation": "着順推移のみ。展開不利・映像は未評価"},
+            "能力比較型": {"finding": "直近の相対着順を確認" if observed else "能力根拠不足",
+                          "evidenceRuns": len(observed),
+                          "limitation": "相手関係・レースレベル未確認"},
+            "コース適性型": {"finding": "同コース過去走あり" if course else "同コース実績未確認",
+                            "evidenceRuns": len(course),
+                            "limitation": "競馬場名の一致のみで適性断定不可"},
+            "展開型": {"finding": position, "evidenceRuns": len(corners),
+                       "limitation": "過去の通過位置からの推定"},
+        }
         reading[no] = {
             "horseNumber": no,
             "pastRunReading": {
@@ -36,6 +56,7 @@ def _qualitative_reading(histories, styles, horses):
             },
             "predictedPosition": position,
             "positionEvidence": style,
+            "methodologyFusion": methodology,
             "rivalRelationship": None,
             "advantageDisadvantage": [],
             "winningScenario": None,
@@ -123,7 +144,8 @@ def predict(race, *, expected_circuit, ability_method=None):
         return result
     reading=_qualitative_reading(histories,style,active)
     result["raceReading"]={"approach":"展開主体・根拠明示","horses":reading,
-                           "expertFusionStatus":"unverified-no-expert-observations"}
+                           "expertFusionStatus":"methodology-only-no-expert-picks",
+                           "fusionPolicy":"展開を主体に回顧・能力・適性の根拠を並列確認。実在予想家の印は捏造しない"}
     stages["ability"]["raceReading"]={no: reading[no]["pastRunReading"] for no in reading}
     stages["runningStyle"]["positions"]={no: reading[no]["predictedPosition"] for no in reading}
     deltas=adjustments(style,config["pace"])
