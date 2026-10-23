@@ -3,6 +3,7 @@
 Never infer the affiliation of an unknown track, and never use future outcomes.
 This module does not generate probabilities, predictions, marks or tickets.
 """
+from datetime import date
 JRA_TRACKS = frozenset(("札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"))
 NAR_TRACKS = frozenset(("門別","帯広","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"))
 
@@ -16,10 +17,27 @@ def race_circuit(run):
     if track in NAR_TRACKS: return "NAR"
     return None
 
+def _observed_day(value):
+    """Normalize the published race day; never treat a malformed day as history."""
+    text = str(value or "").strip().replace("/", "-").replace(".", "-")
+    if len(text) == 8 and text.isascii() and text.isdigit():
+        text = f"{text[:4]}-{text[4:6]}-{text[6:]}"
+    try:
+        return date.fromisoformat(text[:10])
+    except ValueError:
+        return None
+
+
 def transfer_observations(horse,target):
     """Classify reported starts in their supplied order; cannot assert undocumented moves."""
     runs=(horse or {}).get("allPastRuns") or (horse or {}).get("recentRaces") or []
-    observed=[race_circuit(r) for r in runs if isinstance(r,dict)]
+    cutoff = _observed_day((target or {}).get("date") or (target or {}).get("raceDate"))
+    # Historical callers without a target day retain their original observation
+    # contract; dated predictions exclude post-off or undated evidence.
+    observed=[race_circuit(r) for r in runs if isinstance(r,dict) and
+              (cutoff is None or
+               (_observed_day(r.get("date") or r.get("raceDate")) is not None and
+                _observed_day(r.get("date") or r.get("raceDate")) < cutoff))]
     known=[x for x in observed if x in ("JRA","NAR")]
     return {"targetCircuit":race_circuit(target),
             "knownCircuitStarts":len(known),

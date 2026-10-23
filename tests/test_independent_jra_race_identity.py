@@ -11,6 +11,9 @@ CNAME="pw01dde1005"+"0001"+"0002"+"11"+"20261018/AF"
 def test_jra_race_date_identity():
     assert _jra_date_from_cname(CNAME)=="2026-10-18"
     assert _jra_date_from_cname("unknown")==""
+    assert _jra_date_from_cname("test20260229/0A")==""
+    assert _jra_date_from_cname("test20261315/0A")==""
+    assert _jra_date_from_cname("test20240229/0A")=="2024-02-29"
 
 def test_jra_race_number_identity():
     assert _jra_race_no_from_cname(CNAME)==11
