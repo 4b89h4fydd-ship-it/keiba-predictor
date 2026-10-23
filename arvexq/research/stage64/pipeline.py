@@ -8,6 +8,61 @@ from .circuits import CONFIGS, circuit, discipline, active as is_active
 from .marks import roles
 from .tickets import select
 
+
+def _qualitative_reading(histories, styles, horses):
+    """Evidence-led race reading; never invent observations or expert opinions."""
+    by_no = {h["horseNumber"]: h for h in horses}
+    reading = {}
+    for no, runs in histories.items():
+        observed = [r for r in runs if isinstance(r.get("finish"), (int, float))
+                    and isinstance(r.get("fieldSize"), int) and r["fieldSize"] >= r["finish"] >= 1]
+        corners = [r for r in runs if (r.get("cornerPositions") or r.get("passing"))]
+        recent = observed[0] if observed else None
+        style = styles.get(no)
+        if style is None:
+            position = "不明"
+        else:
+            leading, stalking, midpack, closing = style
+            maximum = max(style)
+            position = ("逃げ", "先行", "差し", "追込")[style.index(maximum)] if maximum > 0 else "不明"
+        reading[no] = {
+            "horseNumber": no,
+            "pastRunReading": {
+                "latestFinish": recent.get("finish") if recent else None,
+                "latestFieldSize": recent.get("fieldSize") if recent else None,
+                "observedRuns": len(observed),
+                "cornerEvidenceRuns": len(corners),
+                "interpretation": "着順と通過位置を確認。映像・不利・相手レベルの検証は未取得"
+                                  if observed else "着順根拠不足",
+            },
+            "predictedPosition": position,
+            "positionEvidence": style,
+            "rivalRelationship": None,
+            "advantageDisadvantage": [],
+            "winningScenario": None,
+            "unverified": ["他予想家の独立分析", "映像での不利", "騎手の戦術", "枠順との干渉"],
+        }
+    pressure = sum(1 for v in reading.values() if v["predictedPosition"] in ("逃げ", "先行"))
+    leaders = [no for no, v in reading.items() if v["predictedPosition"] == "逃げ"]
+    for no, v in reading.items():
+        position = v["predictedPosition"]
+        v["rivalRelationship"] = {
+            "otherLeadingCandidates": [n for n in leaders if n != no],
+            "forwardPressure": "競合候補あり" if pressure > 2 else "比較的少ない",
+            "evidence": "出走馬の過去コーナー位置から推定。ゲート・枠順を踏まえた確定隊列ではない",
+        }
+        if position == "逃げ":
+            v["advantageDisadvantage"].append("逃げ候補が単独" if len(leaders) == 1 else "逃げ候補が複数")
+            v["winningScenario"] = "先手を確保して粘り込む展開"
+        elif position == "先行":
+            v["winningScenario"] = "好位を確保し直線で抜け出す展開"
+        elif position in ("差し", "追込"):
+            v["advantageDisadvantage"].append("前に行く馬が多い" if pressure > 2 else "前崩れの根拠は限定的")
+            v["winningScenario"] = "先行勢が消耗し進路を確保できる展開"
+        else:
+            v["winningScenario"] = "通過位置の根拠不足で判定不可"
+    return reading
+
 STAGES=("ability","runningStyle","pace","probability","marks","tickets")
 
 
@@ -67,6 +122,11 @@ def predict(race, *, expected_circuit, ability_method=None):
     # Conservative full-field evidence gate remains shared by all candidates.
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
+    reading=_qualitative_reading(histories,style,active)
+    result["raceReading"]={"approach":"展開主体・根拠明示","horses":reading,
+                           "expertFusionStatus":"unverified-no-expert-observations"}
+    stages["ability"]["raceReading"]={no: reading[no]["pastRunReading"] for no in reading}
+    stages["runningStyle"]["positions"]={no: reading[no]["predictedPosition"] for no in reading}
     deltas=adjustments(style,config["pace"])
     stages["pace"]={"status":"research-hypotheses-not-calibrated","value":deltas,
                     "scenarioWeightsVerified":False}
@@ -80,6 +140,10 @@ def predict(race, *, expected_circuit, ability_method=None):
                                    "trifecta":trifecta},
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
-    stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium)}
+    stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium),
+                     "reasoning":{no:{"position":reading[no]["predictedPosition"],
+                                      "winScenario":reading[no]["winningScenario"],
+                                      "advantageDisadvantage":reading[no]["advantageDisadvantage"]}
+                                  for no in reading}}
     stages["tickets"]={"status":"research-only-unvalidated","value":select(probs)}
     return result
