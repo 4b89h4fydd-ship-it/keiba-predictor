@@ -7,7 +7,7 @@ export const RETIRED_KEYS = new Set([
   'winnerLearningProfile','betRecommendations','recommendedBets','tickets','buyList','bets',
   'markMethod','markEngineVersion','predictionModelVersion','mark','predMark','印',
   'honmeiRole','modelProbabilities','forecastRevisions','currentForecastRevisionId',
-  'morningMarkSnapshot','officialMarkRevisions','modelMarkRevisions','savedForecastRevision',
+  'preoffStage64Archive','morningMarkSnapshot','officialMarkRevisions','modelMarkRevisions','savedForecastRevision',
   '_savedPreoffOriginal','legacyPredictionAudit','preRaceAudit','observedModelCoverage'
 ]);
 
