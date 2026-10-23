@@ -50,6 +50,8 @@ export function publicRace(value) {
       result.predictionStatus = 'ready';
       result.predictionModelVersion = value.prediction.modelVersion;
       result.predictionMarks = live;
+      // Tickets belong to the same server-approved Stage64 product as the marks.
+      if (Array.isArray(value.recommendedBets)) result.recommendedBets = structuredClone(value.recommendedBets);
       result.horses = result.horses.map(h => ({
         ...h, ...(byNo.has(h.horseNumber) ? {predMark:byNo.get(h.horseNumber)} : {})
       }));
