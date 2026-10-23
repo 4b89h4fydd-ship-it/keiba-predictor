@@ -83,28 +83,30 @@ def _qualitative_reading(histories, styles, horses, race_track=None):
     return reading
 
 
-def _yukochi_method_evidence(race, histories):
+def _yukochi_method_evidence(race, histories, horses):
     """Compare public analytical ideas against already supplied observations.
 
     Does not request yukochi.com, copy its proprietary measurements, or invent
     measured sectional times, odds snapshots, or bias figures.
     """
     track = race.get("track")
+    current = {h["horseNumber"]: h for h in horses}
     result = {}
     for no, runs in histories.items():
         same_track = [r for r in runs if track and r.get("track") == track]
         sections = [r.get("first3F") for r in same_track
                     if type(r.get("first3F")) in (int, float) and r["first3F"] > 0]
-        changes = [r.get("jockey") for r in runs[:2] if r.get("jockey")]
+        previous_jockey = next((r["jockey"] for r in runs if r.get("jockey")), None)
+        current_jockey = current[no].get("jockey")
         result[no] = {
             "pastPaceEvidence": {"observedFirst3F": sections[:5],
                                   "status": "observed" if sections else "missing"},
             "trackComparison": {"sameTrackRuns": len(same_track),
                                  "status": "observed" if same_track else "missing"},
             "jockeyChangeEvidence": {
-                "status": "changed" if len(changes) == 2 and changes[0] != changes[1]
-                          else "unchanged" if len(changes) == 2 else "unknown",
-                "basis": "過去2走の騎手名。今回の騎手との差は別途確認が必要"},
+                "status": "changed" if current_jockey and previous_jockey and current_jockey != previous_jockey
+                          else "unchanged" if current_jockey and previous_jockey else "unknown",
+                "basis": "今回の騎手と直近の過去走で確認できる騎手を比較。いずれか欠損なら不明"},
             "trackBias": {"status": "unverified", "note": "当日馬場の内外・前後傾向は未取得"},
             "oddsTimeline": {"status": "unverified", "note": "時刻付きオッズ履歴は未取得"},
             "sourcePolicy": "既存レースデータのみ。外部サイト独自計測値は取得・複製しない",
@@ -171,7 +173,7 @@ def predict(race, *, expected_circuit, ability_method=None):
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
     reading=_qualitative_reading(histories,style,active,race.get("track"))
-    comparisons=_yukochi_method_evidence(race,histories)
+    comparisons=_yukochi_method_evidence(race,histories,active)
     for no in reading:
         reading[no]["supplementalEvidence"]=comparisons[no]
     result["raceReading"]={"approach":"展開主体・根拠明示","horses":reading,
