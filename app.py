@@ -247,6 +247,14 @@ del _arvexq_installer
 def normalize_central_race(raw: dict) -> dict | None:
     if not isinstance(raw, dict):
         return None
+    # A central parser must never relabel an explicitly local record as JRA.
+    # Unknown/missing circuit metadata remains acceptable because the source
+    # path itself is the central parser's authority.
+    from arvexq.ingest.circuit_boundary import require_compatible
+    try:
+        require_compatible(raw, "中央")
+    except ValueError:
+        return None
     date = _clean(str(raw.get("date") or ""))
     track = _clean(str(raw.get("track") or ""))
     race_no = _int(str(raw.get("raceNumber") or raw.get("race_no") or "0"))

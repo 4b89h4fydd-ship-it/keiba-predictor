@@ -3,6 +3,7 @@
 Never use outcomes dated on or after the target race date, nor merge
 incomparable JRA/NAR denominators.
 """
+from arvexq.ingest.circuit_boundary import preoff_records
 from arvexq.ingest.circuit_transfer import race_circuit as _run_circuit, _observed_day
 
 def _history_rates(horse, race):
@@ -12,12 +13,7 @@ def _history_rates(horse, race):
     # Invalid or future-dated records cannot be compared in a pre-race evaluation.
     runs = []
     if cutoff is not None:
-        for run in source:
-            if not isinstance(run, dict):
-                continue
-            day = _observed_day(run.get("date") or run.get("raceDate"))
-            if day is None or day >= cutoff:
-                continue
+        for run in preoff_records(source, cutoff):
             try:
                 finish = float(run.get("finish"))
             except (TypeError, ValueError):
