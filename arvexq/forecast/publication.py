@@ -55,6 +55,8 @@ def public_race(detail):
             result['predictionStatus'] = 'ready'
             result['predictionModelVersion'] = original['modelVersion']
             result['prediction'] = deepcopy(original)
+            if isinstance(original.get('forecastText'), str):
+                result['forecastText'] = original['forecastText']
             result['predictionMarks'] = deepcopy(original_marks)
             # Reproject only the existing sealed pre-off probability evidence.
             # Keep the D1 archived ticket list untouched for audit/history.
@@ -72,6 +74,7 @@ def public_race(detail):
     result['predictionStatus'] = 'ready'
     result['predictionModelVersion'] = prediction['modelVersion']
     result['prediction'] = prediction
+    result['forecastText'] = prediction.get('forecastText', '')
     result['predictionMarks'] = marks
     result['recommendedBets'] = generate_tickets(prediction, marks)
     by_no = {row['horseNumber']: row['mark'] for row in marks}

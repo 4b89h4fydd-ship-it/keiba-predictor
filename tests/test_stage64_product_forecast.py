@@ -43,8 +43,8 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert len(generate_marks(prediction)) == 5
         assert {x["mark"] for x in generate_marks(prediction)} == {"◎", "○", "▲", "△", "☆"}
         items = generate_tickets(prediction, generate_marks(prediction))
-        assert sum(x["points"] for x in items) == 5
-        assert sum(len(x["combos"]) for x in items) == 5
+        assert 1 <= sum(x["points"] for x in items) <= 5
+        assert 1 <= sum(len(x["combos"]) for x in items) <= 5
         assert len(prediction["stages"]) == 6
         assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
 
@@ -56,7 +56,7 @@ def test_public_projection_contains_prediction_marks_and_bets_without_mutating_i
     assert published["predictionStatus"] == "ready"
     assert published["predictionMarks"]
     assert {x["mark"] for x in published["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
-    assert sum(x["points"] for x in published["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in published["recommendedBets"]) <= 5
     assert detail == original
 
 
@@ -121,7 +121,7 @@ def test_d1_prefetch_product_attachment_preserves_original_evidence():
     assert enriched["predictionStatus"] == "ready"
     assert enriched["predictionModelVersion"] == "arvexq-stage64-product-v1"
     assert len(enriched["predictionMarks"]) == 5
-    assert sum(x["points"] for x in enriched["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in enriched["recommendedBets"]) <= 5
     assert repair_reason(enriched, original) == "stage64_products_not_persisted"
 
 
@@ -256,9 +256,7 @@ def test_stage64_seal_transport_retains_integer_probability_keys_losslessly():
     assert restored["recommendedBets"] == source["recommendedBets"]
     assert restored["preRacePrediction"] == source["preRacePrediction"]
 
-def test_all_wager_kinds_compete_for_a_single_five_point_limit():
-    from itertools import combinations, permutations
-    from arvexq.forecast.tickets import _score
+def test_wager_portfolio_counts_only_new_finish_coverage():
     values = {"trifecta": [
         {"combo": [1, 2, 3], "probability": 0.55},
         {"combo": [2, 1, 3], "probability": 0.25},
@@ -268,17 +266,32 @@ def test_all_wager_kinds_compete_for_a_single_five_point_limit():
     marks = [{"horseNumber": n, "mark": m} for n, m in
              [(1, "◎"), (2, "○"), (3, "▲")]]
     result = generate_tickets(prediction, marks)
-    actual = {(entry["kind"], tuple(combo)) for entry in result for combo in entry["combos"]}
-    candidates = []
-    for kind, size in (("馬連", 2), ("ワイド", 2), ("馬単", 2), ("3連複", 3)):
-        combos = permutations((1, 2, 3), size) if kind == "馬単" else combinations((1, 2, 3), size)
-        for combo in combos:
-            probability = _score(values, combo, kind)
-            if probability > 0:
-                candidates.append((-probability, kind, combo))
-    expected = {(kind, combo) for _, kind, combo in sorted(candidates)[:5]}
-    assert actual == expected
-    assert sum(entry["points"] for entry in result) == 5
+    # All actual top-three sets are identical in this synthetic example:
+    # buying the same complete coverage five times is not better than one.
+    assert sum(entry["points"] for entry in result) == 1
+    assert result[0]["kind"] == "3連複"
+    assert result[0]["combos"] == [[1, 2, 3]]
+
+
+def test_stage64_outputs_share_one_prediction_and_pace_explanation():
+    source = race("地方")
+    for h in source["horses"]:
+        h["name"] = "馬" + str(h["horseNumber"])
+    published = with_preoff_clock(public_race, source)
+    forecast = published["forecastText"]
+    model = published["prediction"]
+    marks = published["predictionMarks"]
+    tickets = published["recommendedBets"]
+    assert model["forecastText"] == forecast
+    assert model["modelVersion"] == published["predictionModelVersion"]
+    assert str(marks[0]["horseNumber"]) in forecast
+    assert "前走" in forecast and "展開仮説" in forecast
+    assert "未校正" in forecast
+    selected = {n for item in tickets for pair in item["combos"] for n in pair}
+    assert selected.issubset({m["horseNumber"] for m in marks})
+    assert len(model["stages"]) == 6
+
+
 
 def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archive():
     detail = race("地方")
@@ -295,7 +308,7 @@ def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archi
     archive = deepcopy(original)
     projected = public_race(original)
     assert projected["predictionStatus"] == "ready"
-    assert sum(x["points"] for x in projected["recommendedBets"]) == 5
-    assert sum(len(x["combos"]) for x in projected["recommendedBets"]) == 5
+    assert 1 <= sum(x["points"] for x in projected["recommendedBets"]) <= 5
+    assert 1 <= sum(len(x["combos"]) for x in projected["recommendedBets"]) <= 5
     assert original == archive
     assert original["recommendedBets"] != projected["recommendedBets"]

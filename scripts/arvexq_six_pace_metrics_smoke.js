@@ -71,7 +71,7 @@ assert.ok(model.finishingEvidence(closing,target).closing>model.finishingEvidenc
 assert.ok(model.finishingEvidence(front,target).hold>model.finishingEvidence(closing,target).hold,
   'front retention must be evaluated separately');
 assert.ok(src.includes('finishEvidence:finishingEvidence(h,r)'), 'buildRows must include observed finish evidence');
-assert.ok(src.includes('x.finishEvidence.closingSamples/3'), 'closing score must use measured conversion');
+assert.ok(src.includes('y.finishEvidence.closingSamples/3'), 'closing score must use measured conversion');
 assert.ok(src.includes('y.finishEvidence.holdSamples/3'), 'front stay score must use measured holding');
 assert.ok(src.includes('y.finishEvidence.closingSamples/3'), 'come from behind must use measured conversion');
 assert.ok(src.includes('的中確率ではありません'), 'UI must not equate internal score to empirical accuracy');

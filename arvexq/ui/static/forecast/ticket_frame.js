@@ -54,9 +54,15 @@ function sealedFive(r,server){
 function contents(r,p){
  var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)?sealedFive(r,r.recommendedBets):null;
  if(server){
+   if(!server.length)return '<div class="ai-bet-box"><p class="muted">同じStage64予想から確定できる買い目はありません。別方式の買い目は混ぜません。</p></div>';
    var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+(item.combos||[]).map(function(c){return '<span class="arv-three-combo">'+esc(c.join(' - '))+'</span>';}).join('')+'</strong><p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p></div>';}).join('');
    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">Stage64確率順・全印考慮・全券種合計最大5点</p>'+rows+'</div>';
  }
+ // Never mix an unrelated historical morning receipt into a ready Stage64
+ // product when the server did not provide matching ticket evidence.
+ if(r&&r.predictionStatus==='ready'&&r.prediction&&
+    r.prediction.modelVersion==='arvexq-stage64-product-v1')
+   return '<div class="ai-bet-box"><p class="muted">同一Stage64の買い目データが未取得です。</p></div>';
  var service=root.ARVEXQProductionTickets;
  var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
  if(!plan||!plan.fixedAt||!Array.isArray(plan.items)||!plan.items.length){
