@@ -136,7 +136,7 @@ def test_race_reading_uses_runner_relations_without_fake_expert_votes():
     detail = race("地方")
     prediction = build_prediction(detail, now=NOW)
     reading = prediction["raceReading"]
-    assert reading["expertFusionStatus"] == "unverified-no-expert-observations"
+    assert reading["expertFusionStatus"] == "methodology-only-no-expert-picks"
     assert reading["raceSituation"] == "単騎逃げ・先行負荷軽め"
     assert len(prediction["stages"]["pace"]["value"]) == 2
     assert reading["horses"][1]["predictedPosition"] == "逃げ"
@@ -151,3 +151,13 @@ def test_race_reading_does_not_cross_jra_nar_baselines():
     assert len(central["stages"]["pace"]["value"]) == 1
     assert len(local["stages"]["pace"]["value"]) == 2
     assert central["raceReading"]["raceSituation"] != local["raceReading"]["raceSituation"]
+
+
+def test_handicapping_methods_have_observed_evidence_and_no_fabricated_votes():
+    prediction = build_prediction(race("地方"), now=NOW)
+    for horse in prediction["raceReading"]["horses"].values():
+        lenses = horse["methodologyFusion"]
+        assert set(lenses) == {"回顧型", "能力比較型", "コース適性型", "展開型"}
+        assert all(isinstance(lens["evidenceRuns"], int) for lens in lenses.values())
+        assert "expertVotes" not in horse
+        assert horse["unverified"]
