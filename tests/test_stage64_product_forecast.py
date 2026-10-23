@@ -279,3 +279,23 @@ def test_all_wager_kinds_compete_for_a_single_five_point_limit():
     expected = {(kind, combo) for _, kind, combo in sorted(candidates)[:5]}
     assert actual == expected
     assert sum(entry["points"] for entry in result) == 5
+
+def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archive():
+    detail = race("地方")
+    preoff = with_preoff_clock(public_race, detail)
+    original = deepcopy(preoff)
+    # Legacy archive remains stored unmodified, while its pre-off probability
+    # evidence is safely projected into the current five-point recommendation.
+    original["recommendedBets"] = [
+        {"kind": "ワイド", "combos": [[1, 2], [1, 3], [1, 4], [1, 5], [2, 3]], "points": 5},
+        {"kind": "馬連", "combos": [[1, 2], [1, 3], [1, 4], [1, 5], [2, 3]], "points": 5},
+    ]
+    archive = deepcopy(original)
+    original["result"] = {"status": "確定", "finishers": [{"horseNumber": 1, "finish": 1}]}
+    archive = deepcopy(original)
+    projected = public_race(original)
+    assert projected["predictionStatus"] == "ready"
+    assert sum(x["points"] for x in projected["recommendedBets"]) == 5
+    assert sum(len(x["combos"]) for x in projected["recommendedBets"]) == 5
+    assert original == archive
+    assert original["recommendedBets"] != projected["recommendedBets"]
