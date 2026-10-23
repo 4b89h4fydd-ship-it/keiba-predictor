@@ -818,7 +818,7 @@ function careerCoverageLabel(h){var c=h&&h.careerCoverage;if(!c||!c.state)return
 function careerCoverageLine(h){var c=h&&h.careerCoverage,label=careerCoverageLabel(h);if(!label)return'';var got=n(c.eligibleRuns,0),rep=c.reportedStarts;return '<div class="muted career-coverage" data-career-state="'+esc(c.state)+'" style="margin:2px 0 6px;font-size:11px">全キャリア：'+esc(label)+'（取得 '+esc(got)+'走'+(rep!=null?' / 総出走 '+esc(rep)+'走':'')+(n(c.unusableRecords,0)?' / 項目欠損 '+esc(c.unusableRecords)+'走':'')+'）</div>'}
 function runnerDetailBody(r,p,x){
   var h=x.horse,displayName=horseDisplayName(r,h),recent=(h.recentRaces||h.allPastRuns||[]).slice(0,5),finishEvidence=x.finishEvidence||{},reasons=(x.overallReasons||[]).slice(0,4),bodyTxt=horseBodyWeightText(h),styleTxt=x.expected||x.pastStyle||'不明',
-      rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||(raceMarkClock(r).started?null:paceOutcomeModel(r,p)),no=n(h.horseNumber),role=raceMarkClock(r).started?'発走前保存情報':'相手候補';
+      rf=x.researchFactors||{},sp=styleDisplayPcts(x),out=(p&&p.outcome)||(r&&r.predictionStatus==='ready'?null:(raceMarkClock(r).started?null:paceOutcomeModel(r,p))),no=n(h.horseNumber),role=raceMarkClock(r).started?'発走前保存情報':'相手候補';
   // No model evidence must never be displayed as zero ability.
   var hasScoredEvidence=n(x.threeFactorCoverage,0)>0;
   function pct(v){if(!hasScoredEvidence||v==null||v===''||!Number.isFinite(Number(v)))return '未評価';return Math.round(clamp(Number(v),0,1)*100)}
@@ -1657,15 +1657,34 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){
-  var verified=r&&r.predictionStatus==='ready'&&r.prediction&&
+  // Stage64 must own the pace conclusion. The retired visual simulator may
+  // otherwise invent an unrelated order from the original racecard number.
+  var live=r&&r.predictionStatus==='ready'&&r.prediction&&
     r.prediction.modelVersion==='arvexq-stage64-product-v1'&&
     r.prediction.raceId===r.id&&r.prediction.date===r.date;
-  var saved=verified&&typeof r.forecastText==='string'?r.forecastText.trim():'';
-  var contents='';
-  try{contents=paceBoard(r,p)}catch(e){console.error('pace panel failed',e)}
-  if(saved)contents+='<section class="card"><h2>保存済み展開予想</h2><p>'+esc(saved)+'</p></section>';
-  if(!contents)contents='<section class="card"><h2>展開予想</h2><p>検証済みの展開予想データを取得できませんでした。</p></section>';
-  return '<section id="section-pace" class="card pace-panel-direct">'+contents+'</section>'
+  if(!live)return '<section id="section-pace" class="card pace-panel-direct"><h2>展開予想</h2>'+
+    '<p class="muted">同一レースの検証可能な発走前展開予想は未取得です。</p></section>';
+  var source=r.prediction, stage=source.stages&&source.stages.pace||{},
+    cases=Array.isArray(stage.value)?stage.value:[],
+    names={};
+  (r.horses||[]).forEach(function(h){if(h&&h.horseNumber)names[String(h.horseNumber)]=h.name||String(h.horseNumber)+'番'});
+  var labels=['標準隊列','前争いの影響','前方有利の想定','後方浮上の想定'];
+  var details=cases.map(function(delta,i){
+    if(!delta||typeof delta!=='object')return '';
+    var changes=Object.keys(delta).map(function(no){return {no:no,value:Number(delta[no])}})
+      .filter(function(x){return Number.isFinite(x.value)&&x.value>0})
+      .sort(function(a,b){return b.value-a.value||Number(a.no)-Number(b.no)});
+    return '<div class="actual-stage"><b>仮説'+(i+1)+'：'+esc(labels[i]||'別想定')+'</b><div class="muted">'+
+      (changes.length?'相対的に有利な候補：'+changes.slice(0,3).map(function(x){return esc(names[x.no]||x.no+'番')}).join('、'):
+       '補正なし（標準隊列）')+'</div></div>'
+  }).join('');
+  var prose=String(source.forecastText||r.forecastText||'').trim();
+  return '<section id="section-pace" class="card pace-panel-direct"><div class="ai-flow-card pace-stage-menu-card">'+
+    '<div class="ai-flow-head"><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div>'+
+    '<div class="ai-flow-sub">◎○▲△☆と買い目の基礎となる同一Stage64の展開仮説です。</div></div></div>'+
+    (prose?'<p class="forecast-text">'+esc(prose)+'</p>':'')+details+
+    '<p class="muted">仮説の発生確率・的中確率は未校正。結果から後付けで再予想していません。</p>'+
+    '</div></section>'
 }
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
