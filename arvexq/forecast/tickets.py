@@ -5,13 +5,18 @@ from itertools import permutations, combinations
 def _score(probabilities, combo, kind):
     raw = probabilities.get("trifecta") or {}
     joint = raw if isinstance(raw, dict) else {tuple(row["combo"]): row["probability"] for row in raw}
+    # Stage64 stores probabilities for ordered 1st/2nd/3rd triples.
+    # Project that existing joint distribution to each wager's finish rule;
+    # pair tickets must never look up a nonexistent two-element joint key.
     if kind == "馬単":
-        return sum(joint.get((a, b, c), 0.0) for c in probabilities["win"] for a, b in [combo] if c not in combo)
-    if kind == "3連複":
-        return sum(joint.get(p, 0.0) for p in permutations(combo))
+        return sum(p for finish, p in joint.items() if finish[:2] == tuple(combo))
     if kind == "馬連":
-        return sum(joint.get(p, 0.0) for p in permutations(combo))
-    return sum(joint.get(p, 0.0) for p in permutations(combo) if set(combo).issubset(p[:3]))
+        return sum(p for finish, p in joint.items() if set(finish[:2]) == set(combo))
+    if kind == "ワイド":
+        return sum(p for finish, p in joint.items() if set(combo).issubset(finish[:3]))
+    if kind == "3連複":
+        return sum(p for finish, p in joint.items() if set(finish[:3]) == set(combo))
+    raise ValueError("unknown wager kind")
 
 def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.8,
                      place_payout_slots=3):
