@@ -19,8 +19,8 @@ def observed_positions(run):
     raw = run.get("cornerPositions") or run.get("passing")
     if isinstance(raw, (list, tuple)):
         values = [num(v) for v in raw]
-    elif isinstance(raw, str) and re.fullmatch(r"\\s*\\d+(?:\\s*[-,→]\\s*\\d+)+\\s*", raw):
-        values = [num(v) for v in re.split(r"\\s*[-,→]\\s*", raw.strip())]
+    elif isinstance(raw, str) and re.fullmatch(r"\s*\d+(?:\s*[-,→]\s*\d+)+\s*", raw):
+        values = [num(v) for v in re.split(r"\s*[-,→]\s*", raw.strip())]
     else:
         return []
     return values if len(values) >= 2 and all(v is not None for v in values) else []
