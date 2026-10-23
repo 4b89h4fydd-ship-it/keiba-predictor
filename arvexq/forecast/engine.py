@@ -53,6 +53,17 @@ def build_prediction(facts, now=None):
         return None
     race = dict(facts)
     race["circuit"] = circuit
+    # NAR snapshots may retain the same pre-off history under allPastRuns.
+    # The display adapter already uses this alias; pass it to Stage64 without
+    # modifying stored rows or changing the model / missing-data policy.
+    if circuit == "nar" and isinstance(race.get("horses"), list):
+        race["horses"] = [
+            {**h, "recentRaces": h["allPastRuns"]}
+            if isinstance(h, dict) and not h.get("recentRaces")
+            and isinstance(h.get("allPastRuns"), list) and h["allPastRuns"]
+            else h
+            for h in race["horses"]
+        ]
     try:
         result = predict(race, expected_circuit=circuit)
     except (KeyError, TypeError, ValueError):

@@ -167,3 +167,35 @@ def test_unapproved_research_overlay_still_cannot_fabricate_stage64_products():
     assert result["details"][0]["predictionStatus"] == "new-model-unavailable"
     assert "predictionMarks" not in result["details"][0]
     assert "recommendedBets" not in result["details"][0]
+
+
+def test_nar_all_past_runs_alias_recovers_preoff_marks_without_changing_evidence():
+    detail = race("地方")
+    for horse in detail["horses"]:
+        horse["allPastRuns"] = horse.pop("recentRaces")
+    original = deepcopy(detail)
+    published = with_preoff_clock(public_race, detail)
+    assert published["predictionStatus"] == "ready"
+    assert {m["mark"] for m in published["predictionMarks"]} == {"◎", "○", "▲", "△", "☆"}
+    assert detail == original
+
+
+def test_nar_alias_never_overrides_existing_recent_history_or_missing_evidence():
+    detail = race("地方")
+    detail["horses"][0]["recentRaces"] = []
+    detail["horses"][0]["allPastRuns"] = [{"date": "2026-10-15", "fieldSize": 5, "finish": 1}]
+    # Existing missing-corner guard remains enforced, even with an alias.
+    assert build_prediction(detail, now=NOW) is None
+    detail["horses"][0]["allPastRuns"] = []
+    assert build_prediction(detail, now=NOW) is None
+
+
+def test_nar_history_alias_does_not_change_central_or_started_races():
+    jra = race("中央")
+    for horse in jra["horses"]:
+        horse["allPastRuns"] = horse.pop("recentRaces")
+    assert build_prediction(jra, now=NOW) is None
+    nar = race("地方")
+    for horse in nar["horses"]:
+        horse["allPastRuns"] = horse.pop("recentRaces")
+    assert build_prediction(nar, now=datetime(2026, 10, 23, 13, 0, tzinfo=ZoneInfo("Asia/Tokyo"))) is None
