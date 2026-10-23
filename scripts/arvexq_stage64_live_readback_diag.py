@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from arvexq.forecast.engine import _preoff, build_prediction
 from arvexq.research.stage64.pipeline import predict
+from arvexq.ingest.full_snapshot_codec import unpack_detail as unpack_full_snapshot
 
 RACES = (
     "nar-2026-10-23-園田-09",
@@ -34,7 +35,16 @@ for race_id in RACES:
             timeout=15
         ) as response:
             obj = json.load(response)
-        d = obj["detail"]
+        raw = obj["detail"]
+        d = raw
+        packed_depth = 0
+        while "arvexqFullPayload" in d and packed_depth < 3:
+            d = unpack_full_snapshot(d)
+            packed_depth += 1
+        print("ARVEXQ_D1_COMPRESSION_DEPTH",race_id,packed_depth,
+              "rawPacked","arvexqFullPayload" in raw,
+              "unpackedHorseRuns",sum(len(h.get("recentRaces") or []) for h in d.get("horses") or []),
+              flush=True)
         horses = d.get("horses") or []
         observations = []
         for h in horses:
