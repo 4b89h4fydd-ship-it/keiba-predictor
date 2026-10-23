@@ -19,7 +19,7 @@ function contents(r,p){
  var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)?r.recommendedBets:null;
  if(server){
    var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+(item.combos||[]).map(function(c){return '<span class="arv-three-combo">'+esc(c.join(' - '))+'</span>';}).join('')+'</strong><p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p></div>';}).join('');
-   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">Stage64確率順・全印考慮・各券種最大5点</p>'+rows+'</div>';
+   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">Stage64確率順・全印考慮・全券種合計最大5点</p>'+rows+'</div>';
  }
  var service=root.ARVEXQProductionTickets;
  var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
