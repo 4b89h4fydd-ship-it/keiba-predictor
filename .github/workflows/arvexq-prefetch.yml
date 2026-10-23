@@ -788,6 +788,7 @@ jobs:
           missing_cards=[(rid,'missing D1 summary') for rid in missing_summary_ids]
           missing_analysis=[]
           missing_new_forecast=[]
+          missing_horse_history=[]
           for rid,old in expected.items():
               d=returned.get(rid)
               if not d:
@@ -828,6 +829,23 @@ jobs:
               expected_numbers={int(h.get('horseNumber') or 0) for h in prepared_horses}
               if len(good)<2 or not expected_numbers.issubset(set(numbers)) or len(numbers)!=len(set(numbers)):
                   missing_cards.append((rid,f'expected_numbers={sorted(expected_numbers)} D1_numbers={sorted(set(numbers))}'))
+              # Completion means observed runner histories survived the existing
+              # D1 persistence path; HTTP success is not sufficient.
+              observed={int(h.get('horseNumber') or 0):h for h in horses if h.get('horseNumber')}
+              for original in prepared_horses:
+                  num=int(original.get('horseNumber') or 0)
+                  saved=observed.get(num, {})
+                  original_runs=original.get('recentRaces') or []
+                  saved_runs=saved.get('recentRaces') or []
+                  if original_runs and len(saved_runs)<len(original_runs):
+                      missing_horse_history.append((rid,num,len(original_runs),len(saved_runs)))
+              if old.get('predictionStatus') == 'ready':
+                  marks=old.get('predictionMarks') or []
+                  if marks and d.get('predictionMarks') != marks:
+                      missing_new_forecast.append((rid,'ready-marks-not-persisted'))
+                  bets=old.get('recommendedBets') or []
+                  if bets and d.get('recommendedBets') != bets:
+                      missing_new_forecast.append((rid,'ready-bets-not-persisted'))
               pm=d.get('preparedMeta') if isinstance(d.get('preparedMeta'),dict) else {}
               has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
               if not has_analysis:
@@ -878,7 +896,9 @@ jobs:
               # deployed and verified by the Cloudflare Web Deploy workflow.
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
           if missing_analysis:
-              print('::warning::D1 analysis unavailable for '+str(len(missing_analysis))+' races: '+str(missing_analysis[:20]))
+              raise SystemExit('D1_ANALYSIS_INCOMPLETE: '+str(missing_analysis[:20]))
+          if missing_horse_history:
+              raise SystemExit('D1_HORSE_HISTORY_INCOMPLETE: '+str(missing_horse_history[:25]))
           if missing_new_forecast:
               print('D1_NEW_FORECAST_NOT_PERSISTED',missing_new_forecast[:25])
               raise SystemExit('D1 replacement forecast not published: '+str(len(missing_new_forecast))+' mismatches')
