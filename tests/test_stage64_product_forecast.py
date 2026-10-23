@@ -137,3 +137,33 @@ def test_d1_product_projection_never_retroactively_creates_off_predictions():
     assert finished == snapshot
     assert "predictionMarks" not in projected
     assert "recommendedBets" not in projected
+
+
+def test_research_overlay_never_replaces_approved_preoff_stage64_products():
+    from scripts.arvexq_apply_learned_overlay import apply
+
+    original = with_preoff_clock(public_race, race("地方"))
+    assert original["predictionStatus"] == "ready"
+    assert original["predictionModelVersion"] == "arvexq-stage64-product-v1"
+    assert len(original["predictionMarks"]) == 5
+    assert original["recommendedBets"]
+    sealed = {"frozen": True, "originalReference": "immutable-evidence"}
+    original["preRacePrediction"] = sealed
+    bundle = {"details": [deepcopy(original)], "summaries": []}
+    result, report = apply(bundle, {"地方": {"training": {"lastDate": "2026-10-22"}}})
+    assert result["details"][0] == original
+    assert bundle["details"][0] == original
+    assert report["skipped"][original["id"]] == "approved-stage64-product-preserved"
+    assert result["details"][0]["preRacePrediction"] == sealed
+
+
+def test_unapproved_research_overlay_still_cannot_fabricate_stage64_products():
+    from scripts.arvexq_apply_learned_overlay import apply
+
+    unready = race("地方")
+    unready["predictionStatus"] = "disabled"
+    unready["predictionModelVersion"] = "arvexq-prediction-removed"
+    result, report = apply({"details": [unready]}, {})
+    assert result["details"][0]["predictionStatus"] == "new-model-unavailable"
+    assert "predictionMarks" not in result["details"][0]
+    assert "recommendedBets" not in result["details"][0]

@@ -157,7 +157,7 @@ jobs:
           import {forecastRevisions} from './api_forecast_revisions.mjs';
           import {storageAudit} from './api_storage_audit.mjs';
           import {snapshotExport} from './api_snapshot_export.mjs';
-          import {compressStoredSnapshot} from './api_full_snapshot.mjs';
+          import {compressStoredSnapshot,readCompressedRace} from './api_full_snapshot.mjs';
           export default {async fetch(request,env,ctx){
             const path=new URL(request.url).pathname;
             if(path.startsWith('/api/forecast-revisions/') ||
@@ -165,6 +165,11 @@ jobs:
             if(path==='/api/admin/storage-audit')return storageAudit(request,env);
             if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
             if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+            if(request.method==='GET' && path.startsWith('/api/race/')){
+              const id=decodeURIComponent(path.slice('/api/race/'.length));
+              const full=await readCompressedRace(env,id);
+              if(full)return full;
+            }
             return liveWorker.fetch(request,env,ctx);
           }};
                     """,encoding='utf-8')
@@ -201,7 +206,7 @@ jobs:
           import {forecastRevisions} from './api_forecast_revisions.mjs';
           import {storageAudit} from './api_storage_audit.mjs';
           import {snapshotExport} from './api_snapshot_export.mjs';
-          import {compressStoredSnapshot} from './api_full_snapshot.mjs';
+          import {compressStoredSnapshot,readCompressedRace} from './api_full_snapshot.mjs';
           export default {async fetch(request,env,ctx){
             const path=new URL(request.url).pathname;
             if(path.startsWith('/api/forecast-revisions/') ||
@@ -209,6 +214,11 @@ jobs:
             if(path==='/api/admin/storage-audit')return storageAudit(request,env);
             if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
             if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+            if(request.method==='GET' && path.startsWith('/api/race/')){
+              const id=decodeURIComponent(path.slice('/api/race/'.length));
+              const full=await readCompressedRace(env,id);
+              if(full)return full;
+            }
             return liveWorker.fetch(request,env,ctx);
           }};
                     """,encoding='utf-8')
