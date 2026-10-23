@@ -210,7 +210,11 @@ def predict(race, *, expected_circuit, ability_method=None):
                                    "trifecta":trifecta},
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
-    stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium),
+    # Compare each existing pace hypothesis independently; never use race results.
+    scenario_wins=[distribution(ability,[delta],config["temperature"])["win"]
+                   for delta in deltas]
+    stages["marks"]={"status":"research-only-unvalidated",
+                     "value":roles(probs["win"],podium,scenario_wins),
                      "reasoning":{no:{"position":reading[no]["predictedPosition"],
                                       "winScenario":reading[no]["winningScenario"],
                                       "advantageDisadvantage":reading[no]["advantageDisadvantage"],
