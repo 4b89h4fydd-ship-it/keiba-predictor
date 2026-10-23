@@ -1,3 +1,4 @@
+import {applyStage64Archive} from './preoff-persistence.js';
 // Read only, compact roster. History/analysis/odds failures cannot block this route.
 export const BASIC_SQL = `
   SELECT json_object(
@@ -122,7 +123,8 @@ export async function readRaceDisplay(env, raceId) {
   try {
     const row = await env.DB.prepare(DISPLAY_SQL).bind(raceId).first();
     if (!row) return response({ok:false,error:'race not found',race_id:raceId},404);
-    const detail = await restoreDisplaySnapshot(JSON.parse(row.payload));
+    const stored = JSON.parse(row.payload);
+    const detail = applyStage64Archive(await restoreDisplaySnapshot(stored), stored);
     let odds = [];
     try {
       const result = await env.DB.prepare(`SELECT horse_no, win_odds, popularity,
