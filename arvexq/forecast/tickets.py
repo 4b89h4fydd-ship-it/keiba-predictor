@@ -27,11 +27,21 @@ def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.
     if len(candidates) < 2 or not probabilities.get("trifecta"):
         return []
     specs = (("馬連", 2), ("ワイド", 2), ("馬単", 2), ("3連複", 3))
-    items = []
+    ranked = []
     for kind, size in specs:
-        combos = list(permutations(candidates, size)) if kind == "馬単" else list(combinations(candidates, size))
-        ranked = sorted(combos, key=lambda c: (-_score(probabilities, c, kind), c))[:5]
-        if ranked:
-            items.append({"kind": kind, "combos": [list(c) for c in ranked],
-                          "points": len(ranked), "reason": "Stage64確率順・◎○▲△☆全印考慮"})
+        combos = permutations(candidates, size) if kind == "馬単" else combinations(candidates, size)
+        for combo in combos:
+            probability = _score(probabilities, combo, kind)
+            if probability > 0:
+                ranked.append((-probability, kind, combo))
+    ranked.sort(key=lambda row: (row[0], row[1], row[2]))
+    items = []
+    for _, kind, combo in ranked[:5]:
+        group = next((item for item in items if item["kind"] == kind), None)
+        if group is None:
+            group = {"kind": kind, "combos": [], "points": 0,
+                     "reason": "Stage64全券種横断・的中確率上位5点・◎○▲△☆対象"}
+            items.append(group)
+        group["combos"].append(list(combo))
+        group["points"] += 1
     return items
