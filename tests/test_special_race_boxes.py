@@ -50,6 +50,23 @@ class SpecialRaceBoxesTests(unittest.TestCase):
         self.assertEqual(box["horses"][0]["historyState"], "packed-not-decoded")
         self.assertIsNone(box["horses"][0]["jumpRunsDatedBeforeRace"])
 
+    def test_historical_high_jump_and_decoration_integration(self):
+        from arvexq.prediction.race_intelligence import attach_evidence
+        detail = {"circuit": "中央", "id": "jra-2026-10-18-東京-09",
+                  "date": "2026-10-18", "track": "東京", "title": "東京HJ",
+                  "horses": [{"horseNumber": 1, "name": "検証馬",
+                              "recentRaces": [
+                                  {"date": "2026-09-01", "title": "東京HJ", "finish": 3}],
+                              "integratedEvaluation": {"mark": "◎"}}],
+                  "preRaceBet": {"items": [{"kind": "単勝", "combos": [[1]]}]}}
+        original_bet = copy.deepcopy(detail["preRaceBet"])
+        attach_evidence(detail)
+        box = detail["specialRaceBox"]
+        self.assertEqual(box["box"], "jra-jumps")
+        self.assertEqual(box["horses"][0]["jumpRunsDatedBeforeRace"], 1)
+        self.assertEqual(detail["horses"][0]["integratedEvaluation"]["mark"], "◎")
+        self.assertEqual(detail["preRaceBet"], original_bet)
+
     def test_post_race_results_do_not_change_evidence_box(self):
         race = {"circuit": "中央", "date": "2026-10-25", "title": "2歳新馬", "horses": [
             {"horseNumber": 1, "sire": "父"}]}
