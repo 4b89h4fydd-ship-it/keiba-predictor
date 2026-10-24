@@ -61,3 +61,12 @@ def test_unverified_geometry_is_unknown_not_fabricated():
     source["courseGeometry"]["publishedAt"] = "2026-10-23T11:00:00+09:00"
     source["courseGeometry"]["sourceUrl"] = "https://unsafe.example/geometry"
     assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+
+
+def test_retired_banei_and_jumps_are_not_cast_as_flat():
+    import pytest
+    for track, surface in (("帯広ば", "ダート"), ("園田", "障害"), ("帯広", "ばんえい")):
+        source = race()
+        source["track"], source["surface"] = track, surface
+        with pytest.raises(ValueError, match="retired Banei"):
+            public_pace_factors(source)
