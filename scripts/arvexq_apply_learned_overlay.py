@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from arvexq.prediction.new_forecast import build_forecast
+from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
 
 
 # Retired mutable presentation fields. Do not touch immutable pre-off records,
@@ -77,6 +78,15 @@ def apply(bundle, models):
         if (model.get('training') or {}).get('lastDate', '9999') >= str(detail.get('date') or ''):
             skipped[str(detail['id'])] = 'training-date-not-earlier'
             details.append(without_legacy_presentation(detail))
+            continue
+        # A prefetched race can pass its scheduled start while heavy D1
+        # reads/learning are still running. Do not replace its preserved
+        # original with a newly generated post-off learned forecast. The
+        # public projection independently hides unapproved legacy opinions.
+        if (str(detail.get('date') or '') >= '2026-10-23'
+                and not may_create_prerace_prediction(detail)):
+            details.append(detail)
+            skipped[str(detail['id'])] = 'post-off-original-preserved'
             continue
         try:
             updated = build_forecast(detail, model)
