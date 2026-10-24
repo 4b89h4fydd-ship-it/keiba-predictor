@@ -7,7 +7,7 @@ from arvexq.research.stage64.pipeline import predict
 
 def _run(date, finish, *, no=1, reaction=None, source="individual_sensor"):
     row = {"date": date, "track": "園田", "raceNumber": 3,
-           "distance": 1400, "fieldSize": 10, "finish": finish,
+           "distance": 1400, "surface": "ダート", "fieldSize": 10, "finish": finish,
            "cornerPositions": [no, max(1, no-1)],
            "marginSeconds": (finish-1)*0.2, "opponentLevel": 0.7}
     if reaction is not None:
@@ -143,6 +143,18 @@ def test_head_to_head_challenger_is_audited_not_automatically_promoted():
     assert proposed["horseNumber"] == 2 and proposed["researchOnly"] is True
     assert "same-track-distance-margin" in proposed["confirmedChecks"]
     assert "verified-first-corner-geometry" in proposed["unavailableChecks"]
+    assert "same-track-distance-margin" in proposed["corroboratingEvidence"]
+    # One historical head-to-head win only warrants a comparison when at
+    # least one distinct, observed matched-condition fact corroborates it.
+    facts["headToHead"][2][1]["wins"] = 1
+    assert direct_rematch_candidate([1,2,3,4], facts)["horseNumber"] == 2
+    facts["byHorse"][2]["sameTrackDistanceMarginSeconds"] = .5
+    facts["byHorse"][2]["opponentLevelMedian"] = .7
+    facts["byHorse"][2]["sameTrackDistanceTop3"] = 1
+    assert direct_rematch_candidate([1,2,3,4], facts) is None
+    facts["byHorse"][2]["sameTrackDistanceMarginSeconds"] = .2
+    facts["byHorse"][2]["opponentLevelMedian"] = .8
+    facts["byHorse"][2]["sameTrackDistanceTop3"] = 2
     facts["byHorse"][2]["opponentLevelMedian"] = .1
     assert direct_rematch_candidate([1,2,3,4], facts) is None
     facts["byHorse"][2]["opponentLevelMedian"] = .8
