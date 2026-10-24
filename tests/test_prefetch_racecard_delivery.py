@@ -27,6 +27,42 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.id = "nar-2026-10-08-大井-04"
 
+    def test_fact_stage_does_not_rewrite_only_for_model_or_marks(self) -> None:
+        prepared = race(self.id, (1, 2, 3), ai=True)
+        existing = copy.deepcopy(prepared)
+        prepared["predictionStatus"] = "ready"
+        prepared["predictionModelVersion"] = "arvexq-stage64-product-v1"
+        prepared["predictionMarks"] = [{"horseNumber": 1, "mark": "◎"}]
+        prepared["recommendedBets"] = [{"kind": "馬連", "horseNumbers": [1, 2]}]
+        prepared["preparedMeta"]["analysisInputHash"] = "recent"
+        existing["predictionStatus"] = "disabled"
+        existing["predictionModelVersion"] = "legacy"
+        existing["preparedMeta"]["analysisInputHash"] = "old"
+        self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True), "")
+        self.assertEqual(repair.repair_reason(prepared, existing),
+                         "stage64_products_not_persisted")
+
+    def test_fact_stage_still_repairs_missing_roster_and_real_history(self) -> None:
+        prepared = race(self.id, (1, 2, 3))
+        existing = copy.deepcopy(prepared)
+        prepared["horses"][0]["recentRaces"] = [
+            {"date": "2026-10-01", "track": "佐賀", "raceNumber": 2,
+             "finish": 2, "fieldSize": 11}]
+        self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True),
+                         "career_history_missing_observations")
+        existing["horses"] = existing["horses"][:-1]
+        self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True),
+                         "roster_incomplete")
+
+    def test_workflow_facts_only_and_later_prediction_overlay_remain_separate(self) -> None:
+        workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
+        fact_stage = workflow.split("Persist collected facts using the existing D1 sync pipeline",1)[1].split(
+            "Read D1 facts back and require identical horse/history evidence",1)[0]
+        forecast_stage = workflow.split("Select only missing or thin D1 details",1)[1].split(
+            "Push prepared day repairs to D1 in safe batches",1)[0]
+        self.assertIn("--facts-only", fact_stage)
+        self.assertNotIn("--facts-only", forecast_stage)
+
     def test_partial_roster_with_ai_is_still_a_repair(self) -> None:
         prepared = race(self.id, (1, 2, 3, 4))
         current = race(self.id, (1, 2))
