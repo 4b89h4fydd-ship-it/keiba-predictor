@@ -11,7 +11,7 @@ import zipfile
 
 from arvexq.research.stage63.forward import canonical, digest
 from arvexq.research.stage64.circuits import CONFIGS
-from arvexq.research.stage64.pipeline import predict
+from arvexq.research.stage64.pipeline import predict, _public_position_tactics
 from arvexq.research.stage64.protocol import make_plan, snapshot, verify_local, freeze_batch
 from arvexq.research.stage64.witness import read_witness, verify_batch, REPO, REPO_ID, LIMIT
 from arvexq.research.stage64.evaluation import evaluate
@@ -132,6 +132,59 @@ class Pipeline(unittest.TestCase):
         e = p["paceEvidence"]["historicalCourseEvidence"][1]
         self.assertEqual(e["status"], "context-unavailable")
         self.assertIsNone(e["sameTrackDistanceWins"])
+
+    def test_public_mineta_position_inputs_do_not_invent_a_leader(self):
+        r = race()
+        r["distance"] = 1000
+        histories = {
+            1: [{"date": "2026-10-14", "distance": 1000, "fieldSize": 8,
+                 "cornerPositions": [5, 3]}],
+            2: [{"date": "2026-10-14", "distance": 800, "fieldSize": 8,
+                 "cornerPositions": [6, 5]}],
+            3: [{"date": "2026-10-14", "distance": 1200, "fieldSize": 8,
+                 "cornerPositions": [2, 6]}],
+            4: [{"date": "2026-10-14", "distance": 1000, "fieldSize": 8,
+                 "cornerPositions": [8, 7]}],
+        }
+        evidence = _public_position_tactics(r, histories)
+        self.assertEqual(evidence["forwardIntentCandidates"], [1, 2, 3])
+        self.assertEqual(evidence["adjacentForwardIntentPairs"], [[1, 2], [2, 3]])
+        self.assertEqual(evidence["distanceExtensionCandidates"], [2])
+        self.assertEqual(evidence["distanceShorteningCandidates"], [3])
+        self.assertTrue(evidence["observedProfiles"][1]["top3PositionObserved"])
+        self.assertFalse(evidence["observedProfiles"][2]["top3PositionObserved"])
+        self.assertFalse(evidence["pacePredicted"])
+        self.assertFalse(evidence["actualLeadVerified"])
+
+    def test_unknown_prior_corner_and_not_an_imaginary_loser(self):
+        r = race()
+        histories = {
+            1: [{"date": "2026-10-14", "fieldSize": None, "passing": [1]}],
+            2: [{"date": "2026-10-14", "fieldSize": 8, "passing": []}],
+            3: [{"date": "2026-10-14", "fieldSize": 8, "passing": [4]}],
+            4: [],
+        }
+        evidence = _public_position_tactics(r, histories)
+        self.assertEqual(evidence["positionUnknown"], [1, 2, 4])
+        self.assertIsNone(evidence["observedProfiles"][1]["top3PositionObserved"])
+        self.assertEqual(evidence["forwardIntentCandidates"], [])
+        self.assertEqual(evidence["separatedForwardIntentCandidates"], [])
+        self.assertFalse(evidence["actualCompetitionVerified"])
+
+    def test_public_position_tactics_never_change_existing_win_order(self):
+        r = race()
+        r["distance"] = 1000
+        for h in r["horses"]:
+            h["recentRaces"][0]["distance"] = 800
+            h["recentRaces"][0]["passing"] = [1]
+        p = predict(r, expected_circuit="nar")
+        evidence = p["paceEvidence"]["publicPositionTactics"]
+        self.assertEqual(evidence["forwardIntentCandidates"], [1, 2, 3, 4])
+        self.assertEqual(evidence["adjacentForwardIntentPairs"],
+                         [[1, 2], [2, 3], [3, 4]])
+        self.assertEqual(p["stages"]["marks"]["value"]["orderedWinCandidates"][0], 1)
+        self.assertEqual(len(p["stages"]["pace"]["value"]), 1)
+        self.assertEqual(set(p["stages"]["pace"]["value"][0].values()), {0.0})
 
     def test_status_only_scratch(self):
         r=race();r["horses"][0]["status"]="競走除外"
