@@ -72,3 +72,22 @@ def test_both_ai_families_reject_target_results_late_capture_and_cross_circuit()
             fn(card(result=True),model,captured_at=CAPTURE,scheduled_off_at=OFF)
         with pytest.raises(ValueError,match="circuit"):
             fn(card(circuit="中央"),model,captured_at=CAPTURE,scheduled_off_at=OFF)
+
+
+def test_actual_debutants_are_unknown_observations_not_hidden_as_failed_fields():
+    past=samples()
+    for race in past:
+        race["horses"][-1]["recentRaces"]=[]
+    fitted=fit_two_ais(past,circuit="地方",target_date="2026-10-24")
+    current=card()
+    current["horses"][-1]["recentRaces"]=[]
+    for key,fn in (("ai:learned",predict_logistic),("ai:bayes",predict_bayes)):
+        out=fn(current,fitted[key],captured_at=CAPTURE,scheduled_off_at=OFF)
+        assert 5 in out["win"]
+        assert out["win"][5]>0
+        assert sum(out["win"].values())==pytest.approx(1)
+        assert len(out["trifecta"])==5*4*3
+    from arvexq.prediction.learned_scenarios import race_evidence
+    runner=next(row for row in race_evidence(current) if row["horseNumber"]==5)
+    assert runner["observedStarts"]==0
+    assert runner["sourceDates"]==[]
