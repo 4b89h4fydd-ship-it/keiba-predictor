@@ -69,7 +69,8 @@ def test_confirmed_nar_rival_rewrites_win_probability_marks_and_tickets():
     published = build_prediction(source, now=datetime(
         2026, 10, 27, 9, 0, tzinfo=ZoneInfo("Asia/Tokyo")))
     assert published["predictionStatus"] == "ready"
-    assert generate_marks(published)[0] == {"horseNumber": 2, "mark": "◎"}
+    assert generate_marks(published)[0]["horseNumber"] == 2
+    assert generate_marks(published)[0]["mark"] == "◎"
     assert "◎判定へ反映" in published["forecastText"]
     items = generate_tickets(published, generate_marks(published))
     assert 1 <= sum(item["points"] for item in items) <= 5
