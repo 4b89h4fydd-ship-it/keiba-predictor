@@ -51,6 +51,23 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert "単騎逃げ・ハイペース・差し有利とは断定せず" in prediction["forecastText"]
 
 
+def test_course_history_is_explained_without_changing_public_marks():
+    detail = race("地方")
+    detail["distance"] = 1500
+    detail["horses"][0]["allPastRuns"] = [
+        {"date": "2026-10-15", "finish": 1, "fieldSize": 10,
+         "track": "大井", "distance": 1500, "passing": [1]},
+    ]
+    original = deepcopy(detail)
+    p = build_prediction(detail, now=NOW)
+    e = p["paceEvidence"]["historicalCourseEvidence"][1]
+    assert e["sameTrackDistanceStarts"] == 1
+    assert e["sameTrackDistanceWins"] == 1
+    assert "同場・同距離で確認できた1走中1勝" in p["forecastText"]
+    assert generate_marks(p)[0]["horseNumber"] == 1
+    assert detail == original
+
+
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
     detail = race("地方")
     original = deepcopy(detail)
