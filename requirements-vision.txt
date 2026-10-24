@@ -1,0 +1,5 @@
+# Optional offline computer-vision environment only.
+# Keep these heavy packages OUT of requirements.txt and iPhone/PWA runtime.
+# Requires an explicitly supplied local COCO-horse-capable model weights file.
+ultralytics>=8.3,<9
+opencv-python-headless>=4.10,<5
