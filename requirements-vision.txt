@@ -3,3 +3,6 @@
 # Requires an explicitly supplied local COCO-horse-capable model weights file.
 ultralytics>=8.3,<9
 opencv-python-headless>=4.10,<5
+
+# Also requires the Tesseract OCR executable (apt package tesseract-ocr).
+pytesseract>=0.3.13,<1
