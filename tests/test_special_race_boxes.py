@@ -22,6 +22,13 @@ class SpecialRaceBoxesTests(unittest.TestCase):
         self.assertFalse(box["horses"][0]["firstStartConfirmed"])
         self.assertEqual(race, original)
 
+    def test_nested_pedigree_is_observed(self):
+        race = {"circuit": "中央", "title": "2歳新馬", "horses": [
+            {"horseNumber": 1, "pedigree": {"sire": "父", "dam": "母", "damsire": "母父"}}]}
+        row = build_special_race_box(race)["horses"][0]
+        self.assertTrue({"sire", "dam", "damSire"}.issubset(row["observedFields"]))
+        self.assertNotIn("sire", row["missingFields"])
+
     def test_jump_priority_with_flat_surface_and_no_mixed_ability(self):
         race = {"circuit": "中央", "id": "jra-2026-10-17-京都-04", "date": "2026-10-17",
                 "surface": "芝", "title": "障害3歳以上未勝利", "horses": [{
