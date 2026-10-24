@@ -39,7 +39,10 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
     for circuit in ("中央", "地方"):
         prediction = build_prediction(race(circuit), now=NOW)
         assert prediction["predictionStatus"] == "ready"
-        assert prediction["stage64ModelVersion"] in {"jra-flat-shadow-v1", "nar-flat-shadow-v1"}
+        assert prediction["stage64ModelVersion"] == (
+            "jra-flat-shadow-v1" if circuit == "中央"
+            else "nar-flat-shadow-v2-observed-career"
+        )
         assert len(generate_marks(prediction)) == 5
         assert {x["mark"] for x in generate_marks(prediction)} == {"◎", "○", "▲", "△", "☆"}
         items = generate_tickets(prediction, generate_marks(prediction))
