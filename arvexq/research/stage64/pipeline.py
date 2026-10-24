@@ -1,6 +1,6 @@
 """Six independent shadow stages from saved observations through candidate bets."""
 from copy import deepcopy
-from arvexq.research.stage63.ability import prior_runs, score_field
+from arvexq.research.stage63.ability import prior_runs, score_field, quality
 from arvexq.research.stage63.running_style import style_field
 from arvexq.research.stage63.probability import distribution
 from .circuits import CONFIGS, circuit, discipline, active as is_active
@@ -8,6 +8,46 @@ from .marks import roles
 from .tickets import select
 
 STAGES=("ability","runningStyle","pace","probability","marks","tickets")
+
+
+def _same_track_distance_evidence(horse, race):
+    """Read-only historical facts, never a weighted tactical adjustment.
+
+    Prefer the recorded full career when present, but leave Stage64 ability
+    calculation unchanged until a separately evaluated model decision.
+    Strict historical date cutoff prevents today/future-result leakage.
+    """
+    source = horse.get("allPastRuns") or horse.get("recentRaces") or []
+    try:
+        runs = prior_runs({"recentRaces": source}, race["date"])
+    except ValueError:
+        return {"status": "conflicting-history", "observedStarts": 0,
+                "sameTrackDistanceStarts": None, "sameTrackDistanceWins": None,
+                "sameTrackDistanceTop3": None}
+    target_track = str(race.get("track") or "").strip()
+    target_distance = race.get("distance")
+    try:
+        target_distance = float(target_distance) if target_distance is not None else None
+    except (TypeError, ValueError):
+        target_distance = None
+    comparable = []
+    eligible = [r for r in runs if quality(r) is not None
+                and discipline(r) == discipline(race)]
+    if target_track and target_distance is not None and target_distance > 0:
+        for r in eligible:
+            if str(r.get("track") or "").strip() != target_track:
+                continue
+            try:
+                distance = float(r.get("distance"))
+            except (TypeError, ValueError):
+                continue
+            if distance == target_distance:
+                comparable.append(r)
+    return {"status": "observed-not-predictive", "observedStarts": len(eligible),
+            "sameTrackDistanceStarts": len(comparable),
+            "sameTrackDistanceWins": sum(r["finish"] == 1 for r in comparable),
+            "sameTrackDistanceTop3": sum(r["finish"] <= 3 for r in comparable),
+            "source": "existing-past-runs-strictly-before-race"}
 
 
 def predict(race, *, expected_circuit, ability_method=None):
@@ -83,6 +123,8 @@ def predict(race, *, expected_circuit, ability_method=None):
     deltas = [{no: 0.0 for no in ability}]
     result["paceEvidence"] = {
         "source": "preoff-prior-first-corner-observations",
+        "historicalCourseEvidence": {h["horseNumber"]: _same_track_distance_evidence(h, race)
+                                     for h in active},
         "observedPositionProfiles": profiles,
         "earlyPositionObservedOrder": front_observed,
         "actualLeadVerified": False,
