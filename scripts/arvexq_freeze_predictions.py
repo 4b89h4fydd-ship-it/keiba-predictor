@@ -209,7 +209,28 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
         from arvexq.forecast.engine import build_prediction
         from arvexq.forecast.marks import generate_marks
         from arvexq.forecast.tickets import generate_tickets
-        prediction = build_prediction(detail, now=now)
+        # Prefetch already computed five actual methods and its empirical
+        # weights before the off. The sealer must freeze THAT recorded opinion,
+        # not demand a fresh set of models or synthesize a second prediction.
+        existing_prediction = detail.get("prediction")
+        prediction = None
+        if (isinstance(existing_prediction, dict)
+                and existing_prediction.get("modelVersion") == "arvexq-empirical-fusion-v1"
+                and existing_prediction.get("predictionStatus") == "ready"
+                and existing_prediction.get("productionEligible") is True
+                and existing_prediction.get("raceId") == detail.get("id")
+                and existing_prediction.get("date") == detail.get("date")
+                and detail.get("predictionModelVersion") == existing_prediction.get("modelVersion")
+                and detail.get("predictionStatus") == "ready"):
+            try:
+                captured = datetime.fromisoformat(
+                    str(existing_prediction["capturedAt"]).replace("Z","+00:00"))
+                if captured.tzinfo and captured <= now and captured < post:
+                    prediction = copy.deepcopy(existing_prediction)
+            except (KeyError, ValueError, TypeError):
+                prediction = None
+        if prediction is None:
+            prediction = build_prediction(detail, now=now)
         if prediction is None:
             return {"status": "incomplete-prediction", "predictionStatus": "disabled"}
         marks = generate_marks(prediction)
@@ -236,6 +257,27 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                         "mark": marks_by_number.get(int(h["horseNumber"]), "")}
                        for h in active],
         }
+        # Promote to a genuine frozen per-method receipt only after the
+        # pre-off lock is committed into the same D1 detail. Its opinions were
+        # computed on the original earlier card, never from finish/payout.
+        method_receipt = working.get("fusionMethodPreoffReceipt")
+        if isinstance(method_receipt, dict):
+            try:
+                captured = datetime.fromisoformat(
+                    str(method_receipt["capturedAt"]).replace("Z","+00:00"))
+                same = (method_receipt.get("raceId")==working["id"]
+                        and method_receipt.get("raceDate")==working["date"]
+                        and method_receipt.get("circuit")==working.get("circuit")
+                        and captured.tzinfo and captured < post
+                        and method_receipt.get("sourceKind")=="preoff-method-opinions-unsealed"
+                        and set((method_receipt.get("arms") or {}).keys()) ==
+                           set((prediction.get("methodEvidence") or {}).keys()))
+                if same:
+                    frozen = copy.deepcopy(method_receipt)
+                    frozen["sourceKind"] = "original-frozen-preoff-method-opinions"
+                    working["preRaceMethodOriginal"] = frozen
+            except (KeyError, ValueError, TypeError):
+                pass
         sealed = seal_detail(working, lock, now)
         return {"status": "sealed", "detail": sealed,
                 "revision": sealed["preRacePrediction"]["sealRevision"]}
