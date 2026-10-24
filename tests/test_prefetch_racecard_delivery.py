@@ -196,6 +196,21 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(workflow.count("arvexq-cold-start-race-summaries-v1"), 1,
                          "retire the old post-analysis cold-start publisher")
 
+    def test_d1_readback_checks_prepared_active_ids_not_legacy_day_totals(self) -> None:
+        # A D1 calendar manifest can retain retired races with 404 details.
+        # The regression contract is exact identity/completeness of every
+        # prepared active race, without silently discarding missing active IDs.
+        workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
+        self.assertIn("D1_PREFETCH_ACTIVE_ID_READBACK", workflow)
+        self.assertIn("D1_PREFETCH_ACTIVE_SCOPE", workflow)
+        self.assertIn("missing_prepared_ids=sorted(expected_ids-set(expected))", workflow)
+        self.assertIn("missing_summary_ids=sorted(expected_ids-actual_ids)", workflow)
+        self.assertIn("missing_cards.extend((rid,'no prepared source detail')", workflow)
+        self.assertIn("d=returned.get(rid)", workflow)
+        self.assertIn("raise SystemExit('D1 racecard delivery incomplete:", workflow)
+        self.assertNotIn('if [ "$ACTUAL" -lt "$EXPECTED" ]', workflow)
+        self.assertNotIn('if [ "$DETAILS" -lt "$EXPECTED" ]', workflow)
+
     def test_pipeline_still_publishes_when_analysis_fails(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         self.assertIn("Publish lightweight racecards independent of D1 capacity", workflow)
