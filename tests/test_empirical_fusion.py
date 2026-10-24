@@ -93,9 +93,12 @@ def test_bets_must_have_independent_joint_distributions_and_verified_odds():
     for opinion_row in opinions.values():
         opinion_row["trifecta"] = [
             {"combo": [1, 2, 3], "probability": 0.6},
-            {"combo": [1, 3, 2], "probability": 0.3},
-            {"combo": [2, 1, 3], "probability": 0.1},
+            {"combo": [2, 3, 4], "probability": 0.1},
+            {"combo": [3, 4, 5], "probability": 0.1},
+            {"combo": [4, 5, 1], "probability": 0.1},
+            {"combo": [5, 1, 2], "probability": 0.1},
         ]
+        opinion_row["top3"] = {1: .8, 2: .8, 3: .8, 4: .3, 5: .3}
     without_quotes = blend(race(), opinions, fitted)
     assert without_quotes["recommendedBets"] == []
     with_quotes = blend(race(), opinions, fitted,
@@ -105,7 +108,12 @@ def test_bets_must_have_independent_joint_distributions_and_verified_odds():
                                                 ("3連単", (1, 2, 3)): 4.0}})
     assert 1 <= len(with_quotes["recommendedBets"]) <= 5
     assert all(t["expectedReturn"] >= 1 for t in with_quotes["recommendedBets"])
-    assert with_quotes["recommendedBets"][0]["kind"] == "3連複"
+    assert with_quotes["recommendedBets"][0]["kind"] == "3連単"
+    broken_joint = deepcopy(opinions)
+    broken_joint["ai:mass"]["top3"][1] -= .1
+    broken_joint["ai:mass"]["top3"][2] += .1
+    with pytest.raises(ValueError, match="inconsistent joint"):
+        blend(race(), broken_joint, fitted)
     broken = deepcopy(opinions)
     broken["ai:mass"]["trifecta"] = []
     assert not blend(race(), broken, fitted,
