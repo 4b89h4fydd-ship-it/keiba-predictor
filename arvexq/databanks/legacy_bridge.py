@@ -319,6 +319,13 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
     (horse, race, limit). Missing evidence can therefore fan out across every
     capable provider without the UI knowing which backend supplied it.
     """
+    import os
+    from .smartrc import build_smartrc_source
+    smart = build_smartrc_source(_pick(namespace, "_fetch_smartrc"),
+                                configured=bool(os.getenv("SMARTRC_FEED_URL", "").strip()))
+    if smart is not None:
+        registry.register(smart)
+
     jra = build_jra_source(
         schedule=_pick(namespace, "fetch_jra_official", "fetch_central_feed"),
         race_detail=_pick(namespace, "_jra_parse_race"),

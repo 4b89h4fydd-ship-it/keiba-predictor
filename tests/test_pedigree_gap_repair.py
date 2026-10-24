@@ -81,6 +81,10 @@ def test_existing_app_enrichment_uses_same_non_overwriting_merge():
         data = {key: [row]} if key != "extra" else {key: [{"source": "contract", "rows": [dict(row, extra=row)]}]}
         out = namespace["_merge_enrichment"]({"circuit": "中央", "horses": [horse]}, data)
         assert out["horses"][0]["pedigree"] == {"sire": "公式父", "dam": "母"}
+        wrong = {"horseNumber": 1, "name": "別馬", "pedigree": {"dam": "別馬母"}}
+        data = {key: [wrong]} if key != "extra" else {key: [{"source": "contract", "rows": [dict(wrong, extra=wrong)]}]}
+        before = {"circuit": "中央", "horses": [{"horseNumber": 1, "name": "馬"}]}
+        assert "pedigree" not in namespace["_merge_enrichment"](before, data)["horses"][0]
 
 
 def test_storage_filter_keeps_requested_training_evidence_without_reviving_scores():
