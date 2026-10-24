@@ -62,17 +62,20 @@ def _verified_first_corner(race):
         published = datetime.fromisoformat(str(published_text).replace("Z", "+00:00"))
         race_day = date.fromisoformat(str(race["date"]))
         start = str(race.get("scheduledStartTime") or race.get("startTime") or "")
-        # An official resource published on an earlier date is fine; for
-        # same-day releases the exact scheduled race off must be present.
-        if published.tzinfo is None or published.date() > race_day:
+        from zoneinfo import ZoneInfo
+        if published.tzinfo is None:
             return None
-        if published.date() == race_day:
+        published_jst = published.astimezone(ZoneInfo("Asia/Tokyo"))
+        if published_jst.date() > race_day:
+            return None
+        # If an exact off-clock is unavailable, same-day information cannot
+        # be certified pre-off. Never treat a UTC date as JST race date.
+        if published_jst.date() == race_day:
             if len(start) < 5:
                 return None
-            from zoneinfo import ZoneInfo
             off = datetime.fromisoformat(race["date"]+"T"+start[:5]).replace(
                 tzinfo=ZoneInfo("Asia/Tokyo"))
-            if published >= off.astimezone(published.tzinfo):
+            if published_jst >= off:
                 return None
     except (ValueError, TypeError, KeyError):
         return None
