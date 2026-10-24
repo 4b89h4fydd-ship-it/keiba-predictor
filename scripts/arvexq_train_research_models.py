@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from arvexq.prediction.learned_scenarios import fit_model
+from arvexq.prediction.fusion_historical_replay import train_and_validate
 
 
 def train_models(source, target_date):
@@ -26,6 +27,18 @@ def train_models(source, target_date):
             models[circuit] = fit_model(subset, circuit=circuit)
         except ValueError as exc:
             errors[circuit] = str(exc)
+    # Use the SAME earlier D1 detail collection, not a new feed/endpoint.
+    # The ensemble must have a disjoint training period and >=30 unseen
+    # official-payout evaluations. No replay is called a frozen preoff receipt.
+    fusion = {}
+    for circuit in ('中央','地方'):
+        try:
+            fusion[circuit] = train_and_validate(
+                eligible, circuit=circuit, target_date=target_date)
+        except (ValueError, TypeError, KeyError, OverflowError, ZeroDivisionError) as exc:
+            errors['fusion:' + circuit] = type(exc).__name__ + ': ' + str(exc)
+    if fusion:
+        models['fusion'] = fusion
     return models, errors
 
 
@@ -59,8 +72,10 @@ def main(argv=None):
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(models,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     args.report.write_text(json.dumps({'trainedCircuits':sorted(models),
-        'errors':errors,'source':'earlier-dated-frozen-d1-details',
+        'errors':errors,'source':'earlier-dated-D1-details',
         'targetDate':args.target_date,'researchOnly':True,
+        'fusionCalibratedCircuits':sorted((models.get('fusion') or {})),
+        'fusionAudits':{c:res.get('audit') for c,res in (models.get('fusion') or {}).items()},
         'sourceDates':sorted({d.get('date') for d in combined['details'] if isinstance(d,dict) and d.get('date')}),
         'inputFileCount':len(source_files),'eligibleRecordCount':sum(1 for d in combined['details'] if isinstance(d,dict) and (d.get('result') or {}).get('status') == '確定' and str(d.get('date') or '') < args.target_date)},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'trainedCircuits':sorted(models),'errors':errors},ensure_ascii=False))
