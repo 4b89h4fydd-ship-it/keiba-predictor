@@ -771,10 +771,10 @@ jobs:
           DETAILS=$(jq '.details // [] | length' verified-day.json)
           MISSING=$(jq '.missing_detail_count // 0' verified-d1-report.json)
           echo "D1 PREFETCH summaries expected=$EXPECTED actual=$ACTUAL details=$DETAILS missing=$MISSING"
-          if [ "$ACTUAL" -lt "$EXPECTED" ] || [ "$DETAILS" -lt "$EXPECTED" ] || [ "$MISSING" -gt 0 ]; then
-            echo "::error::D1 is missing race summaries or prepared details"
-            exit 1
-          fi
+          # The D1 day listing may retain archived/retired race summaries with
+          # no detail row. Judge completion by the exact prepared active race IDs
+          # below, never by totals for a legacy D1 calendar day.
+          echo "D1_PREFETCH_ACTIVE_ID_READBACK follows; legacy day-only rows are audited separately"
           python - <<'PY'
           import json
           from pathlib import Path
@@ -786,7 +786,13 @@ jobs:
           expected_ids={str(r.get('id')) for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
           actual_ids={str(r.get('id')) for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
           missing_summary_ids=sorted(expected_ids-actual_ids)
+          missing_prepared_ids=sorted(expected_ids-set(expected))
+          legacy_only_ids=sorted(actual_ids-expected_ids)
+          print('D1_PREFETCH_ACTIVE_SCOPE', 'prepared=',len(expected_ids),
+                'd1_day=',len(actual_ids),'legacy_only=',len(legacy_only_ids),
+                'legacy_without_detail=',sum(rid not in returned for rid in legacy_only_ids))
           missing_cards=[(rid,'missing D1 summary') for rid in missing_summary_ids]
+          missing_cards.extend((rid,'no prepared source detail') for rid in missing_prepared_ids)
           missing_analysis=[]
           missing_new_forecast=[]
           missing_horse_history=[]
