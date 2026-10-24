@@ -88,6 +88,22 @@ class NewMethodTests(unittest.TestCase):
         self.assertNotIn("secretFootage",str(public))
         self.assertNotIn("videoAnalyzedInternally",str(public))
 
+    def test_blank_result_placeholder_is_accepted_without_leaking_finishers(self):
+        from arvexq.forecast.engine import build_prediction
+        race=sample()
+        race["result"]={"status":"未確定","finishers":[]}
+        with patch("arvexq.forecast.engine.load_model", return_value=model()):
+            with patch("arvexq.forecast.engine.predict") as scorer:
+                scorer.return_value={"predictionStatus":"ready"}
+                out=build_prediction(race,now=datetime(2098,12,1,tzinfo=ZoneInfo("Asia/Tokyo")))
+                self.assertEqual(out["predictionStatus"],"ready")
+                scorer.assert_called_once()
+                self.assertNotIn("result",scorer.call_args.args[0])
+        race["result"]={"status":"確定","finishers":[{"horseNumber":1,"finish":1}]}
+        with patch("arvexq.forecast.engine.load_model") as load_model:
+            self.assertIsNone(build_prediction(race,now=datetime(2098,12,1,tzinfo=ZoneInfo("Asia/Tokyo"))))
+            load_model.assert_not_called()
+
     def test_missing_model_does_not_restore_retired_products(self):
         race=sample()
         race["predictionStatus"]="ready"
