@@ -2,7 +2,7 @@
 CONFIGS = {
     "jra": {"version":"jra-flat-shadow-v1","pace":"neutral",
             "ability":"baseline","temperature":1.0,"styleWindow":None},
-    "nar": {"version":"nar-flat-shadow-v1","pace":"four",
+    "nar": {"version":"nar-flat-shadow-v2-observed-career","pace":"four",
             "ability":"baseline","temperature":1.0,"styleWindow":None},
 }
 
