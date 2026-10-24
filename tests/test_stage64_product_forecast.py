@@ -287,8 +287,8 @@ def test_stage64_outputs_share_one_prediction_and_pace_explanation():
     assert model["forecastText"] == forecast
     assert model["modelVersion"] == published["predictionModelVersion"]
     assert str(marks[0]["horseNumber"]) in forecast
-    assert "前走" in forecast and "展開仮説" in forecast
-    assert "未校正" in forecast
+    assert "初角位置" in forecast and "逃げることは同義ではない" in forecast
+    assert "確率校正は未完了" in forecast
     selected = {n for item in tickets for pair in item["combos"] for n in pair}
     assert selected.issubset({m["horseNumber"] for m in marks})
     assert len(model["stages"]) == 6
@@ -316,17 +316,19 @@ def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archi
     assert original["recommendedBets"] != projected["recommendedBets"]
 
 
-def test_new_pace_rewrite_accounts_for_front_competition_in_both_circuits():
+def test_unsupported_front_competition_is_not_invented_in_either_circuit():
     for owner in ("中央", "地方"):
         p = build_prediction(race(owner), now=NOW)
         assert p is not None
         stages = p["stages"]
         evidence = p["paceEvidence"]
-        assert evidence["source"] == "preoff-prior-corner-positions"
-        assert evidence["frontCompetition"] >= 0
+        assert evidence["source"] == "preoff-prior-first-corner-observations"
+        assert evidence["actualLeadVerified"] is False
+        assert evidence["actualPaceVerified"] is False
         assert evidence["scenarioOccurrenceCalibrated"] is False
         assert evidence["aiEnsembleTrained"] is False
-        assert stages["pace"]["model"] == "mineta-position-competition-rewrite"
-        assert len(stages["pace"]["value"]) == 4
+        assert stages["pace"]["model"] == "no-unsupported-tactical-boost"
+        assert len(stages["pace"]["value"]) == 1
+        assert all(delta == 0 for delta in stages["pace"]["value"][0].values())
         assert set(stages) == {"ability","runningStyle","pace","probability","marks","tickets"}
         assert set(stages["pace"]["value"][0]) == set(stages["ability"]["value"])
