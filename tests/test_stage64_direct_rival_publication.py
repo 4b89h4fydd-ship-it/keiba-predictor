@@ -16,8 +16,8 @@ def race(circuit="nar"):
     track = "園田" if circuit == "nar" else "京都"
     surface = "ダート" if circuit == "nar" else "芝"
 
-    def run(day, finish, distance, margin, no):
-        return {"date": day, "track": track, "raceNumber": 3, "surface": surface,
+    def run(day, finish, distance, margin, no, race_number=3):
+        return {"date": day, "track": track, "raceNumber": race_number, "surface": surface,
                 "distance": distance, "fieldSize": 6, "finish": finish,
                 "cornerPositions": [no, no], "marginSeconds": margin,
                 "opponentLevel": .7}
@@ -35,8 +35,8 @@ def race(circuit="nar"):
             ]},
             {"horseNumber": 2, "recentRaces": [
                 run("2026-10-15", 1, 1400, .00, 1),
-                run("2026-10-08", 4, 1600, .60, 4),
-                run("2026-10-01", 4, 1600, .60, 4),
+                run("2026-10-08", 4, 1600, .60, 4, race_number=4),
+                run("2026-10-01", 4, 1600, .60, 4, race_number=4),
             ]},
             {"horseNumber": 3, "recentRaces": [
                 run("2026-10-15", 5, 1400, .80, 5),
