@@ -273,6 +273,24 @@ class Scoring(unittest.TestCase):
         self.assertEqual(m["roiPct"],200.)
         self.assertFalse(report["independentlyVerifiedPreoff"])
 
+    def test_honmei_top3_counts_first_second_and_third_distinctly(self):
+        for order, first_hit, top3_hit in (
+            ([1, 2, 3], True, True),
+            ([2, 1, 3], False, True),
+            ([2, 3, 1], False, True),
+            ([2, 3, 4], False, False),
+        ):
+            self.results[0]["orders"] = [order]
+            self.results[0]["payouts"] = None
+            report=evaluate(self.batch,self.results)
+            row=next(r for r in report["rows"] if r["arm"]=="baseline")
+            m=report["byCircuit"]["nar"]["baseline"]
+            self.assertEqual(row["winnerTop1"], first_hit)
+            self.assertEqual(row["honmeiTop3Hit"], top3_hit)
+            self.assertEqual(m["honmeiTop3Hits"], int(top3_hit))
+            self.assertEqual(m["honmeiTop3RateScored"], float(top3_hit))
+            self.assertEqual(m["honmeiTop3RateAllCohort"], float(top3_hit))
+
     def test_missing_payout_unknown_roi(self):
         self.results[0]["payouts"][0]["amount"]=None
         m=evaluate(self.batch,self.results)["byCircuit"]["nar"]["baseline"]
