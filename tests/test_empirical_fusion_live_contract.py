@@ -7,7 +7,8 @@ from datetime import date, datetime, timedelta
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from arvexq.prediction.empirical_fusion import fit_weights, VERSION
+from arvexq.prediction.empirical_fusion import fit_weights, blend, VERSION
+from arvexq.prediction.mineta_public_pace import public_pace_factors
 from arvexq.forecast.engine import build_prediction
 from arvexq.forecast.publication import public_race
 from arvexq.forecast.marks import generate_marks
@@ -90,6 +91,11 @@ def patch_time(call, detail):
 def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     src = fixture()
     saved = deepcopy(src)
+    assert public_pace_factors(src)["raceId"] == src["id"]
+    raw = blend(src, src["fusionInputs"]["opinions"],
+                src["fusionInputs"]["calibration"],
+                quoted_odds=src["fusionInputs"]["odds"])
+    assert raw["predictionMarks"]
     output = build_prediction(src, now=NOW)
     assert src == saved
     assert output is not None, "complete preoff inputs must produce an output"
