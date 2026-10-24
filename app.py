@@ -2487,6 +2487,18 @@ def _smart_normalize_row(x:dict)->dict|None:
     out={"horseNumber":no,"name":name,"smartRc":smart}
     rr=_pick(x,"recentRaces","recent_races")
     if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
+    # SmartRc publishes these *names* as f_name/m_name/mf_name.
+    # This is pedigree identity only, not an inferred sire-performance score.
+    raw_pedigree=x.get("pedigree") if isinstance(x.get("pedigree"),dict) else {}
+    lineage={
+        "sire": _pick(x,"f_name","sire","father") or _pick(raw_pedigree,"sire","father"),
+        "dam": _pick(x,"m_name","dam","mother") or _pick(raw_pedigree,"dam","mother"),
+        "damSire": _pick(x,"mf_name","damSire","damsire") or _pick(raw_pedigree,"damSire","damsire"),
+        "sireDamSire": _pick(x,"fmf_name") or raw_pedigree.get("sireDamSire"),
+        "damDamSire": _pick(x,"mmf_name") or raw_pedigree.get("damDamSire"),
+    }
+    lineage={key:str(value).strip() for key,value in lineage.items() if isinstance(value,str) and value.strip()}
+    if lineage:out["pedigree"]=lineage
     return out
 
 from arvexq.ingest.enrichment_transport import _format_feed_url, _fetch_json_url
@@ -2614,8 +2626,23 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
             try:return _netkeiba_detail_rows(snap)
             except Exception as exc:errs.append("netkeiba: "+str(exc));return []
         def get_smart():
-            # v146: SmartRc tempo/final-section metrics are intentionally suspended.
-            return []
+            # Existing configured SmartRc feed: pedigree *only* for JRA.
+            # Tempo/final-section metrics stay suspended. Never scrape or
+            # invent a feed when SMARTRC_FEED_URL is not configured.
+            if snap.get("circuit")!="中央" or not os.getenv("SMARTRC_FEED_URL","").strip():
+                return []
+            try:
+                result=_fetch_smartrc(snap)
+                if result.get("status")!="done":
+                    if result.get("error"):errs.append("SmartRc: "+str(result["error"]))
+                    return []
+                return [{"horseNumber":h.get("horseNumber"),"name":h.get("name"),
+                         "pedigree":h["pedigree"]}
+                        for h in result.get("rows") or []
+                        if isinstance(h.get("pedigree"),dict) and h["pedigree"]]
+            except Exception as exc:
+                errs.append("SmartRc: "+str(exc))
+                return []
         def get_extra():
             try:return _fetch_extra_sources(snap)
             except Exception as exc:errs.append("補助: "+str(exc));return []
