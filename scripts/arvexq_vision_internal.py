@@ -96,6 +96,15 @@ def process_internal_feed(*, feed_url: str, token: str, allowed_hosts: set[str],
                     raise ValueError("provider must attest video processing rights")
                 if not config.get("autoIdentifySaddlecloth") and not config.get("verifiedIdentityMap"):
                     raise ValueError("automated OCR or verified horse identity source required")
+                ids = config.get("horseIdentityByNumber") or {}
+                if (not isinstance(ids, dict)
+                        or any(not str(ids.get(str(no)) or "").strip()
+                               for no in config.get("horseNumbers") or [])):
+                    raise ValueError("stable horse IDs for every runner required to link past video")
+                for name in ("videoSha256", "weightsSha256"):
+                    value = str(job.get(name) or "").lower()
+                    if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+                        raise ValueError(name + " full provider SHA256 required")
                 video = folder / ("race-%02d.mp4" % i)
                 weights = folder / ("detector-%02d.pt" % i)
                 _download(job.get("videoUrl", ""), video, hosts=allowed_hosts, token=token,
