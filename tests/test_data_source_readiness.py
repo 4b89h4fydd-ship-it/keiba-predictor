@@ -25,6 +25,14 @@ class DataSourceReadinessTests(unittest.TestCase):
             self.assertEqual(report["localDailyPreoffOddsZips"],1)
             self.assertEqual(report["localFinalOddsZipsNotEligibleForPreoff"],1)
 
+    def test_research_catalog_tracks_weather_track_ground_and_video_without_banei(self):
+        from arvexq.databanks.source_catalog import discovery_inventory, NAR_VENUES
+        ids={s["id"] for s in discovery_inventory()}
+        self.assertTrue({"jra_going_history","jma_weather_history","jra_official_video"}.issubset(ids))
+        self.assertNotIn("banei_official", ids)
+        self.assertNotIn("帯広", NAR_VENUES)
+        self.assertTrue(all(not s["enabledForExtraction"] for s in discovery_inventory()))
+
     def test_missing_paths_remain_missing(self):
         result=audit(env={"ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES":"/missing/nonexistent.zip"})
         self.assertEqual(len(result["localArchivePathsMissing"]),1)
