@@ -71,7 +71,7 @@ SOURCE = (
     'def _strip_excluded(value):\n'
     '    if isinstance(value,dict):\n'
     '        return {k:_strip_excluded(v) for k,v in value.items() if str(k).lower() not in\n'
-    "                {'cr','share','crscore','sharerate','training','trainingscore','trainingcomment','workouts','調教','シェア'}}\n"
+    "                {'cr','share','crscore','sharerate','trainingscore','シェア'}}\n"
     '    if isinstance(value,list): return [_strip_excluded(v) for v in value]\n'
     '    return value\n'
     '\n'

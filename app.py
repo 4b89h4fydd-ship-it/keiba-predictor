@@ -2485,6 +2485,12 @@ def _smart_normalize_row(x:dict)->dict|None:
     if not no and not name:return None
     smart={"ten1f":_pick(x,"ten1f","ten1f_best","h1_ten1f","テン1F"),"ten":_pick(x,"ten","ten_pat","ten_has","テン"),"agari":_pick(x,"agari","agari3f","furlong3","agari_pat","agari_has","上がり"),"estimatedPopularity":_pick(x,"estimatedPopularity","est_pop","推人","推定人気")}
     out={"horseNumber":no,"name":name,"smartRc":smart}
+    pedigree = dict(x.get("pedigree")) if isinstance(x.get("pedigree"),dict) else {}
+    for field, aliases in (("sire",("sire","父")),("dam",("dam","母")),("damsire",("damsire","母父"))):
+        value = _pick(x,*aliases)
+        if pedigree.get(field) in (None,"") and value not in (None,""):
+            pedigree[field] = value
+    if pedigree:out["pedigree"]=pedigree
     rr=_pick(x,"recentRaces","recent_races")
     if isinstance(rr,list):out["recentRaces"]=[z for z in rr if isinstance(z,dict)][:5]
     return out
@@ -2539,23 +2545,34 @@ def _fetch_extra_sources(detail:dict)->list[dict]:
     return out
 
 def _merge_enrichment(detail:dict,data:dict)->dict:
+    from arvexq.ingest.pedigree_merge import fill_pedigree
+    from arvexq.ingest.horse_identity import _horse_key
     hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs if h.get("horseNumber")};by_name={str(h.get("name") or "").strip():h for h in hs if h.get("name")};sources=[]
+    def matched(row):
+        try:no=int(row.get("horseNumber") or 0)
+        except (TypeError,ValueError,OverflowError):return None
+        name=_horse_key(row.get("name"))
+        if no:
+            horse=by_no.get(no)
+            return horse if horse and (not name or _horse_key(horse.get("name"))==name) else None
+        candidates=[horse for horse in hs if name and _horse_key(horse.get("name"))==name]
+        return candidates[0] if len(candidates)==1 else None
     for row in data.get("smartRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+        h=matched(row)
         if not h:continue
         if "SmartRc" not in sources:sources.append("SmartRc")
         if row.get("smartRc"):h["smartRc"]={**(h.get("smartRc") or {}),**row.get("smartRc")}
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        fill_pedigree(h,row,source="SmartRc")
         for k in ("owner","producer","birthday"):
             if h.get(k) in (None,"") and row.get(k) not in (None,""):h[k]=row.get(k)
         if row.get("recentRaces"):h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
     for row in data.get("netkeibaRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+        h=matched(row)
         if not h:continue
         sources.append("netkeiba") if "netkeiba" not in sources else None
         for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange","owner","producer"):
             if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        fill_pedigree(h,row,source="netkeiba")
         if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
         if row.get("recentRaces") or row.get("allPastRuns"):
             # The fallback can carry an entire dated JRA/NAR history. Do not
@@ -2573,12 +2590,13 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
     for b in data.get("extra") or []:
         src=str(b.get("source") or "補助")
         for row in b.get("rows") or []:
-            h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+            h=matched(row)
             if h:
                 extra=_strip_excluded(row.get("extra") or {})
                 h.setdefault("extraSources",{})[src]=extra
+                fill_pedigree(h,extra,source=src)
                 for key in ("pedigree","jockeyStats","trainerStats","jumpJockeyStats","jumpTrainerStats","jumpStats","isTransfer","transferFrom","ten1f","agari3f","pedigreeScore","distanceSuitabilityScore","surfaceSuitabilityScore","drawScore","bodyWeightScore","opponentLevelScore","lapScore","conditionChangeScore","jockeyScore","trainerScore","jumpJockeyScore","jumpTrainerScore"):
-                    if extra.get(key) is not None:h[key]=extra[key]
+                    if key != "pedigree" and extra.get(key) is not None:h[key]=extra[key]
                 if isinstance(extra.get("allPastRuns"),list) and detail.get("date"):
                     # An older supplemental lane used to overwrite the whole
                     # lifetime archive with any partial third-party response.
@@ -2614,8 +2632,10 @@ def _start_enrichment(race_id:str,detail:dict,force:bool=False,horse_no:int|None
             try:return _netkeiba_detail_rows(snap)
             except Exception as exc:errs.append("netkeiba: "+str(exc));return []
         def get_smart():
-            # v146: SmartRc tempo/final-section metrics are intentionally suspended.
-            return []
+            # Existing authorized feed only; suspended tempo/ratings stay disabled.
+            from arvexq.databanks.smartrc import pedigree_rows
+            try:return pedigree_rows(_fetch_smartrc,snap,configured=bool(os.getenv("SMARTRC_FEED_URL","").strip()))
+            except Exception as exc:errs.append("SmartRc pedigree: "+str(exc));return []
         def get_extra():
             try:return _fetch_extra_sources(snap)
             except Exception as exc:errs.append("補助: "+str(exc));return []

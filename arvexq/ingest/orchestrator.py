@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import time
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from typing import Any
 
@@ -15,6 +17,9 @@ class FetchResult:
     ok: bool
     data: Any = None
     error: str | None = None
+    acquired_at: str | None = None
+    elapsed_seconds: float | None = None
+    attempts: int = 1
 
 
 async def _call(fetcher, *args, **kwargs):
@@ -44,6 +49,7 @@ async def fetch_domain(
         return []
 
     async def run(source):
+        started = time.monotonic()
         fetcher = source.fetchers[domain]
         # Retry only transient failures through the SAME registered provider.
         # A site returning empty/ambiguous history is a data-quality outcome,
@@ -51,7 +57,9 @@ async def fetch_domain(
         for attempt in range(2):
             try:
                 data = await _call(fetcher, *args, **kwargs)
-                return FetchResult(source=source.name, domain=domain, ok=True, data=data)
+                return FetchResult(source=source.name, domain=domain, ok=True, data=data,
+                                   acquired_at=datetime.now(timezone.utc).isoformat(),
+                                   elapsed_seconds=round(time.monotonic() - started, 3), attempts=attempt + 1)
             except Exception as exc:
                 message = f"{type(exc).__name__}: {exc}"
                 transient = any(code in message.lower() for code in (
@@ -62,7 +70,9 @@ async def fetch_domain(
                 if attempt == 0 and transient:
                     await asyncio.sleep(0.3)
                     continue
-                return FetchResult(source=source.name, domain=domain, ok=False, error=message)
+                return FetchResult(source=source.name, domain=domain, ok=False, error=message,
+                                   acquired_at=datetime.now(timezone.utc).isoformat(),
+                                   elapsed_seconds=round(time.monotonic() - started, 3), attempts=attempt + 1)
         raise AssertionError("unreachable provider retry")
 
     return list(await asyncio.gather(*(run(source) for source in providers)))

@@ -26,6 +26,12 @@ if str(ROOT) not in sys.path:
 from arvexq.ingest.full_snapshot_codec import KEY as FULL_PAYLOAD_KEY, unpack_detail
 
 
+def supported_race(row: dict[str, Any]) -> bool:
+    """Match the existing prefetch/API exclusion without deleting stored data."""
+    return str(row.get("track") or "") not in {"帯広", "帯広ば"} and not any(
+        f"-{venue}-" in str(row.get("id") or "") for venue in ("帯広", "帯広ば"))
+
+
 def get_json(url: str, timeout: float, retries: int) -> dict[str, Any]:
     last: Exception | None = None
     for attempt in range(max(1, retries)):
@@ -71,7 +77,9 @@ def main() -> int:
     base = args.api_base.rstrip("/")
     day_url = f"{base}/api/day?date={urllib.parse.quote(args.date)}&details=0&t={int(time.time())}"
     day = get_json(day_url, args.timeout, args.retries)
-    races = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    raw_races = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    excluded_ids = [str(r["id"]) for r in raw_races if not supported_race(r)]
+    races = [r for r in raw_races if supported_race(r)]
     if not races:
         # A newly opened calendar day has no D1 summaries yet. Full Prefetch
         # must publish its locally prepared official race list, not abort here.
@@ -147,6 +155,10 @@ def main() -> int:
     out["date"] = out.get("date") or args.date
     out["races"] = races
     out["details"] = details
+    out["raceCount"] = len(races)
+    out["detailCount"] = len(details)
+    out["excludedRaceIds"] = excluded_ids
+    out["upstreamRaceCount"] = len(raw_races)
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
 
     report = {
@@ -155,6 +167,7 @@ def main() -> int:
         "detail_count": len(details),
         "missing_detail_count": len(errors),
         "missing_details": [{"race_id": rid, "error": errors[rid]} for rid in ids if rid in errors],
+        "excluded_race_ids": excluded_ids,
     }
     if args.report:
         Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
