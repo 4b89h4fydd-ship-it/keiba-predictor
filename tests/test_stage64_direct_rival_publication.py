@@ -66,14 +66,11 @@ def test_confirmed_nar_rival_rewrites_win_probability_marks_and_tickets():
     assert len(result["stages"]) == 6
     assert result["productionEligible"] is False
 
+    # The obsolete Stage64 research candidate may still be reproduced for
+    # historical comparison, but NEVER published as a live replacement.
     published = build_prediction(source, now=datetime(
         2026, 10, 27, 9, 0, tzinfo=ZoneInfo("Asia/Tokyo")))
-    assert published["predictionStatus"] == "ready"
-    assert generate_marks(published)[0]["horseNumber"] == 2
-    assert generate_marks(published)[0]["mark"] == "◎"
-    assert "◎判定へ反映" in published["forecastText"]
-    items = generate_tickets(published, generate_marks(published))
-    assert 1 <= sum(item["points"] for item in items) <= 5
+    assert published is None
 
 
 def test_incomplete_or_contradictory_rematch_does_not_replace_winner():
