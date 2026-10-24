@@ -6,7 +6,7 @@ from typing import Any
 _SOURCE_KEYS = {
     "sire": ("sire", "father"),
     "dam": ("dam", "mother"),
-    "damSire": ("damSire", "broodmareSire", "mothersFather"),
+    "damSire": ("damSire", "damsire", "broodmareSire", "mothersFather"),
     "trainer": ("trainer",),
     "jockey": ("jockey",),
     "workout": ("workoutTimes", "trainingTimes", "trainingRecords", "workouts"),
@@ -16,9 +16,10 @@ _SOURCE_KEYS = {
 
 
 def _present(horse: dict[str, Any], keys: tuple[str, ...]) -> bool:
-    return any(key in horse and horse[key] is not None
-               and horse[key] != "" and horse[key] != [] and horse[key] != {}
-               for key in keys)
+    values = [horse, horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}]
+    return any(key in valuesource and valuesource[key] is not None
+               and valuesource[key] != "" and valuesource[key] != [] and valuesource[key] != {}
+               for valuesource in values for key in keys)
 
 
 def build_debut_box(detail: dict[str, Any]) -> dict[str, Any]:
