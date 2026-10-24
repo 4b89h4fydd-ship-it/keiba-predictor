@@ -186,6 +186,52 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(len(p["stages"]["pace"]["value"]), 1)
         self.assertEqual(set(p["stages"]["pace"]["value"][0].values()), {0.0})
 
+    def test_nar_ability_reads_compatible_archived_career_but_jra_separate(self):
+        def with_old_starts(owner):
+            r=race(owner)
+            for h in r["horses"]:
+                no=h["horseNumber"]
+                h["allPastRuns"] = list(h["recentRaces"]) + [
+                    {"date":"2026-09-10", "track":"試験場", "raceNumber":1,
+                     "finish":1 if no==4 else 4, "fieldSize":4,
+                     "passing":[1 if no==4 else no]},
+                    {"date":"2026-09-01", "track":"試験場", "raceNumber":1,
+                     "finish":1 if no==4 else 4, "fieldSize":4,
+                     "passing":[1 if no==4 else no]},
+                ]
+            return r
+        nar=with_old_starts("nar")
+        old=copy.deepcopy(nar)
+        for h in old["horses"]:
+            h.pop("allPastRuns",None)
+        before=predict(old,expected_circuit="nar")
+        after=predict(nar,expected_circuit="nar")
+        self.assertEqual(before["stages"]["marks"]["value"]["orderedWinCandidates"][0],1)
+        self.assertEqual(after["stages"]["marks"]["value"]["orderedWinCandidates"][0],4)
+        self.assertEqual(after["abilityHistoryCoverage"]["fullCareerRunners"],4)
+        jra=with_old_starts("jra")
+        jra_before=predict({**jra, "horses":[
+            {k:v for k,v in h.items() if k!="allPastRuns"} for h in jra["horses"]]},
+            expected_circuit="jra")
+        jra_after=predict(jra,expected_circuit="jra")
+        self.assertEqual(jra_before["stages"]["marks"]["value"],
+                         jra_after["stages"]["marks"]["value"])
+        self.assertEqual(jra_after["abilityHistoryCoverage"]["fullCareerRunners"],0)
+
+    def test_incompatible_or_future_archived_runs_do_not_override_recent(self):
+        r=race()
+        base=predict(r,expected_circuit="nar")
+        r["horses"][0]["allPastRuns"] = [
+            {"date":"2026-09-01","track":"試験場","raceNumber":1,
+             "finish":4,"fieldSize":4,"passing":[4]},
+            {"date":"2026-10-22","track":"試験場","raceNumber":1,
+             "finish":1,"fieldSize":4,"passing":[1]},
+        ]
+        out=predict(r,expected_circuit="nar")
+        self.assertEqual(base["stages"]["marks"]["value"],
+                         out["stages"]["marks"]["value"])
+        self.assertEqual(out["abilityHistoryCoverage"]["fullCareerRunners"],0)
+
     def test_status_only_scratch(self):
         r=race();r["horses"][0]["status"]="競走除外"
         p=predict(r,expected_circuit="nar")
