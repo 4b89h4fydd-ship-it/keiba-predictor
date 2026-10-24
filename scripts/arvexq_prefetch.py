@@ -299,8 +299,24 @@ def _enrich_cards_concurrently(cards: dict[str, dict[str, Any]], workers: int = 
 
 def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[str, Any]:
     out = copy.deepcopy(detail)
+    # Optional internal research input from licensed VIDEO artifacts. Never
+    # fetch external media in Full Prefetch and never treat unvalidated vision
+    # observations as a correction to product marks or wager probabilities.
+    vision_dir = str(os.getenv("ARVEXQ_VISION_EVIDENCE_DIR") or "").strip()
+    if vision_dir and os.path.isdir(vision_dir):
+        from arvexq.vision.history import attach_from_store
+        try:
+            out = attach_from_store(out, vision_dir)
+        except (ValueError, OSError, KeyError) as exc:
+            print("VISION_RESEARCH_EVIDENCE_REJECTED",
+                  str(detail.get("id") or ""), type(exc).__name__, flush=True)
     attach_career_readiness(out)
     pm = dict(out.get("preparedMeta") or {})
+    vision_samples = sum(len(h.get("visionResearchHistory") or [])
+                         for h in (out.get("horses") or []) if isinstance(h, dict))
+    if vision_samples:
+        pm["visionResearchStatus"] = "internal-unvalidated-not-applied-to-marks"
+        pm["visionResearchHistoricalRuns"] = vision_samples
     active = active_horses(out)
     with_history = sum(
         1 for h in active
