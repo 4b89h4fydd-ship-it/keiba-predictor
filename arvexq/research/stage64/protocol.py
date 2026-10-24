@@ -1,5 +1,5 @@
 """Versioned, circuit-owned prospective cohort and local forecast envelopes."""
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from hashlib import sha256
 from pathlib import Path
 from copy import deepcopy
@@ -10,9 +10,14 @@ from .pipeline import predict
 
 ARMS=("baseline","recent5","recent5_shrunk")
 JST=timezone(timedelta(hours=9))
-RACE=("id","date","circuit","track","surface","analysisMode","startTime","fieldSize")
+RACE=("id","date","circuit","track","surface","analysisMode","startTime",
+      "scheduledStartTime","distance","raceNumber","courseGeometry","fieldSize")
 HORSE=("horseNumber","status","scratched","withdrawn","cancelled")
-RUN=("date","_raceDate","track","surface","analysisMode","raceId","fieldSize","finish","cornerPositions","passing")
+RUN=("date","_raceDate","track","surface","analysisMode","raceId","raceNumber",
+     "distance","fieldSize","finish","cornerPositions","passing",
+     "marginSeconds","timeBehindWinner","opponentLevel","earlyTiming",
+     "class","className")
+EARLY_TIMING=("sourceKind","sourceRef","gateReactionSeconds","first200mSeconds")
 
 
 def code_hash():
@@ -48,15 +53,49 @@ def post_at(race):
     return datetime.fromisoformat(race["date"]+"T"+clock+":00").replace(tzinfo=JST)
 
 
+def _frozen_prior_rows(rows, cutoff):
+    """Only dated, pre-off historical facts; never transport target/future finishes."""
+    if not isinstance(rows, list):
+        return []
+    frozen = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        day = row.get("_raceDate") or row.get("date")
+        try:
+            if (not isinstance(day, str) or date.fromisoformat(day).isoformat() != day
+                    or day >= cutoff):
+                continue
+        except ValueError:
+            continue
+        fact = {k: deepcopy(row[k]) for k in RUN if k in row and k != "earlyTiming"}
+        timing = row.get("earlyTiming")
+        if isinstance(timing, dict):
+            fact["earlyTiming"] = {
+                k: deepcopy(timing[k]) for k in EARLY_TIMING if k in timing
+            }
+        frozen.append(fact)
+    return frozen
+
+
 def clean_input(race):
     if any(race.get(k) for k in ("result","results","payouts")):
         raise ValueError("target outcome present")
-    clean={k:race[k] for k in RACE if k in race}
+    clean={k:deepcopy(race[k]) for k in RACE if k in race}
     clean["horses"]=[]
+    is_nar = race.get("circuit") in ("nar", "地方")
     for horse in race["horses"]:
-        h={k:horse[k] for k in HORSE if k in horse}
-        h["recentRaces"]=[{k:row[k] for k in RUN if k in row}
-                           for row in horse.get("recentRaces") or []]
+        h={k:deepcopy(horse[k]) for k in HORSE if k in horse}
+        h["recentRaces"]=_frozen_prior_rows(horse.get("recentRaces"),race["date"])
+        # NAR has an independently registered full-career policy. Preserve
+        # only eligible dated facts, not the opaque archive or result labels.
+        if is_nar and isinstance(horse.get("allPastRuns"),list):
+            h["allPastRuns"]=_frozen_prior_rows(horse["allPastRuns"],race["date"])
+        transport=horse.get("careerTransport")
+        if (is_nar and isinstance(transport,dict)
+                and type(transport.get("observedRuns")) is int
+                and transport["observedRuns"] >= 0):
+            h["careerTransport"]={"observedRuns":transport["observedRuns"]}
         clean["horses"].append(h)
     return clean
 
