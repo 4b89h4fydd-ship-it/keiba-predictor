@@ -62,9 +62,29 @@ def main() -> int:
     # generate replacement pre-off features, or allow training to read them.
     historical_repair = meta.get("source") == "github-actions-history-missing-only-v2"
     allow_original_unverified = live_delta or historical_repair
-    details = [pack_detail(unpack_full_snapshot(x),
-                           preserve_unverified_legacy=allow_original_unverified)
-               for x in source_details]
+    # A live delta may contain a legacy, *unsealed* feature matrix. That
+    # matrix is not a pre-off training record. Keep the input bundle intact
+    # and omit only this orphan evidence from the outbound live detail; the
+    # existing protect_sync guard retains any D1-authoritative frozen archive.
+    # Never relax the strict pre-off archive check for ordinary prefetch jobs.
+    orphan_unsealed: list[str] = []
+    def prepare_detail(raw: dict[str, Any]) -> dict[str, Any]:
+        detail = unpack_full_snapshot(raw)
+        if (live_delta and isinstance(detail.get("massFeatureSnapshot"), dict)
+                and not isinstance(detail.get("preRacePrediction"), dict)):
+            orphan_unsealed.append(race_id(detail))
+            detail = dict(detail)
+            for key in ("massFeatureSnapshot", "massFeatureHash",
+                        "massFeatureSchemaVersion", "massFeatureSnapshotVersion"):
+                detail.pop(key, None)
+        return pack_detail(detail, preserve_unverified_legacy=allow_original_unverified)
+
+    details = [prepare_detail(x) for x in source_details]
+    if orphan_unsealed:
+        print("LIVE_DELTA_UNSEALED_MASS_NOT_PUBLISHED",
+              "count=" + str(len(orphan_unsealed)),
+              "races=" + ",".join(orphan_unsealed[:10]),
+              "input_original_preserved=true training_eligible=false")
     unverified = [
         race_id(d) for d in details
         if (d.get("massFeatureArchive") or {}).get("originHashVerified") is False
@@ -81,7 +101,14 @@ def main() -> int:
                              for d in details if isinstance(d.get("massFeatureArchive"), dict))
     archived_mass_count = sum(bool(d.get("massFeatureArchive")) for d in details)
     for original, prepared in zip(source_details, details):
-        if isinstance(original.get("massFeatureSnapshot"), dict):
+        raw = unpack_full_snapshot(original)
+        if isinstance(raw.get("massFeatureSnapshot"), dict):
+            if (live_delta and not isinstance(raw.get("preRacePrediction"), dict)):
+                # Never declare an unsealed matrix archived, nor allow its
+                # absence from a live-only sync to erase the original source.
+                if prepared.get("massFeatureSnapshot") or prepared.get("massFeatureArchive"):
+                    raise SystemExit("live unsealed mass must not be published as frozen")
+                continue
             if not prepared.get("massFeatureArchive") or prepared.get("massFeatureSnapshot"):
                 raise SystemExit("D1 mass-feature transfer must be lossless and archive-only")
     career_starts = sum(int((h.get("careerTransport") or {}).get("observedRuns") or 0)
