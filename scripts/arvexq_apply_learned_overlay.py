@@ -57,15 +57,6 @@ def apply(bundle, models):
         if not isinstance(detail, dict) or not detail.get('id'):
             details.append(detail)
             continue
-        # A prefetched race can pass its scheduled start while heavy D1
-        # reads/learning are still running. Do not replace its preserved
-        # original with a newly generated post-off learned forecast. The
-        # public projection independently hides unapproved legacy opinions.
-        if (str(detail.get('date') or '') >= '2026-10-23'
-                and not may_create_prerace_prediction(detail)):
-            details.append(detail)
-            skipped[str(detail['id'])] = 'post-off-original-preserved'
-            continue
         # The currently approved, independently computed Stage64 product
         # is authoritative for this pre-off publication. A research-only
         # learned overlay must never replace its marks, tickets or pace.
@@ -87,6 +78,15 @@ def apply(bundle, models):
         if (model.get('training') or {}).get('lastDate', '9999') >= str(detail.get('date') or ''):
             skipped[str(detail['id'])] = 'training-date-not-earlier'
             details.append(without_legacy_presentation(detail))
+            continue
+        # A prefetched race can pass its scheduled start while heavy D1
+        # reads/learning are still running. Do not replace its preserved
+        # original with a newly generated post-off learned forecast. The
+        # public projection independently hides unapproved legacy opinions.
+        if (str(detail.get('date') or '') >= '2026-10-23'
+                and not may_create_prerace_prediction(detail)):
+            details.append(detail)
+            skipped[str(detail['id'])] = 'post-off-original-preserved'
             continue
         try:
             updated = build_forecast(detail, model)
