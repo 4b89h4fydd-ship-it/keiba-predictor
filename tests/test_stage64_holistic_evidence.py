@@ -106,10 +106,28 @@ def test_preoff_first_corner_needs_identified_official_course_geometry():
 
 
 def test_head_to_head_challenger_is_audited_not_automatically_promoted():
-    facts = {"headToHead": {2: {1: {"wins": 2, "losses": 0, "ties": 0,
-                                     "raceIds": ["2026-09-15", "2026-10-04"]}}}}
+    facts = {
+        "headToHead": {2: {1: {"wins": 2, "losses": 0, "ties": 0,
+                                "raceIds": ["2026-09-15", "2026-10-04"]}}},
+        "firstCorner": None,
+        "byHorse": {
+            1: {"sameTrackDistanceMarginSeconds": .5,
+                "sameTrackDistanceMarginSamples": 2,
+                "opponentLevelMedian": .7, "opponentLevelSamples": 2,
+                "sameTrackDistanceTop3": 1, "sameTrackDistanceStarts": 2},
+            2: {"sameTrackDistanceMarginSeconds": .2,
+                "sameTrackDistanceMarginSamples": 2,
+                "opponentLevelMedian": .8, "opponentLevelSamples": 2,
+                "sameTrackDistanceTop3": 2, "sameTrackDistanceStarts": 2},
+        },
+    }
     proposed = direct_rematch_candidate([1,2,3,4], facts)
     assert proposed["horseNumber"] == 2 and proposed["researchOnly"] is True
+    assert "same-track-distance-margin" in proposed["confirmedChecks"]
+    assert "verified-first-corner-geometry" in proposed["unavailableChecks"]
+    facts["byHorse"][2]["opponentLevelMedian"] = .1
+    assert direct_rematch_candidate([1,2,3,4], facts) is None
+    facts["byHorse"][2]["opponentLevelMedian"] = .8
     facts["headToHead"][2][1]["losses"] = 1
     assert direct_rematch_candidate([1,2,3,4], facts) is None
 
