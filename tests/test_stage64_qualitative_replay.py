@@ -76,9 +76,12 @@ def test_two_date_replay_baselines_and_public_tactics():
             continue
         if source.get("analysisMode") == "障害" or source.get("surface") == "障害":
             continue
+        visible = deepcopy(source)
+        for h in visible["horses"]:
+            h.pop("allPastRuns", None)
         try:
-            plain = predict(source, expected_circuit=source["circuit"])
-            recent = predict(source, expected_circuit=source["circuit"],
+            plain = predict(visible, expected_circuit=source["circuit"])
+            recent = predict(visible, expected_circuit=source["circuit"],
                              ability_method="recent5")
         except (ValueError, KeyError, TypeError):
             continue
@@ -152,22 +155,22 @@ def test_later_day_blind_replay_comparison():
             continue
         if source.get("surface") == "障害":
             continue
+        visible = deepcopy(source)
+        for h in visible["horses"]:
+            h.pop("allPastRuns", None)
         try:
-            p = predict(source, expected_circuit=source["circuit"])
+            p = predict(visible, expected_circuit=source["circuit"])
         except (KeyError, TypeError, ValueError):
             continue
         stage = p["stages"]["marks"]
         if stage["value"] is None:
             continue
         order = stage["value"]["orderedWinCandidates"]
-        all_career = deepcopy(source)
-        full_runner_count = 0
-        for horse in all_career["horses"]:
-            old = horse.get("allPastRuns")
-            if isinstance(old, list) and len(old) > len(horse.get("recentRaces") or []):
-                horse["recentRaces"] = old
-                full_runner_count += 1
-        p_full = predict(all_career, expected_circuit=source["circuit"])
+        # Same Stage64 pipeline, distinct NAR/JRA input policies. No raw
+        # result or payout is ever passed into either calculation.
+        p_full = predict(source, expected_circuit=source["circuit"])
+        full_runner_count = p_full.get("abilityHistoryCoverage", {}).get(
+            "fullCareerRunners", 0)
         full_order = ((p_full["stages"].get("marks") or {}).get("value") or {}).get(
             "orderedWinCandidates") or []
         full_pick = full_order[0] if full_order else order[0]
