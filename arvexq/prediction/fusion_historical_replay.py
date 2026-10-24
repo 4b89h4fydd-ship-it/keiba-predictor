@@ -178,7 +178,10 @@ def train_and_validate(details, *, circuit, target_date, min_races=30,
     if len(ids)!=len(set(ids)):
         raise ValueError("duplicate historical race IDs")
     days=sorted({row["date"] for row in eligible})
-    pivot=next((day for day in days[1:] if
+    # Prefer the most recent entire heldout day while keeping >=30
+    # independent training races. The earliest split forced JRA onto just
+    # one incomplete weekend day, despite later pre-target history.
+    pivot=next((day for day in reversed(days[1:]) if
                sum(d["date"]<day for d in eligible)>=min_races and
                sum(d["date"]>=day for d in eligible)>=min_races),None)
     if pivot is None:
