@@ -117,7 +117,8 @@ async function verify(kind,name){
     assert.ok(paper[k]&&dark(paper[k].foreground),'Unreadable pale text on paper: '+k+' '+JSON.stringify(paper[k]));
     assert.equal(paper[k].opacity,'1','Transparent/washed-out text: '+k);
   }
-  assert.deepEqual(result.actions,['厳選','特別','AI成績','お気に入り']);
+  assert.deepEqual(result.actions,['厳選','特別','お気に入り'],
+    'Current approved shortcuts exclude retired AI成績');
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
   assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'結果待ち');
