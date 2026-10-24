@@ -78,7 +78,7 @@
           p1Probability:prob.win&&prob.win[no]!=null?prob.win[no]:null,p2Probability:null,
           p3Probability:prob.top3&&prob.top3[no]!=null?prob.top3[no]:null,overallGrade:'',coverage:1};
       });
-      // Stage64 pace is an array of scenarios, each keyed by actual horse number.
+      // Historic models may contain a separate scenario array; fusion has direct observed evidence.
       // The array index is not a horse number and the correction is not a calibrated pace prediction.
       var pace=(stage.pace&&stage.pace.value)||[],paceRows=[];
       if(Array.isArray(pace))pace.forEach(function(deltas,index){
@@ -89,7 +89,7 @@
             paceRows.push({scenarioIndex:index+1,horseNumber:no,delta:delta});
         });
       });
-      last={active:marks.length>0,source:'stage64-preoff',scenarios:[],pace:paceRows,
+      last={active:marks.length>0,source:server.modelVersion==='arvexq-empirical-fusion-v1'?'empirical-fusion-preoff':'stage64-archived',scenarios:[],pace:paceRows,
         forecastText:String(server.forecastText||''),
         modelVersion:server.modelVersion||'',uncalibrated:!(stage.probability&&stage.probability.calibrationVerified===true),unavailable:!marks.length,
         marks:marks.map(function(x){var h=race.horses.find(function(y){return Number(y.horseNumber)===Number(x.horseNumber)})||{};return {horseNumber:Number(x.horseNumber),name:String(h.name||''),mark:String(x.mark||'')}})};

@@ -13,6 +13,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from arvexq.prediction.new_forecast import build_forecast
 from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
+from arvexq.prediction.prerace_archive import sealed_lock
+from arvexq.prediction.fusion_source_composer import assemble_fusion_inputs
+from arvexq.forecast.engine import build_prediction
+from arvexq.forecast.marks import generate_marks
+from arvexq.forecast.tickets import generate_tickets
 
 
 # Retired mutable presentation fields. Do not touch immutable pre-off records,
@@ -49,26 +54,78 @@ def without_legacy_presentation(detail):
     return row
 
 
-def apply(bundle, models):
+def apply(bundle, models, *, now=None):
     out = dict(bundle)
     details = []
     changed, skipped = [], {}
+    fused, fusion_errors = [], {}
     for detail in bundle.get('details', []):
         if not isinstance(detail, dict) or not detail.get('id'):
             details.append(detail)
             continue
-        # The currently approved, independently computed Stage64 product
-        # is authoritative for this pre-off publication. A research-only
-        # learned overlay must never replace its marks, tickets or pace.
-        if (detail.get('predictionStatus') == 'ready'
-                and detail.get('predictionModelVersion') == 'arvexq-stage64-product-v1'
-                and isinstance(detail.get('prediction'), dict)
-                and isinstance(detail.get('predictionMarks'), list)
-                and detail.get('predictionMarks')
-                and isinstance(detail.get('recommendedBets'), list)):
+        # An already sealed original is immutable. Never overwrite that
+        # record, even when the new method weights are different.
+        if sealed_lock(detail):
             details.append(detail)
-            skipped[str(detail['id'])] = 'approved-stage64-product-preserved'
+            skipped[str(detail['id'])] = 'already-frozen-preoff-original-preserved'
             continue
+        # Reuse this EXACT existing D1 publication step for the trained
+        # five-method fusion. No added endpoint or alternative data source.
+        fusion = ((models.get('fusion') or {}).get(detail.get('circuit'))
+                  if isinstance(models, dict) else None)
+        if fusion and may_create_prerace_prediction(detail):
+            try:
+                sources = assemble_fusion_inputs(
+                    detail, fusion['models'], fusion['calibration'], now=now)
+                candidate = dict(detail)
+                candidate['fusionInputs'] = {
+                    'opinions': sources['opinions'],
+                    'calibration': sources['calibration'],
+                    'odds': sources.get('odds'),
+                    'capturedAt': sources['capturedAt'],
+                }
+                pred = build_prediction(candidate, now=now)
+                if not isinstance(pred, dict) or pred.get('predictionStatus') != 'ready':
+                    raise ValueError('five-method forecast cannot be verified before off')
+                marks = generate_marks(pred)
+                tickets = generate_tickets(pred, marks, race=detail)
+                if len(marks) != 5 or not isinstance(tickets, list):
+                    raise ValueError('fusion marks or tickets contract incomplete')
+                ready = dict(detail)
+                ready['predictionStatus'] = 'ready'
+                ready['predictionModelVersion'] = pred['modelVersion']
+                ready['prediction'] = pred
+                ready['predictionMarks'] = marks
+                ready['recommendedBets'] = tickets
+                ready['forecastText'] = pred['forecastText']
+                # Save compact, immutable before-off per-method winner votes
+                # for later genuine settlement. Do NOT leak the full ML model
+                # or bulky all-triple opinion arrays into the D1 racecard.
+                ready['fusionMethodPreoffReceipt'] = {
+                    'raceId': sources['raceId'], 'raceDate': sources['raceDate'],
+                    'circuit': sources['circuit'],
+                    'capturedAt': sources['capturedAt'],
+                    'scheduledOffAt': sources['scheduledOffAt'],
+                    'sourceKind': 'preoff-method-opinions-unsealed',
+                    'sourceVersions': sources['sourceVersions'],
+                    'roster': sources['roster'],
+                    'arms': {name: {field: opinion[field] for field in (
+                          'modelVersion','evidenceId','raceId','capturedAt','win','top3')}
+                          for name, opinion in sources['opinions'].items()},
+                }
+                labels = {row['horseNumber']: row['mark'] for row in marks}
+                ready['horses'] = [
+                    dict(h, predMark=labels.get(h.get('horseNumber'), h.get('predMark','')))
+                    if isinstance(h, dict) else h
+                    for h in detail.get('horses') or []
+                ]
+                details.append(ready)
+                fused.append(str(detail['id']))
+                continue
+            except (ValueError, TypeError, KeyError, OverflowError) as exc:
+                fusion_errors[str(detail['id'])] = type(exc).__name__ + ': ' + str(exc)
+        # No new live Stage64 prediction may be published. Previous frozen
+        # Stage64 receipts are already handled by the immutable-seal guard.
         circuit = detail.get('circuit')
         model = models.get(circuit)
         if not isinstance(model, dict):
@@ -106,8 +163,11 @@ def apply(bundle, models):
     meta = dict(out.get('meta') or {})
     meta['learnedForecastOverlayCount'] = len(changed)
     meta['learnedForecastOverlayResearchOnly'] = True
+    meta['empiricalFusionPreoffReadyCount'] = len(fused)
     out['meta'] = meta
-    return out, {'overlaid': changed, 'skipped': skipped, 'productionTicketAccuracyVerified': False}
+    return out, {'overlaid': changed, 'skipped': skipped,
+                 'fusionPublished': fused, 'fusionErrors': fusion_errors,
+                 'productionTicketAccuracyVerified': False}
 
 
 def main():
@@ -121,7 +181,9 @@ def main():
                             json.loads(args.models.read_text(encoding='utf-8')))
     args.out.write_text(json.dumps(payload, ensure_ascii=False, allow_nan=False))
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2))
-    print('LEARNED_FORECAST_OVERLAY',len(report['overlaid']),'skipped',len(report['skipped']))
+    print('FUSION_PREFETCH_READY',len(report['fusionPublished']),
+          'fusion_errors',len(report['fusionErrors']),
+          'legacy_research_only',len(report['overlaid']))
 
 
 if __name__ == '__main__':

@@ -7,8 +7,9 @@ from copy import deepcopy
 from .engine import build_prediction
 from .marks import generate_marks
 from .tickets import generate_tickets
+from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION
 RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking', 'honmeiDecision',
-    'preRacePrediction', 'preRaceBet', 'predictionAudit', 'frozenPredictionAudit',
+    'preRacePrediction', 'preRaceBet', 'fusionInputs', 'predictionAudit', 'frozenPredictionAudit',
     'winnerLearningProfile', 'betRecommendations', 'recommendedBets', 'tickets', 'buyList', 'bets',
     'markMethod', 'markEngineVersion', 'predictionModelVersion', 'mark', 'predMark', '印',
     'honmeiRole', 'modelProbabilities', 'forecastRevisions', 'currentForecastRevisionId',
@@ -27,7 +28,7 @@ def public_race(detail):
     result = project(detail)
     prediction = build_prediction(detail)
     if prediction is None:
-        # A stored, verified pre-off Stage64 product is immutable race evidence.
+        # A stored, verified original remains immutable historical race evidence.
         # Publishing its original marks/tickets after the off is NOT a new
         # prediction. Never create a product retroactively for an empty row.
         original = detail.get('prediction')
@@ -38,8 +39,8 @@ def public_race(detail):
                   if isinstance(h, dict)}
         valid = (isinstance(original, dict)
                  and detail.get('predictionStatus') == 'ready'
-                 and detail.get('predictionModelVersion') == 'arvexq-stage64-product-v1'
-                 and original.get('modelVersion') == 'arvexq-stage64-product-v1'
+                 and detail.get('predictionModelVersion') in (FUSION_VERSION, 'arvexq-stage64-product-v1')
+                 and original.get('modelVersion') == detail.get('predictionModelVersion')
                  and original.get('predictionStatus') == 'ready'
                  and original.get('productionEligible') is True
                  and original.get('raceId') == detail.get('id')
@@ -58,11 +59,9 @@ def public_race(detail):
             if isinstance(original.get('forecastText'), str):
                 result['forecastText'] = original['forecastText']
             result['predictionMarks'] = deepcopy(original_marks)
-            # Reproject only the existing sealed pre-off probability evidence.
-            # Keep the D1 archived ticket list untouched for audit/history.
-            # Never use post-race outcomes to select a ticket.
-            revised = generate_tickets(original, original_marks, race=detail)
-            result['recommendedBets'] = revised if revised else deepcopy(original_tickets)
+            # The original, pre-off recorded picks stay untouched after the off.
+            # Never generate or reorder tickets using post-off odds/outcomes.
+            result['recommendedBets'] = deepcopy(original_tickets)
             by_no = {m['horseNumber']: m['mark'] for m in original_marks}
             for horse in result.get('horses') or []:
                 if horse.get('horseNumber') in by_no:

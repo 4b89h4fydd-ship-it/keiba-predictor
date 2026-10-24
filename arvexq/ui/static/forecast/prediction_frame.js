@@ -9,7 +9,9 @@
       ?'<p class="muted">既存の学習モデルによる発走前の仮予想（未検証）。保存済みの発走前原本・確定買い目ではありません。</p>'
       :live&&live.source==='learned-revision-retrospective'
       ?'<p class="muted">過去レースの事後再分析です。発走前の予想成績には含めません。</p>'
-      :live&&live.source==='stage64-preoff'
+      :live&&live.source==='empirical-fusion-preoff'
+      ?'<p class="muted">みねた氏主体＋複数予想家＋独立AIを、過去実績の重みで融合した発走前予想です。主観による印の変更はありません。</p>'
+      :live&&live.source==='stage64-archived'
       ?'<p class="muted">Stage64発走前の展開仮説（確率・補正は未校正）です。</p>'
       :'<p class="muted">このレースの学習済み予想印は未取得です。確認できない印は生成しません。</p>';
     var text=String(live&&live.forecastText||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});
