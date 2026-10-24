@@ -50,6 +50,19 @@ def build_prediction(facts, now=None):
     race.pop("result", None)
     videos=race.pop("_internalVideoFeatures",None)
     quoted=race.pop("_internalThreeWayOdds",None)
+    # Use ONLY the already-configured official local ZIP input. Without
+    # explicit authorization, no NAR commercial odds source is activated.
+    if quoted is None and circuit == "地方":
+        from os import environ, pathsep
+        paths = [p for p in environ.get("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "").split(pathsep) if p]
+        if paths and environ.get("ARVEXQ_NAR_ODDS_USAGE_AUTHORIZED") == "1":
+            from arvexq.databanks.nar_official_csv import preoff_three_way_odds
+            try:
+                quoted = preoff_three_way_odds(paths, race)
+            except (OSError, ValueError, TypeError):
+                # Broken or ineligible quote input is NOT a reason to lose
+                # otherwise-valid probability/mark predictions.
+                quoted = []
     try:
         return predict(race,model,videos=videos,quoted_odds=quoted)
     except (ValueError,KeyError,TypeError,OverflowError):
