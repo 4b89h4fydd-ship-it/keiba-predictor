@@ -6,6 +6,7 @@ no outcome keys are ever passed to Stage64. Never use this as product accuracy.
 """
 import base64
 import gzip
+from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
@@ -159,16 +160,30 @@ def test_later_day_blind_replay_comparison():
         if stage["value"] is None:
             continue
         order = stage["value"]["orderedWinCandidates"]
+        all_career = deepcopy(source)
+        full_runner_count = 0
+        for horse in all_career["horses"]:
+            old = horse.get("allPastRuns")
+            if isinstance(old, list) and len(old) > len(horse.get("recentRaces") or []):
+                horse["recentRaces"] = old
+                full_runner_count += 1
+        p_full = predict(all_career, expected_circuit=source["circuit"])
+        full_order = ((p_full["stages"].get("marks") or {}).get("value") or {}).get(
+            "orderedWinCandidates") or []
+        full_pick = full_order[0] if full_order else order[0]
         challenger = p["winnerEvidenceComparison"]["proposedHeadToHeadResearchChallenger"]
         new_pick = challenger["horseNumber"] if challenger else order[0]
         # Prediction/decision fully locked before reading result map.
         locked.append((race_id, source["circuit"], order[0], new_pick,
-                       challenger is not None))
+                       challenger is not None, full_pick, full_runner_count))
     assert len(locked) >= 60, "too few eligible unseen archives"
     groups = defaultdict(lambda: {"n":0, "baseWin":0, "baseTop3":0,
                                   "candidateWin":0, "candidateTop3":0,
-                                  "changed":0, "goodChanges":0, "badChanges":0})
-    for race_id, circuit, baseline, challenger, changed in locked:
+                                  "changed":0, "goodChanges":0, "badChanges":0,
+                                  "fullWin":0, "fullTop3":0, "fullChanged":0,
+                                  "fullGoodChanges":0, "fullBadChanges":0,
+                                  "fullRunnerEvidenceRaces":0})
+    for race_id, circuit, baseline, challenger, changed, full_pick, full_count in locked:
         winning, second, third = HOLDOUT_LABELS[race_id]
         date = "-".join(race_id.split("-")[1:4])
         metrics = groups[(date, circuit)]
@@ -178,6 +193,12 @@ def test_later_day_blind_replay_comparison():
         metrics["candidateWin"] += int(challenger == winning)
         metrics["candidateTop3"] += int(challenger in (winning, second, third))
         metrics["changed"] += int(changed)
+        metrics["fullWin"] += int(full_pick == winning)
+        metrics["fullTop3"] += int(full_pick in (winning, second, third))
+        metrics["fullChanged"] += int(full_pick != baseline)
+        metrics["fullGoodChanges"] += int(full_pick == winning and baseline != winning)
+        metrics["fullBadChanges"] += int(baseline == winning and full_pick != winning)
+        metrics["fullRunnerEvidenceRaces"] += int(full_count > 0)
         metrics["goodChanges"] += int(changed and challenger == winning and baseline != winning)
         metrics["badChanges"] += int(changed and baseline == winning and challenger != winning)
     for (date, circuit), stats in sorted(groups.items()):
