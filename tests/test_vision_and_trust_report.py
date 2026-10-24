@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from hashlib import sha256
+import json
 from datetime import datetime, timezone
 from unittest import TestCase
 
@@ -36,10 +38,17 @@ def settled(race_id="nar-test-1", finish=(1, 2, 3), payout=1580):
     # 12:30 JST = 03:30 UTC; captured time must be before scheduled post.
     captured = int(datetime(2026, 10, 1, 3, 0, tzinfo=timezone.utc).timestamp())
     lock = {"raceId": race_id, "raceDate": race_date, "capturedAtEpoch": captured,
-            "frozen": True, "sealRevision": "immutable1",
+            "frozen": True, "freezePolicy": "arvexq-server-prerace-seal-v1",
+            "sealedAtEpoch": captured + 60,
             "horses": [{"horseNumber": 1, "mark": "◎"},
                        {"horseNumber": 2, "mark": "○"},
                        {"horseNumber": 3, "mark": "▲"}]}
+    payload = {"raceId": race_id, "date": race_date,
+               "captured": captured, "sealed": lock["sealedAtEpoch"],
+               "horses": lock["horses"]}
+    lock["sealRevision"] = sha256(json.dumps(
+        payload, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"), default=str).encode()).hexdigest()
     return {"id": race_id, "date": race_date, "startTime": "12:30",
             "circuit": "地方", "preRacePrediction": lock,
             "preRaceBet": {"items": [{"kind": "3連単", "combos": [[1, 2, 3]]}]},
@@ -104,6 +113,13 @@ class HonestHistoryTests(TestCase):
         report = build_trust_report([bad])
         self.assertFalse(report["ticketMetrics"]["byKind"]["3連単"]["completePayouts"])
         self.assertIsNone(report["ticketMetrics"]["byKind"]["3連単"]["flatStakeReturnRate"])
+
+    def test_modified_original_hash_is_rejected(self):
+        tampered = settled("r1")
+        tampered["preRacePrediction"]["horses"][0]["mark"] = "○"
+        report = build_trust_report([tampered])
+        self.assertEqual(report["population"]["withVerifiedOriginalAndOfficialFinal"], 0)
+        self.assertEqual(report["population"]["missingOrInvalidOriginal"], 1)
 
     def test_no_retroactive_capture_and_duplicate_races(self):
         late = settled("r1")
