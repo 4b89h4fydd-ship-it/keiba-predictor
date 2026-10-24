@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from arvexq.vision.observations import analyze_tracking
+from arvexq.vision.auto_identity import resolve_ocr_identities
 
 VERSION = "arvexq-video-detector-v1"
 COCO_HORSE_CLASS = 17
@@ -119,7 +120,7 @@ def _validated_config(config: dict[str, Any]) -> tuple[list[int], list[float], d
     return roster, cuts, identity_map
 
 
-def _extract_boxes(result: Any) -> list[tuple[int, float, float, float]]:
+def _extract_boxes(result: Any) -> list[tuple[int, float, float, float, tuple[float, float, float, float]]]:
     """Extract actual model track IDs, detection scores and ground-contact pixels."""
     if result is None:
         return []
@@ -139,14 +140,15 @@ def _extract_boxes(result: Any) -> list[tuple[int, float, float, float]]:
         x1, y1, x2, y2 = map(_number, bounds)
         if x2 <= x1 or y2 <= y1:
             continue
-        output.append((int(track_id), _number(score), (x1 + x2) / 2, y2))
+        output.append((int(track_id), _number(score), (x1 + x2) / 2, y2, (x1, y1, x2, y2)))
     return output
 
 
 def collect_video(video_path: str | Path, config: dict[str, Any], *,
                   model_path: str | Path,
                   capture_factory: Callable | None = None,
-                  model_factory: Callable | None = None) -> dict[str, Any]:
+                  model_factory: Callable | None = None,
+                  ocr_reader: Callable | None = None) -> dict[str, Any]:
     """Run a pretrained horse detector on EVERY decoded frame and track IDs.
 
     Returned unknown tracks are counts only, never falsely named horses.
@@ -154,6 +156,10 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
     Actual missed horses are not interpolated. Sampling is explicit.
     """
     roster, cuts, identity_map = _validated_config(config)
+    auto_ocr = config.get('autoIdentifySaddlecloth') is True
+    if auto_ocr and ocr_reader is None:
+        from arvexq.vision.auto_identity import read_saddlecloth_number
+        ocr_reader = read_saddlecloth_number
     path = Path(video_path)
     weights = Path(model_path)
     if not path.is_file() or not path.stat().st_size:
@@ -184,9 +190,10 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
         if type(stride) is not int or not 1 <= stride <= 120:
             raise ValueError("sampleEveryNFrames must be 1..120")
         frames = []
+        ocr_reads = []
+        pending_unidentified = []
         frame_index = 0
         cut_index = 0
-        unidentified_count = 0
         model = model_factory(str(weights))
         while True:
             success, image = cap.read()
@@ -198,36 +205,65 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
                 continue
             while cut_index < len(cuts) and t >= cuts[cut_index]:
                 cut_index += 1
-                model = model_factory(str(weights))  # track states are camera-specific
+                model = model_factory(str(weights))
             camera = f"camera-{cut_index}"
             inference = model.track(image, persist=True, classes=[COCO_HORSE_CLASS],
                                     tracker="bytetrack.yaml", conf=0.25, verbose=False)
             tracks = _extract_boxes(inference[0] if inference else None)
-            detections = []
+            frame = {"timeSeconds": round(t, 6), "cameraId": camera, "horses": []}
             seen = set()
-            for track_id, score, pixel_x, pixel_y in tracks:
+            for track_id, score, pixel_x, pixel_y, bounds in tracks:
                 mapping = identity_map.get(camera, {}).get(str(track_id))
-                if mapping is None:
-                    unidentified_count += 1
-                    continue
-                no = mapping["horseNumber"]
-                # Multiple detections mapped to the same entry in one frame
-                # indicate inconsistent tracking/identity evidence; fail closed.
-                if no in seen:
-                    raise ValueError("conflicting track mapping for a horse")
-                seen.add(no)
                 transforms = config["calibration"].get("homographies")
                 matrix = (transforms[camera] if transforms is not None
                           else config["calibration"]["homography"])
                 ground_x, ground_y = project_ground(pixel_x, pixel_y, matrix)
-                detections.append({
+                if mapping is None:
+                    if auto_ocr:
+                        raw_read = ocr_reader(image, bounds)
+                        raw_read = raw_read if isinstance(raw_read, dict) else {}
+                        ocr_reads.append({
+                            "cameraId": camera, "trackId": track_id,
+                            "timeSeconds": round(t, 6),
+                            "horseNumber": raw_read.get("horseNumber"),
+                            "confidence": raw_read.get("confidence"),
+                        })
+                    pending_unidentified.append((frame, camera, track_id, score, ground_x, ground_y))
+                    continue
+                no = mapping["horseNumber"]
+                if no in seen:
+                    raise ValueError("conflicting track mapping for a horse")
+                seen.add(no)
+                frame["horses"].append({
                     "horseNumber": no, "xMeters": ground_x, "yMeters": ground_y,
                     "visible": True, "identityConfidence": 1.0,
+                    "identitySource": "externally-reviewed",
                     "detectionConfidence": round(score, 5),
                     "trackId": track_id,
                 })
-            frames.append({"timeSeconds": round(t, 6), "cameraId": camera,
-                           "horses": detections})
+            frames.append(frame)
+        auto_assigned = 0
+        if auto_ocr and pending_unidentified:
+            ocr_map = resolve_ocr_identities(ocr_reads, roster)
+            for frame, camera, track_id, score, x, y in pending_unidentified:
+                item = ocr_map.get(camera, {}).get(str(track_id))
+                if not item:
+                    continue
+                no = item["horseNumber"]
+                if any(h["horseNumber"] == no for h in frame["horses"]):
+                    # Conflicting identity evidence cannot both be credited.
+                    continue
+                frame["horses"].append({
+                    "horseNumber": no, "xMeters": x, "yMeters": y,
+                    "visible": True,
+                    "identityConfidence": item["identityConfidence"],
+                    "identitySource": "automated-ocr-provisional",
+                    "ocrVotes": item["independentFrames"],
+                    "detectionConfidence": round(score, 5),
+                    "trackId": track_id,
+                })
+                auto_assigned += 1
+        unidentified_count = len(pending_unidentified) - auto_assigned
         if len(frames) < 2:
             raise ValueError("at least two decoded sampled frames required")
     finally:
@@ -245,7 +281,9 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
                     "sampleStride": stride, "fps": fps,
                     "unidentifiedDetections": unidentified_count,
                     "cameraCutsDeclared": len(cuts),
-                    "identityMapping": "reviewed-per-camera-track-ids-not-auto-identification"},
+                    "identityMapping": ("reviewed-and-provisional-ocr" if auto_ocr
+                                        else "reviewed-per-camera-track-ids"),
+                    "autoIdentifiedDetections": auto_assigned},
     }
     measurements = analyze_tracking(manifest, roster)
     return {"version": VERSION, "manifest": manifest, "measurements": measurements,
