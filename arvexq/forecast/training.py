@@ -121,7 +121,8 @@ def train(races, *, circuit, train_before, validate_before, video_by_race=None,
         "temperature":temperature,"paceEffect":0.0,
         "scenarioWeights":{"baseline":1.0,"fast":0.0,"slow":0.0},
         "scenarioWeightsValidated":False,
-        "outOfSampleValidated":True,
+        # Fitting and temperature selection alone do not constitute future-race validation.
+        "outOfSampleValidated":False,
         "missingVideoValidated":all(all(row["video_missing"] == 1.0 for row in f.values())
                                      for _,_,f,_ in train_rows+valid_rows),
         "trainedThrough":max(day for _,day,_,_ in train_rows),
