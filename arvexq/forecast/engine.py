@@ -78,6 +78,33 @@ def _stage64_pace_text(race, prediction):
             + "、".join(name(no) for no in early[:3]) + "。"
             "前方にいたことと今回逃げることは同義ではない。"
         )
+    public = evidence.get("publicPositionTactics") or {}
+    if public:
+        profiles = public.get("observedProfiles") or {}
+        observed_top3 = [
+            no for no, item in profiles.items()
+            if item.get("top3PositionObserved") is True
+        ]
+        if observed_top3:
+            pieces.append("前走の通過順位で3番手以内を記録した馬は"
+                          + "、".join(name(no) for no in observed_top3) + "。")
+        extended = public.get("distanceExtensionCandidates") or []
+        shortened = public.get("distanceShorteningCandidates") or []
+        if extended:
+            pieces.append("前走から距離延長は" + "、".join(name(no) for no in extended)
+                          + "。前進意識の可能性を確認する対象。")
+        if shortened:
+            pieces.append("前走から距離短縮は" + "、".join(name(no) for no in shortened)
+                          + "。前走の位置取りだけで先行と決めない。")
+        adjacency = public.get("adjacentForwardIntentPairs") or []
+        if adjacency:
+            pieces.append("先行意識の候補が馬番で隣り合う組は"
+                          + "、".join(name(a) + "と" + name(b) for a, b in adjacency)
+                          + "。実際に競るとは限らない。")
+        if public.get("positionUnknown"):
+            pieces.append("前走位置取りが未確認の馬は"
+                          + "、".join(name(no) for no in public["positionUnknown"])
+                          + "。不明を後方脚質として扱わない。")
     course = evidence.get("historicalCourseEvidence") or {}
     # Factual course/distance observations explain where the tentative
     # winner choice may be vulnerable; they do NOT alter marks or probability.
