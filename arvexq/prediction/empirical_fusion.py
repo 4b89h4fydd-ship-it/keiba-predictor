@@ -59,6 +59,21 @@ def _arms(arms):
     return names
 
 
+def _validate_opinion_sources(arms, scheduled_off, race_id):
+    """Reject reused method identities and post-off individual predictions."""
+    versions = set()
+    for name, opinion in arms.items():
+        version = str(opinion.get("modelVersion") or "")
+        evidence_id = str(opinion.get("evidenceId") or "")
+        if not version or not evidence_id or opinion.get("raceId") != race_id:
+            raise ValueError("independent method identity/evidence missing")
+        if version in versions:
+            raise ValueError("duplicate model identity disguised as independent methods")
+        versions.add(version)
+        if _timestamp(opinion.get("capturedAt")) >= _timestamp(scheduled_off):
+            raise ValueError("post-off method opinion is not preoff evidence")
+
+
 def _validate_capture(row, cutoff):
     race_day = date.fromisoformat(str(row["raceDate"]))
     if race_day >= date.fromisoformat(cutoff):
@@ -94,6 +109,7 @@ def fit_weights(history, *, target_date, min_races=30):
         seen.add(key)
         circuits.add(str(row.get("circuit") or ""))
         current = _arms(row["arms"])
+        _validate_opinion_sources(row["arms"], row["scheduledOffAt"], row["raceId"])
         if names is None:
             names = current
         if names != current:
@@ -222,6 +238,16 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
     if not isinstance(max_tickets, int) or not 1 <= max_tickets <= 5:
         raise ValueError("maximum five total tickets")
     methods = _arms(opinions)
+    from zoneinfo import ZoneInfo
+    try:
+        off_clock = str(race.get("scheduledStartTime") or race.get("startTime") or "")
+        if len(off_clock) < 5:
+            raise ValueError("scheduled race off required")
+        scheduled_off = datetime.fromisoformat(today + "T" + off_clock[:5] + ":00").replace(
+            tzinfo=ZoneInfo("Asia/Tokyo")).isoformat()
+    except (ValueError, TypeError) as exc:
+        raise ValueError("verified scheduled race off required") from exc
+    _validate_opinion_sources(opinions, scheduled_off, race["id"])
     weights = fitted.get("weights")
     if not isinstance(weights, dict) or methods != set(weights) or abs(sum(weights.values()) - 1.) > 1e-7:
         raise ValueError("fitted method/weight mismatch")
@@ -252,7 +278,14 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
     ranked = sorted(roster, key=lambda no: (-win[no], -top3[no], no))
     marks = [{"horseNumber": no, "mark": mark, "winProbability": win[no],
               "top3Probability": top3[no]} for no, mark in zip(ranked, MARKS)]
-    tickets, ticket_status = _tickets(joint if all_joint else None, marks, quoted_odds, max_tickets)
+    verified_odds = None
+    if quoted_odds is not None:
+        if not isinstance(quoted_odds, dict) or not isinstance(quoted_odds.get("prices"), dict):
+            raise ValueError("timestamped official odds quotes required")
+        if _timestamp(quoted_odds.get("capturedAt")) >= _timestamp(scheduled_off):
+            raise ValueError("post-off odds cannot determine a preoff ticket")
+        verified_odds = quoted_odds["prices"]
+    tickets, ticket_status = _tickets(joint if all_joint else None, marks, verified_odds, max_tickets)
     return {
         "version": VERSION, "circuit": race["circuit"], "raceId": race["id"],
         "predictionDate": today, "methodWeights": dict(sorted(weights.items())),
