@@ -143,5 +143,65 @@ class OfficialArchiveObservedFields(unittest.TestCase):
             self.assertEqual(len(result['allPastRuns']), 1)
             self.assertEqual(result['allPastRuns'][0]['date'], '2026-09-30')
 
+
+
+class NarPreoffOddsTests(unittest.TestCase):
+    def test_daily_zip_preoff_only_with_real_horse_numbers(self):
+        from datetime import datetime, timezone, timedelta
+        from arvexq.databanks.nar_official_csv import preoff_three_way_odds
+        import os
+        with tempfile.TemporaryDirectory() as directory:
+            jst = timezone(timedelta(hours=9))
+            before = int(datetime(2026,10,25,14,57,tzinfo=jst).timestamp())
+            after = int(datetime(2026,10,25,15,1,tzinfo=jst).timestamp())
+            race = {"date":"2026-10-25","circuit":"地方","track":"園田",
+                    "raceNumber":5,"scheduledStartTime":"15:00",
+                    "horses":[{"horseNumber":x} for x in (1,2,3,4)]}
+            rows = [
+                ["園田","20261025","5","３連単","1","2","3","24.5","","8"],
+                ["園田","20261025","5","３連複","1","3","2","6.8","","2"],
+                ["園田","20261025","5","３連単","1","2","9","88.0","",""],
+                ["園田","20261025","6","３連単","1","2","3","33.0","",""],
+            ]
+            early = Path(directory) / f"20261025_{before}_odds.zip"
+            late = Path(directory) / f"20261025_{after}_odds.zip"
+            monthly = Path(directory) / f"202610_{after}_odds.zip"
+            for zpath, amount in ((early,"24.5"),(late,"99.9"),(monthly,"100.0")):
+                variant=[r.copy() for r in rows]
+                variant[0][7]=amount
+                with zipfile.ZipFile(zpath, "w") as archive:
+                    archive.writestr("20261025_odds.csv", encode(variant))
+            found=preoff_three_way_odds([monthly,late,early],race)
+            self.assertEqual(len(found),2)
+            straight=next(r for r in found if r["kind"]=="3連単")
+            trio=next(r for r in found if r["kind"]=="3連複")
+            self.assertEqual(straight["odds"],24.5)
+            self.assertEqual(straight["horses"],[1,2,3])
+            self.assertEqual(trio["horses"],[1,2,3])
+            self.assertIn("14:57:00+09:00",straight["observedAt"])
+            self.assertEqual(preoff_three_way_odds([monthly,late],race),[])
+            with self.assertRaises(ValueError):
+                preoff_three_way_odds([early],{**race,"circuit":"中央"})
+
+    def test_ambiguous_and_after_post_quotes_cannot_enter(self):
+        from datetime import datetime,timezone,timedelta
+        from arvexq.databanks.nar_official_csv import preoff_three_way_odds
+        jst=timezone(timedelta(hours=9))
+        with tempfile.TemporaryDirectory() as directory:
+            stamp=int(datetime(2026,10,25,14,58,tzinfo=jst).timestamp())
+            path=Path(directory)/f"20261025_{stamp}_odds.zip"
+            rows=[
+                ["園田","20261025","5","３連単","1","2","3","24.5"],
+                ["園田","20261025","5","３連単","1","2","3","30.5"],
+            ]
+            with zipfile.ZipFile(path,"w") as z:
+                z.writestr("20261025_odds.csv",encode(rows))
+            race={"date":"2026-10-25","circuit":"地方","track":"園田",
+                  "raceNo":5,"startTime":"15:00",
+                  "horses":[{"horseNumber":i} for i in (1,2,3,4)]}
+            with self.assertRaisesRegex(ValueError,"conflicting"):
+                preoff_three_way_odds([path],race)
+            self.assertEqual(preoff_three_way_odds([path],{**race,"startTime":"14:55"}),[])
+
 if __name__ == '__main__':
     unittest.main()
