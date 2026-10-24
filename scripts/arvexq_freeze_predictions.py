@@ -203,7 +203,7 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
         return {"status": "missing-historical-evidence"}
     # Keep the existing immutable D1 seal. For the approved 2026-10-23+
-    # production forecast, consume Stage64 rather than the retired 60/40 ranker.
+    # production forecast, consume independently validated fusion rather than Stage64.
     # Explicit test-injected assign/build functions retain their old contract.
     if detail.get("date", "") >= "2026-10-23" and assign is None and build is None:
         from arvexq.forecast.engine import build_prediction
@@ -214,7 +214,7 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
             return {"status": "incomplete-prediction", "predictionStatus": "disabled"}
         marks = generate_marks(prediction)
         tickets = generate_tickets(prediction, marks)
-        if len(marks) != 5 or not tickets:
+        if len(marks) != 5 or not isinstance(tickets, list):
             return {"status": "incomplete-prediction", "predictionStatus": "disabled"}
         working = copy.deepcopy(detail)
         working["predictionStatus"] = "ready"
@@ -343,22 +343,22 @@ def capture_original_bet(detail: dict[str, Any], now: datetime) -> dict[str, Any
     post = post_at(detail)
     if not post or now.astimezone(JST) >= post:
         raise ValueError("refusing post-off ticket generation")
-    # Reuse the pre-off Stage64 products already calculated in prepare_seal.
+    # Reuse the pre-off empirical fusion products already calculated in prepare_seal.
     # No separate selector, betting model, endpoint or post-off calculation.
     if (detail.get("predictionStatus") == "ready"
-            and detail.get("predictionModelVersion") == "arvexq-stage64-product-v1"):
+            and detail.get("predictionModelVersion") == "arvexq-empirical-fusion-v1"):
         items = detail.get("recommendedBets")
-        if not isinstance(items, list) or not items or any(
+        if not isinstance(items, list) or any(
                 not isinstance(item, dict) or not item.get("combos") for item in items):
-            raise ValueError("Stage64 original recommended bets unavailable")
+            raise ValueError("empirically fused ticket record unavailable")
         return {
             "raceId": str(detail["id"]),
             "fixedAt": now.isoformat(timespec="seconds"),
             "fixedBeforePost": True,
             "fixedMinutesBeforePost": int((post - now).total_seconds() // 60),
-            "decision": "推奨", "items": copy.deepcopy(items),
+            "decision": "推奨" if items else "見送り", "items": copy.deepcopy(items),
             "modelVersion": detail["predictionModelVersion"],
-            "lockPolicy": "server-stage64-original-v1-no-post-hoc",
+            "lockPolicy": "server-empirical-fusion-original-v1-no-post-hoc",
         }
     command = ["node", "scripts/arvexq_capture_prerace_bet.js"]
     process = subprocess.run(
