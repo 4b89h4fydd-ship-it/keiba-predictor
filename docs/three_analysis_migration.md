@@ -50,3 +50,37 @@ forecast; official past runs, races and user records are not deleted.
 - No real, verified all-field horse video tracking or matched lift comparison.
 - No proven live D1 -> official odds -> 3連系 ticket recommendation coverage.
 - Production deployment and mobile rendering have not been verified.
+
+## 2026-10-25: Actual preserved D1 evidence (read-only MotherDuck research run)
+
+Read-only MotherDuck Flight `824ed29b-e3c7-46ab-a1dd-683f9717bedd`, run 1, **SUCCEEDED**.
+No MotherDuck data was inserted, overwritten or used as a new provider route.
+
+| Evidence | Measured |
+| --- | ---: |
+| Full snapshots restored with SHA check | 401/401 |
+| Finalized races | 399 |
+| Races with historical runs | 385 |
+| Valid local training-label rows | 197 |
+| Valid central training-label rows | 46 |
+| Video feature rows | 0 |
+| Race-lap series | 0 |
+
+Using the **existing** `forecast/training.py` and `forecast/new_method.py`:
+
+- NAR: 97 races fit (October 15–18), 32 races temperature-calibrated
+  (October 19), 68 race strictly later holdout (October 20–21).
+  **Winner pick hit 19/68 = 27.94%**, holdout winner log-loss 2.0297,
+  mean win Brier 0.08229. No verified 3-way quotes/stake ledger -> ROI NOT MEASURED.
+- JRA: 23 races fitted October 17, 23 temperature-calibrated October 18.
+  **No later eligible holdout**, so no JRA winner-hit estimate can be reported.
+- Missing verified all-runner videos and race pace scenario labels mean
+  neither video lift nor true scenario calibration is measurable.
+  No model is accepted for production or advertised as satisfying targets.
+- In particular, `train()` cannot set `outOfSampleValidated=true`
+  because the same temperature-validation rows are not independent holdout.
+
+Do **not** interpret ordinary Python/JS CI passing as proof that production
+can calculate a valid race prediction. The model directory remains empty, and
+`scenarioWeightsValidated` stays false. The draft PR is intentionally not
+merged or deployed because it would suppress real predictions.
