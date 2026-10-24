@@ -94,7 +94,6 @@ jobs:
           elif [ "$SCHEDULE_EXPRESSION" = "05 5,8,11 * * *" ]; then
             # The scheduled day-before lane keeps manual/push/today behavior unchanged.
             TARGET_DATE=$(TZ=Asia/Tokyo date -d tomorrow +%F)
-            echo "ARVEXQ_DAY_AHEAD=1" >> "$GITHUB_ENV"
           else
             TARGET_DATE=$(TZ=Asia/Tokyo date +%F)
           fi
@@ -103,6 +102,9 @@ jobs:
             exit 1
           fi
           echo "TARGET_DATE=$TARGET_DATE" >> "$GITHUB_ENV"
+          if [[ "$TARGET_DATE" > "$(TZ=Asia/Tokyo date +%F)" ]]; then
+            echo "ARVEXQ_DAY_AHEAD=1" >> "$GITHUB_ENV"
+          fi
 
       - name: Restore ARVEXQ data cache
         uses: actions/cache/restore@v4
