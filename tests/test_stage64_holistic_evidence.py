@@ -82,6 +82,24 @@ def test_future_result_and_non_comparable_history_never_enter_opposition():
     assert facts["headToHead"][2][1]["wins"] == 2
 
 
+def test_full_career_reused_without_discarding_recent_runs_or_future_leak():
+    r = _race()
+    complete = deepcopy(r["horses"][0]["recentRaces"])
+    older = _run("2026-08-01", 3, no=3)
+    future = _run("2026-11-01", 1, no=1, reaction=.01)
+    complete.extend([older, future])
+    r["horses"][0]["allPastRuns"] = complete
+    p = predict(r, expected_circuit="nar")
+    fact = p["paceEvidence"]["holisticWinnerEvidence"]["byHorse"][1]
+    assert fact["historicalStarts"] == 3
+    assert fact["historicalMarginSamples"] == 3
+    assert fact["individualGateReactionSamples"] == 1
+    # A partial old career cannot erase a known recent start.
+    r["horses"][0]["allPastRuns"] = [older]
+    p2 = predict(r, expected_circuit="nar")
+    assert p2["paceEvidence"]["holisticWinnerEvidence"]["byHorse"][1]["historicalStarts"] == 2
+
+
 def test_preoff_first_corner_needs_identified_official_course_geometry():
     r = _race()
     geo = {"sourceKind": "official_course_geometry",
