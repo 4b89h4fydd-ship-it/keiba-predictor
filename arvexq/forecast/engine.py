@@ -6,10 +6,25 @@ from .new_method import VERSION, load_model, predict
 JST=ZoneInfo("Asia/Tokyo")
 
 
+def _has_result_evidence(value):
+    """Exclude posted outcomes; permit empty pre-off result placeholders."""
+    if not value:
+        return False
+    if not isinstance(value, dict):
+        return True
+    if set(value) - {"status", "finishers", "payouts"}:
+        return True
+    if value.get("finishers") or value.get("payouts"):
+        return True
+    return str(value.get("status") or "").strip() not in {
+        "", "未確定", "未取得", "発走前", "未発走"
+    }
+
+
 def build_prediction(facts, now=None):
     if not isinstance(facts, dict) or facts.get("circuit") not in ("中央", "地方", "jra", "nar"):
         return None
-    if facts.get("result") or facts.get("raceStatus") in ("速報", "確定", "終了"):
+    if _has_result_evidence(facts.get("result")) or facts.get("raceStatus") in ("速報", "確定", "終了"):
         return None
     if not isinstance(facts.get("date"), str):
         return None
