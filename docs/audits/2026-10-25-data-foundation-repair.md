@@ -110,3 +110,9 @@ HTTP成功は公開入口の閲覧テストのみ。自動取得・商用利用�
 既存の `_smart_normalize_row` は血統を出力せず、`_start_enrichment.get_smart` は無条件に空配列を返していた。父・母・母父の観測値を保持し、既存 `SMARTRC_FEED_URL` が設定された場合だけ同じ `_fetch_smartrc` を利用する血統専用adapterを既存registryと補完処理へ接続した。公開ページの新規スクレイピングは作成せず、SmartRcのtempo・ratings・予想スコアは再開しない。馬番と馬名が矛盾する場合や複数候補は拒否する。app.pyの既存3取得元のマージも矛盾する馬番・馬名を拒否する。
 
 実契約フィードURL・利用許諾・認証情報はこの実行環境にないため、実SmartRcからの血統取得は未実施。中央・地方の同じ既存補完経路、正規化、部分欠損補完、既存値不変、別馬拒否はテスト用応答で検証した。実レース欠測率の改善には計上しない。
+
+## 最終実測追記
+
+SmartRc/本人照合修復を含む全Python回帰1096 passed・64 subtests passed、PWA build v330成功。10/25の公式掲載予定はJRAの東京・京都・新潟各12=36レース、NARの盛岡12・金沢9・高知11・佐賀10=42レースで、D1対象詳細78件と件数一致。JRA番組は予定であり変更・中止に対する最終出馬表と全馬の照合ではない。出典: https://www.jra.go.jp/keiba/calendar2026/2026/10/1025.html 、https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop 。ローカルJRA直取得はタイムアウト、ローカルNAR summaryは未投入SQLiteの0件なので、これらを公式開催0件や正常取得とは判定しない。Web取得した公式掲載で件数を補助照合した。
+
+MotherDuck既存401件のsha256は、保存JSON文字列そのもののSHAと401/401一致。追記候補222件も同じraw-JSON SHA契約に合わせ、保存オブジェクトをcanonical順に整列してから出力。既存の圧縮形式を維持し、後付け予想原本は作らない。

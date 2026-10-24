@@ -21,7 +21,12 @@ def test_audit_decodes_full_envelopes_and_does_not_claim_preoff_evidence():
     assert s["preoffEvidencePresentRaces"] == 0
     assert s["kind"] == "debut"
     assert s["missingRates"]["historyPresentHorses"] == 1
-    assert len(list(analytics_rows(b))) == 1
+    rows = list(analytics_rows(b))
+    assert len(rows) == 1
+    import hashlib, json
+    # MotherDuck's existing SHA contract hashes the actual stored JSON bytes.
+    serialized = json.dumps(rows[0]["snapshot_json"], ensure_ascii=False, separators=(",", ":"))
+    assert hashlib.sha256(serialized.encode()).hexdigest() == rows[0]["sha256"]
     assert b == original
 
 

@@ -115,7 +115,7 @@ def analytics_rows(bundle: dict):
         stored = pack_detail(detail)
         raw = json.dumps(stored, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
         yield {"race_id": decoded["id"], "race_date": decoded["date"],
-               "sha256": hashlib.sha256(raw.encode()).hexdigest(), "snapshot_json": stored}
+               "sha256": hashlib.sha256(raw.encode()).hexdigest(), "snapshot_json": json.loads(raw)}
 
 
 def main():
