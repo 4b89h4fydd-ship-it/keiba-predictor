@@ -78,6 +78,20 @@ def _stage64_pace_text(race, prediction):
             + "、".join(name(no) for no in early[:3]) + "。"
             "前方にいたことと今回逃げることは同義ではない。"
         )
+    course = evidence.get("historicalCourseEvidence") or {}
+    # Factual course/distance observations explain where the tentative
+    # winner choice may be vulnerable; they do NOT alter marks or probability.
+    observed = []
+    for no in ranked[:5]:
+        record = course.get(no) or {}
+        starts = record.get("sameTrackDistanceStarts")
+        wins = record.get("sameTrackDistanceWins")
+        if isinstance(starts, int) and starts > 0 and isinstance(wins, int) and wins:
+            observed.append(f"{name(no)}は同場・同距離で確認できた{starts}走中{wins}勝")
+    if observed:
+        pieces.append("同場・同距離の過去実績："
+                      + "、".join(observed) + "。"
+                      "過去の勝利記録は今回の勝利保証ではない。")
     pieces.append(
         "枠順・発馬・騎手の選択・出走馬同士の競り合いを確認しない限り、"
         "単騎逃げ・ハイペース・差し有利とは断定せず、"
