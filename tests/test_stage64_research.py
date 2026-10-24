@@ -92,6 +92,38 @@ class Pipeline(unittest.TestCase):
         self.assertNotEqual(predict(race("jra"),expected_circuit="jra")["modelVersion"],
                             predict(race(),expected_circuit="nar")["modelVersion"])
 
+    def test_central_and_local_use_distinct_prediction_methods(self):
+        expected = {
+            "jra": ("jra-visible-history", "jra-course-distance-opposition-review"),
+            "nar": ("nar-lossless-observed-career", "nar-full-career-direct-rival-review"),
+        }
+        for owner, (ability_policy, winner_policy) in expected.items():
+            p = predict(race(owner), expected_circuit=owner)
+            self.assertEqual(p["predictionMethod"]["circuit"], owner)
+            self.assertEqual(p["predictionMethod"]["abilityHistory"], ability_policy)
+            self.assertEqual(p["predictionMethod"]["winnerReview"], winner_policy)
+            self.assertEqual(p["winnerEvidenceComparison"]["method"], winner_policy)
+            self.assertEqual(set(p["stages"]),
+                             {"ability","runningStyle","pace","probability","marks","tickets"})
+            self.assertFalse(p["predictionMethod"]["unvalidatedTacticalBoostsApplied"])
+        self.assertNotEqual(CONFIGS["jra"]["abilityObservationPolicy"],
+                            CONFIGS["nar"]["abilityObservationPolicy"])
+        self.assertNotEqual(CONFIGS["jra"]["winnerReviewPolicy"],
+                            CONFIGS["nar"]["winnerReviewPolicy"])
+
+    def test_swapped_circuit_policy_is_rejected_before_marks(self):
+        for owner, other in (("jra","nar"), ("nar","jra")):
+            with patch.dict(CONFIGS[owner], {
+                "abilityObservationPolicy": CONFIGS[other]["abilityObservationPolicy"]
+            }):
+                with self.assertRaisesRegex(ValueError, "cross-circuit ability"):
+                    predict(race(owner), expected_circuit=owner)
+            with patch.dict(CONFIGS[owner], {
+                "winnerReviewPolicy": CONFIGS[other]["winnerReviewPolicy"]
+            }):
+                with self.assertRaisesRegex(ValueError, "cross-circuit winner"):
+                    predict(race(owner), expected_circuit=owner)
+
     def test_all_front_position_does_not_fabricate_lead_competition(self):
         r=race()
         for h in r["horses"]:
