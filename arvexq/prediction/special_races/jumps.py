@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-_JUMP = re.compile(r"障害|ジャンプ|J[･・.]?G[ⅠⅡⅢ123]", re.I)
+_JUMP = re.compile(r"障害|ジャンプ|(?:東京|京都|阪神|中山|新潟|福島|小倉)HJ|J[･・.]?G[ⅠⅡⅢ123]", re.I)
 _SOURCE_KEYS = {
     "jumpStats": ("jumpStats",),
     "jumpJockeyStats": ("jumpJockeyStats",),
