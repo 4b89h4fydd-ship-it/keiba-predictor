@@ -32,3 +32,16 @@ assert.ok(!ui.home([],opts).includes("data-race="));
 const injected=ui.home([{...rows[0],track:'<img src=x onerror=alert(1)>'}],opts);
 assert.ok(!injected.includes('<img src=x onerror=alert(1)>'));
 console.log("HORSE_ALL_RACES_OK");
+
+// Excluded Banei must never reappear from old API lists, even if a later
+// venue has a valid 1R-12R card. Preserve other NAR/JRA venues.
+const archived=[...rows,
+ {id:"nar-"+date+"-帯広ば-01",circuit:"地方",track:"帯広ば",raceNumber:1,date,startTime:"14:35"},
+ {id:"nar-"+date+"-帯広-02",circuit:"地方",track:"帯広",raceNumber:2,date,startTime:"15:10"},
+ {id:"nar-"+date+"-帯広ば-03",circuit:"地方",track:"大井",raceNumber:3,date,startTime:"15:50"}
+];
+const withoutBanei=ui.home(archived,opts);
+assert(!withoutBanei.includes("帯広"),"retired Banei must not render");
+assert(withoutBanei.includes('data-track="大井"'));
+assert(withoutBanei.includes('data-track="東京"'));
+console.log("HORSE_PORTAL_BANEI_EXCLUDED_PASS");

@@ -7,7 +7,7 @@
   var jobs=Object.create(null);
   function validDay(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''))}
   function available(date,id,fetchJson){
-    if(!validDay(date)||!String(id||''))return Promise.resolve(null);
+    if(!validDay(date)||!String(id||'')||/-帯広(?:ば)?-/.test(String(id)))return Promise.resolve(null);
     var key=String(date);
     if(!jobs[key]){
       var url='/racecards/'+encodeURIComponent(key)+'.json';
@@ -23,7 +23,8 @@
     });
   }
   function factual(d){
-      if(!d||!Array.isArray(d.horses)||d.horses.length<2)return null;
+      if(!d||['帯広','帯広ば'].includes(String(d.track||''))||/-帯広(?:ば)?-/.test(String(d.id||''))||
+         !Array.isArray(d.horses)||d.horses.length<2)return null;
       var seen=Object.create(null);
       for(var i=0;i<d.horses.length;i++){
         var h=d.horses[i]||{},no=Number(h.horseNumber),name=String(h.name||'').trim();
@@ -39,7 +40,9 @@
     return available(date,'__schedule__',fetchJson).then(function(){
       return jobs[String(date)]?jobs[String(date)].then(function(data){
         if(!data)return null;
-        var rows=data.races.map(function(r){return r&&r.date===date?factual(r):null});
+        var active=data.races.filter(function(r){return r&&!['帯広','帯広ば'].includes(String(r.track||''))&&
+          !/-帯広(?:ば)?-/.test(String(r.id||''))});
+        var rows=active.map(function(r){return r.date===date?factual(r):null});
         return rows.length&&rows.every(Boolean)?rows:null;
       }):null;
     });

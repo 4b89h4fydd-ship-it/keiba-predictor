@@ -93,3 +93,31 @@ const root={};new Function('window',home)(root);
 const actions=root.ARVEXQUnifiedHome.buttons();
 assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,2,'selected and special need !');
 assert.match(style,/arv-unified-alert/);
+
+// Regression against legacy D1 list and device cache resurrecting excluded Banei.
+const excludedStart=src.indexOf('function isExcludedBanei(');
+const excludedEnd=src.indexOf('\n}',excludedStart)+2;
+const filterStart=src.indexOf('function activeVenueRaces(');
+const filterEnd=src.indexOf('\n}',filterStart)+2;
+assert(excludedStart>=0&&filterStart>excludedEnd);
+const visible=new Function(src.slice(excludedStart,excludedEnd)+'\n'+
+  src.slice(filterStart,filterEnd)+';return activeVenueRaces;')();
+const all=[
+ {id:'nar-2026-10-24-帯広ば-01',track:'帯広ば'},
+ {id:'nar-2026-10-24-帯広-02',track:'帯広'},
+ {id:'nar-2026-10-24-帯広ば-03',track:'大井'},
+ {id:'nar-2026-10-24-佐賀-01',track:'佐賀'},
+ {id:'jra-2026-10-24-京都-02',track:'京都'}
+];
+assert.deepEqual(visible(all).map(r=>r.track),['佐賀','京都']);
+assert.deepEqual(visible(all),visible(all)); // no mutation and stable order
+assert.equal(all.length,5,'never modify archived data');
+const loadStart=src.indexOf('function loadRaceCache(');
+const loadEnd=src.indexOf('\nfunction saveRaceCache(',loadStart);
+assert(src.slice(loadStart,loadEnd).includes('activeVenueRaces(x.rows)'),'device cache must filter Banei');
+assert(open.includes('isExcludedBanei({id:id})'),'direct race navigation must reject Banei');
+const mergedStart=src.indexOf('function mergeBootstrap(');
+const mergedEnd=src.indexOf('\nfunction load(',mergedStart);
+assert(src.slice(mergedStart,mergedEnd).includes('activeVenueRaces(body&&body.races)'));
+assert(src.includes('rows=activeVenueRaces(rows);'),'live fallback must filter Banei');
+console.log('APP_BANEI_EXCLUSION_CACHE_API_DIRECT_ROUTE_PASS');
