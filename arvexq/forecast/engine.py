@@ -7,8 +7,7 @@ missing. Frozen historical originals are handled by publication.py.
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from arvexq.prediction.empirical_fusion import VERSION, blend
-from arvexq.prediction.mineta_public_pace import public_pace_factors
+VERSION = "arvexq-empirical-fusion-v1"
 
 JST = ZoneInfo("Asia/Tokyo")
 
@@ -56,6 +55,10 @@ def build_prediction(facts, now=None):
     `fusionInputs` must be prepared from genuine, independently dated,
     same-roster method outputs on that path; never synthesize votes here.
     """
+    # Import within the now-initialized production entry point: the legacy
+    # prediction package imports forecast.engine for its compatibility adapter.
+    from arvexq.prediction.empirical_fusion import blend
+    from arvexq.prediction.mineta_public_pace import public_pace_factors
     if not _preoff(facts, now):
         return None
     if facts.get("track") in ("帯広", "帯広ば") or facts.get("surface") in ("ばんえい", "障害"):
