@@ -1,5 +1,6 @@
 """Six independent shadow stages from saved observations through candidate bets."""
 from copy import deepcopy
+from math import isfinite
 from arvexq.research.stage63.ability import prior_runs, score_field, quality
 from arvexq.research.stage63.running_style import style_field
 from arvexq.research.stage63.probability import distribution
@@ -84,8 +85,10 @@ def _public_position_tactics(race, histories):
             continue
         run = runs[0]
         positions = run.get("cornerPositions") or run.get("passing") or []
-        observed = isinstance(positions, list) and bool(positions) and all(
-            type(p) in (int, float) and p >= 1 and p <= run.get("fieldSize", 0)
+        field_size = run.get("fieldSize")
+        observed = type(field_size) is int and field_size >= 3 and isinstance(
+            positions, list) and bool(positions) and all(
+            type(p) in (int, float) and isfinite(p) and 1 <= p <= field_size
             for p in positions
         )
         top3 = any(p <= 3 for p in positions) if observed else None
