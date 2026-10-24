@@ -74,7 +74,7 @@ function readFavoriteRaces(){
     }).slice(-100)
   }catch(e){return []}
 }
-var favoriteRaces=readFavoriteRaces();
+var favoriteRaces=readFavoriteRaces().filter(function(r){return !isExcludedBanei(r)});
 function isFavoriteRace(r){
   return !!r&&favoriteRaces.some(function(x){return String(x.id)===String(r.id)&&String(x.date)===String(r.date||state.date)})
 }
@@ -93,12 +93,13 @@ function toggleFavoriteRace(id,date){
     next.push({id:String(r.id),date:keyDate,circuit:String(r.circuit||state.circuit),track:String(r.track||state.track||''),raceNumber:n(r.raceNumber),title:String(r.title||''),startTime:String(r.startTime||'')});
     next=next.slice(-100)
   }
-  try{localStorage.setItem(FAVORITE_RACES_KEY,JSON.stringify(next))}
+  try{var archivedBanei=readFavoriteRaces().filter(isExcludedBanei);
+    localStorage.setItem(FAVORITE_RACES_KEY,JSON.stringify(archivedBanei.concat(next).slice(-100)))}
   catch(e){try{window.alert('お気に入りを保存できませんでした。ブラウザの保存設定をご確認ください。')}catch(_e){}return}
   favoriteRaces=next;render()
 }
 function favoriteHomeSection(){
-  var rows=favoriteRaces.filter(function(x){return x.date===state.date&&!isExcludedBanei(x)}).slice().sort(function(a,b){
+  var rows=favoriteRaces.filter(function(x){return x.date===state.date}).slice().sort(function(a,b){
     return String(a.startTime||'').localeCompare(String(b.startTime||''))||String(a.track||'').localeCompare(String(b.track||''),'ja')||n(a.raceNumber)-n(b.raceNumber)
   });
   if(!rows.length)return '';
