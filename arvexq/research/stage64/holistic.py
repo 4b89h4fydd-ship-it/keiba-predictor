@@ -139,6 +139,7 @@ def evidence(race, histories, active):
             if str(run.get("track") or "") == str(race.get("track") or "")
             and _number(run.get("distance")) is not None
             and _number(run.get("distance")) == _number(race.get("distance"))
+            and (not race.get("surface") or run.get("surface") == race.get("surface"))
         ]
         # The sample count is explicitly recorded; a missing value is not bad.
         # Margin seconds are comparable only under observed matching course
@@ -212,11 +213,11 @@ def direct_rematch_candidate(order, observations):
     eligible = []
     for challenger in order[1:5]:
         record = matches.get(challenger, {}).get(leader, {})
-        if (record.get("wins", 0) < 2 or record.get("losses", 0) != 0
+        if (record.get("wins", 0) < 1 or record.get("losses", 0) != 0
                 or record.get("ties", 0) != 0):
             continue
         a, b = facts[challenger], facts[leader]
-        checks, unknown = [], []
+        checks, unknown, corroborated = [], [], []
         contradictory = False
         # All margin observations compared here must have the same recorded
         # track and distance; unknown margin is not a 0-second performance.
@@ -239,6 +240,8 @@ def direct_rematch_candidate(order, observations):
                 bv = bv / b[count_key]
             if (av > bv if prefer_lower else av < bv):
                 contradictory = True
+            elif (av < bv if prefer_lower else av > bv):
+                corroborated.append(label)
             checks.append(label)
         # Only compare gate timing within an independently documented course
         # geometry. Different start courses do not have a common scale.
@@ -249,18 +252,20 @@ def direct_rematch_candidate(order, observations):
                 checks.append("individual-gate-reaction")
                 if a[key] > b[key]:
                     contradictory = True
+                elif a[key] < b[key]:
+                    corroborated.append("individual-gate-reaction")
             else:
                 unknown.append("individual-gate-reaction")
             checks.append("verified-first-corner-geometry")
         else:
             unknown.extend(["individual-gate-reaction", "verified-first-corner-geometry"])
-        if not contradictory:
-            eligible.append((challenger, record["wins"], checks, unknown))
+        if not contradictory and corroborated:
+            eligible.append((challenger, record["wins"], checks, unknown, corroborated))
     if len(eligible) != 1:
         return None
-    challenger, count, checked, unknown = eligible[0]
+    challenger, count, checked, unknown, corroborated = eligible[0]
     return {"horseNumber": challenger, "otherHorseNumber": leader,
             "sharedPastRacesWon": count, "confirmedChecks": checked,
-            "unavailableChecks": unknown,
-            "reason": "repeat-head-to-head-outperformance-with-no-known-contradiction",
+            "corroboratingEvidence": corroborated, "unavailableChecks": unknown,
+            "reason": "head-to-head-precedence-corroborated-by-comparable-history",
             "researchOnly": True}
