@@ -164,9 +164,14 @@ def _stage64_pace_text(race, prediction):
         "proposedHeadToHeadResearchChallenger")
     if rematch:
         count = rematch["sharedPastRacesWon"]
+        applied = (prediction.get("winnerEvidenceComparison") or {}).get(
+            "appliedToWinProbabilityAndMarks") is True
         pieces.append("過去の直接対戦では" + name(rematch["horseNumber"])
                       + "が" + name(rematch["otherHorseNumber"])
-                      + f"に{count}回先着。研究段階の逆転候補であり◎変更には未採用。")
+                      + f"に{count}回先着。"
+                      + ("確認済みの比較根拠により今回の◎判定へ反映。"
+                         if applied else "◎は従来の能力順位で判断。")
+                      + "この条件分岐の将来的中率は未検証。")
     first_corner = holistic.get("firstCorner")
     if first_corner is not None:
         pieces.append("公式記録に基づく初角までの距離は"
