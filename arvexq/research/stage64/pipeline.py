@@ -7,6 +7,7 @@ from arvexq.research.stage63.probability import distribution
 from .circuits import CONFIGS, circuit, discipline, active as is_active
 from .marks import roles
 from .tickets import select
+from .holistic import evidence as holistic_evidence, direct_rematch_candidate
 
 STAGES=("ability","runningStyle","pace","probability","marks","tickets")
 
@@ -230,6 +231,7 @@ def predict(race, *, expected_circuit, ability_method=None):
         "otherExpertFeaturesVerified": False,
         "aiEnsembleTrained": False,
     }
+    result["paceEvidence"]["holisticWinnerEvidence"] = holistic_evidence(race, histories, active)
     stages["pace"] = {
         "status": "observed-position-only-pace-unverified",
         "value": deltas, "scenarioWeightsVerified": False,
@@ -248,5 +250,12 @@ def predict(race, *, expected_circuit, ability_method=None):
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
     stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium)}
+    result["winnerEvidenceComparison"] = {
+        "proposedHeadToHeadResearchChallenger": direct_rematch_candidate(
+            stages["marks"]["value"]["orderedWinCandidates"],
+            result["paceEvidence"]["holisticWinnerEvidence"]),
+        "selectionPolicy": "unvalidated-candidate-does-not-overwrite-current-winner",
+        "winnerRankUnchanged": True,
+    }
     stages["tickets"]={"status":"research-only-unvalidated","value":select(probs)}
     return result
