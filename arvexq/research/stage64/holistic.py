@@ -7,6 +7,7 @@ past starts; missing observations remain None rather than zero.
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime, date
 from math import isfinite
 from urllib.parse import urlsplit
 
@@ -56,6 +57,25 @@ def _verified_first_corner(race):
     uri = str(record.get("sourceUrl") or "")
     parsed = urlsplit(uri)
     meters = _number(record.get("firstCornerDistanceMeters"))
+    published_text = record.get("publishedAt")
+    try:
+        published = datetime.fromisoformat(str(published_text).replace("Z", "+00:00"))
+        race_day = date.fromisoformat(str(race["date"]))
+        start = str(race.get("scheduledStartTime") or race.get("startTime") or "")
+        # An official resource published on an earlier date is fine; for
+        # same-day releases the exact scheduled race off must be present.
+        if published.tzinfo is None or published.date() > race_day:
+            return None
+        if published.date() == race_day:
+            if len(start) < 5:
+                return None
+            from zoneinfo import ZoneInfo
+            off = datetime.fromisoformat(race["date"]+"T"+start[:5]).replace(
+                tzinfo=ZoneInfo("Asia/Tokyo"))
+            if published >= off.astimezone(published.tzinfo):
+                return None
+    except (ValueError, TypeError, KeyError):
+        return None
     if (parsed.scheme != "https" or parsed.hostname not in OFFICIAL_COURSE_HOSTS
             or meters is None or meters <= 0 or meters >= 5000
             or str(record.get("track") or "") != str(race.get("track") or "")
