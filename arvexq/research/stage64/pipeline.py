@@ -156,6 +156,18 @@ def _prior_career_for_nar(horse, cutoff):
     """
     recent = prior_runs(horse, cutoff)
     raw_full = horse.get("allPastRuns")
+    transport = horse.get("careerTransport")
+    claimed = transport.get("observedRuns") if isinstance(transport, dict) else None
+    # The pre-existing lossless archive is the authoritative recovery path
+    # only when the visible whole-career lane is absent or incomplete.
+    needs_recover = not isinstance(raw_full, list) or not raw_full or (
+        type(claimed) is int and len(raw_full) < claimed)
+    if needs_recover and isinstance(horse.get("careerArchive"), dict):
+        from arvexq.ingest.career_transport import recover_horse
+        try:
+            raw_full = recover_horse(horse, cutoff).get("allPastRuns")
+        except (ValueError, KeyError, TypeError, OSError):
+            return recent, False
     if not isinstance(raw_full, list) or not raw_full:
         return recent, False
     full = prior_runs({"recentRaces": raw_full}, cutoff)
