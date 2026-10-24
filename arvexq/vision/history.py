@@ -198,3 +198,39 @@ def attach_historical_video(detail: dict[str, Any], evidence: list[dict[str, Any
             horse["visionResearchHistory"] = matched
     copied["visionResearchAppliedToProductionPrediction"] = False
     return copied
+
+
+
+def attach_from_store(detail: dict[str, Any], directory: str | Path) -> dict[str, Any]:
+    """Attach only available prior race video; bounded, local, research-only.
+
+    This hook never opens video files and never downloads anything. Missing
+    coverage is the ordinary case until an authorized video feed is connected.
+    """
+    current = _date(detail.get("date"))
+    if not current:
+        return detail
+    keys = set()
+    for horse in detail.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        for field in ("recentRaces", "allPastRuns"):
+            rows = horse.get(field) or []
+            if not isinstance(rows, list):
+                continue
+            for run in rows:
+                if not isinstance(run, dict):
+                    continue
+                day = _date(run.get("date") or run.get("raceDate"))
+                identity = str(run.get("raceId") or "")
+                if identity and day and day < current:
+                    keys.add(identity)
+    verified = []
+    for race_id in sorted(keys):
+        candidate = load_evidence(directory, race_id)
+        if candidate is not None:
+            verified.append(candidate)
+    if not verified:
+        return detail
+    updated = attach_historical_video(detail, verified)
+    return updated
