@@ -31,5 +31,10 @@ def parse_jra_profile_pedigree(html: str) -> dict[str, object]:
         value = target.get_text(" ", strip=True)
         if not value or len(value) > 90 or value in _INVALID:
             continue
-        pedigree.setdefault(_LABELS[name], value)
+        # JRA mother links sometimes append 産駒 as link navigation text.
+        # This suffix is not part of the dam's registered name.
+        if name == "母" and value.endswith("産駒"):
+            value = value[:-2].strip()
+        if value:
+            pedigree.setdefault(_LABELS[name], value)
     return {"pedigree": pedigree} if pedigree else {}
