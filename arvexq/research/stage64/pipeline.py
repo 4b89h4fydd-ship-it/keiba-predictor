@@ -18,6 +18,10 @@ def _same_track_distance_evidence(horse, race):
     Strict historical date cutoff prevents today/future-result leakage.
     """
     source = horse.get("allPastRuns") or horse.get("recentRaces") or []
+    if not isinstance(source, list):
+        return {"status": "history-unavailable", "observedStarts": 0,
+                "sameTrackDistanceStarts": None, "sameTrackDistanceWins": None,
+                "sameTrackDistanceTop3": None}
     try:
         runs = prior_runs({"recentRaces": source}, race["date"])
     except ValueError:
@@ -30,6 +34,10 @@ def _same_track_distance_evidence(horse, race):
         target_distance = float(target_distance) if target_distance is not None else None
     except (TypeError, ValueError):
         target_distance = None
+    if not target_track or target_distance is None or not target_distance > 0:
+        return {"status": "context-unavailable", "observedStarts": len(runs),
+                "sameTrackDistanceStarts": None, "sameTrackDistanceWins": None,
+                "sameTrackDistanceTop3": None}
     comparable = []
     eligible = [r for r in runs if quality(r) is not None
                 and discipline(r) == discipline(race)]
