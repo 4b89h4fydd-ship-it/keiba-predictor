@@ -71,3 +71,44 @@ def test_banei_rejects_invalid_flat_weight_not_body_mass():
     assert rows[0]["bodyWeight"] == 1050
     assert rows[0]["carriedWeight"] is None
 
+
+def test_actual_official_banei_multirow_layout_no_previous_run_mixup():
+    html = """<table><tbody>
+      <tr class="tBorder"><td class="horseNum">1</td>
+          <td><a class="horseName">ニジイロアオゾラ</a></td>
+          <td class="odds_weight">6.6 (2人気)</td></tr>
+      <tr><td>父名</td><td>競走歴</td></tr>
+      <tr><td>母名</td><td>過去走 1093 騎手620</td></tr>
+      <tr><td><span class="male">牝6</span></td><td>鹿毛</td>
+          <td>04.10生</td><td>620　9-6-2-45</td></tr>
+      <tr><td class="odds_weight">1084<br>(-9)</td><td>1093 620</td></tr>
+      <tr class="tBorder"><td class="horseNum">2</td>
+          <td><a class="horseName">別の馬</a></td></tr>
+      <tr><td>欠損</td></tr><tr><td>欠損</td></tr>
+      <tr><td><span class="male">牡5</span></td><td>栗毛</td>
+          <td>01.01生</td><td>600 1-2-3-4</td></tr>
+      <tr><td class="odds_weight">998<br>(+5)</td></tr>
+      </tbody></table>"""
+    detail = {"track": "帯広ば", "analysisMode": "ばんえい",
+              "horses": [{"horseNumber": 1, "name": "ニジイロアオゾラ"},
+                         {"horseNumber": 2, "name": "別の馬"}]}
+    rows = parse_card_html(detail, html, clean)
+    assert rows == [
+        {"horseNumber": 1, "bodyWeight": 1084,
+         "bodyWeightChange": -9, "carriedWeight": 620.0,
+         "source": "NAR公式出馬表"},
+        {"horseNumber": 2, "bodyWeight": 998,
+         "bodyWeightChange": 5, "carriedWeight": 600.0,
+         "source": "NAR公式出馬表"},
+    ]
+
+
+def test_official_banei_identity_mismatch_does_not_assign_wrong_horse():
+    html = """<table><tr class="tBorder"><td class="horseNum">1</td>
+      <td><a class="horseName">別馬</a></td></tr>
+      <tr><td><span class="male">牡5</span></td><td>栗毛</td>
+      <td>01.01生</td><td>620 1-2-3-4</td></tr>
+      <tr><td class="odds_weight">1050 (-2)</td></tr></table>"""
+    detail = {"track": "帯広ば",
+              "horses": [{"horseNumber": 1, "name": "本来の馬"}]}
+    assert parse_card_html(detail, html, clean) == []
