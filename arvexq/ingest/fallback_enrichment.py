@@ -238,12 +238,10 @@ def _horse_early_timing_count(horse: dict[str, Any], cutoff: str = "", limit: in
 
 def _needs_pedigree(horse: dict[str, Any]) -> bool:
     p = horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}
-    return not (
-        _present(p.get("sire"))
-        or _present(horse.get("sire"))
-        or _present(p.get("dam"))
-        or _present(horse.get("dam"))
-    )
+    # Any missing key matters: one observed parent must not suppress attempts
+    # to collect the remaining family tree from other existing providers.
+    return any(not (_present(p.get(k)) or _present(horse.get(k))) for k in
+               ("sire", "dam", "damSire"))
 
 
 def _needs_connections(horse: dict[str, Any]) -> bool:
@@ -338,7 +336,14 @@ def _apply_payload(
         "prizeMoneyAtRace", "representativeRun", "jumpStats", "obstacleStats",
     ):
         value = payload.get(key)
-        if not _present(horse.get(key)) and _present(value):
+        if key == "pedigree" and isinstance(value, dict):
+            previous = horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}
+            additions = {k: copy.deepcopy(v) for k, v in value.items()
+                         if _present(v) and not _present(previous.get(k))}
+            if additions:
+                horse["pedigree"] = {**previous, **additions}
+                changed = True
+        elif not _present(horse.get(key)) and _present(value):
             horse[key] = copy.deepcopy(value)
             changed = True
 
