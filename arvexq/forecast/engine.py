@@ -64,11 +64,31 @@ def _stage64_pace_text(race, prediction):
     def name(no):
         return str(horses.get(no, {}).get("name") or f"{no}番")
 
+    policy = prediction.get("predictionMethod") or {}
+    if policy.get("circuit") == "jra":
+        method_text = (
+            "中央競馬方式：近走の出走成績を能力判断の基準にし、"
+            "コース・距離・相手関係・着差と位置取りを検討する。"
+            "地方の全過去走判定は流用しない。"
+        )
+    elif policy.get("circuit") == "nar":
+        coverage = prediction.get("abilityHistoryCoverage") or {}
+        full = coverage.get("fullCareerRunners", 0)
+        method_text = (
+            "地方競馬方式：保存済みの全過去走と直近走が整合する馬"
+            + (f"{full}頭" if full else "がないため")
+            + ("では長期の能力・脚質・相手との直接対戦を確認する。"
+               if full else "確認できる近走だけで判断する。")
+            + "中央の近走限定方式は流用しない。"
+        )
+    else:
+        method_text = "予想方法の区分が未確認。"
     profiles = evidence.get("observedPositionProfiles") or {}
     early = [no for no in (evidence.get("earlyPositionObservedOrder") or [])
              if profiles.get(no) in {"前方", "好位"}]
     pieces = [
-        "近走の着順から能力を確認し、過去の初角位置は観測された脚質傾向として別に読む。",
+        method_text,
+        "過去の着順から能力を確認し、初角位置は観測された脚質傾向として別に読む。",
         f"現在の◎候補は{name(ranked[0])}。"
         "これは能力評価を基準とした暫定候補であり、的中率を保証しない。",
     ]
@@ -143,9 +163,10 @@ def _stage64_pace_text(race, prediction):
     rematch = (prediction.get("winnerEvidenceComparison") or {}).get(
         "proposedHeadToHeadResearchChallenger")
     if rematch:
+        count = rematch["sharedPastRacesWon"]
         pieces.append("過去の直接対戦では" + name(rematch["horseNumber"])
                       + "が" + name(rematch["otherHorseNumber"])
-                      + "に複数回先着。研究段階の逆転候補であり◎変更には未採用。")
+                      + f"に{count}回先着。研究段階の逆転候補であり◎変更には未採用。")
     first_corner = holistic.get("firstCorner")
     if first_corner is not None:
         pieces.append("公式記録に基づく初角までの距離は"
