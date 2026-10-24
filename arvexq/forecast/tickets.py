@@ -1,5 +1,6 @@
 """Deterministic Stage64 ticket projection using every product mark."""
 from itertools import permutations, combinations
+from math import isfinite
 
 
 def _score(probabilities, combo, kind):
@@ -18,8 +19,52 @@ def _score(probabilities, combo, kind):
         return sum(p for finish, p in joint.items() if set(finish[:3]) == set(combo))
     raise ValueError("unknown wager kind")
 
+
+def _kochi_final_triples(joint):
+    """Five research candidates from the pre-off joint order distribution.
+
+    Every active runner in the model is eligible, including unmarked third-
+    place candidates. Three trio and two trifecta candidates use distinct
+    events where possible; no actual race results or post-off odds are read.
+    The 3:2 allocation is a fixed uncalibrated policy, not an EV optimum.
+    """
+    trio_mass = {}
+    ordered_mass = {}
+    for raw_combo, raw_probability in joint.items():
+        try:
+            combo = tuple(int(n) for n in raw_combo)
+            probability = float(raw_probability)
+        except (ValueError, TypeError):
+            return []
+        if (len(combo) != 3 or len(set(combo)) != 3
+                or any(n <= 0 for n in combo)
+                or not isfinite(probability) or probability < 0):
+            return []
+        unordered = tuple(sorted(combo))
+        trio_mass[unordered] = trio_mass.get(unordered, 0.) + probability
+        ordered_mass[combo] = ordered_mass.get(combo, 0.) + probability
+    if not ordered_mass or not isfinite(sum(ordered_mass.values())) or sum(ordered_mass.values()) <= 0:
+        return []
+    ranked_trios = sorted(trio_mass, key=lambda c: (-trio_mass[c], c))
+    ranked_trifectas = sorted(ordered_mass, key=lambda c: (-ordered_mass[c], c))
+    trios = ranked_trios[:3]
+    covered_trios = set(trios)
+    # With no authenticated trifecta prices, avoid spending all two ordered
+    # slots on finishes already covered by the three unordered tickets.
+    complement = [c for c in ranked_trifectas if tuple(sorted(c)) not in covered_trios]
+    trifectas = (complement + [c for c in ranked_trifectas if c not in complement])[:2]
+    if not trios or not trifectas:
+        return []
+    return [
+        {"kind": "3連複", "combos": [list(c) for c in trios], "points": len(trios),
+         "reason": "高知ファイナル：発走前の全出走馬の着順分布から選定（未校正・期待値未検証）"},
+        {"kind": "3連単", "combos": [list(c) for c in trifectas], "points": len(trifectas),
+         "reason": "高知ファイナル：3連複と重複する着順を可能な範囲で除外（未校正・期待値未検証）"},
+    ]
+
+
 def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.8,
-                     place_payout_slots=3):
+                     place_payout_slots=3, race=None):
     if not isinstance(prediction, dict) or prediction.get("predictionStatus") != "ready":
         return []
     probabilities = ((prediction.get("stages") or {}).get("probability") or {}).get("value") or {}
@@ -35,6 +80,9 @@ def generate_tickets(prediction, marks, quoted_odds=None, min_hit_probability=0.
     joint = raw if isinstance(raw, dict) else {
         tuple(row["combo"]): row["probability"] for row in raw
     }
+    if (isinstance(race, dict) and race.get('track') == '高知'
+            and 'ファイナル' in str(race.get('title') or '')):
+        return _kochi_final_triples(joint)
     finishes = list(joint.items())
     def matches(finish, combo, kind):
         if kind == "馬単":
