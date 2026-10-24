@@ -65,7 +65,7 @@ def rich(detail: Any) -> bool:
     )
 
 
-def repair_reason(prepared: Any, existing: Any) -> str:
+def repair_reason(prepared: Any, existing: Any, *, facts_only: bool = False) -> str:
     """A rich-but-truncated D1 card also needs repair; never drop known runners."""
     if not isinstance(prepared, dict) or not prepared.get("id"):
         return ""
@@ -77,6 +77,32 @@ def repair_reason(prepared: Any, existing: Any) -> str:
     old = named_roster(existing)
     if len(new) > len(old) and set(old).issubset(new):
         return "roster_incomplete"
+    # The initial D1 facts phase is collection-only: model version, marks,
+    # diagnosis hash and old prediction status are not factual differences.
+    # They are handled by the independent post-readback analysis phase below.
+    # A race with full saved facts must not be rewritten 40 times solely due
+    # to stale/crossing pre-off opinions: repeated large writes can hit 1102.
+    if facts_only:
+        old_rows = [h for h in existing.get("horses") or [] if isinstance(h, dict)]
+        if len(old) < 2 or len(old) != len(old_rows):
+            return "roster_incomplete"
+        expected_size = prepared.get("fieldSize")
+        if type(expected_size) is int and expected_size > len(old):
+            return "roster_incomplete"
+        for h in prepared.get("horses") or []:
+            if not isinstance(h, dict):
+                continue
+            no = int(h.get("horseNumber") or 0)
+            old_h = next((v for v in old_rows if int(v.get("horseNumber") or 0) == no), {})
+            try:
+                actual_runs = _career_rows(old_h, str(existing.get("date") or ""))
+                observed_runs = _career_rows(h, str(prepared.get("date") or ""))
+            except (ValueError, TypeError, KeyError, RuntimeError):
+                return "career_archive_invalid"
+            if (len(observed_runs) > len(actual_runs)
+                    or not _history_observations_retained(observed_runs, actual_runs)):
+                return "career_history_missing_observations"
+        return ""
     # A prepared Stage64 product must reach D1 even when legacy diagnosis
     # flags and observation hashes are unchanged. Do not recompute products here.
     if prepared.get("predictionStatus") == "ready" and prepared.get("predictionModelVersion") == "arvexq-stage64-product-v1":
@@ -212,6 +238,7 @@ def main() -> int:
     p.add_argument("--current", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--report", required=True)
+    p.add_argument("--facts-only", action="store_true", help="Repair only official roster/history facts; predictions are a later phase")
     args = p.parse_args()
 
     prepared = read(args.prepared)
@@ -249,7 +276,7 @@ def main() -> int:
         if old_roster and not set(old_roster).issubset(new_roster):
             reasons.append({"race_id": rid, "reason": "source_roster_missing_known_horses"})
             continue
-        reason = repair_reason(detail, old)
+        reason = repair_reason(detail, old, facts_only=args.facts_only)
         if reason:
             if len(new_roster) < 2:
                 reasons.append({"race_id": rid, "reason": "source_missing_named_runners"})

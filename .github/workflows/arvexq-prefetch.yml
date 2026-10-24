@@ -311,7 +311,8 @@ jobs:
             --workers 4 --retries 6 --allow-missing-details --allow-empty-day
           python scripts/arvexq_select_prefetch_repairs.py \
             --prepared prefetch-facts.json --current facts-current-d1.json \
-            --out facts-sync-payload.json --report facts-sync-selection.json
+            --out facts-sync-payload.json --report facts-sync-selection.json \
+            --facts-only
           python scripts/arvexq_sync_batches.py \
             --input facts-sync-payload.json --out-dir facts-sync-batches
           COUNT=$(find facts-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
