@@ -141,10 +141,22 @@ def evidence(race, histories, active):
             and _number(run.get("distance")) == _number(race.get("distance"))
         ]
         # The sample count is explicitly recorded; a missing value is not bad.
+        # Margin seconds are comparable only under observed matching course
+        # and distance. A cross-course raw-margin mean would be a false input.
+        comparable_margins = [
+            value for row in comparable
+            for value in [next((_number(row.get(key)) for key in
+                               ("marginSeconds", "timeBehindWinner")
+                               if _number(row.get(key)) is not None), None)]
+            if value is not None and value >= 0
+        ]
+        comparable_margins.sort()
         facts[no] = {
             "historicalStarts": len(context),
             "historicalMarginSeconds": sorted(margins)[len(margins)//2] if margins else None,
             "historicalMarginSamples": len(margins),
+            "sameTrackDistanceMarginSeconds": comparable_margins[len(comparable_margins)//2] if comparable_margins else None,
+            "sameTrackDistanceMarginSamples": len(comparable_margins),
             "opponentLevelMedian": sorted(opposing)[len(opposing)//2] if opposing else None,
             "opponentLevelSamples": len(opposing),
             "individualGateReactionMedian": sorted(gate)[len(gate)//2] if gate else None,
