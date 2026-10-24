@@ -61,7 +61,7 @@ def public_race(detail):
             # Reproject only the existing sealed pre-off probability evidence.
             # Keep the D1 archived ticket list untouched for audit/history.
             # Never use post-race outcomes to select a ticket.
-            revised = generate_tickets(original, original_marks)
+            revised = generate_tickets(original, original_marks, race=detail)
             result['recommendedBets'] = revised if revised else deepcopy(original_tickets)
             by_no = {m['horseNumber']: m['mark'] for m in original_marks}
             for horse in result.get('horses') or []:
@@ -76,7 +76,7 @@ def public_race(detail):
     result['prediction'] = prediction
     result['forecastText'] = prediction.get('forecastText', '')
     result['predictionMarks'] = marks
-    result['recommendedBets'] = generate_tickets(prediction, marks)
+    result['recommendedBets'] = generate_tickets(prediction, marks, race=detail)
     by_no = {row['horseNumber']: row['mark'] for row in marks}
     for horse in result.get('horses') or []:
         no = horse.get('horseNumber')
