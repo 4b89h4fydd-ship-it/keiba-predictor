@@ -42,6 +42,14 @@ jobs:
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Restore accumulated internal vision evidence
+        if: steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data/vision-evidence
+          key: arvexq-vision-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-vision-${{ runner.os }}-
       - name: Install offline analysis dependencies
         if: steps.provider.outputs.enabled == 'true'
         run: |
@@ -72,6 +80,12 @@ jobs:
           python scripts/arvexq_vision_internal.py \
             --date "$TARGET_DATE" \
             --output-dir .arvexq-data/vision-evidence
+      - name: Cache accumulated internal evidence for later forecasts
+        if: success() && steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .arvexq-data/vision-evidence
+          key: arvexq-vision-${{ runner.os }}-${{ github.run_id }}
       - name: Preserve measurement artifacts for audit only
         if: always() && steps.provider.outputs.enabled == 'true'
         uses: actions/upload-artifact@v4
