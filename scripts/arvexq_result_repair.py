@@ -70,8 +70,18 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
 
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
     bundle = _read_json(bundle_path)
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id")]
-    base_details = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id")]
+    # The D1 calendar can retain retired Banei summary IDs without detail
+    # records. Do not reacquire, publish, or verify those retired races. Leave
+    # the archived D1 originals and any upstream bundle bytes untouched.
+    def active(row: Any) -> bool:
+        if not isinstance(row, dict) or not row.get("id"):
+            return False
+        rid = str(row["id"])
+        return (str(row.get("track") or "") not in ("帯広", "帯広ば")
+                and "-帯広-" not in rid and "-帯広ば-" not in rid)
+
+    rows = [r for r in (bundle.get("races") or []) if active(r)]
+    base_details = [d for d in (bundle.get("details") or []) if active(d)]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in base_details}
     summary_by_id = {str(r["id"]): r for r in rows}
 
