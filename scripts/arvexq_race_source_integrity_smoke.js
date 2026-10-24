@@ -91,7 +91,9 @@ const home=fs.readFileSync('arvexq/ui/static/sports/unified-home.js','utf8');
 const style=fs.readFileSync('arvexq/ui/static/sports/unified-home.css','utf8');
 const root={};new Function('window',home)(root);
 const actions=root.ARVEXQUnifiedHome.buttons();
-assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,2,'selected and special need !');
+assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,0,'no selected or special alert without a real race');
+const counted=root.ARVEXQUnifiedHome.buttons('horse',{selected:{central:1,local:0},special:{central:0,local:1}});
+assert.equal((counted.match(/class="arv-unified-alert"/g)||[]).length,2,'selected and special need ! when each has at least one race');
 assert.match(style,/arv-unified-alert/);
 
 // Regression against legacy D1 list and device cache resurrecting excluded Banei.
