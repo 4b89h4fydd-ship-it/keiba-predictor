@@ -146,6 +146,39 @@ def _public_position_tactics(race, histories):
     }
 
 
+def _prior_career_for_nar(horse, cutoff):
+    """Re-use the existing saved career, never download or synthesize starts.
+
+    JRA keeps its separately registered input policy. Accept a longer NAR
+    history only if every visible recent start is represented with consistent
+    identity and finish. An incomplete archive cannot silently replace the
+    known observations. All runs must be strictly earlier than race day.
+    """
+    recent = prior_runs(horse, cutoff)
+    raw_full = horse.get("allPastRuns")
+    if not isinstance(raw_full, list) or not raw_full:
+        return recent, False
+    full = prior_runs({"recentRaces": raw_full}, cutoff)
+    if len(full) <= len(recent):
+        return recent, False
+    claims = horse.get("careerTransport")
+    if isinstance(claims, dict) and claims.get("observedRuns") is not None:
+        claimed = claims["observedRuns"]
+        if type(claimed) is not int or claimed > len(full):
+            return recent, False
+    by_day = {r.get("_raceDate") or r.get("date"): r for r in full}
+    for run in recent:
+        day = run.get("_raceDate") or run.get("date")
+        stored = by_day.get(day)
+        if stored is None:
+            return recent, False
+        for key in ("track", "raceNumber", "finish", "fieldSize"):
+            old, new = run.get(key), stored.get(key)
+            if old is not None and new is not None and old != new:
+                return recent, False
+    return full, True
+
+
 def predict(race, *, expected_circuit, ability_method=None):
     owner=circuit(race)
     if owner!=expected_circuit:
@@ -173,10 +206,16 @@ def predict(race, *, expected_circuit, ability_method=None):
         result["blockers"].append({"reason":"fewer-than-three-active-runners"})
         return result
     histories={}
+    expanded_careers = []
     for h in active:
         no=h["horseNumber"]
         try:
-            runs=prior_runs(h,race["date"])
+            if owner == "nar":
+                runs, expanded = _prior_career_for_nar(h, race["date"])
+                if expanded:
+                    expanded_careers.append(no)
+            else:
+                runs=prior_runs(h,race["date"])
         except ValueError:
             result["blockers"].append({"horseNumber":no,"reason":"conflicting-history"})
             runs=[]
@@ -188,6 +227,15 @@ def predict(race, *, expected_circuit, ability_method=None):
             else:
                 usable.append(run)
         histories[no]=usable
+    result["abilityHistoryCoverage"] = {
+        "source": "existing-saved-allPastRuns-when-compatible" if owner == "nar"
+                  else "existing-jra-recentRaces",
+        "fullCareerUsedHorseNumbers": sorted(expanded_careers),
+        "fullCareerRunners": len(expanded_careers),
+        "activeRunners": len(active),
+        "fullCareerCoverageVerified": False,
+        "missingCareerDoesNotMeanPoorAbility": True,
+    }
     ability=score_field(histories,method)
     style=style_field(histories,config["styleWindow"])
     stages["ability"]={"status":"research-only" if all(v is not None for v in ability.values()) else "incomplete",
