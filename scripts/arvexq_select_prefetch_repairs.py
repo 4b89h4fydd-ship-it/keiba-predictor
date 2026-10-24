@@ -103,32 +103,14 @@ def repair_reason(prepared: Any, existing: Any, *, facts_only: bool = False) -> 
                     or not _history_observations_retained(observed_runs, actual_runs)):
                 return "career_history_missing_observations"
         return ""
-    # A prepared Stage64 product must reach D1 even when legacy diagnosis
+    # A prepared new three-analysis product must reach D1 even when legacy diagnosis
     # flags and observation hashes are unchanged. Do not recompute products here.
-    if prepared.get("predictionStatus") == "ready" and prepared.get("predictionModelVersion") == "arvexq-stage64-product-v1":
+    if prepared.get("predictionStatus") == "ready" and prepared.get("predictionModelVersion") == "arvexq-three-analysis-vnext-1":
         if (existing.get("predictionStatus") != "ready"
                 or existing.get("predictionModelVersion") != prepared.get("predictionModelVersion")
                 or existing.get("predictionMarks") != prepared.get("predictionMarks")
                 or existing.get("recommendedBets") != prepared.get("recommendedBets")):
-            return "stage64_products_not_persisted"
-    # A rich old card is not equivalent to the current learned forecast.
-    # Never skip replacement solely because the retired analysis was ready.
-    new_version = str(prepared.get("predictionModelVersion") or "")
-    old_version = str(existing.get("predictionModelVersion") or "")
-    if new_version.startswith("arvexq-learned-whole-career"):
-        if new_version != old_version:
-            return "replacement_model_changed"
-        new_marks = {int(h.get("horseNumber") or 0): str((h.get("integratedEvaluation") or {}).get("mark") or "")
-                     for h in prepared.get("horses") or [] if isinstance(h, dict)}
-        old_marks = {int(h.get("horseNumber") or 0): str((h.get("integratedEvaluation") or {}).get("mark") or "")
-                     for h in existing.get("horses") or [] if isinstance(h, dict)}
-        if new_marks != old_marks:
-            return "replacement_marks_changed"
-    if prepared.get("legacyPresentationDisabled") and (
-        existing.get("predictionStatus") != "new-model-unavailable"
-        or existing.get("recommendedBetPlan") != prepared.get("recommendedBetPlan")
-    ):
-        return "retired_forecast_still_published"
+            return "new_method_products_not_persisted"
     if not rich(existing):
         return "thin"
     # Facts are saved first. A later valid analysis must be published even

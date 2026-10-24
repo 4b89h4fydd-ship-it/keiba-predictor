@@ -31,7 +31,7 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         prepared = race(self.id, (1, 2, 3), ai=True)
         existing = copy.deepcopy(prepared)
         prepared["predictionStatus"] = "ready"
-        prepared["predictionModelVersion"] = "arvexq-stage64-product-v1"
+        prepared["predictionModelVersion"] = "arvexq-three-analysis-vnext-1"
         prepared["predictionMarks"] = [{"horseNumber": 1, "mark": "◎"}]
         prepared["recommendedBets"] = [{"kind": "馬連", "horseNumbers": [1, 2]}]
         prepared["preparedMeta"]["analysisInputHash"] = "recent"
@@ -40,7 +40,7 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         existing["preparedMeta"]["analysisInputHash"] = "old"
         self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True), "")
         self.assertEqual(repair.repair_reason(prepared, existing),
-                         "stage64_products_not_persisted")
+                         "new_method_products_not_persisted")
 
     def test_fact_stage_still_repairs_missing_roster_and_real_history(self) -> None:
         prepared = race(self.id, (1, 2, 3))
