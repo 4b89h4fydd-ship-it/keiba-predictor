@@ -91,15 +91,23 @@ def test_two_date_replay_baselines_and_public_tactics():
         distinct_front = next((h for h in win_order[:3] if h in segregated),
                               win_order[0])
         # Freeze all four candidate predictions before opening labels.
+        challenger = (plain.get("winnerEvidenceComparison") or {}).get(
+            "proposedHeadToHeadResearchChallenger")
+        rematch = challenger["horseNumber"] if challenger else win_order[0]
         judged.append((race_id, source["circuit"], win_order[0],
-                       recent_order[0], explicit_course, distinct_front))
+                       recent_order[0], explicit_course, distinct_front,
+                       rematch, bool(challenger)))
     assert len(judged) >= 30, "insufficient comparable saved race history"
     report = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
-    for race_id, circuit, baseline, recent, course, separated in judged:
+    rematch_triggers = defaultdict(int)
+    for race_id, circuit, baseline, recent, course, separated, rematch, triggered in judged:
         winner, runnerup, third = LABELS[race_id]
+        if triggered:
+            rematch_triggers[("-".join(race_id.split("-")[1:4]), circuit)] += 1
         for method, n in (("baseline", baseline), ("recent5", recent),
                           ("explicitCourse", course),
-                          ("isolatedForward", separated)):
+                          ("isolatedForward", separated),
+                          ("directRivalReplayOnly", rematch)):
             row = report[("-".join(race_id.split("-")[1:4]), circuit)][method]
             row[0] += 1
             row[1] += n == winner
@@ -108,5 +116,6 @@ def test_two_date_replay_baselines_and_public_tactics():
         info = "; ".join("%s %d/%d◎1着 %d/%d◎3内" % (
             method, result[1], result[0], result[2], result[0])
             for method, result in sorted(methods.items()))
+        info += "; directRivalTriggers=%d" % rematch_triggers[(date,circuit)]
         warnings.warn("ARVEXQ_RESEARCH_NOT_PREOFF %s %s: %s" %
                       (date, circuit, info), UserWarning, stacklevel=1)
