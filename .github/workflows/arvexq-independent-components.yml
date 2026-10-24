@@ -58,7 +58,9 @@ jobs:
       - name: JRA past-run field contracts and integration
         run: python -m pytest -q tests/test_jra_past_fields_independent.py
       - name: JavaScript production modules
-        run: node scripts/arvexq_production_boundaries_smoke.cjs
+        run: |
+          node scripts/arvexq_production_boundaries_smoke.cjs
+          node scripts/arvexq_stage64_summary_precedence_smoke.cjs
       - name: Stage64 pre-off API, wager marginal and scenario display contracts
         run: |
           python -m pytest -q tests/test_stage64_product_forecast.py tests/test_stage64_frozen_input_evidence.py tests/test_stage64_direct_rival_publication.py

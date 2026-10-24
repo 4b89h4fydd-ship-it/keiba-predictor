@@ -42,6 +42,7 @@ jobs:
         run: |
           node --check arvexq/ui/static/app.js
           node scripts/arvexq_web_odds_fallback_smoke.mjs
+          node scripts/arvexq_stage64_summary_precedence_smoke.cjs
           node tests/horse_realtime_sync.mjs
           python -m py_compile build_static.py
           python build_static.py
@@ -227,6 +228,11 @@ jobs:
         run: |
           test -n "$PROD_BASE"
           ARVEXQ_BASE_URL="$PROD_BASE" ARVEXQ_SMOKE_TIMEOUT=30000 ARVEXQ_BROWSER=webkit node scripts/arvexq_webapp_race_smoke.js
+      - name: Verify actual sealed Stage64 predictions in production iPhone Safari
+        if: ${{ always() && github.event_name == 'push' && env.PROD_BASE != '' }}
+        env:
+          ARVEXQ_BASE_URL: ${{ env.PROD_BASE }}
+        run: node scripts/arvexq_stage64_live_display_smoke.cjs
       - name: Production all-race saved-original and independent odds verification
         if: ${{ always() && env.PROD_BASE != '' }}
         env:
