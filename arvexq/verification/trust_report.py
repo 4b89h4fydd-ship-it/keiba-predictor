@@ -7,13 +7,42 @@ claim of actual betting profit. This module never creates a prediction.
 from __future__ import annotations
 
 from collections import defaultdict
+from hashlib import sha256
+import json
 from math import sqrt
 from typing import Any
 
 from arvexq.backtest.ticket_metrics import summarize_frozen_ticket_metrics
-from arvexq.prediction.prerace_archive import evaluate_frozen_result, sealed_lock
+from arvexq.prediction.prerace_archive import evaluate_frozen_result, sealed_lock, post_at
 
 VERSION = "arvexq-trust-report-v1"
+
+
+def verify_original_seal(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Admit only immutable original hashes sealed strictly before the off.
+
+    A self-consistent digest is *not* third-party proof of when the server
+    wrote the record; immutable external publication is still required for
+    independently certified commercial performance.
+    """
+    lock = sealed_lock(detail)
+    if lock is None or lock.get("freezePolicy") != "arvexq-server-prerace-seal-v1":
+        return None
+    post = post_at(detail)
+    sealed = lock.get("sealedAtEpoch")
+    captured = lock.get("capturedAtEpoch")
+    if (type(sealed) is not int or type(captured) is not int
+            or post is None or not captured <= sealed < int(post.timestamp())):
+        return None
+    payload = {
+        "raceId": lock["raceId"], "date": lock["raceDate"],
+        "captured": captured, "sealed": sealed, "horses": lock["horses"],
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True,
+                     separators=(",", ":"), default=str).encode()
+    if sha256(raw).hexdigest() != lock.get("sealRevision"):
+        return None
+    return lock
 
 
 def _wilson(hits: int, attempts: int) -> list[float] | None:
@@ -50,7 +79,7 @@ def build_trust_report(details: list[dict[str, Any]]) -> dict[str, Any]:
         circuit = str(detail.get("circuit") or "unclassified")
         key = circuit + "/" + str(day)[:7]
         scope[key]["total"] += 1
-        locked = sealed_lock(detail)
+        locked = verify_original_seal(detail)
         status = "missing-preoff-original"
         audit = None
         if locked is not None:
