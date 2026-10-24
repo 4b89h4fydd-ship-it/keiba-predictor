@@ -45,6 +45,9 @@ def build_prediction(facts, now=None):
         return None
     race=dict(facts)
     race["circuit"]=circuit
+    # Pre-off placeholders are not finish evidence and must not block
+    # the scorer's explicit "no result data" leakage guard.
+    race.pop("result", None)
     videos=race.pop("_internalVideoFeatures",None)
     quoted=race.pop("_internalThreeWayOdds",None)
     try:
