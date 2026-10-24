@@ -121,8 +121,8 @@ def train(races, *, circuit, train_before, validate_before, video_by_race=None,
         "temperature":temperature,"paceEffect":0.0,
         "scenarioWeights":{"baseline":1.0,"fast":0.0,"slow":0.0},
         "scenarioWeightsValidated":False,
-        # Fitting and temperature selection alone do not constitute future-race validation.
-        "outOfSampleValidated":False,
+        # No outOfSampleValidated certificate here: only separate untouched
+        # future-race validation can authorize that field.
         "missingVideoValidated":all(all(row["video_missing"] == 1.0 for row in f.values())
                                      for _,_,f,_ in train_rows+valid_rows),
         "trainedThrough":max(day for _,day,_,_ in train_rows),
@@ -146,14 +146,23 @@ def test_holdout(model, races, *, video_by_race=None, quoted_three_way_odds=None
         p=_win_probs(features,model["weights"],model["featureMeans"],model["temperature"])
         winner=min(labels,key=lambda n:labels[n])
         lead=max(p,key=p.get)
-        metrics.append({"raceId":rid,"date":day,"winnerHit":int(lead==winner),
+        lead_finish=labels[lead]
+        metrics.append({"raceId":rid,"date":day,"honmeiHorseNumber":lead,
+                        "honmeiFinish":lead_finish,
+                        "winnerHit":int(lead_finish==1),
+                        "top3Hit":int(lead_finish<=3),
                         "winnerLogLoss":-log(max(p[winner],1.e-15)),
                         "winBrier":sum((v-(n==winner))**2 for n,v in p.items())/len(p)})
     if not metrics:
-        return {"status":"no-eligible-holdout","raceCount":0,"returnRate":None}
+        return {"status":"no-eligible-holdout","raceCount":0,
+                "honmeiWinCount":0,"honmeiTop3Count":0,
+                "winnerHitRate":None,"honmeiTop3Rate":None,"returnRate":None}
     return {
         "status":"measured-baseline-no-video-claim","raceCount":len(metrics),
         "winnerHitRate":mean(x["winnerHit"] for x in metrics),
+        "honmeiWinCount":sum(x["winnerHit"] for x in metrics),
+        "honmeiTop3Count":sum(x["top3Hit"] for x in metrics),
+        "honmeiTop3Rate":mean(x["top3Hit"] for x in metrics),
         "winnerLogLoss":mean(x["winnerLogLoss"] for x in metrics),
         "winBrier":mean(x["winBrier"] for x in metrics),
         "returnRate":None,
