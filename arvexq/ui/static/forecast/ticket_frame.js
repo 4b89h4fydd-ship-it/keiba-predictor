@@ -34,7 +34,8 @@ function sealedFive(r,server){
     var matches=item.kind==='馬単'?finish[0]===nums[0]&&finish[1]===nums[1]:
       item.kind==='馬連'?finish.slice(0,2).every(function(n){return nums.indexOf(n)>=0;}):
       item.kind==='ワイド'?nums.every(function(n){return finish.slice(0,3).indexOf(n)>=0;}):
-      item.kind==='3連複'?finish.slice(0,3).every(function(n){return nums.indexOf(n)>=0;}):false;
+      item.kind==='3連複'?finish.slice(0,3).every(function(n){return nums.indexOf(n)>=0;}):
+      item.kind==='3連単'?finish.slice(0,3).every(function(n,i){return n===nums[i];}):false;
     return sum+(matches&&Number.isFinite(row.prob)?row.prob:0);
    },0);
    ranked.push({item:item,combo:combo,probability:probability});
@@ -56,7 +57,12 @@ function contents(r,p){
  if(server){
    if(!server.length)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
    var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+(item.combos||[]).map(function(c){return '<span class="arv-three-combo">'+esc(c.join(' - '))+'</span>';}).join('')+'</strong><p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p></div>';}).join('');
-   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+(r.prediction&&r.prediction.modelVersion==='arvexq-empirical-fusion-v1'?'発走前実オッズの期待回収率・全券種合計最大5点':'旧方式・保存済み発走前買い目')+'</p>'+rows+'</div>';
+   var kochiFinal=r&&r.track==='高知'&&/ファイナル/.test(String(r.title||''));
+   var isFusion=r.prediction&&r.prediction.modelVersion==='arvexq-empirical-fusion-v1';
+   var methodology=isFusion?'発走前の実オッズと期待回収率で選定・全券種合計最大5点':
+     kochiFinal?'高知ファイナル：全出走馬から3着候補を評価・3連複と3連単の合計最大5点（未校正）':
+     '旧方式の保存済み発走前買い目・全券種合計最大5点';
+   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.
