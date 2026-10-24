@@ -1,6 +1,6 @@
 """Six independent shadow stages from saved observations through candidate bets."""
 from copy import deepcopy
-from math import isfinite
+from math import isfinite, nextafter, inf
 from arvexq.research.stage63.ability import prior_runs, score_field, quality
 from arvexq.research.stage63.running_style import style_field
 from arvexq.research.stage63.probability import distribution
@@ -337,6 +337,45 @@ def predict(race, *, expected_circuit, ability_method=None):
             holistic_histories[no] = extended
     result["paceEvidence"]["holisticWinnerEvidence"] = holistic_evidence(
         race, holistic_histories, active)
+    # Replace the NAR winner ordering only when the already registered direct-
+    # rival review finds an uncontradicted, corroborated historical rematch.
+    # This stays inside the six existing stages: the same revised ability
+    # ordering feeds win probability, marks and tickets, with no extra route.
+    review = config["winnerReviewPolicy"]
+    original_order = sorted(ability, key=lambda no: (-ability[no], no))
+    rival = None
+    applied = False
+    if owner == "nar":
+        if review != "nar-full-career-direct-rival-review":
+            raise ValueError("cross-circuit winner review conflict")
+        rival = direct_rematch_candidate(
+            original_order, result["paceEvidence"]["holisticWinnerEvidence"])
+        if rival is not None:
+            chosen, original = rival["horseNumber"], rival["otherHorseNumber"]
+            if original == original_order[0] and chosen in original_order[1:5]:
+                ability[chosen], ability[original] = ability[original], ability[chosen]
+                # Resolve an exact finish-quality tie without guessing a
+                # performance boost or fabricating a win probability.
+                if sorted(ability, key=lambda no: (-ability[no], no))[0] != chosen:
+                    ability[chosen] = nextafter(max(ability.values()), inf)
+                applied = True
+    elif owner == "jra":
+        if review != "jra-course-distance-opposition-review":
+            raise ValueError("cross-circuit winner review conflict")
+    else:
+        raise ValueError("unsupported prediction circuit")
+    result["winnerEvidenceComparison"] = {
+        "method": review,
+        "proposedHeadToHeadResearchChallenger": rival,
+        "selectionPolicy": ("corroborated-nar-direct-rematch-applied"
+                            if applied else "original-ability-ranking"),
+        "winnerRankUnchanged": not applied,
+        "appliedToWinProbabilityAndMarks": applied,
+        "originalWinnerHorseNumber": original_order[0],
+        "selectedWinnerHorseNumber": (rival["horseNumber"]
+                                      if applied else original_order[0]),
+        "forwardAccuracyValidated": False,
+    }
     stages["pace"] = {
         "status": "observed-position-only-pace-unverified",
         "value": deltas, "scenarioWeightsVerified": False,
@@ -355,28 +394,5 @@ def predict(race, *, expected_circuit, ability_method=None):
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
     stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium)}
-    # The JRA course/distance/opposition review is independently registered.
-    # NAR can compare recorded direct rivals across the available full career.
-    # Neither exploratory challenger can alter current marks without genuine
-    # held-out verification; the two methods must never be mixed.
-    review = config["winnerReviewPolicy"]
-    if owner == "nar":
-        if review != "nar-full-career-direct-rival-review":
-            raise ValueError("cross-circuit winner review conflict")
-        rival = direct_rematch_candidate(
-            stages["marks"]["value"]["orderedWinCandidates"],
-            result["paceEvidence"]["holisticWinnerEvidence"])
-    elif owner == "jra":
-        if review != "jra-course-distance-opposition-review":
-            raise ValueError("cross-circuit winner review conflict")
-        rival = None
-    else:
-        raise ValueError("unsupported prediction circuit")
-    result["winnerEvidenceComparison"] = {
-        "method": review,
-        "proposedHeadToHeadResearchChallenger": rival,
-        "selectionPolicy": "unvalidated-candidate-does-not-overwrite-current-winner",
-        "winnerRankUnchanged": True,
-    }
     stages["tickets"]={"status":"research-only-unvalidated","value":select(probs)}
     return result
