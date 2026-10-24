@@ -196,26 +196,71 @@ def evidence(race, histories, active):
 
 
 def direct_rematch_candidate(order, observations):
-    """Strict, audit-only head-to-head challenger; never scores by guessed weights.
+    """A cautious research-only winner comparison, never guessed point weights.
 
-    Requiring two prior wins against the baseline leader with zero defeats
-    avoids an arbitrary points blend. This remains *research-only* until a
-    genuinely later held-out validation justifies an actual winner change.
+    A direct shared-race rematch is necessary, but not sufficient: all
+    *available comparable* margins, opponent strength, course records and
+    individual start timing are checked for contradictions. Missing evidence
+    cannot be silently treated as a win. Official geometry is a context
+    observation, never a made-up inner-draw bonus.
     """
     if not order:
         return None
     leader = order[0]
     matches = observations["headToHead"]
+    facts = observations["byHorse"]
     eligible = []
     for challenger in order[1:5]:
         record = matches.get(challenger, {}).get(leader, {})
-        if (record.get("wins", 0) >= 2 and record.get("losses", 0) == 0
-                and record.get("ties", 0) == 0):
-            eligible.append((challenger, record["wins"]))
+        if (record.get("wins", 0) < 2 or record.get("losses", 0) != 0
+                or record.get("ties", 0) != 0):
+            continue
+        a, b = facts[challenger], facts[leader]
+        checks, unknown = [], []
+        contradictory = False
+        # All margin observations compared here must have the same recorded
+        # track and distance; unknown margin is not a 0-second performance.
+        for label, key, prefer_lower, count_key in (
+            ("same-track-distance-margin", "sameTrackDistanceMarginSeconds",
+             True, "sameTrackDistanceMarginSamples"),
+            ("observed-opponent-level", "opponentLevelMedian",
+             False, "opponentLevelSamples"),
+            ("same-track-distance-podium-record", "sameTrackDistanceTop3",
+             False, "sameTrackDistanceStarts"),
+        ):
+            av, bv = a.get(key), b.get(key)
+            if av is None or bv is None or not a.get(count_key) or not b.get(count_key):
+                unknown.append(label)
+                continue
+            # Convert historical top-three COUNT into a per-start observation
+            # rather than mistaking more starts for higher performance.
+            if key == "sameTrackDistanceTop3":
+                av = av / a[count_key]
+                bv = bv / b[count_key]
+            if (av > bv if prefer_lower else av < bv):
+                contradictory = True
+            checks.append(label)
+        # Only compare gate timing within an independently documented course
+        # geometry. Different start courses do not have a common scale.
+        if observations.get("firstCorner") is not None:
+            key = "individualGateReactionMedian"
+            if (a.get("individualGateReactionSamples") and
+                    b.get("individualGateReactionSamples")):
+                checks.append("individual-gate-reaction")
+                if a[key] > b[key]:
+                    contradictory = True
+            else:
+                unknown.append("individual-gate-reaction")
+            checks.append("verified-first-corner-geometry")
+        else:
+            unknown.extend(["individual-gate-reaction", "verified-first-corner-geometry"])
+        if not contradictory:
+            eligible.append((challenger, record["wins"], checks, unknown))
     if len(eligible) != 1:
         return None
-    challenger, count = eligible[0]
+    challenger, count, checked, unknown = eligible[0]
     return {"horseNumber": challenger, "otherHorseNumber": leader,
-            "sharedPastRacesWon": count,
-            "reason": "repeat-direct-rival-wins-no-verified-defeat",
+            "sharedPastRacesWon": count, "confirmedChecks": checked,
+            "unavailableChecks": unknown,
+            "reason": "repeat-head-to-head-outperformance-with-no-known-contradiction",
             "researchOnly": True}
