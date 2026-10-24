@@ -181,7 +181,8 @@ def _vector(report, centers, scales):
     return [(float(v)-c)/s if v is not None else 0. for v,c,s in zip(values,centers,scales)] + [float(v is None) for v in values]
 
 
-def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01):
+def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03, l2=.01,
+              allow_missing_starts=False):
     """Pairwise logistic ranking. Fixed optimizer settings are not ability weights.
 
     This is training code, not validation: fit only on a prespecified earlier
@@ -200,7 +201,8 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
             continue
         labels = {int(r['horseNumber']): int(r['finish']) for r in detail['result'].get('finishers', [])
                   if r.get('horseNumber') and r.get('finish') and int(r['finish']) > 0}
-        rows = [r for r in race_evidence(detail) if r['observedStarts'] and r['horseNumber'] in labels]
+        rows = [r for r in race_evidence(detail)
+                if (r['observedStarts'] or allow_missing_starts) and r['horseNumber'] in labels]
         if len(rows) < 2:
             continue
         samples.append((rows, labels))
@@ -239,6 +241,10 @@ def fit_model(details, *, circuit, family='flat', epochs=150, learning_rate=.03,
                                    separators=(',', ':')).encode()).hexdigest()
     training = {'raceIds': ids, 'lastDate': max(dates), 'races': len(ids), 'circuit': circuit,
                 'family': family, 'inputEvidenceHash': input_hash}
+    if allow_missing_starts:
+        # Fusion-only: winner/loser labels for actual debutants train the
+        # 40 missingness bits; we NEVER invent a preceding run or use odds.
+        training['allowMissingStarts'] = True
     artifact = {'version': VERSION, 'features': list(FEATURES), 'centers': centers, 'scales': scales,
                 'weights': weights, 'training': training, 'calibrationStatus': 'unvalidated',
                 'optimizer': {'epochs': epochs, 'learningRate': learning_rate, 'l2': l2}}
@@ -282,7 +288,9 @@ def predict_model(detail, model):
         raise ValueError('model artifact hash mismatch')
     scenarios = []
     base = race_evidence(detail)
-    if len(base) < 3 or any(not r['observedStarts'] for r in base):
+    if len(base) < 3 or (
+            any(not r['observedStarts'] for r in base)
+            and model['training'].get('allowMissingStarts') is not True):
         return {'version': VERSION, 'status': 'insufficient-history', 'reports': base, 'scenarios': []}
     for name,label in [('usual','通常の隊列'),('forward','前の位置を取り合う場合'),('held-up','想定より後ろに控える場合')]:
         rows = race_evidence(detail,scenario=name)
