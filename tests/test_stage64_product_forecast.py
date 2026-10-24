@@ -52,6 +52,12 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert len(prediction["stages"]["pace"]["value"]) == 1
         assert prediction["paceEvidence"]["actualPaceVerified"] is False
         assert "単騎逃げ・ハイペース・差し有利とは断定せず" in prediction["forecastText"]
+        if circuit == "中央":
+            assert "中央競馬方式：" in prediction["forecastText"]
+            assert "地方競馬方式：" not in prediction["forecastText"]
+        else:
+            assert "地方競馬方式：" in prediction["forecastText"]
+            assert "中央競馬方式：" not in prediction["forecastText"]
 
 
 def test_course_history_is_explained_without_changing_public_marks():
