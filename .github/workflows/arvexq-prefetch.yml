@@ -94,6 +94,7 @@ jobs:
           elif [ "$SCHEDULE_EXPRESSION" = "05 5,8,11 * * *" ]; then
             # The scheduled day-before lane keeps manual/push/today behavior unchanged.
             TARGET_DATE=$(TZ=Asia/Tokyo date -d tomorrow +%F)
+            echo "ARVEXQ_DAY_AHEAD=1" >> "$GITHUB_ENV"
           else
             TARGET_DATE=$(TZ=Asia/Tokyo date +%F)
           fi
@@ -349,6 +350,7 @@ jobs:
           echo "D1_STORED_EVIDENCE_VERIFIED"
 
       - name: Analyze only persisted D1 data and prepare original marks and bets
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           RACES=$(jq '.races // [] | length' persisted-facts.json)
           if [ "$RACES" -le 0 ]; then
@@ -378,7 +380,7 @@ jobs:
       - name: Prepare previous-day research training corpus (optional)
         timeout-minutes: 5
         continue-on-error: true
-        if: success()
+        if: success() && env.ARVEXQ_DAY_AHEAD != '1'
         shell: bash
         run: |
           set -euo pipefail
@@ -421,7 +423,7 @@ jobs:
       - name: Capture optional preoff research candidates (not production picks)
         timeout-minutes: 5
         continue-on-error: true
-        if: success()
+        if: success() && env.ARVEXQ_DAY_AHEAD != '1'
         shell: bash
         run: |
           set -euo pipefail
@@ -443,7 +445,7 @@ jobs:
       - name: Report research capture operational evidence
         timeout-minutes: 1
         continue-on-error: true
-        if: always()
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
         shell: bash
         run: |
           python - <<'PY'
@@ -489,7 +491,7 @@ jobs:
       - name: Record research capture result in progress issue
         timeout-minutes: 1
         continue-on-error: true
-        if: always()
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -531,7 +533,7 @@ jobs:
             });
 
       - name: Archive research-only preoff receipts
-        if: always()
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-research-preoff-${{ github.run_id }}
@@ -545,6 +547,7 @@ jobs:
           retention-days: 30
 
       - name: Calibrate ticket hit rates from sealed previous-day results
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         continue-on-error: true
         run: |
           python scripts/arvexq_empirical_ticket_calibration.py \
@@ -552,6 +555,7 @@ jobs:
           echo "Calibration based only on pre-off saved model-v2 tickets and official results"
 
       - name: Publish empirical calibration independently of immutable morning originals
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           set -euo pipefail
           RECORDS=arvexq/ui/static/morning/hit_rate_records.json
@@ -602,6 +606,7 @@ jobs:
           git worktree remove /tmp/arvexq-calibration-publish
 
       - name: Replace legacy active forecasts in D1 publication payload
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           MODEL_PATH=".arvexq-data/research-models.json"
           if [ ! -s "$MODEL_PATH" ]; then
@@ -616,6 +621,7 @@ jobs:
           echo "LEGACY_ACTIVE_FORECASTS_DISABLED"
 
       - name: Freeze morning selected and special predictions for all races
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           # The same UI analysis logic runs headlessly on the full prepared day.
           # Once the first post has passed we never backfill a new morning pick.
@@ -631,6 +637,7 @@ jobs:
           rm -f prefetch-morning.json
 
       - name: Publish fixed morning race list as a Cloudflare static asset
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -677,6 +684,7 @@ jobs:
           echo "STATIC_MORNING_PICKS_ARCHIVED $FILE"
 
       - name: Preserve lossless prediction originals before D1 writes
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -698,6 +706,7 @@ jobs:
           gh workflow run arvexq-web-deploy.yml --ref main
 
       - name: Select only missing or thin D1 details
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$RACES" -le 0 ]; then
@@ -722,6 +731,7 @@ jobs:
           jq '{prepared,existing,existing_rich,repair_count}' prefetch-repair-selection.json
 
       - name: Push prepared day repairs to D1 in safe batches
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           RACES=$(jq '.meta.race_count // 0' prefetch-sync-payload.json)
           if [ "$RACES" -le 0 ]; then
@@ -762,6 +772,7 @@ jobs:
           echo "D1 prefetch push verified all batches"
 
       - name: Verify prepared day and analysis from D1
+        if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
           if [ "$EXPECTED" -le 0 ]; then
@@ -961,7 +972,7 @@ jobs:
           cp /tmp/arvexq-prefetch.log runtime-prefetch.log 2>/dev/null || true
 
       - name: Preserve morning D1 consistency audit
-        if: always()
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-morning-d1-consistency-${{ github.run_id }}
