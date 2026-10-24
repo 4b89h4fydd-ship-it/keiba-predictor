@@ -110,7 +110,7 @@ const all=[
  {id:'jra-2026-10-24-京都-02',track:'京都'}
 ];
 assert.deepEqual(visible(all).map(r=>r.track),['佐賀','京都']);
-assert.deepEqual(visible(all),visible(all)); // no mutation and stable order
+assert.deepEqual(all.map(r=>r.track),['帯広ば','帯広','大井','佐賀','京都']); // source untouched
 assert.equal(all.length,5,'never modify archived data');
 const loadStart=src.indexOf('function loadRaceCache(');
 const loadEnd=src.indexOf('\nfunction saveRaceCache(',loadStart);
@@ -121,3 +121,10 @@ const mergedEnd=src.indexOf('\nfunction load(',mergedStart);
 assert(src.slice(mergedStart,mergedEnd).includes('activeVenueRaces(body&&body.races)'));
 assert(src.includes('rows=activeVenueRaces(rows);'),'live fallback must filter Banei');
 console.log('APP_BANEI_EXCLUSION_CACHE_API_DIRECT_ROUTE_PASS');
+
+// A deep-link to a removed venue must normalize back to the home, not show a
+// blank venue or issue a forbidden retired-race request.
+const restoreStart=src.indexOf('function restoreLocation(');
+const restoreEnd=src.indexOf('\nfunction installNavigation(',restoreStart);
+assert(src.slice(restoreStart,restoreEnd).includes("if(isExcludedBanei({id:id,track:u.searchParams.get('track')}))"));
+console.log('BANEI_DEEP_LINK_REJECTED_PASS');
