@@ -11,7 +11,7 @@ import zipfile
 
 from arvexq.research.stage63.forward import canonical, digest
 from arvexq.research.stage64.circuits import CONFIGS
-from arvexq.research.stage64.pipeline import predict
+from arvexq.research.stage64.pipeline import predict, _public_position_tactics
 from arvexq.research.stage64.protocol import make_plan, snapshot, verify_local, freeze_batch
 from arvexq.research.stage64.witness import read_witness, verify_batch, REPO, REPO_ID, LIMIT
 from arvexq.research.stage64.evaluation import evaluate
@@ -77,10 +77,218 @@ class Pipeline(unittest.TestCase):
     def test_circuit_isolation(self):
         with self.assertRaises(ValueError):predict(race("jra"),expected_circuit="nar")
 
-    def test_no_jra_tactical_weight_transfer(self):
-        p=predict(race("jra"),expected_circuit="jra")
-        self.assertEqual(len(p["stages"]["pace"]["value"]),1)
-        self.assertEqual(len(predict(race(),expected_circuit="nar")["stages"]["pace"]["value"]),4)
+    def test_circuit_isolation_and_unverified_pace_cannot_move_ability_order(self):
+        for owner in ("jra", "nar"):
+            r=race(owner)
+            # Every horse had a recorded first-corner position, but this
+            # does not establish today's lead, an uncontested pace, or odds.
+            p=predict(r,expected_circuit=owner)
+            self.assertEqual(len(p["stages"]["pace"]["value"]),1)
+            self.assertTrue(all(v==0 for v in p["stages"]["pace"]["value"][0].values()))
+            self.assertFalse(p["paceEvidence"]["actualLeadVerified"])
+            self.assertFalse(p["paceEvidence"]["actualPaceVerified"])
+            self.assertEqual(p["stages"]["marks"]["value"]["orderedWinCandidates"][0],1)
+            self.assertEqual(p["paceEvidence"]["observedPositionProfiles"][1],"前方")
+        self.assertNotEqual(predict(race("jra"),expected_circuit="jra")["modelVersion"],
+                            predict(race(),expected_circuit="nar")["modelVersion"])
+
+    def test_central_and_local_use_distinct_prediction_methods(self):
+        expected = {
+            "jra": ("jra-visible-history", "jra-course-distance-opposition-review"),
+            "nar": ("nar-lossless-observed-career", "nar-full-career-direct-rival-review"),
+        }
+        for owner, (ability_policy, winner_policy) in expected.items():
+            p = predict(race(owner), expected_circuit=owner)
+            self.assertEqual(p["predictionMethod"]["circuit"], owner)
+            self.assertEqual(p["predictionMethod"]["abilityHistory"], ability_policy)
+            self.assertEqual(p["predictionMethod"]["winnerReview"], winner_policy)
+            self.assertEqual(p["winnerEvidenceComparison"]["method"], winner_policy)
+            self.assertEqual(set(p["stages"]),
+                             {"ability","runningStyle","pace","probability","marks","tickets"})
+            self.assertFalse(p["predictionMethod"]["unvalidatedTacticalBoostsApplied"])
+        self.assertNotEqual(CONFIGS["jra"]["abilityObservationPolicy"],
+                            CONFIGS["nar"]["abilityObservationPolicy"])
+        self.assertNotEqual(CONFIGS["jra"]["winnerReviewPolicy"],
+                            CONFIGS["nar"]["winnerReviewPolicy"])
+
+    def test_swapped_circuit_policy_is_rejected_before_marks(self):
+        for owner, other in (("jra","nar"), ("nar","jra")):
+            with patch.dict(CONFIGS[owner], {
+                "abilityObservationPolicy": CONFIGS[other]["abilityObservationPolicy"]
+            }):
+                with self.assertRaisesRegex(ValueError, "cross-circuit ability"):
+                    predict(race(owner), expected_circuit=owner)
+            with patch.dict(CONFIGS[owner], {
+                "winnerReviewPolicy": CONFIGS[other]["winnerReviewPolicy"]
+            }):
+                with self.assertRaisesRegex(ValueError, "cross-circuit winner"):
+                    predict(race(owner), expected_circuit=owner)
+
+    def test_all_front_position_does_not_fabricate_lead_competition(self):
+        r=race()
+        for h in r["horses"]:
+            h["recentRaces"][0]["passing"]=[1]
+        p=predict(r,expected_circuit="nar")
+        self.assertTrue(all(v=="前方" for v in
+                            p["paceEvidence"]["observedPositionProfiles"].values()))
+        self.assertFalse(p["paceEvidence"]["actualPaceVerified"])
+        self.assertEqual(p["stages"]["marks"]["value"]["orderedWinCandidates"][0],1)
+
+    def test_actual_same_track_distance_history_is_observational_only(self):
+        r = race()
+        r["distance"] = 1500
+        r["horses"][0]["recentRaces"][0]["distance"] = 1500
+        plain = predict(r, expected_circuit="nar")
+        r["horses"][0]["allPastRuns"] = [
+            {"date": "2026-10-20", "finish": 2, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-10", "finish": 1, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-23", "finish": 1, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-08", "finish": 1, "fieldSize": 10,
+             "track": "他場", "distance": 1500, "passing": [1]},
+        ]
+        with_full = predict(r, expected_circuit="nar")
+        evidence = with_full["paceEvidence"]["historicalCourseEvidence"][1]
+        self.assertEqual(evidence["observedStarts"], 3)
+        self.assertEqual(evidence["sameTrackDistanceStarts"], 2)
+        self.assertEqual(evidence["sameTrackDistanceWins"], 1)
+        self.assertEqual(evidence["sameTrackDistanceTop3"], 2)
+        # Evidence is additive read-only: no unvalidated ability or mark boost.
+        for stage in ("ability", "probability", "marks", "tickets"):
+            self.assertEqual(plain["stages"][stage], with_full["stages"][stage])
+
+    def test_missing_course_context_does_not_claim_no_wins(self):
+        p = predict(race(), expected_circuit="nar")
+        e = p["paceEvidence"]["historicalCourseEvidence"][1]
+        self.assertEqual(e["status"], "context-unavailable")
+        self.assertIsNone(e["sameTrackDistanceWins"])
+
+    def test_public_mineta_position_inputs_do_not_invent_a_leader(self):
+        r = race()
+        r["distance"] = 1000
+        histories = {
+            1: [{"date": "2026-10-14", "distance": 1000, "fieldSize": 8,
+                 "cornerPositions": [5, 3]}],
+            2: [{"date": "2026-10-14", "distance": 800, "fieldSize": 8,
+                 "cornerPositions": [6, 5]}],
+            3: [{"date": "2026-10-14", "distance": 1200, "fieldSize": 8,
+                 "cornerPositions": [2, 6]}],
+            4: [{"date": "2026-10-14", "distance": 1000, "fieldSize": 8,
+                 "cornerPositions": [8, 7]}],
+        }
+        evidence = _public_position_tactics(r, histories)
+        self.assertEqual(evidence["forwardIntentCandidates"], [1, 2, 3])
+        self.assertEqual(evidence["adjacentForwardIntentPairs"], [[1, 2], [2, 3]])
+        self.assertEqual(evidence["distanceExtensionCandidates"], [2])
+        self.assertEqual(evidence["distanceShorteningCandidates"], [3])
+        self.assertTrue(evidence["observedProfiles"][1]["top3PositionObserved"])
+        self.assertFalse(evidence["observedProfiles"][2]["top3PositionObserved"])
+        self.assertFalse(evidence["pacePredicted"])
+        self.assertFalse(evidence["actualLeadVerified"])
+
+    def test_unknown_prior_corner_and_not_an_imaginary_loser(self):
+        r = race()
+        histories = {
+            1: [{"date": "2026-10-14", "fieldSize": None, "passing": [1]}],
+            2: [{"date": "2026-10-14", "fieldSize": 8, "passing": []}],
+            3: [{"date": "2026-10-14", "fieldSize": 8, "passing": [4]}],
+            4: [],
+        }
+        evidence = _public_position_tactics(r, histories)
+        self.assertEqual(evidence["positionUnknown"], [1, 2, 4])
+        self.assertIsNone(evidence["observedProfiles"][1]["top3PositionObserved"])
+        self.assertEqual(evidence["forwardIntentCandidates"], [])
+        self.assertEqual(evidence["separatedForwardIntentCandidates"], [])
+        self.assertFalse(evidence["actualCompetitionVerified"])
+
+    def test_public_position_tactics_never_change_existing_win_order(self):
+        r = race()
+        r["distance"] = 1000
+        for h in r["horses"]:
+            h["recentRaces"][0]["distance"] = 800
+            h["recentRaces"][0]["passing"] = [1]
+        p = predict(r, expected_circuit="nar")
+        evidence = p["paceEvidence"]["publicPositionTactics"]
+        self.assertEqual(evidence["forwardIntentCandidates"], [1, 2, 3, 4])
+        self.assertEqual(evidence["adjacentForwardIntentPairs"],
+                         [[1, 2], [2, 3], [3, 4]])
+        self.assertEqual(p["stages"]["marks"]["value"]["orderedWinCandidates"][0], 1)
+        self.assertEqual(len(p["stages"]["pace"]["value"]), 1)
+        self.assertEqual(set(p["stages"]["pace"]["value"][0].values()), {0.0})
+
+    def test_nar_ability_reads_compatible_archived_career_but_jra_separate(self):
+        def with_old_starts(owner):
+            r=race(owner)
+            for h in r["horses"]:
+                no=h["horseNumber"]
+                h["allPastRuns"] = list(h["recentRaces"]) + [
+                    {"date":"2026-09-10", "track":"試験場", "raceNumber":1,
+                     "finish":1 if no==4 else 4, "fieldSize":4,
+                     "passing":[1 if no==4 else no]},
+                    {"date":"2026-09-01", "track":"試験場", "raceNumber":1,
+                     "finish":1 if no==4 else 4, "fieldSize":4,
+                     "passing":[1 if no==4 else no]},
+                ]
+            return r
+        nar=with_old_starts("nar")
+        old=copy.deepcopy(nar)
+        for h in old["horses"]:
+            h.pop("allPastRuns",None)
+        before=predict(old,expected_circuit="nar")
+        after=predict(nar,expected_circuit="nar")
+        self.assertEqual(before["stages"]["marks"]["value"]["orderedWinCandidates"][0],1)
+        self.assertEqual(after["stages"]["marks"]["value"]["orderedWinCandidates"][0],4)
+        self.assertEqual(after["abilityHistoryCoverage"]["fullCareerRunners"],4)
+        jra=with_old_starts("jra")
+        jra_before=predict({**jra, "horses":[
+            {k:v for k,v in h.items() if k!="allPastRuns"} for h in jra["horses"]]},
+            expected_circuit="jra")
+        jra_after=predict(jra,expected_circuit="jra")
+        self.assertEqual(jra_before["stages"]["marks"]["value"],
+                         jra_after["stages"]["marks"]["value"])
+        self.assertEqual(jra_after["abilityHistoryCoverage"]["fullCareerRunners"],0)
+
+    def test_preexisting_lossless_career_archive_recovers_older_nar_starts(self):
+        from arvexq.ingest.career_transport import pack_horse
+        r=race()
+        horse=r["horses"][0]
+        horse["recentRaces"] = [
+            {"date":f"2026-09-{day:02d}", "track":"試験場",
+             "raceNumber":1, "finish":1, "fieldSize":4, "passing":[1]}
+            for day in (19,17,15,13,11,9,7,5)
+        ]
+        horse["allPastRuns"]=list(horse["recentRaces"])
+        expected=predict(r, expected_circuit="nar")
+        packed=pack_horse(horse, r["date"])
+        self.assertGreater(packed["careerTransport"]["observedRuns"],5)
+        packed.pop("allPastRuns")
+        r["horses"][0]=packed
+        recovered=predict(r, expected_circuit="nar")
+        self.assertEqual(recovered["abilityHistoryCoverage"]["fullCareerRunners"],1)
+        self.assertEqual(expected["stages"]["ability"]["value"][1],
+                         recovered["stages"]["ability"]["value"][1])
+        self.assertEqual(len(packed["recentRaces"]),5)
+        # A corrupt sidecar is never accepted as verified observation.
+        r["horses"][0]=copy.deepcopy(packed)
+        r["horses"][0]["careerArchive"]["sha256"]="0"*64
+        fallback=predict(r, expected_circuit="nar")
+        self.assertEqual(fallback["abilityHistoryCoverage"]["fullCareerRunners"],0)
+
+    def test_incompatible_or_future_archived_runs_do_not_override_recent(self):
+        r=race()
+        base=predict(r,expected_circuit="nar")
+        r["horses"][0]["allPastRuns"] = [
+            {"date":"2026-09-01","track":"試験場","raceNumber":1,
+             "finish":4,"fieldSize":4,"passing":[4]},
+            {"date":"2026-10-22","track":"試験場","raceNumber":1,
+             "finish":1,"fieldSize":4,"passing":[1]},
+        ]
+        out=predict(r,expected_circuit="nar")
+        self.assertEqual(base["stages"]["marks"]["value"],
+                         out["stages"]["marks"]["value"])
+        self.assertEqual(out["abilityHistoryCoverage"]["fullCareerRunners"],0)
 
     def test_status_only_scratch(self):
         r=race();r["horses"][0]["status"]="競走除外"
@@ -221,6 +429,24 @@ class Scoring(unittest.TestCase):
         self.assertEqual(m["trifectaHits"],1)
         self.assertEqual(m["roiPct"],200.)
         self.assertFalse(report["independentlyVerifiedPreoff"])
+
+    def test_honmei_top3_counts_first_second_and_third_distinctly(self):
+        for order, first_hit, top3_hit in (
+            ([1, 2, 3], True, True),
+            ([2, 1, 3], False, True),
+            ([2, 3, 1], False, True),
+            ([2, 3, 4], False, False),
+        ):
+            self.results[0]["orders"] = [order]
+            self.results[0]["payouts"] = None
+            report=evaluate(self.batch,self.results)
+            row=next(r for r in report["rows"] if r["arm"]=="baseline")
+            m=report["byCircuit"]["nar"]["baseline"]
+            self.assertEqual(row["winnerTop1"], first_hit)
+            self.assertEqual(row["honmeiTop3Hit"], top3_hit)
+            self.assertEqual(m["honmeiTop3Hits"], int(top3_hit))
+            self.assertEqual(m["honmeiTop3RateScored"], float(top3_hit))
+            self.assertEqual(m["honmeiTop3RateAllCohort"], float(top3_hit))
 
     def test_missing_payout_unknown_roi(self):
         self.results[0]["payouts"][0]["amount"]=None

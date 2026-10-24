@@ -47,50 +47,139 @@ def _preoff(facts, now):
 
 
 def _stage64_pace_text(race, prediction):
-    """Explain the same six-stage estimate; never run a second predictor.
+    """Explain observed early positions without claiming a proven race pace.
 
-    Tactical emphasis follows the *publicly described* pace/position approach.
-    The model still uses uncalibrated hypothetical scenarios and must say so.
+    The earlier forward/closer scenario prose treated unsupported corrections
+    as if they were tactical evidence. Never label early position as a
+    guaranteed lead or invent certainty about a pace battle.
     """
     stages = prediction["stages"]
-    styles = stages["runningStyle"]["value"] or {}
-    deltas = stages["pace"]["value"] or []
+    evidence = prediction.get("paceEvidence") or {}
     marks = stages["marks"]["value"] or {}
     ranked = marks.get("orderedWinCandidates") or []
     horses = {h["horseNumber"]: h for h in race["horses"]}
     if not ranked:
         return ""
+
     def name(no):
         return str(horses.get(no, {}).get("name") or f"{no}番")
-    leader = ranked[0]
-    front = sorted(
-        (no for no, style in styles.items()
-         if isinstance(style, (tuple, list)) and len(style) == 4),
-        key=lambda no: (-(styles[no][0] + styles[no][1]), no))
-    parts = [
-        "前走の初角位置・脚質と近走着順を別々に確認し、"
-        "同一の展開仮説から勝ち候補・印・買い目を求める。",
-        f"勝ち候補の先頭は{name(leader)}。"
-        "この順位は未校正のモデル推定で、的中率を保証しない。"
+
+    policy = prediction.get("predictionMethod") or {}
+    if policy.get("circuit") == "jra":
+        method_text = (
+            "中央競馬方式：近走の出走成績を能力判断の基準にし、"
+            "コース・距離・相手関係・着差と位置取りを検討する。"
+            "地方の全過去走判定は流用しない。"
+        )
+    elif policy.get("circuit") == "nar":
+        coverage = prediction.get("abilityHistoryCoverage") or {}
+        full = coverage.get("fullCareerRunners", 0)
+        method_text = (
+            "地方競馬方式：保存済みの全過去走と直近走が整合する馬"
+            + (f"{full}頭" if full else "がないため")
+            + ("では長期の能力・脚質・相手との直接対戦を確認する。"
+               if full else "確認できる近走だけで判断する。")
+            + "中央の近走限定方式は流用しない。"
+        )
+    else:
+        method_text = "予想方法の区分が未確認。"
+    profiles = evidence.get("observedPositionProfiles") or {}
+    early = [no for no in (evidence.get("earlyPositionObservedOrder") or [])
+             if profiles.get(no) in {"前方", "好位"}]
+    pieces = [
+        method_text,
+        "過去の着順から能力を確認し、初角位置は観測された脚質傾向として別に読む。",
+        f"現在の◎候補は{name(ranked[0])}。"
+        "これは能力評価を基準とした暫定候補であり、的中率を保証しない。",
     ]
-    if front:
-        parts.append("過去の位置取りから前方に運ぶ傾向が強い候補は"
-                     + "、".join(name(no) for no in front[:3]) + "。")
-    labels = ("標準隊列", "前争いの影響", "前方有利の想定", "後方浮上の想定")
-    for index, case in enumerate(deltas):
-        if not isinstance(case, dict):
-            continue
-        favored = sorted(
-            ((no, float(delta)) for no, delta in case.items() if delta > 0),
-            key=lambda row: (-row[1], row[0]))
-        if index == 0:
-            parts.append(f"展開仮説{index + 1}（{labels[0]}）を比較対象にする。")
-        elif favored:
-            parts.append(f"展開仮説{index + 1}（{labels[index] if index < len(labels) else '別想定'}）で"
-                         + "補正上位は" + "、".join(name(no) for no, _ in favored[:3]) + "。")
-    parts.append("各仮説の発生頻度と予測勝率の実測校正は未完了。"
-                 "印と買い目は同じStage64の推定分布から選ぶ。")
-    return "".join(parts)
+    if early:
+        pieces.append(
+            "初角で前方に位置した観測傾向がある馬は"
+            + "、".join(name(no) for no in early[:3]) + "。"
+            "前方にいたことと今回逃げることは同義ではない。"
+        )
+    public = evidence.get("publicPositionTactics") or {}
+    if public:
+        profiles = public.get("observedProfiles") or {}
+        observed_top3 = [
+            no for no, item in profiles.items()
+            if item.get("top3PositionObserved") is True
+        ]
+        if observed_top3:
+            pieces.append("前走の通過順位で3番手以内を記録した馬は"
+                          + "、".join(name(no) for no in observed_top3) + "。")
+        extended = public.get("distanceExtensionCandidates") or []
+        shortened = public.get("distanceShorteningCandidates") or []
+        if extended:
+            pieces.append("前走から距離延長は" + "、".join(name(no) for no in extended)
+                          + "。前進意識の可能性を確認する対象。")
+        if shortened:
+            pieces.append("前走から距離短縮は" + "、".join(name(no) for no in shortened)
+                          + "。前走の位置取りだけで先行と決めない。")
+        adjacency = public.get("adjacentForwardIntentPairs") or []
+        if adjacency:
+            pieces.append("先行意識の候補が馬番で隣り合う組は"
+                          + "、".join(name(a) + "と" + name(b) for a, b in adjacency)
+                          + "。実際に競るとは限らない。")
+        if public.get("positionUnknown"):
+            pieces.append("前走位置取りが未確認の馬は"
+                          + "、".join(name(no) for no in public["positionUnknown"])
+                          + "。不明を後方脚質として扱わない。")
+    course = evidence.get("historicalCourseEvidence") or {}
+    # Factual course/distance observations explain where the tentative
+    # winner choice may be vulnerable; they do NOT alter marks or probability.
+    observed = []
+    for no in ranked[:5]:
+        record = course.get(no) or {}
+        starts = record.get("sameTrackDistanceStarts")
+        wins = record.get("sameTrackDistanceWins")
+        if isinstance(starts, int) and starts > 0 and isinstance(wins, int) and wins:
+            observed.append(f"{name(no)}は同場・同距離で確認できた{starts}走中{wins}勝")
+    if observed:
+        pieces.append("同場・同距離の過去実績："
+                      + "、".join(observed) + "。"
+                      "過去の勝利記録は今回の勝利保証ではない。")
+    holistic = evidence.get("holisticWinnerEvidence") or {}
+    horses_facts = holistic.get("byHorse") or {}
+    if ranked:
+        first = ranked[0]
+        f = horses_facts.get(first) or {}
+        relevant = []
+        margin = f.get("sameTrackDistanceMarginSeconds")
+        margin_samples = f.get("sameTrackDistanceMarginSamples") or 0
+        if margin is not None and margin_samples:
+            relevant.append("同場同距離の過去着差%s秒（%d走）" %
+                            (margin, margin_samples))
+        opponent = f.get("opponentLevelMedian")
+        if opponent is not None and f.get("opponentLevelSamples"):
+            relevant.append("相手水準の観測%d走" % f["opponentLevelSamples"])
+        reaction = f.get("individualGateReactionMedian")
+        if reaction is not None and f.get("individualGateReactionSamples"):
+            relevant.append("個別スタート反応の記録%d走" %
+                            f["individualGateReactionSamples"])
+        if relevant:
+            pieces.append(name(first) + "の過去の根拠は" + "、".join(relevant)
+                          + "。条件の異なる時計は直接比較しない。")
+    rematch = (prediction.get("winnerEvidenceComparison") or {}).get(
+        "proposedHeadToHeadResearchChallenger")
+    if rematch:
+        count = rematch["sharedPastRacesWon"]
+        pieces.append("過去の直接対戦では" + name(rematch["horseNumber"])
+                      + "が" + name(rematch["otherHorseNumber"])
+                      + f"に{count}回先着。研究段階の逆転候補であり◎変更には未採用。")
+    first_corner = holistic.get("firstCorner")
+    if first_corner is not None:
+        pieces.append("公式記録に基づく初角までの距離は"
+                      + str(first_corner["meters"]) + "m。")
+    else:
+        pieces.append("公式根拠付きの初角までの距離は未取得。推測で内外有利を断定しない。")
+    pieces.append(
+        "枠順・発馬・騎手の選択・出走馬同士の競り合いを確認しない限り、"
+        "単騎逃げ・ハイペース・差し有利とは断定せず、"
+        "根拠のない展開補正で能力上位馬を印から外さない。"
+        "複数予想家の根拠融合・AIの独立検証・確率校正は未完了。"
+    )
+    return "".join(pieces)
 
 
 def build_prediction(facts, now=None):

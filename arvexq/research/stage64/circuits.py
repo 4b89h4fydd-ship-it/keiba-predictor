@@ -1,9 +1,13 @@
 """Separately registered circuit baselines, with no fitted weight transfer."""
 CONFIGS = {
     "jra": {"version":"jra-flat-shadow-v1","pace":"neutral",
-            "ability":"baseline","temperature":1.0,"styleWindow":None},
-    "nar": {"version":"nar-flat-shadow-v1","pace":"four",
-            "ability":"baseline","temperature":1.0,"styleWindow":None},
+            "ability":"baseline","temperature":1.0,"styleWindow":None,
+            "abilityObservationPolicy":"jra-visible-history",
+            "winnerReviewPolicy":"jra-course-distance-opposition-review"},
+    "nar": {"version":"nar-flat-shadow-v2-observed-career","pace":"four",
+            "ability":"baseline","temperature":1.0,"styleWindow":None,
+            "abilityObservationPolicy":"nar-lossless-observed-career",
+            "winnerReviewPolicy":"nar-full-career-direct-rival-review"},
 }
 
 

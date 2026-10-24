@@ -39,14 +39,42 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
     for circuit in ("中央", "地方"):
         prediction = build_prediction(race(circuit), now=NOW)
         assert prediction["predictionStatus"] == "ready"
-        assert prediction["stage64ModelVersion"] in {"jra-flat-shadow-v1", "nar-flat-shadow-v1"}
+        assert prediction["stage64ModelVersion"] == (
+            "jra-flat-shadow-v1" if circuit == "中央"
+            else "nar-flat-shadow-v2-observed-career"
+        )
         assert len(generate_marks(prediction)) == 5
         assert {x["mark"] for x in generate_marks(prediction)} == {"◎", "○", "▲", "△", "☆"}
         items = generate_tickets(prediction, generate_marks(prediction))
         assert 1 <= sum(x["points"] for x in items) <= 5
         assert 1 <= sum(len(x["combos"]) for x in items) <= 5
         assert len(prediction["stages"]) == 6
-        assert len(prediction["stages"]["pace"]["value"]) == (1 if circuit == "中央" else 4)
+        assert len(prediction["stages"]["pace"]["value"]) == 1
+        assert prediction["paceEvidence"]["actualPaceVerified"] is False
+        assert "単騎逃げ・ハイペース・差し有利とは断定せず" in prediction["forecastText"]
+        if circuit == "中央":
+            assert "中央競馬方式：" in prediction["forecastText"]
+            assert "地方競馬方式：" not in prediction["forecastText"]
+        else:
+            assert "地方競馬方式：" in prediction["forecastText"]
+            assert "中央競馬方式：" not in prediction["forecastText"]
+
+
+def test_course_history_is_explained_without_changing_public_marks():
+    detail = race("地方")
+    detail["distance"] = 1500
+    detail["horses"][0]["allPastRuns"] = [
+        {"date": "2026-10-15", "finish": 1, "fieldSize": 10,
+         "track": "大井", "distance": 1500, "passing": [1]},
+    ]
+    original = deepcopy(detail)
+    p = build_prediction(detail, now=NOW)
+    e = p["paceEvidence"]["historicalCourseEvidence"][1]
+    assert e["sameTrackDistanceStarts"] == 1
+    assert e["sameTrackDistanceWins"] == 1
+    assert "同場・同距離で確認できた1走中1勝" in p["forecastText"]
+    assert generate_marks(p)[0]["horseNumber"] == 1
+    assert detail == original
 
 
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
@@ -285,8 +313,8 @@ def test_stage64_outputs_share_one_prediction_and_pace_explanation():
     assert model["forecastText"] == forecast
     assert model["modelVersion"] == published["predictionModelVersion"]
     assert str(marks[0]["horseNumber"]) in forecast
-    assert "前走" in forecast and "展開仮説" in forecast
-    assert "未校正" in forecast
+    assert "初角位置" in forecast and "逃げることは同義ではない" in forecast
+    assert "確率校正は未完了" in forecast
     selected = {n for item in tickets for pair in item["combos"] for n in pair}
     assert selected.issubset({m["horseNumber"] for m in marks})
     assert len(model["stages"]) == 6
@@ -312,3 +340,21 @@ def test_saved_preoff_ticket_publication_uses_five_points_without_changing_archi
     assert 1 <= sum(len(x["combos"]) for x in projected["recommendedBets"]) <= 5
     assert original == archive
     assert original["recommendedBets"] != projected["recommendedBets"]
+
+
+def test_unsupported_front_competition_is_not_invented_in_either_circuit():
+    for owner in ("中央", "地方"):
+        p = build_prediction(race(owner), now=NOW)
+        assert p is not None
+        stages = p["stages"]
+        evidence = p["paceEvidence"]
+        assert evidence["source"] == "preoff-prior-first-corner-observations"
+        assert evidence["actualLeadVerified"] is False
+        assert evidence["actualPaceVerified"] is False
+        assert evidence["scenarioOccurrenceCalibrated"] is False
+        assert evidence["aiEnsembleTrained"] is False
+        assert stages["pace"]["model"] == "no-unsupported-tactical-boost"
+        assert len(stages["pace"]["value"]) == 1
+        assert all(delta == 0 for delta in stages["pace"]["value"][0].values())
+        assert set(stages) == {"ability","runningStyle","pace","probability","marks","tickets"}
+        assert set(stages["pace"]["value"][0]) == set(stages["ability"]["value"])

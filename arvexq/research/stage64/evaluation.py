@@ -19,6 +19,7 @@ def summarize(rows):
     brier=[r["brier"] for r in scored if r["brier"] is not None]
     hits=sum(r["trifectaHit"] for r in scored)
     top1=sum(r["winnerTop1"] for r in scored)
+    honmei_top3=sum(r["honmeiTop3Hit"] for r in scored)
     top3=sum(r["winnerTop3"] for r in scored)
     axis=sum(r["axisTop3Hit"] for r in scored)
     largest=sorted(scored,key=lambda r:r["returnYen"] or 0,reverse=True)[:2]
@@ -28,6 +29,9 @@ def summarize(rows):
             "scoredDates":len({r["date"] for r in scored}),
             "coverage":n/total if total else None,
             "winnerTop1Hits":top1,"winnerTop3Hits":top3,"axisTop3Hits":axis,
+            "honmeiTop3Hits":honmei_top3,
+            "honmeiTop3RateScored":honmei_top3/n if n else None,
+            "honmeiTop3RateAllCohort":honmei_top3/total if total else None,
             "trifectaHits":hits,"trifectaHitRateScored":hits/n if n else None,
             "trifectaHitRateAllCohort":hits/total if total else None,
             "meanLogloss":statistics.mean(loss) if loss else None,
@@ -88,7 +92,7 @@ def evaluate(batch, results, *, independently_verified=False):
             tickets=p["stages"]["tickets"]["value"]
             record={"raceId":snap["raceId"],"circuit":snap["circuit"],"date":snap["input"]["date"],
                     "arm":arm,"scored":tickets is not None,"winnerTop1":False,
-                    "winnerTop3":False,"axisTop3Hit":False,"trifectaHit":False,
+                    "winnerTop3":False,"honmeiTop3Hit":False,"axisTop3Hit":False,"trifectaHit":False,
                     "logloss":None,"brier":None,"stakeYen":0,"returnYen":None}
             if tickets is not None:
                 combos=[tuple(c) for c in tickets["hypotheticalTrifectaTop10"]]
@@ -98,6 +102,7 @@ def evaluate(batch, results, *, independently_verified=False):
                 rank=sorted(win,key=lambda n:(-win[n],n))
                 axis=p["stages"]["marks"]["value"]["axisRole"]["horseNumber"]
                 record.update(winnerTop1=rank[0] in winners,
+                              honmeiTop3Hit=any(rank[0] in o for o in orders),
                               winnerTop3=bool(set(rank[:3])&winners),
                               axisTop3Hit=any(axis in o for o in orders),
                               trifectaHit=bool(set(combos)&actuals),
