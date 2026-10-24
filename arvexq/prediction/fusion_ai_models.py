@@ -45,7 +45,10 @@ def _labels(detail):
 
 def _evidence(detail):
     rows = race_evidence(detail, scenario="usual")
-    if len(rows) < 5 or any(not r.get("observedStarts") for r in rows):
+    # A true debutant is represented by unknown historical features.
+    # The separate Bayes learner trains the missing category from real prior
+    # debutant winners/losers; no fake race history is constructed.
+    if len(rows) < 5:
         raise ValueError("complete preoff prior-run AI evidence required")
     nos = [r.get("horseNumber") for r in rows]
     if len(set(nos)) != len(nos) or any(type(no) is not int or no <= 0 for no in nos):
@@ -198,7 +201,7 @@ def fit_two_ais(details, *, circuit, target_date, min_races=30):
     eligible = [d for d in details if d.get("circuit")==circuit and
                 str(d.get("date") or "") < target_date and
                 (d.get("result") or {}).get("status")=="確定"]
-    logistic = fit_model(eligible, circuit=circuit)
+    logistic = fit_model(eligible, circuit=circuit, allow_missing_starts=True)
     bayes = fit_bayes(eligible, circuit=circuit,
                       target_date=target_date, min_races=min_races)
     if logistic["training"]["lastDate"] >= target_date:
