@@ -231,7 +231,29 @@ def predict(race, *, expected_circuit, ability_method=None):
         "otherExpertFeaturesVerified": False,
         "aiEnsembleTrained": False,
     }
-    result["paceEvidence"]["holisticWinnerEvidence"] = holistic_evidence(race, histories, active)
+    # Use the existing lossless full-career lane for historical comparison
+    # where it genuinely contains the current recent-run cohort. Avoid
+    # replacing newer observed runs with an incomplete older archive.
+    holistic_histories = dict(histories)
+    for horse in active:
+        no = horse["horseNumber"]
+        archived = horse.get("allPastRuns")
+        if not isinstance(archived, list) or not archived:
+            continue
+        try:
+            extended = prior_runs({"recentRaces": archived}, race["date"])
+        except ValueError:
+            continue
+        if not all(discipline(run) == discipline(race) for run in extended):
+            continue
+        def prior_identity(run):
+            return (run.get("_raceDate") or run.get("date"),
+                    run.get("track"), run.get("raceNumber"))
+        extended_ids = {prior_identity(run) for run in extended}
+        if extended and all(prior_identity(run) in extended_ids for run in histories[no]):
+            holistic_histories[no] = extended
+    result["paceEvidence"]["holisticWinnerEvidence"] = holistic_evidence(
+        race, holistic_histories, active)
     stages["pace"] = {
         "status": "observed-position-only-pace-unverified",
         "value": deltas, "scenarioWeightsVerified": False,
