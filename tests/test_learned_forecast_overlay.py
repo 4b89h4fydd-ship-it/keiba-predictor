@@ -4,6 +4,42 @@ from scripts.arvexq_apply_learned_overlay import apply
 
 
 class OverlayTests(unittest.TestCase):
+    def test_no_postoff_replacement_of_persisted_prediction(self):
+        race = {
+            'id': 'jra-2026-10-24-新潟-09', 'date': '2026-10-24',
+            'circuit': '中央', 'startTime': '14:15',
+            'predictionStatus': 'ready',
+            'predictionModelVersion': 'previous-observed-research',
+            'preRacePrediction': {'frozen': True, 'sealRevision': 'immutable'},
+            'predictionMarks': [{'horseNumber': 1, 'mark': '◎'}],
+            'horses': [{'horseNumber': 1, 'name': 'preserved'}],
+        }
+        model = {'中央': {'training': {'lastDate': '2026-10-23'}}}
+        with patch('scripts.arvexq_apply_learned_overlay.may_create_prerace_prediction',
+                   return_value=False), \
+                patch('scripts.arvexq_apply_learned_overlay.build_forecast',
+                      side_effect=AssertionError('post-off forecast generated')) as build:
+            payload, report = apply({'details': [race]}, model)
+            build.assert_not_called()
+        self.assertEqual(payload['details'][0], race)
+        self.assertEqual(report['overlaid'], [])
+        self.assertEqual(report['skipped'][race['id']], 'post-off-original-preserved')
+
+    def test_future_race_continues_approved_overlay_policy(self):
+        race = {'id': 'jra-2026-10-25-東京-09', 'date': '2026-10-25',
+                'circuit': '中央', 'startTime': '14:15'}
+        model = {'中央': {'training': {'lastDate': '2026-10-24'}}}
+        with patch('scripts.arvexq_apply_learned_overlay.may_create_prerace_prediction',
+                   return_value=True), \
+                patch('scripts.arvexq_apply_learned_overlay.build_forecast',
+                      return_value={'id':race['id'], 'recommendedBetPlan': {'items': []},
+                                    'predictionModelVersion': 'research-learned'}) as build:
+            payload, report = apply({'details': [race]}, model)
+            build.assert_called_once()
+        self.assertEqual(report['overlaid'], [race['id']])
+        self.assertEqual(payload['details'][0]['predictionModelVersion'],
+                         'research-learned')
+
     def test_new_forecast_preserves_original_and_does_not_publish_unverified_tickets(self):
         detail = {'id': 'race-1', 'date': '2026-10-18', 'circuit': '中央',
                   'preRacePrediction': {'frozen': True, 'horses': [1]},
