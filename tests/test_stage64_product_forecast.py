@@ -46,7 +46,9 @@ def test_jra_and_nar_are_separate_and_publish_all_six_products():
         assert 1 <= sum(x["points"] for x in items) <= 5
         assert 1 <= sum(len(x["combos"]) for x in items) <= 5
         assert len(prediction["stages"]) == 6
-        assert len(prediction["stages"]["pace"]["value"]) == 4
+        assert len(prediction["stages"]["pace"]["value"]) == 1
+        assert prediction["paceEvidence"]["actualPaceVerified"] is False
+        assert "単騎逃げ・ハイペース・差し有利とは断定せず" in prediction["forecastText"]
 
 
 def test_public_projection_contains_prediction_marks_and_bets_without_mutating_input():
