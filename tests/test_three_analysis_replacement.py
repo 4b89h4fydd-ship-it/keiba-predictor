@@ -104,6 +104,25 @@ class NewMethodTests(unittest.TestCase):
             self.assertIsNone(build_prediction(race,now=datetime(2098,12,1,tzinfo=ZoneInfo("Asia/Tokyo"))))
             load_model.assert_not_called()
 
+    def test_official_daily_odds_gate_preserves_forecast_and_requires_rights(self):
+        from arvexq.forecast.engine import build_prediction
+        from unittest.mock import patch as mocked
+        race=sample()
+        quote={"kind":"3連単","horses":[1,2,3],"odds":21.0}
+        before=datetime(2098,12,1,tzinfo=ZoneInfo("Asia/Tokyo"))
+        with mocked("arvexq.forecast.engine.load_model",return_value=model()), \
+             mocked("arvexq.forecast.engine.predict",return_value={"predictionStatus":"ready"}) as calc, \
+             mocked("arvexq.databanks.nar_official_csv.preoff_three_way_odds",return_value=[quote]) as odds:
+            with mocked.dict("os.environ",{"ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES":"/tmp/local.zip"},clear=True):
+                build_prediction(race,now=before)
+                odds.assert_not_called()
+                self.assertIsNone(calc.call_args.kwargs["quoted_odds"])
+            with mocked.dict("os.environ",{"ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES":"/tmp/local.zip",
+                                           "ARVEXQ_NAR_ODDS_USAGE_AUTHORIZED":"1"},clear=True):
+                build_prediction(race,now=before)
+                odds.assert_called_once()
+                self.assertEqual(calc.call_args.kwargs["quoted_odds"],[quote])
+
     def test_missing_model_does_not_restore_retired_products(self):
         race=sample()
         race["predictionStatus"]="ready"
