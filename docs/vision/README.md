@@ -5,24 +5,24 @@ validated race-horse recognition or live forecast integration.
 
 ## Run
 
-Create a licensed local race video \`race.mp4\`, local horse-detection weights
-\`horse-detector.pt\` (COCO horse class 17), and a reviewed configuration file.
+Create a licensed local race video `race.mp4`, local horse-detection weights
+`horse-detector.pt` (COCO horse class 17), and a reviewed configuration file.
 Do **not** download or redistribute third-party footage without permission.
 
-\`\`\`sh
+```sh
 python -m pip install -r requirements-vision.txt
 python scripts/arvexq_video_analyze.py \
   --video race.mp4 \
   --weights horse-detector.pt \
   --config race-video.json \
   --output race-evidence.json
-\`\`\`
+```
 
-Example \`race-video.json\` (the horse tracker IDs are **illustrative only**;
+Example `race-video.json` (the horse tracker IDs are **illustrative only**;
 a reviewer must replace the identity mappings with actual verified footage
 evidence before claiming horse-level observations):
 
-\`\`\`json
+```json
 {
   "raceId": "nar-2026-10-25-園田-01",
   "raceDate": "2026-10-25",
@@ -34,7 +34,11 @@ evidence before claiming horse-level observations):
     "reviewed": true,
     "coordinateSystem": "ground-plane-meters",
     "source": "surveyed reference points independently confirmed for each source camera",
-    "homography": [[1,0,0],[0,1,0],[0,0,1]]
+    "homographies": {
+      "camera-0": [[1,0,0],[0,1,0],[0,0,1]],
+      "camera-1": [[1,0,0],[0,1,0],[0,0,1]],
+      "camera-2": [[1,0,0],[0,1,0],[0,0,1]]
+    }
   },
   "verifiedIdentityMap": {
     "camera-0": {
@@ -43,15 +47,16 @@ evidence before claiming horse-level observations):
     }
   }
 }
-\`\`\`
+```
 
 **Important:** identity IDs above and the identity homography are placeholders,
 NOT usable horse observations; ground-plane calibration MUST use measured
-control points in actual metres. The current processor assumes **one reviewed
-homography** applies to all camera segments. Footage that switches viewpoints
-must first be split into uniform-camera clips or use an explicit reviewed
-per-camera transform in a future implementation. Declared camera cuts ensure
-tracks are never interpolated across camera transitions.
+control points in actual metres. The processor requires **one independently reviewed homography for each
+camera segment** when the footage changes viewpoints. The matrix shown above
+is deliberately a placeholder, not valid course calibration. If a camera
+switch occurs without a corresponding measured matrix, the analysis rejects
+the input. Declared camera cuts also ensure tracks are never interpolated
+across camera transitions.
 
 The recorded tracking source includes SHA256 checksums for the actual video
 and model weights. Unknown tracker IDs remain unassigned, as do horses hidden
@@ -66,7 +71,7 @@ No forecast marks or buy tickets are changed by this command.
 - Checked calibration and pace/position alignment against official sectional
   and track records where available.
 - Date-split central and local forecasting tests, video-on vs video-off,
-  showing \`◎\` win/top-3 calibration and **actual payout-based** trio and
+  showing `◎` win/top-3 calibration and **actual payout-based** trio and
   trifecta return with missing source disclosures.
 - Only promote genuinely observed and statistically useful features. An
   inferred event is never labelled as observed, and no unverified revenue
