@@ -218,6 +218,32 @@ class Pipeline(unittest.TestCase):
                          jra_after["stages"]["marks"]["value"])
         self.assertEqual(jra_after["abilityHistoryCoverage"]["fullCareerRunners"],0)
 
+    def test_preexisting_lossless_career_archive_recovers_older_nar_starts(self):
+        from arvexq.ingest.career_transport import pack_horse
+        r=race()
+        horse=r["horses"][0]
+        horse["recentRaces"] = [
+            {"date":f"2026-09-{day:02d}", "track":"試験場",
+             "raceNumber":1, "finish":1, "fieldSize":4, "passing":[1]}
+            for day in (19,17,15,13,11,9,7,5)
+        ]
+        horse["allPastRuns"]=list(horse["recentRaces"])
+        expected=predict(r, expected_circuit="nar")
+        packed=pack_horse(horse, r["date"])
+        self.assertGreater(packed["careerTransport"]["observedRuns"],5)
+        packed.pop("allPastRuns")
+        r["horses"][0]=packed
+        recovered=predict(r, expected_circuit="nar")
+        self.assertEqual(recovered["abilityHistoryCoverage"]["fullCareerRunners"],1)
+        self.assertEqual(expected["stages"]["ability"]["value"][1],
+                         recovered["stages"]["ability"]["value"][1])
+        self.assertEqual(len(packed["recentRaces"]),5)
+        # A corrupt sidecar is never accepted as verified observation.
+        r["horses"][0]=copy.deepcopy(packed)
+        r["horses"][0]["careerArchive"]["sha256"]="0"*64
+        fallback=predict(r, expected_circuit="nar")
+        self.assertEqual(fallback["abilityHistoryCoverage"]["fullCareerRunners"],0)
+
     def test_incompatible_or_future_archived_runs_do_not_override_recent(self):
         r=race()
         base=predict(r,expected_circuit="nar")
