@@ -79,13 +79,23 @@ def _validated_config(config: dict[str, Any]) -> tuple[list[int], list[float], d
             or calibration.get("coordinateSystem") != "ground-plane-meters"
             or not str(calibration.get("source") or "").strip()):
         raise ValueError("independently reviewed surveyed calibration required")
-    project_ground(0, 0, calibration.get("homography"))
     raw_cuts = config.get("cameraCutsSeconds") or []
     if not isinstance(raw_cuts, list):
         raise ValueError("camera cuts must be a list")
     cuts = [_number(t) for t in raw_cuts]
     if any(t <= 0 for t in cuts) or cuts != sorted(set(cuts)):
         raise ValueError("camera cuts must be sorted unique positive times")
+    transforms = calibration.get("homographies")
+    if cuts or transforms is not None:
+        if not isinstance(transforms, dict):
+            raise ValueError("each camera segment requires its own reviewed homography")
+        required = {f"camera-{i}" for i in range(len(cuts) + 1)}
+        if set(transforms) != required:
+            raise ValueError("reviewed homography required for every camera segment")
+        for matrix in transforms.values():
+            project_ground(0, 0, matrix)
+    else:
+        project_ground(0, 0, calibration.get("homography"))
     identity_map = config.get("verifiedIdentityMap") or {}
     if not isinstance(identity_map, dict):
         raise ValueError("reviewed segment identities must be a mapping")
@@ -206,8 +216,10 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
                 if no in seen:
                     raise ValueError("conflicting track mapping for a horse")
                 seen.add(no)
-                ground_x, ground_y = project_ground(pixel_x, pixel_y,
-                    config["calibration"]["homography"])
+                transforms = config["calibration"].get("homographies")
+                matrix = (transforms[camera] if transforms is not None
+                          else config["calibration"]["homography"])
+                ground_x, ground_y = project_ground(pixel_x, pixel_y, matrix)
                 detections.append({
                     "horseNumber": no, "xMeters": ground_x, "yMeters": ground_y,
                     "visible": True, "identityConfidence": 1.0,
