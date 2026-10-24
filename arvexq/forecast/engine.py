@@ -119,6 +119,39 @@ def _stage64_pace_text(race, prediction):
         pieces.append("同場・同距離の過去実績："
                       + "、".join(observed) + "。"
                       "過去の勝利記録は今回の勝利保証ではない。")
+    holistic = evidence.get("holisticWinnerEvidence") or {}
+    horses_facts = holistic.get("byHorse") or {}
+    if ranked:
+        first = ranked[0]
+        f = horses_facts.get(first) or {}
+        relevant = []
+        margin = f.get("sameTrackDistanceMarginSeconds")
+        margin_samples = f.get("sameTrackDistanceMarginSamples") or 0
+        if margin is not None and margin_samples:
+            relevant.append("同場同距離の過去着差%s秒（%d走）" %
+                            (margin, margin_samples))
+        opponent = f.get("opponentLevelMedian")
+        if opponent is not None and f.get("opponentLevelSamples"):
+            relevant.append("相手水準の観測%d走" % f["opponentLevelSamples"])
+        reaction = f.get("individualGateReactionMedian")
+        if reaction is not None and f.get("individualGateReactionSamples"):
+            relevant.append("個別スタート反応の記録%d走" %
+                            f["individualGateReactionSamples"])
+        if relevant:
+            pieces.append(name(first) + "の過去の根拠は" + "、".join(relevant)
+                          + "。条件の異なる時計は直接比較しない。")
+    rematch = (prediction.get("winnerEvidenceComparison") or {}).get(
+        "proposedHeadToHeadResearchChallenger")
+    if rematch:
+        pieces.append("過去の直接対戦では" + name(rematch["horseNumber"])
+                      + "が" + name(rematch["otherHorseNumber"])
+                      + "に複数回先着。研究段階の逆転候補であり◎変更には未採用。")
+    first_corner = holistic.get("firstCorner")
+    if first_corner is not None:
+        pieces.append("公式記録に基づく初角までの距離は"
+                      + str(first_corner["meters"]) + "m。")
+    else:
+        pieces.append("公式根拠付きの初角までの距離は未取得。推測で内外有利を断定しない。")
     pieces.append(
         "枠順・発馬・騎手の選択・出走馬同士の競り合いを確認しない限り、"
         "単騎逃げ・ハイペース・差し有利とは断定せず、"
