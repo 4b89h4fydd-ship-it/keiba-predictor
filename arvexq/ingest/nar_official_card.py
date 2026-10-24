@@ -49,7 +49,7 @@ def _official_banei_rows(soup, detail, clean):
                 if "odds_weight" not in (cell.get("class") or []):
                     continue
                 candidate = clean(cell.get_text(" ", strip=True))
-                m = re.fullmatch(r"(\d{3,4})\s*(?:kg)?\s*\\(([+-]?\d+)\\)", candidate)
+                m = re.fullmatch(r"(\d{3,4})\s*(?:kg)?\s*\(([+-]?\d+)\)", candidate)
                 if m:
                     body, change = observed_body_weight(
                         [m.group(1) + " (" + m.group(2) + ")"], "", 0, -1, banei=True,
