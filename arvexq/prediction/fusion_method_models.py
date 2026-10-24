@@ -87,8 +87,10 @@ def observed_buckets(detail):
     for horse in horses:
         no = horse["horseNumber"]
         analysis = analyze_past_performance(horse, detail)
-        if not analysis["datedRuns"]:
-            raise ValueError("at least one dated prior start required for each runner")
+        # A real debutant has zero earlier starts, not a failed roster.
+        # Its form and course buckets are explicitly "unknown"/zero-observed;
+        # historical debutants train the corresponding prior probabilities.
+        # Never invent a previous performance just to force five marks.
         for method in METHODS:
             out[method][no] = _bucket(method, pace, by_no[no], analysis)
     return out
