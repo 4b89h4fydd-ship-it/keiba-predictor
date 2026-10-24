@@ -96,7 +96,7 @@ def test_bets_must_have_independent_joint_distributions_and_verified_odds():
     without_quotes = blend(race(), opinions, fitted)
     assert without_quotes["recommendedBets"] == []
     with_quotes = blend(race(), opinions, fitted,
-                        quoted_odds={("馬連", (1, 2)): 2.0, ("3連複", (1, 2, 3)): 1.5,
+                        quoted_odds={("馬連", (1, 2)): 2.0, ("3連複", (1, 2, 3)): 3.0,
                                      ("3連単", (1, 2, 3)): 4.0})
     assert 1 <= len(with_quotes["recommendedBets"]) <= 5
     assert all(t["expectedReturn"] >= 1 for t in with_quotes["recommendedBets"])
