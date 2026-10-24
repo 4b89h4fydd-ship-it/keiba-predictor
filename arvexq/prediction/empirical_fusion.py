@@ -328,7 +328,7 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
               "top3Probability": top3[no]} for no, mark in zip(ranked, MARKS)]
     verified_odds = None
     if quoted_odds is not None:
-        if not isinstance(quoted_odds, dict) or not isinstance(quoted_odds.get("prices"), dict):
+        if not isinstance(quoted_odds, dict) or not isinstance(quoted_odds.get("prices"), (dict, list)):
             raise ValueError("timestamped official odds quotes required")
         if _timestamp(quoted_odds.get("capturedAt")) >= _timestamp(scheduled_off):
             raise ValueError("post-off odds cannot determine a preoff ticket")
