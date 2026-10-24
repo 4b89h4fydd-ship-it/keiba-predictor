@@ -89,3 +89,60 @@ Do **not** interpret ordinary Python/JS CI passing as proof that production
 can calculate a valid race prediction. The model directory remains empty, and
 `scenarioWeightsValidated` stays false. The draft PR is intentionally not
 merged or deployed because it would suppress real predictions.
+
+
+## Data-source expansion audit (2026-10-25)
+
+The existing `arvexq/databanks/source_catalog.py` lists 31 research
+candidates. Listing a source is **not** permission or evidence of actual
+extraction. In particular, the `build_*_source` modules are callback wrappers,
+not independent authenticated provider accounts.
+
+### Existing connected/conditional routes
+
+- Current JRA official and NAR official parsers and Netkeiba history are
+  mediated by existing `arvexq/databanks/legacy_bridge.py` registrations.
+- Official NAR ZIP historical race/horselist support **already existed** in
+  `arvexq/databanks/nar_official_csv.py`. It runs only if ZIP files are
+  explicitly configured via `ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES` or already
+  provided through the NarSync `ARCHIVE_DIR`. It **does not download them**.
+- Added `preoff_three_way_odds(paths, race)` to that same offline NAR
+  CSV loader. It only accepts explicitly provided
+  `YYYYMMDD_<UNIX_timestamp>_odds.zip` files and rejects monthly final
+  odds, post-off snapshots, wrong circuits, scratched runners, invalid
+  combinations, and conflicting quotes. The ZIP filename timestamp alone
+  does not independently prove the source publication time: operators
+  must verify file provenance and rights before relying on a backtest.
+- Added `scripts/arvexq_data_source_readiness.py` to distinguish an
+  existing local ZIP/authorized source from catalog-only candidates.
+  Its audit is observational and does not declare legal authorization.
+- No new external provider endpoints, accounts, Cloudflare D1 tables,
+  database migrations or data download processes were introduced.
+
+### High-value blocked sources
+
+- Official NAR historical ZIPs: no verified full historical archive installed
+  in the runtime; requires lawful data provision for meaningful 1998+ backfill.
+  The official user guide is at
+  https://www.keiba.go.jp/pdf/manual/data_pdf_manual.pdf and public
+  terms at https://www.keiba.go.jp/terms.html.
+- JRA-VAN: Data Lab. JV-Link normally requires an actual Windows licensed
+  environment. Commercial distribution of JRA-VAN data is **not** provided
+  by an ordinary Data Lab. account; JRADB licensing is a separate matter.
+- JBIS, JRDB, KeibaBook, Umanity and media/video: catalogued only unless
+  actual contract, credential/authorized local file, stable horse identity
+  and release-time provenance have been verified. Do not treat automated
+  browsing/viewing as legal bulk extraction rights.
+- Video: no permanent horse ID / camera-calibrated full-field data,
+  therefore no supported video uplift estimate.
+- Weather and JRA race-day ground conditions: potentially valuable
+  external data; no permission-verified new acquisition route is connected.
+
+### Gates still pending for actual coverage improvement
+
+Obtain a representative permitted official archive, verify checksum,
+event/horse identity and pre-race timestamps, measure counts of
+eligible training examples by JRA and NAR, independently calibrate
+probabilities and benchmark the **same** future races with and without
+each evidence family. Never attach final odds, result rows or later
+images to a target pre-off race.
