@@ -191,11 +191,30 @@ def _prior_career_for_nar(horse, cutoff):
     return full, True
 
 
+def _jra_historical_observations(horse, cutoff):
+    """JRA winner assessment: observed recent starts, not the NAR archive policy."""
+    return prior_runs(horse, cutoff), False
+
+
+def _nar_historical_observations(horse, cutoff):
+    """NAR winner assessment: validated saved career before race date."""
+    return _prior_career_for_nar(horse, cutoff)
+
+
+OBSERVATION_POLICIES = {
+    "jra": ("jra-visible-history", _jra_historical_observations),
+    "nar": ("nar-lossless-observed-career", _nar_historical_observations),
+}
+
+
 def predict(race, *, expected_circuit, ability_method=None):
     owner=circuit(race)
     if owner!=expected_circuit:
         raise ValueError("cross-circuit execution")
     config=deepcopy(CONFIGS[owner])
+    policy_id, history_reader = OBSERVATION_POLICIES[owner]
+    if config["abilityObservationPolicy"] != policy_id:
+        raise ValueError("cross-circuit ability method conflict")
     method=ability_method or config["ability"]
     stages={k:{"status":"blocked","value":None} for k in STAGES}
     result={"raceId":race["id"],"date":race["date"],"circuit":owner,
@@ -222,12 +241,9 @@ def predict(race, *, expected_circuit, ability_method=None):
     for h in active:
         no=h["horseNumber"]
         try:
-            if owner == "nar":
-                runs, expanded = _prior_career_for_nar(h, race["date"])
-                if expanded:
-                    expanded_careers.append(no)
-            else:
-                runs=prior_runs(h,race["date"])
+            runs, expanded = history_reader(h, race["date"])
+            if expanded:
+                expanded_careers.append(no)
         except ValueError:
             result["blockers"].append({"horseNumber":no,"reason":"conflicting-history"})
             runs=[]
@@ -239,6 +255,13 @@ def predict(race, *, expected_circuit, ability_method=None):
             else:
                 usable.append(run)
         histories[no]=usable
+    result["predictionMethod"] = {
+        "circuit": owner,
+        "abilityHistory": policy_id,
+        "winnerReview": config["winnerReviewPolicy"],
+        "sixStageChainPreserved": True,
+        "unvalidatedTacticalBoostsApplied": False,
+    }
     result["abilityHistoryCoverage"] = {
         "source": "existing-saved-allPastRuns-when-compatible" if owner == "nar"
                   else "existing-jra-recentRaces",
@@ -332,10 +355,26 @@ def predict(race, *, expected_circuit, ability_method=None):
                           "trifectaMass":sum(probs["trifecta"].values()),
                           "calibrationVerified":False}
     stages["marks"]={"status":"research-only-unvalidated","value":roles(probs["win"],podium)}
-    result["winnerEvidenceComparison"] = {
-        "proposedHeadToHeadResearchChallenger": direct_rematch_candidate(
+    # The JRA course/distance/opposition review is independently registered.
+    # NAR can compare recorded direct rivals across the available full career.
+    # Neither exploratory challenger can alter current marks without genuine
+    # held-out verification; the two methods must never be mixed.
+    review = config["winnerReviewPolicy"]
+    if owner == "nar":
+        if review != "nar-full-career-direct-rival-review":
+            raise ValueError("cross-circuit winner review conflict")
+        rival = direct_rematch_candidate(
             stages["marks"]["value"]["orderedWinCandidates"],
-            result["paceEvidence"]["holisticWinnerEvidence"]),
+            result["paceEvidence"]["holisticWinnerEvidence"])
+    elif owner == "jra":
+        if review != "jra-course-distance-opposition-review":
+            raise ValueError("cross-circuit winner review conflict")
+        rival = None
+    else:
+        raise ValueError("unsupported prediction circuit")
+    result["winnerEvidenceComparison"] = {
+        "method": review,
+        "proposedHeadToHeadResearchChallenger": rival,
         "selectionPolicy": "unvalidated-candidate-does-not-overwrite-current-winner",
         "winnerRankUnchanged": True,
     }
