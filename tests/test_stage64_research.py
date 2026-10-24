@@ -102,6 +102,37 @@ class Pipeline(unittest.TestCase):
         self.assertFalse(p["paceEvidence"]["actualPaceVerified"])
         self.assertEqual(p["stages"]["marks"]["value"]["orderedWinCandidates"][0],1)
 
+    def test_actual_same_track_distance_history_is_observational_only(self):
+        r = race()
+        r["distance"] = 1500
+        r["horses"][0]["recentRaces"][0]["distance"] = 1500
+        plain = predict(r, expected_circuit="nar")
+        r["horses"][0]["allPastRuns"] = [
+            {"date": "2026-10-20", "finish": 2, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-10", "finish": 1, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-23", "finish": 1, "fieldSize": 10,
+             "track": "試験場", "distance": 1500, "passing": [1]},
+            {"date": "2026-10-08", "finish": 1, "fieldSize": 10,
+             "track": "他場", "distance": 1500, "passing": [1]},
+        ]
+        with_full = predict(r, expected_circuit="nar")
+        evidence = with_full["paceEvidence"]["historicalCourseEvidence"][1]
+        self.assertEqual(evidence["observedStarts"], 3)
+        self.assertEqual(evidence["sameTrackDistanceStarts"], 2)
+        self.assertEqual(evidence["sameTrackDistanceWins"], 1)
+        self.assertEqual(evidence["sameTrackDistanceTop3"], 2)
+        # Evidence is additive read-only: no unvalidated ability or mark boost.
+        for stage in ("ability", "probability", "marks", "tickets"):
+            self.assertEqual(plain["stages"][stage], with_full["stages"][stage])
+
+    def test_missing_course_context_does_not_claim_no_wins(self):
+        p = predict(race(), expected_circuit="nar")
+        e = p["paceEvidence"]["historicalCourseEvidence"][1]
+        self.assertEqual(e["status"], "context-unavailable")
+        self.assertIsNone(e["sameTrackDistanceWins"])
+
     def test_status_only_scratch(self):
         r=race();r["horses"][0]["status"]="競走除外"
         p=predict(r,expected_circuit="nar")
