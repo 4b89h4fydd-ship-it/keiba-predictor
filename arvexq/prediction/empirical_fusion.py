@@ -321,6 +321,14 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
         if j is None:
             all_joint = False
         else:
+            # A 3-way joint distribution must agree with the SAME model's
+            # own win and podium marginals; otherwise the advertised ticket
+            # expectation is mathematically incoherent.
+            for no in roster:
+                modeled_win = sum(p for finish, p in j.items() if finish[0] == no)
+                modeled_top3 = sum(p for finish, p in j.items() if no in finish)
+                if abs(modeled_win - p1[no]) > 1e-5 or abs(modeled_top3 - p3[no]) > 1e-5:
+                    raise ValueError("inconsistent joint probability marginals")
             for finish, value in j.items():
                 joint[finish] += weights[method] * value
     ranked = sorted(roster, key=lambda no: (-win[no], -top3[no], no))
