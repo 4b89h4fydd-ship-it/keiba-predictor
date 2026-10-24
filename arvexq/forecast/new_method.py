@@ -247,9 +247,9 @@ def predict(race, model, *, videos=None, quoted_odds=None):
     tickets.sort(key=lambda x: (-x["expectedReturn"], -x["hitProbability"]))
     return {
         "modelVersion": VERSION, "raceId": race["id"], "date": race["date"], "circuit": race["circuit"],
-        "predictionStatus": "ready", "productionEligible": True, "videoAnalyzedInternally": True,
+        "predictionStatus": "ready", "productionEligible": True, "videoAnalyzedInternally": any(evidence[n]["video_missing"] == 0.0 for n in numbers),
         "probabilities": {"win": win, "top3": top3,
                           "trifecta": [{"combo": list(k), "probability": p} for k, p in dist.items()]},
         "marks": marks, "tickets": tickets,
-        "forecastText": "能力と展開を実測済みモデルで統合。映像は内部評価のみ。",
+        "forecastText": "能力と展開の統合モデルによる勝率・3着内率の推定。",
     }
