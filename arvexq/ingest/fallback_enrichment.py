@@ -7,6 +7,8 @@ from typing import Any
 from arvexq.databanks.registry import DataBankRegistry, registry
 from arvexq.ingest.orchestrator import FetchResult, fetch_domain
 from arvexq.ingest.full_career import merge_career, audit_career, date_key
+from arvexq.ingest.pedigree_merge import needs_pedigree, fill_pedigree
+from arvexq.ingest.circuit_boundary import normalized_circuit
 
 # Identity-verified career sources provide both observed runs and race-date
 # start-count evidence. Track count-source outages separately for audit parity.
@@ -66,10 +68,12 @@ def _merge_runs(existing: Any, incoming: Any, *, cutoff: str = "", limit: int = 
     for raw in [*(existing or []), *(incoming or [])]:
         if not isinstance(raw, dict):
             continue
-        date = str(raw.get("date") or raw.get("raceDate") or "")
+        date = date_key(raw.get("date") or raw.get("raceDate"))
         # Never supplement a pre-race model with the target race or future data.
-        if cutoff and date and date >= cutoff:
+        if cutoff and (not date or not date_key(cutoff) or date >= date_key(cutoff)):
             continue
+        if date:
+            raw = dict(raw, date=date)
         key = _run_key(raw)
         if key not in merged:
             merged[key] = copy.deepcopy(raw)
@@ -237,13 +241,7 @@ def _horse_early_timing_count(horse: dict[str, Any], cutoff: str = "", limit: in
 
 
 def _needs_pedigree(horse: dict[str, Any]) -> bool:
-    p = horse.get("pedigree") if isinstance(horse.get("pedigree"), dict) else {}
-    return not (
-        _present(p.get("sire"))
-        or _present(horse.get("sire"))
-        or _present(p.get("dam"))
-        or _present(horse.get("dam"))
-    )
+    return needs_pedigree(horse)
 
 
 def _needs_connections(horse: dict[str, Any]) -> bool:
@@ -332,8 +330,8 @@ def _apply_payload(
     if domain == "horse_history":
         changed = _apply_career_stats(horse, payload.get("careerStartEvidence"), source, cutoff) or changed
 
+    changed = fill_pedigree(horse, payload, source=source) or changed
     for key in (
-        "pedigree", "sire", "dam", "damsire",
         "jockeyStats", "trainerStats", "jockeyProfile", "trainerProfile",
         "prizeMoneyAtRace", "representativeRun", "jumpStats", "obstacleStats",
     ):
@@ -370,11 +368,24 @@ async def enrich_race_missing(
     if not horses:
         return out
 
-    circuit = "JRA" if str(out.get("circuit") or "") in {"中央", "JRA"} else "NAR"
+    label = normalized_circuit(out.get("circuit"))
+    if label is None:
+        out.setdefault("preparedMeta", {})["supplementalSearch"] = {
+            "status": "unknown-circuit", "searchedHorses": 0,
+            "error": "Explicit JRA/NAR circuit is required; no provider was called"}
+        return out
+    circuit = "JRA" if label == "中央" else "NAR"
     cutoff = str(out.get("date") or "")
     sem = asyncio.Semaphore(max(1, int(max_parallel_horses or 1)))
     failures: list[dict[str, str]] = []
     changed_horses = 0
+    provider_outcomes: dict[str, dict[str, Any]] = {}
+    def coverage() -> dict[str, int]:
+        return {"horses": len(horses),
+                "historyPresent": sum(_history_count(h) > 0 for h in horses),
+                "pedigreeComplete": sum(not _needs_pedigree(h) for h in horses),
+                "connectionsPresent": sum(not _needs_connections(h) for h in horses)}
+    coverage_before = coverage()
     measured_feeds = {
         src.name for src in bank_registry.providers("horse_history", circuit=circuit)
         if src.supplement_complete_history
@@ -448,6 +459,19 @@ async def enrich_race_missing(
                     only_sources=only_sources,
                 )
                 for result in results:
+                    key = result.source + ":" + result.domain
+                    stats = provider_outcomes.setdefault(key, {"calls": 0, "httpOrAdapterSuccess": 0,
+                        "withData": 0, "empty": 0, "failed": 0, "attempts": 0, "elapsedSeconds": 0.0})
+                    stats["calls"] += 1
+                    stats["attempts"] += result.attempts
+                    stats["elapsedSeconds"] = round(stats["elapsedSeconds"] + (result.elapsed_seconds or 0), 3)
+                    stats["lastAcquiredAt"] = result.acquired_at
+                    stats["httpOrAdapterSuccess"] += int(result.ok)
+                    stats["failed"] += int(not result.ok)
+                    if result.ok:
+                        has_data = result.data not in (None, "", [], {})
+                        stats["withData"] += int(has_data)
+                        stats["empty"] += int(not has_data)
                     if domain == "horse_history":
                         history_sources.append(result.source)
                     if not result.ok:
@@ -489,6 +513,10 @@ async def enrich_race_missing(
     pm = out.setdefault("preparedMeta", {})
     pm["supplementalSearch"] = {
         "version": "arvexq-multi-source-fallback-v1",
+        "coverageBefore": coverage_before,
+        "coverageAfter": coverage(),
+        "providerOutcomes": provider_outcomes,
+        "timestampNote": "acquiredAt is not proof of historical pre-off publication",
         "searchedHorses": len(horses),
         "changedHorses": changed_horses,
         "historyCompleteHorses": sum((h.get("_careerHistoryAudit") or {}).get("complete") is True for h in horses),

@@ -2539,13 +2539,14 @@ def _fetch_extra_sources(detail:dict)->list[dict]:
     return out
 
 def _merge_enrichment(detail:dict,data:dict)->dict:
+    from arvexq.ingest.pedigree_merge import fill_pedigree
     hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs if h.get("horseNumber")};by_name={str(h.get("name") or "").strip():h for h in hs if h.get("name")};sources=[]
     for row in data.get("smartRows") or []:
         h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
         if not h:continue
         if "SmartRc" not in sources:sources.append("SmartRc")
         if row.get("smartRc"):h["smartRc"]={**(h.get("smartRc") or {}),**row.get("smartRc")}
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        fill_pedigree(h,row,source="SmartRc")
         for k in ("owner","producer","birthday"):
             if h.get(k) in (None,"") and row.get(k) not in (None,""):h[k]=row.get(k)
         if row.get("recentRaces"):h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
@@ -2555,7 +2556,7 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
         sources.append("netkeiba") if "netkeiba" not in sources else None
         for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange","owner","producer"):
             if (h.get(k) in (None,"",0)) and row.get(k) not in (None,""):h[k]=row.get(k)
-        if row.get("pedigree"):h["pedigree"]={**(h.get("pedigree") or {}),**row.get("pedigree")}
+        fill_pedigree(h,row,source="netkeiba")
         if row.get("_netkeibaHorseId"):h["_netkeibaHorseId"]=row.get("_netkeibaHorseId")
         if row.get("recentRaces") or row.get("allPastRuns"):
             # The fallback can carry an entire dated JRA/NAR history. Do not
@@ -2577,8 +2578,9 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
             if h:
                 extra=_strip_excluded(row.get("extra") or {})
                 h.setdefault("extraSources",{})[src]=extra
+                fill_pedigree(h,extra,source=src)
                 for key in ("pedigree","jockeyStats","trainerStats","jumpJockeyStats","jumpTrainerStats","jumpStats","isTransfer","transferFrom","ten1f","agari3f","pedigreeScore","distanceSuitabilityScore","surfaceSuitabilityScore","drawScore","bodyWeightScore","opponentLevelScore","lapScore","conditionChangeScore","jockeyScore","trainerScore","jumpJockeyScore","jumpTrainerScore"):
-                    if extra.get(key) is not None:h[key]=extra[key]
+                    if key != "pedigree" and extra.get(key) is not None:h[key]=extra[key]
                 if isinstance(extra.get("allPastRuns"),list) and detail.get("date"):
                     # An older supplemental lane used to overwrite the whole
                     # lifetime archive with any partial third-party response.

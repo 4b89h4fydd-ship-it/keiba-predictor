@@ -39,6 +39,17 @@ SOURCE_CATALOG: list[list[str]] = [["jra_official","JRA公式レース結果","J
     ["saga_official","佐賀競馬公式","NAR","https://www.sagakeiba.net/graderaceschedule/","schedule,result,video","開催・騎乗・除外変更の公式案内"],
     ["netkeiba_newspaper","netkeiba競馬新聞データ解説","JRA","https://race.sp.netkeiba.com/race/newspaper_master.html","horse_early3f,corner,horse_sectional,pace_forecast","前半3F/追走指数など。商品内容と利用条件を要確認"],
     ["keiba_eight","競馬エイト電子版","JRA","https://eight.race.sanspo.com/","horse,history,forecast","全JRAレースの新聞形式。契約下の閲覧サービスで自動配信・転載権限は別"]]
+SOURCE_CATALOG.extend([
+    ["smartrc", "スマート出馬表", "both", "https://www.smartrc.jp/v4/", "entries,pedigree,history", "閲覧・契約と機械取得権限は別。既存SMARTRC_FEED_URLのみ利用"],
+    ["sportsnavi", "スポーツナビ競馬", "JRA", "https://sports.yahoo.co.jp/keiba/", "entries,result,odds,horse", "公開閲覧。自動取得・商用利用権限は未確認"],
+    ["docomo_keiba", "dメニュースポーツ競馬", "JRA", "https://sports.smt.docomo.ne.jp/keiba/data/", "horse,history,result", "JRA提供データの閲覧。二次利用権限は別途確認"],
+    ["jra_courses", "JRA競馬場", "JRA", "https://www.jra.go.jp/facilities/race/", "course,obstacle", "公式コース資料。初角距離は距離・内外回り・発走位置別の原典必須"],
+    ["jra_training", "JRA調教情報", "JRA", "https://www.jra.go.jp/keiba/", "training,debut,horse", "公開対象・掲載時刻をレース別確認。全新馬の全調教を網羅するとは限らない"],
+    ["nar_judges", "NAR裁決・パトロール", "NAR", "https://www.keiba.go.jp/qa.html", "trip,video", "裁決翌日まで、DG全周映像1週以内。商用利用と保存は別途許諾必要"],
+    ["jma_observations", "気象庁観測CSV・XML", "both", "https://www.data.jma.go.jp/developer/index.html", "weather,precipitation,wind,temperature", "公共データ利用規約。出典・加工表記。観測地点と競馬場の違いを保持"],
+    ["gsi_maps", "国土地理院地図", "both", "https://maps.gsi.go.jp/", "geometry,elevation", "一般地形と実際の走路距離を混同しない。個別レイヤー利用条件確認"],
+    ["yukochi", "地方競馬ウォッチ・関連研究候補", "NAR", "https://yukochi.com/", "forecast,statistics", "ユーザー指定の調査対象。実測値・予想・転載許諾を区別。自動取得未承認"],
+])
 NAR_VENUES: list[str] = ["帯広","門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]
 VALID_EVIDENCE_FAMILIES = (
     "entries", "horse", "history", "corner", "race_lap", "horse_early3f",
@@ -46,7 +57,21 @@ VALID_EVIDENCE_FAMILIES = (
     "jockey", "trainer", "trip", "pedigree", "result", "odds", "payout",
     "video", "statistics", "connections", "ratings", "forecast",
     "pace", "schedule", "trip_review", "last3f", "pace_comment", "sectional",
+    "course", "obstacle", "training", "debut", "weather", "precipitation",
+    "wind", "temperature", "geometry", "elevation",
 )
+
+# Observed policy evidence is independent of runtime provider registration.
+# Unknown is intentional; a successful HTTP response never grants extraction rights.
+SOURCE_POLICY_REVIEW = {
+    "jra_van": ("contract-required", "https://jravan.jp/info/rule.html", "1986 onwards (product description)"),
+    "jrdb": ("commercial-permission-required", "https://jrdb.com/terms", None),
+    "jbis": ("commercial-preparation-restricted", "https://www.jbis.or.jp/help/use/", None),
+    "nar_official": ("commercial-permission-required", "https://www.keiba.go.jp/qa.html", "results from 1998 (FAQ)"),
+    "nar_live": ("download-commercial-permission-required", "https://www.keiba.go.jp/qa.html", "normally 13 months; graded exceptions"),
+    "nar_judges": ("commercial-permission-required", "https://www.keiba.go.jp/qa.html", None),
+    "jma_observations": ("public-data-terms-attribution", "https://www.jma.go.jp/jma/kishou/info/coment.html", "station/element dependent"),
+}
 
 
 def discovery_inventory() -> list[dict[str, Any]]:
@@ -55,6 +80,13 @@ def discovery_inventory() -> list[dict[str, Any]]:
             "id": key, "label": name, "circuit": circuit,
             "referenceUrl": url, "evidenceFamilies": fields.split(","),
             "usageNote": note, "enabledForExtraction": False,
+            "policyStatus": SOURCE_POLICY_REVIEW.get(key, ("unverified", None, None))[0],
+            "termsUrl": SOURCE_POLICY_REVIEW.get(key, (None, None, None))[1],
+            "historicalCoverage": SOURCE_POLICY_REVIEW.get(key, (None, None, None))[2],
+            "fees": None, "authentication": None, "updateSchedule": None,
+            "measuredSuccessRate": None, "measuredMissingRate": None,
+            "lastDataFetchTest": None,
+            "statusNote": "null means not measured/verified; catalog membership is not an installed provider",
         }
         for key, name, circuit, url, fields, note in SOURCE_CATALOG
     ]
