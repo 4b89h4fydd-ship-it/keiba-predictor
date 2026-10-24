@@ -109,6 +109,31 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python - <<'PY'
+          from collections import Counter
+          from pathlib import Path
+          import json
+          from arvexq.prediction.fusion_historical_replay import _eligible,_preoff_card
+          from arvexq.prediction.fusion_method_models import observed_buckets
+          for circuit in ('中央','地方'):
+              counts=Counter()
+              samples=[]
+              for path in sorted(Path('/tmp/arvexq-five-replay').glob('2026-*.json')):
+                  for row in json.loads(path.read_text()).get('details',[]):
+                      if row.get('circuit')!=circuit:continue
+                      counts['read']+=1
+                      if not _eligible(row,circuit):
+                          counts['not_final_or_unsettleable']+=1
+                          continue
+                      counts['official_settleable']+=1
+                      try:
+                          observed_buckets(_preoff_card(row))
+                          counts['complete_method_history']+=1
+                      except Exception as exc:
+                          counts[type(exc).__name__+':'+str(exc)[:80]]+=1
+                          if len(samples)<8:samples.append([row.get('id'),str(exc)[:90]])
+              print('REAL_FUSION_SOURCE_GATE',circuit,dict(counts),'samples',samples)
+          PY
           python scripts/arvexq_train_research_models.py \
             --input-dir /tmp/arvexq-five-replay \
             --target-date 2026-10-24 \
@@ -125,10 +150,13 @@ jobs:
                         for k,v in (d.get('fusionAudits') or {}).items()},
           },ensure_ascii=False))
           model=json.load(open('/tmp/arvexq-fusion-models.json'))
+          missing=[]
           for c in ('中央','地方'):
               block=(model.get('fusion') or {}).get(c)
               if not block or block['calibration']['nRaces']<30:
-                  raise SystemExit('REAL_FUSION_JRA_NAR_MISSING_'+c)
+                  missing.append(c)
+                  continue
               print('REAL_FUSION_METRICS',c,json.dumps(
                   block['calibration']['metrics'],ensure_ascii=False))
+          if missing:raise SystemExit('REAL_FUSION_JRA_NAR_MISSING_'+','.join(missing))
           PY
