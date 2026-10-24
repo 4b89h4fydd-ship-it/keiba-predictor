@@ -76,9 +76,15 @@ class PrefetchNextDayScheduleTest(unittest.TestCase):
             self.assertIn(output["TARGET_DATE"], {before.isoformat(), after.isoformat()})
             self.assertNotEqual(output.get("ARVEXQ_DAY_AHEAD"), "1")
 
-    def test_manual_date_overrides_schedule(self) -> None:
-        output = run_date_step(self.workflow, "2026-11-03", DAY_AHEAD_SCHEDULE)
-        self.assertEqual(output["TARGET_DATE"], "2026-11-03")
+    def test_manual_future_date_overrides_schedule_and_keeps_predictions_unfrozen(self) -> None:
+        future = (datetime.now(ZoneInfo("Asia/Tokyo")).date() + timedelta(days=3)).isoformat()
+        output = run_date_step(self.workflow, future, DAY_AHEAD_SCHEDULE)
+        self.assertEqual(output["TARGET_DATE"], future)
+        self.assertEqual(output.get("ARVEXQ_DAY_AHEAD"), "1")
+
+    def test_manual_historical_date_never_becomes_day_ahead(self) -> None:
+        output = run_date_step(self.workflow, "2026-10-01", DAY_AHEAD_SCHEDULE)
+        self.assertEqual(output["TARGET_DATE"], "2026-10-01")
         self.assertNotEqual(output.get("ARVEXQ_DAY_AHEAD"), "1")
 
     def test_day_ahead_does_not_generate_prediction_products(self) -> None:
