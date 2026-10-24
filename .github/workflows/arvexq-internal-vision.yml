@@ -1,0 +1,101 @@
+name: ARVEXQ Internal Video Analysis
+
+"on":
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Past race date YYYY-MM-DD (blank = yesterday JST)"
+        required: false
+        type: string
+  schedule:
+    # Yesterday's race video, 02:30 JST. This is research-only, not a bet job.
+    - cron: "30 17 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-internal-video-${{github.event.inputs.date || 'latest' }}
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ARVEXQ_VIDEO_FEED_URL: ${{secrets.ARVEXQ_VIDEO_FEED_URL }}
+      ARVEXQ_VIDEO_FEED_TOKEN: ${{secrets.ARVEXQ_VIDEO_FEED_TOKEN }}
+      ARVEXQ_VIDEO_ALLOWED_HOSTS: ${{vars.ARVEXQ_VIDEO_ALLOWED_HOSTS }}
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check authorized provider configuration
+        id: provider
+        shell: bash
+        run: |
+          if [ -z "$ARVEXQ_VIDEO_FEED_URL" ] || [ -z "$ARVEXQ_VIDEO_FEED_TOKEN" ] || [ -z "$ARVEXQ_VIDEO_ALLOWED_HOSTS" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VIDEO_DATA_UNAVAILABLE: no licensed/authorized video provider configured; nothing was analyzed"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Restore accumulated internal vision evidence
+        if: steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data/vision-evidence
+          key: arvexq-vision-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-vision-${{ runner.os }}-
+      - name: Install offline analysis dependencies
+        if: steps.provider.outputs.enabled == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends tesseract-ocr
+          python -m pip install -r requirements-vision.txt
+      - name: Resolve previous calendar day's video
+        if: steps.provider.outputs.enabled == 'true'
+        shell: bash
+        env:
+          REQUESTED_DATE: ${{github.event.inputs.date }}
+        run: |
+          if [ -n "$REQUESTED_DATE" ]; then
+            TARGET_DATE="$REQUESTED_DATE"
+          else
+            TARGET_DATE="$(TZ=Asia/Tokyo date -d yesterday +%F)"
+          fi
+          if ! [[ "$TARGET_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "::error::Invalid date"
+            exit 1
+          fi
+          echo "TARGET_DATE=$TARGET_DATE" >> "$GITHUB_ENV"
+      - name: Analyze licensed video internally (research only)
+        if: steps.provider.outputs.enabled == 'true'
+        env:
+          PYTHONPATH: .
+        run: |
+          python scripts/arvexq_vision_internal.py \
+            --date "$TARGET_DATE" \
+            --output-dir .arvexq-data/vision-evidence
+      - name: Cache accumulated internal evidence for later forecasts
+        if: success() && steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .arvexq-data/vision-evidence
+          key: arvexq-vision-${{ runner.os }}-${{ github.run_id }}
+      - name: Preserve measurement artifacts for audit only
+        if: always() && steps.provider.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-vision-evidence-${{github.run_id }}
+          path: .arvexq-data/vision-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Explicit no-provider receipt
+        if: steps.provider.outputs.enabled != 'true'
+        run: |
+          echo "VIDEO_RESEARCH_STATUS=blocked-no-authorized-video-source"
+          echo "FORECAST_UPDATED=false"

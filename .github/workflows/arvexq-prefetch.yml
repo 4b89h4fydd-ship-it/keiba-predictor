@@ -60,6 +60,7 @@ jobs:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_VISION_EVIDENCE_DIR: ${{ github.workspace }}/.arvexq-data/vision-evidence
       ARVEXQ_BOOTSTRAP_WARM: "0"
       ARVEXQ_DATA_CORE: "0"
       ARVEXQ_COLLECT_ONLY: "1"
@@ -115,6 +116,14 @@ jobs:
             arvexq-prefetch-${{ runner.os }}-${{ env.TARGET_DATE }}-
             arvexq-data-${{ runner.os }}-${{ env.TARGET_DATE }}-
             arvexq-data-${{ runner.os }}-
+
+      - name: Restore private video research observations
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data/vision-evidence
+          key: arvexq-vision-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-vision-${{ runner.os }}-
 
       - name: Validate restored SQLite cache
         run: |
