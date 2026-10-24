@@ -168,7 +168,11 @@ def _order_probabilities(numbers, scores):
     podium = {no: 0.0 for no in numbers}
     for first, second, third in permutations(numbers, 3):
         a, b, c = scores[first], scores[second], scores[third]
-        p = (a/normal) * (b/(normal-a)) * (c/(normal-a-b))
+        # Sum remaining weights directly: subtracting a near-certain winner
+        # from normal loses small remaining mass to floating-point rounding.
+        after_first = sum(scores[n] for n in numbers if n != first)
+        after_second = sum(scores[n] for n in numbers if n not in (first,second))
+        p = (a/normal) * (b/after_first) * (c/after_second)
         joint.append({"combo": [first, second, third], "probability": p})
         win[first] += p
         for no in (first, second, third):
