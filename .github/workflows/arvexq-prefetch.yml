@@ -25,6 +25,7 @@ name: ARVEXQ Full Prefetch
       - arvexq/pipeline/persisted_inputs.py
       - arvexq/prediction/**
       - arvexq/forecast/**
+      - arvexq/research/stage64/**
       - arvexq/ingest/**
       - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
