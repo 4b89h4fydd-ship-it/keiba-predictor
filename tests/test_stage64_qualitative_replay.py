@@ -19,7 +19,7 @@ LABELS = json.loads(r'''{"jra-2026-10-17-京都-01":[2,9,3],"jra-2026-10-17-京�
 
 
 def _existing_snapshot(race_id):
-    date = race_id.split("-")[1]
+    date = "-".join(race_id.split("-")[1:4])
     root = ROOT / "arvexq/ui/static/saved-snapshots"
     catalog = json.loads((root / (date + ".json")).read_text(encoding="utf-8"))
     meta = catalog["races"].get(race_id)
@@ -100,7 +100,7 @@ def test_two_date_replay_baselines_and_public_tactics():
         for method, n in (("baseline", baseline), ("recent5", recent),
                           ("explicitCourse", course),
                           ("isolatedForward", separated)):
-            row = report[(race_id.split("-")[1], circuit)][method]
+            row = report[("-".join(race_id.split("-")[1:4]), circuit)][method]
             row[0] += 1
             row[1] += n == winner
             row[2] += n in (winner, runnerup, third)
