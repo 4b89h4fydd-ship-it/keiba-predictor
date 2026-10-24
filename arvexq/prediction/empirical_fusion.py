@@ -100,6 +100,7 @@ def fit_weights(history, *, target_date, min_races=30):
     seen = set()
     stats = defaultdict(lambda: {"wins": 0, "stake": 0., "returned": 0., "races": 0})
     names = None
+    versions = None
     circuits = set()
     for row in history:
         _validate_capture(row, target_date)
@@ -110,6 +111,11 @@ def fit_weights(history, *, target_date, min_races=30):
         circuits.add(str(row.get("circuit") or ""))
         current = _arms(row["arms"])
         _validate_opinion_sources(row["arms"], row["scheduledOffAt"], row["raceId"])
+        current_versions = {name: data["modelVersion"] for name, data in row["arms"].items()}
+        if versions is None:
+            versions = current_versions
+        elif versions != current_versions:
+            raise ValueError("evaluation model versions changed across cohort")
         if names is None:
             names = current
         if names != current:
@@ -145,6 +151,7 @@ def fit_weights(history, *, target_date, min_races=30):
         "version": VERSION, "trainedThrough": max(row["raceDate"] for row in history),
         "targetDate": target_date, "circuit": next(iter(circuits)),
         "evaluatedRaceIds": sorted(seen), "nRaces": len(seen),
+        "methodVersions": dict(sorted(versions.items())),
         "weights": {k: raw[k] / mass for k in sorted(raw)},
         "metrics": {k: {"winHits": v["wins"], "races": v["races"],
                          "winHitRate": v["wins"] / v["races"],
@@ -189,6 +196,38 @@ def _hit(kind, combo, finish):
     if kind == "3連単":
         return combo == finish[:3]
     raise ValueError("unsupported betting kind")
+
+
+def _quoted_prices(quotes):
+    """Accept a portable JSON quote list, never a fabricated tuple-key map."""
+    if not isinstance(quotes, dict):
+        raise ValueError("timestamped official quote envelope required")
+    if quotes.get("sourceKind") != "official_preoff_quotes":
+        raise ValueError("official preoff ticket-price source required")
+    rows = quotes.get("prices")
+    if isinstance(rows, dict):
+        # In-process tools can supply tuple keys. External JSON transport uses
+        # the structured list variant below.
+        return rows
+    if not isinstance(rows, list):
+        raise ValueError("structured official prices required")
+    out = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("invalid official price record")
+        kind, combo = row.get("kind"), row.get("combo")
+        if (kind not in BET_TYPES or not isinstance(combo, list) or
+                len(combo) != BET_TYPES[kind] or
+                any(type(n) is not int or n < 1 for n in combo) or
+                len(set(combo)) != len(combo)):
+            raise ValueError("invalid official quote combination")
+        if kind in ("馬連", "ワイド", "3連複"):
+            combo = sorted(combo)
+        key = (kind, tuple(combo))
+        if key in out:
+            raise ValueError("duplicate official quote combination")
+        out[key] = _number(row.get("odds"))
+    return out
 
 
 def _tickets(joint, marks, quoted_odds, limit):
@@ -249,6 +288,13 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
         raise ValueError("verified scheduled race off required") from exc
     _validate_opinion_sources(opinions, scheduled_off, race["id"])
     weights = fitted.get("weights")
+    if (fitted.get("nRaces", 0) < 30 or
+            len(fitted.get("evaluatedRaceIds") or []) != fitted.get("nRaces") or
+            fitted.get("weightsIndependentOfTargetOutcome") is not True):
+        raise ValueError("insufficient verified empirical calibration sample")
+    if fitted.get("methodVersions") != {
+            name: value["modelVersion"] for name, value in opinions.items()}:
+        raise ValueError("active method versions differ from backtested cohort")
     if not isinstance(weights, dict) or methods != set(weights) or abs(sum(weights.values()) - 1.) > 1e-7:
         raise ValueError("fitted method/weight mismatch")
     if any(type(w) not in (float, int) or not isfinite(w) or w < 0 for w in weights.values()):
@@ -284,7 +330,7 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
             raise ValueError("timestamped official odds quotes required")
         if _timestamp(quoted_odds.get("capturedAt")) >= _timestamp(scheduled_off):
             raise ValueError("post-off odds cannot determine a preoff ticket")
-        verified_odds = quoted_odds["prices"]
+        verified_odds = _quoted_prices(quoted_odds)
     tickets, ticket_status = _tickets(joint if all_joint else None, marks, verified_odds, max_tickets)
     return {
         "version": VERSION, "circuit": race["circuit"], "raceId": race["id"],
