@@ -99,7 +99,7 @@ def test_bets_must_have_independent_joint_distributions_and_verified_odds():
     without_quotes = blend(race(), opinions, fitted)
     assert without_quotes["recommendedBets"] == []
     with_quotes = blend(race(), opinions, fitted,
-                        quoted_odds={"capturedAt": "2026-10-24T10:00:00+09:00",
+                        quoted_odds={"sourceKind": "official_preoff_quotes", "capturedAt": "2026-10-24T10:00:00+09:00",
                                      "prices": {("馬連", (1, 2)): 2.0,
                                                 ("3連複", (1, 2, 3)): 3.0,
                                                 ("3連単", (1, 2, 3)): 4.0}})
@@ -109,7 +109,7 @@ def test_bets_must_have_independent_joint_distributions_and_verified_odds():
     broken = deepcopy(opinions)
     broken["ai:mass"]["trifecta"] = []
     assert not blend(race(), broken, fitted,
-                     quoted_odds={"capturedAt": "2026-10-24T10:00:00+09:00",
+                     quoted_odds={"sourceKind": "official_preoff_quotes", "capturedAt": "2026-10-24T10:00:00+09:00",
                                   "prices": {("馬連", (1, 2)): 10}})["recommendedBets"]
 
 
@@ -138,5 +138,5 @@ def test_duplicate_ai_and_postoff_quotes_cannot_masquerade_as_independent():
     opinions = {name: opinion(method=name) for name in METHODS}
     with pytest.raises(ValueError, match="post-off odds"):
         blend(race(), opinions, fitted,
-              quoted_odds={"capturedAt": "2026-10-24T12:01:00+09:00",
+              quoted_odds={"sourceKind": "official_preoff_quotes", "capturedAt": "2026-10-24T12:01:00+09:00",
                            "prices": {("馬連", (1, 2)): 10}})
