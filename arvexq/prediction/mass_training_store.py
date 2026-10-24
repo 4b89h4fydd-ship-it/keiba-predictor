@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from arvexq.prediction.mass_training_dataset import rows_from_frozen_snapshot
-from arvexq.prediction.mass_feature_transport import recover_mass_detail
+from arvexq.prediction.mass_feature_transport import recover_mass_detail, _feature_hash
+from arvexq.ingest.full_snapshot_codec import unpack_detail
 
 STORE_VERSION = "arvexq-mass-training-store-v1"
 
@@ -26,6 +27,14 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     """Use only the already-frozen feature snapshot; never rebuild from final detail."""
     if not isinstance(detail, dict):
         return []
+    # The existing D1/SQLite storage may contain a losslessly compressed full
+    # detail. Read its authenticated original before inspecting result labels or
+    # frozen feature evidence: the thin display index is NOT a training source.
+    if "arvexqFullPayload" in detail:
+        try:
+            detail = unpack_detail(detail)
+        except (TypeError, ValueError, KeyError, OSError):
+            return []
     result = _confirmed_result(detail)
     if result is None:
         return []
@@ -42,6 +51,34 @@ def frozen_training_rows_from_detail(detail: dict[str, Any]) -> list[dict[str, A
     if not isinstance(snapshot, dict):
         return []
     if not snapshot.get("featureHash") or not snapshot.get("rows"):
+        return []
+    # Both direct and compressed copies use the SAME origin-content hash.
+    # A direct snapshot used to bypass this guard, while compressed snapshots
+    # were verified during restore_snapshot().
+    expected = str(snapshot["featureHash"])
+    if expected != _feature_hash(snapshot):
+        return []
+    if (str(snapshot.get("raceId") or "") != str(detail.get("id") or detail.get("raceId") or "")
+            or str(snapshot.get("date") or "") != str(detail.get("date") or "")):
+        return []
+    # Existing lossless archive details can omit the outer circuit; in that
+    # legacy shape the immutable snapshot remains the owner of circuit.
+    # When the outer circuit is present it must agree with the frozen owner.
+    outer_circuit = detail.get("circuit")
+    if outer_circuit not in (None, "") and str(snapshot.get("circuit") or "") != str(outer_circuit):
+        return []
+    if detail.get("massFeatureHash") and str(detail["massFeatureHash"]) != expected:
+        return []
+    lock = detail.get("preRacePrediction")
+    if isinstance(lock, dict) and lock.get("massFeatureHash") and str(lock["massFeatureHash"]) != expected:
+        return []
+    archive = detail.get("massFeatureArchive")
+    if isinstance(archive, dict):
+        if archive.get("originHashVerified") is False or str(archive.get("featureHash") or "") != expected:
+            return []
+    # Explicitly provisional or disqualified captures are never promoted
+    # just because their feature bytes happen to hash correctly.
+    if detail.get("verifiedForTraining") is False or snapshot.get("verifiedForTraining") is False:
         return []
     return rows_from_frozen_snapshot(snapshot, result)
 
@@ -83,7 +120,9 @@ def iter_frozen_training_rows(
     for row in dbrows:
         try:
             detail = json.loads(row["payload"])
-        except Exception:
+            if isinstance(detail, dict) and "arvexqFullPayload" in detail:
+                detail = unpack_detail(detail)
+        except (TypeError, ValueError, KeyError, OSError):
             continue
         snapshot = detail.get("massFeatureSnapshot") if isinstance(detail, dict) else None
         archive = detail.get("massFeatureArchive") if isinstance(detail, dict) else None
@@ -93,6 +132,15 @@ def iter_frozen_training_rows(
             continue
         examples = frozen_training_rows_from_detail(detail)
         if not examples:
+            continue
+        # The SQLite index remains a separate authority for race identity and
+        # circuit. This also checks legacy payloads with no top-level circuit.
+        aliases = {"中央": "jra", "jra": "jra", "地方": "nar", "nar": "nar"}
+        source_circuit = aliases.get(str(row["circuit"] or ""))
+        frozen_circuit = aliases.get(str(examples[0].get("circuit") or ""))
+        if (str(row["race_id"]) != str(examples[0]["raceId"])
+                or str(row["race_date"]) != str(examples[0]["date"])
+                or source_circuit is None or source_circuit != frozen_circuit):
             continue
         seen_hashes.add(feature_hash)
         for example in examples:
