@@ -1,6 +1,5 @@
 """Six independent shadow stages from saved observations through candidate bets."""
 from copy import deepcopy
-from math import isfinite
 from arvexq.research.stage63.ability import prior_runs, score_field
 from arvexq.research.stage63.running_style import style_field
 from arvexq.research.stage63.probability import distribution
@@ -67,36 +66,37 @@ def predict(race, *, expected_circuit, ability_method=None):
     # Conservative full-field evidence gate remains shared by all candidates.
     if any(v is None for v in ability.values()) or any(v is None for v in style.values()):
         return result
-    # Replacement: Mineta-inspired positional race dynamics, not the old
-    # independent four fixed pace adjustments. Data must be known pre-off.
-    # Training weights/scenario occurrence rates have NOT been calibrated.
-    positional = {no: tuple(vals) for no, vals in style.items()}
-    front = {no: vals[0] + 0.5 * vals[1] for no, vals in positional.items()}
-    pursuit = {no: vals[2] + vals[3] for no, vals in positional.items()}
-    pressure = sum(front.values())
-    competition = max(0.0, pressure - 1.0)
-    # A contested lead affects all front-runners; late movers can benefit.
-    neutral = {no: 0.0 for no in positional}
-    contested = {no: 0.18 * competition * (pursuit[no] - front[no])
-                 for no in positional}
-    easy_lead = {no: 0.16 * front[no] / max(1.0, pressure)
-                 - 0.08 * pursuit[no] for no in positional}
-    closer_friendly = {no: 0.12 * pursuit[no] - 0.06 * front[no]
-                       for no in positional}
-    deltas = [neutral, contested, easy_lead, closer_friendly]
+    # First-corner quartiles describe observed positioning, NOT which runner
+    # will take the lead today.  The previous fixed tactical boosts invented
+    # pace outcomes and displaced high-ability winners from product marks.
+    # Keep the six stages, but withhold unsupported race-pace adjustments
+    # until actual pace/lead evidence can be evaluated without leakage.
+    positions = ("前方", "好位", "中団", "後方")
+    profiles = {}
+    for no, shares in style.items():
+        peak = max(shares)
+        dominant = [i for i, value in enumerate(shares) if value == peak]
+        profiles[no] = positions[dominant[0]] if len(dominant) == 1 else "位置取り混在"
+    front_observed = sorted(
+        style, key=lambda no: (-(style[no][0] + style[no][1]), no)
+    )
+    deltas = [{no: 0.0 for no in ability}]
     result["paceEvidence"] = {
-        "frontPressure": pressure,
-        "frontCompetition": competition,
-        "source": "preoff-prior-corner-positions",
+        "source": "preoff-prior-first-corner-observations",
+        "observedPositionProfiles": profiles,
+        "earlyPositionObservedOrder": front_observed,
+        "actualLeadVerified": False,
+        "actualPaceVerified": False,
+        "uncertainty": "初角の前方傾向だけでは逃げ主張・先行争い・控える馬を判定できない",
         "scenarioOccurrenceCalibrated": False,
-        "expertMethod": "mineta-public-position-and-pace-principles",
         "otherExpertFeaturesVerified": False,
         "aiEnsembleTrained": False,
     }
-    stages["pace"]={"status":"research-hypotheses-not-calibrated","value":deltas,
-                    "scenarioWeightsVerified":False,
-                    "frontCompetition":competition,
-                    "model":"mineta-position-competition-rewrite"}
+    stages["pace"] = {
+        "status": "observed-position-only-pace-unverified",
+        "value": deltas, "scenarioWeightsVerified": False,
+        "model": "no-unsupported-tactical-boost",
+    }
     # The six stages are one causal chain. Keep expert corroboration separate
     # until track/pedigree/training evidence is verified and backtested.
     probs=distribution(ability,deltas,config["temperature"])
