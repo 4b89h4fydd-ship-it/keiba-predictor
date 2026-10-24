@@ -32,9 +32,16 @@ def train_models(source, target_date):
     # official-payout evaluations. No replay is called a frozen preoff receipt.
     fusion = {}
     for circuit in ('中央','地方'):
+        # The legacy training helper also serves very small and empty
+        # test batches. Independent fusion needs >=30 train PLUS >=30
+        # temporally later holdout races, so do not mark small inputs
+        # as a failure of the separate existing research model.
+        subset = [d for d in eligible if d.get('circuit') == circuit]
+        if len(subset) < 60 or len({d.get('date') for d in subset}) < 2:
+            continue
         try:
             fusion[circuit] = train_and_validate(
-                eligible, circuit=circuit, target_date=target_date)
+                subset, circuit=circuit, target_date=target_date)
         except (ValueError, TypeError, KeyError, OverflowError, ZeroDivisionError) as exc:
             errors['fusion:' + circuit] = type(exc).__name__ + ': ' + str(exc)
     if fusion:
