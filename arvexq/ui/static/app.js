@@ -961,8 +961,36 @@ function mergePublishedResult(oldResult,newResult){
   else if(!priorFinal&&reflectUseful(next.status))out.status=next.status;
   return out
 }
+// A full D1 detail's actual sealed Stage64 product outranks the lightweight
+// day summary. The summary can be delayed and still say "disabled" after
+// pre-off marks/tickets have already been sealed in the authoritative detail.
+// Never let that stale summary erase a validated winner/pace/bet chain.
+function authorizedStage64Detail(detail){
+  if(!detail||detail.predictionStatus!=='ready'||
+     detail.predictionModelVersion!=='arvexq-stage64-product-v1')return false;
+  var p=detail.prediction, marks=detail.predictionMarks, tickets=detail.recommendedBets;
+  if(!p||p.modelVersion!=='arvexq-stage64-product-v1'||
+     p.predictionStatus!=='ready'||p.productionEligible!==true||
+     p.raceId!==detail.id||p.date!==detail.date||
+     !Array.isArray(marks)||marks.length!==5||
+     !Array.isArray(tickets)||!tickets.length)return false;
+  var labels=['◎','○','▲','△','☆'],seen={};
+  if(!marks.every(function(m,i){
+    var no=Number(m&&m.horseNumber);
+    if(!Number.isInteger(no)||no<=0||seen[no]||m.mark!==labels[i])return false;
+    seen[no]=true;return true;
+  }))return false;
+  return tickets.every(function(t){
+    return t&&Array.isArray(t.combos)&&t.combos.length>0&&t.combos.every(function(combo){
+      return Array.isArray(combo)&&combo.length>=2&&combo.every(function(n){
+        return Number.isInteger(Number(n))&&!!seen[Number(n)]
+      })
+    })
+  });
+}
 function mergeRaceReflection(base,incoming,oddsRows,summary){
   base=base||{};incoming=incoming||{};summary=summary||{};
+  var sealedDetail=authorizedStage64Detail(incoming);
   var out=Object.assign({},base);
   Object.keys(incoming).forEach(function(key){
     var v=incoming[key];
@@ -975,6 +1003,10 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
   Object.keys(summary).forEach(function(key){
     var v=summary[key];
     if(key==='horses'||key==='result')return;
+    // Race-day summaries are advisory for card/status, not authoritative
+    // replacements for the complete, verified pre-off forecast in D1 detail.
+    if(sealedDetail&&['predictionStatus','predictionModelVersion','prediction',
+       'predictionMarks','recommendedBets','forecastText'].indexOf(key)>=0)return;
     // Day summaries may be stale or built by the retired scorer. Only a
     // full detail can authoritatively replace its learned forecast version.
     if((key==='predictionModelVersion'||key==='predictionStatus'||key==='legacyPresentationDisabled')&&
