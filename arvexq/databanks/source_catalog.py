@@ -9,6 +9,9 @@ from typing import Any
 
 # id / label / circuit / verified public entry point / available data families / caveat
 SOURCE_CATALOG: list[list[str]] = [["jra_official","JRA公式レース結果","JRA","https://www.jra.go.jp/keiba/","result,corner,race_lap,horse","公式閲覧。再配信・大量取得の条件は要確認"],
+    ["jra_going_history","JRA含水率・クッション値アーカイブ","JRA","https://www.jra.go.jp/keiba/baba/archive/","statistics,pace","PDFで公表。計測時刻とレース発走時刻を照合。転載・二次利用条件に留意"],
+    ["jma_weather_history","気象庁・過去の気象観測データ","both","https://www.data.jma.go.jp/risk/obsdl/","statistics,pace","時別/日別CSV。観測地点・品質符号・時刻一致を検証。過度の自動アクセス禁止"],
+    ["jra_official_video","JRA公式過去レース動画","JRA","https://jra.jp/faq/pop02/1_4.html","video,trip_review","2015年3月以降の公式過去映像を閲覧可能。映像の商用二次利用には事前許諾が必要"],
     ["jra_van","JRA-VAN DataLab.","JRA","https://jra-van.jp/dlb/","history,odds,result,sectional","一般DataLab契約ではスマホ商用再配信不可。JRADB商用契約が必要"],
     ["nar_official","地方競馬情報サイト/NAR","NAR","https://www.keiba.go.jp/","entries,result,corner,race_lap,history","公式情報。利用規約に無断転載禁止"],
     ["nar_csv","NAR公式CSV","NAR","https://www.keiba.go.jp/pdf/manual/data_pdf_manual.pdf","entries,odds,payout,race_lap,corner","2026 CSV。ZIPダウンロードはページから。商用許諾要確認"],
@@ -28,7 +31,6 @@ SOURCE_CATALOG: list[list[str]] = [["jra_official","JRA公式レース結果","J
     ["keiba_intelligence","KEIBA Intelligence","both","https://keiba-intelligence.jp/","history,forecast,result","中央/南関東のAI分析アーカイブ"],
     ["spat4","SPAT4","NAR","https://www.nankankeiba.com/","entries,odds,video","公式誘導先。専用データ配信利用は未確認"],
     ["nar_live","NAR競馬ライブ情報","NAR","https://www.keiba.go.jp/live/","video,trip_review","映像確認。構造化自動取得ではない"],
-    ["banei_official","ばんえい十勝公式 成績表","NAR","https://www.banei-keiba.or.jp/race_starting_pdf.php","entries,result,schedule","帯広ばんえい。平地のコーナー順位とは別形式"],
     ["hokkaido_official","ホッカイドウ競馬公式","NAR","https://www.hokkaidokeiba.net/raceinfo/","history,result,odds,entries,video","門別。前5走出走表・成績表"],
     ["iwate_official","岩手競馬公式","NAR","https://www.iwatekeiba.or.jp/","schedule,result,trainer,jockey,statistics","盛岡・水沢。能力検査・騎手リーディング等"],
     ["kanazawa_official","金沢競馬公式","NAR","https://www.kanazawakeiba.com/race/","entries,result,odds,video","結果・オッズはNARへのリンクも含む"],
@@ -39,7 +41,7 @@ SOURCE_CATALOG: list[list[str]] = [["jra_official","JRA公式レース結果","J
     ["saga_official","佐賀競馬公式","NAR","https://www.sagakeiba.net/graderaceschedule/","schedule,result,video","開催・騎乗・除外変更の公式案内"],
     ["netkeiba_newspaper","netkeiba競馬新聞データ解説","JRA","https://race.sp.netkeiba.com/race/newspaper_master.html","horse_early3f,corner,horse_sectional,pace_forecast","前半3F/追走指数など。商品内容と利用条件を要確認"],
     ["keiba_eight","競馬エイト電子版","JRA","https://eight.race.sanspo.com/","horse,history,forecast","全JRAレースの新聞形式。契約下の閲覧サービスで自動配信・転載権限は別"]]
-NAR_VENUES: list[str] = ["帯広","門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]
+NAR_VENUES: list[str] = ["門別","盛岡","水沢","浦和","船橋","大井","川崎","金沢","笠松","名古屋","園田","姫路","高知","佐賀"]
 VALID_EVIDENCE_FAMILIES = (
     "entries", "horse", "history", "corner", "race_lap", "horse_early3f",
     "horse_sectional", "estimated_sectional", "pace_forecast",
