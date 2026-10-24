@@ -18,6 +18,7 @@ def build_jra_source(
     body_weight: Callable[..., Any] | None = None,
     scratches: Callable[..., Any] | None = None,
     jockey_trainer: Callable[..., Any] | None = None,
+    pedigree: Callable[..., Any] | None = None,
 ) -> DataSource:
     fetchers = {
         key: value
@@ -32,6 +33,7 @@ def build_jra_source(
             "body_weight": body_weight,
             "scratches": scratches,
             "jockey_trainer": jockey_trainer,
+            "pedigree": pedigree,
         }.items()
         if value is not None
     }
