@@ -40,6 +40,25 @@ def _jra_history_adapter(namespace: dict[str, Any]):
     return fetch
 
 
+def _jra_pedigree_adapter(namespace: dict[str, Any]):
+    """Reuse the existing JRA horse-profile URL and cache; no new feed."""
+    request = _pick(namespace, "_jra_request")
+    if request is None:
+        return None
+    from arvexq.ingest.jra_profile_pedigree import parse_jra_profile_pedigree
+
+    def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
+        if str(race.get("circuit") or "") not in ("中央", "JRA"):
+            return {}
+        cname = str(horse.get("_jraHorseCname") or horse.get("jraHorseCname") or "")
+        if not cname.startswith("pw01dud") or not str(race.get("date") or ""):
+            return {}
+        html = request("https://www.jra.go.jp/JRADB/accessU.html", cname, 86400)
+        return parse_jra_profile_pedigree(html)
+
+    return fetch
+
+
 def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
     """Enrich every recent dated start through the canonical JRA result parser."""
     parse_result = _pick(namespace, "_jra_parse_result")
@@ -325,6 +344,7 @@ def register_legacy_sources(namespace: dict[str, Any]) -> dict[str, list[str]]:
         horse_history=_jra_history_adapter(namespace),
         results=_pick(namespace, "_jra_parse_result"),
         track_weather=_pick(namespace, "_jra_fetch_environment"),
+        pedigree=_jra_pedigree_adapter(namespace),
     )
     if jra.fetchers:
         registry.register(jra)
