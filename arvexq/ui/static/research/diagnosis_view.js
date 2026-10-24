@@ -37,7 +37,7 @@
     var body=(r.horses||[]).slice().sort(function(a,b){return a.horseNumber-b.horseNumber}).map(function(h){
       var saved=by[h.horseNumber],row=rows.find(function(x){return x.horse&&x.horse.horseNumber===h.horseNumber})||{},
           stageRow=!saved&&stage&&stage[String(h.horseNumber)],ev=saved&&(saved.lockedEvaluation||saved),
-          score=saved?ev.score:(stageRow&&stageRow.ability!==null?stageRow.ability*100:(!started?row.overallScoreExact:null)),
+          score=saved?ev.score:(stageRow?(stageRow.ability!==null?stageRow.ability*100:null):(!started?row.overallScoreExact:null)),
           grade=saved?ev.grade:(stageRow?'能力指数':(!started?row.overallGrade:'')),
           mark=saved?saved.mark:(stageRow?stageRow.mark:(!started?row.predMark:'')),
           axes=saved&&saved.axes,notes=[];

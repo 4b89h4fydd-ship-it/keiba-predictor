@@ -40,3 +40,16 @@ for(const circuit of ['中央','地方']){
   assert.ok(refused.includes('発走前の診断根拠は未保存'));
 }
 console.log('JRA_NAR_STAGE64_ALL_RUNNER_DIAGNOSIS_VISIBLE_PASS');
+
+// Stage64 absent ability never falls through into a legacy/post-result score.
+const nullAbilityRace={id:'race-null',date:'2026-10-24',circuit:'中央',predictionStatus:'ready',
+  predictionModelVersion:'arvexq-stage64-product-v1',horses:Array.from({length:5},(_,i)=>({horseNumber:i+1,name:'N'+i})),
+  predictionMarks:['◎','○','▲','△','☆'].map((m,i)=>({horseNumber:i+1,mark:m})),
+  prediction:{raceId:'race-null',date:'2026-10-24',circuit:'中央',modelVersion:'arvexq-stage64-product-v1',
+    productionEligible:true,predictionStatus:'ready',stages:{ability:{value:{1:null,2:.2,3:.3,4:.4,5:.5}},
+    probability:{value:{win:{1:.1},top3:{1:.3}},calibrationVerified:false}}}};
+const nullHtml=root.ARVEXQDiagnosisView.render(nullAbilityRace,
+  {rows:[{horse:nullAbilityRace.horses[0],overallScoreExact:99,overallGrade:'A'}]},
+  {...deps,original:()=>null,started:()=>false});
+assert.ok(!nullHtml.includes('99.0'));
+console.log('STAGE64_NULL_SCORE_NO_LEGACY_LEAK_PASS');
