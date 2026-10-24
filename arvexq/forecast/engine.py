@@ -64,7 +64,9 @@ def _stage64_pace_text(race, prediction):
     def name(no):
         return str(horses.get(no, {}).get("name") or f"{no}番")
 
-    early = evidence.get("earlyPositionObservedOrder") or []
+    profiles = evidence.get("observedPositionProfiles") or {}
+    early = [no for no in (evidence.get("earlyPositionObservedOrder") or [])
+             if profiles.get(no) in {"前方", "好位"}]
     pieces = [
         "近走の着順から能力を確認し、過去の初角位置は観測された脚質傾向として別に読む。",
         f"現在の◎候補は{name(ranked[0])}。"
