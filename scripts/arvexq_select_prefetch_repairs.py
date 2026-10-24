@@ -111,24 +111,6 @@ def repair_reason(prepared: Any, existing: Any, *, facts_only: bool = False) -> 
                 or existing.get("predictionMarks") != prepared.get("predictionMarks")
                 or existing.get("recommendedBets") != prepared.get("recommendedBets")):
             return "new_method_products_not_persisted"
-    # A rich old card is not equivalent to the current learned forecast.
-    # Never skip replacement solely because the retired analysis was ready.
-    new_version = str(prepared.get("predictionModelVersion") or "")
-    old_version = str(existing.get("predictionModelVersion") or "")
-    if new_version.startswith("arvexq-learned-whole-career"):
-        if new_version != old_version:
-            return "replacement_model_changed"
-        new_marks = {int(h.get("horseNumber") or 0): str((h.get("integratedEvaluation") or {}).get("mark") or "")
-                     for h in prepared.get("horses") or [] if isinstance(h, dict)}
-        old_marks = {int(h.get("horseNumber") or 0): str((h.get("integratedEvaluation") or {}).get("mark") or "")
-                     for h in existing.get("horses") or [] if isinstance(h, dict)}
-        if new_marks != old_marks:
-            return "replacement_marks_changed"
-    if prepared.get("legacyPresentationDisabled") and (
-        existing.get("predictionStatus") != "new-model-unavailable"
-        or existing.get("recommendedBetPlan") != prepared.get("recommendedBetPlan")
-    ):
-        return "retired_forecast_still_published"
     if not rich(existing):
         return "thin"
     # Facts are saved first. A later valid analysis must be published even
