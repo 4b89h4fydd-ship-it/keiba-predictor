@@ -270,6 +270,8 @@ def blend(race, opinions, fitted, *, quoted_odds=None, max_tickets=5):
     if not isinstance(race, dict) or not isinstance(fitted, dict) or fitted.get("version") != VERSION:
         raise ValueError("verified learned weights required")
     today = str(race["date"])
+    if fitted.get("targetDate") != today:
+        raise ValueError("empirical calibration is not for this exact target date")
     if date.fromisoformat(fitted["trainedThrough"]) >= date.fromisoformat(today):
         raise ValueError("training date must precede prediction date")
     if fitted["circuit"] != race.get("circuit"):
