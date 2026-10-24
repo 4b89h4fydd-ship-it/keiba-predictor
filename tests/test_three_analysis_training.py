@@ -27,6 +27,7 @@ class ChronologicalTrainingTests(TestCase):
         self.assertEqual(model["trainedThrough"],"2098-01-16")
         self.assertEqual(model["calibratedThrough"],"2098-01-23")
         self.assertFalse(model["scenarioWeightsValidated"])
+        self.assertFalse(model["outOfSampleValidated"])
         results=evaluate_holdout(model,races)
         self.assertEqual(results["raceCount"],5)
         self.assertIsNone(results["returnRate"])
