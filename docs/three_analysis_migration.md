@@ -69,9 +69,14 @@ No MotherDuck data was inserted, overwritten or used as a new provider route.
 Using the **existing** `forecast/training.py` and `forecast/new_method.py`:
 
 - NAR: 97 races fit (October 15–18), 32 races temperature-calibrated
-  (October 19), 68 race strictly later holdout (October 20–21).
-  **Winner pick hit 19/68 = 27.94%**, holdout winner log-loss 2.0297,
-  mean win Brier 0.08229. No verified 3-way quotes/stake ledger -> ROI NOT MEASURED.
+  (October 19), 68 races strictly later holdout (October 20–21).
+  **◎ 1着 19/68 = 27.94%; ◎ 3着内 41/68 = 60.29%**.
+  Observed ◎ finish ranks: 1着19, 2着14, 3着8, 4着以下27.
+  Independently verified by read-only MotherDuck Flight
+  `3b270567-8544-4d4c-9929-0456def7de27` run #1 (SUCCEEDED),
+  using the same frozen pre-off features and NAR model on the 68 holdout races.
+  Holdout winner log-loss 2.0297, mean win Brier 0.08229.
+  No verified 3-way quotes/stake ledger -> ROI NOT MEASURED.
 - JRA: 23 races fitted October 17, 23 temperature-calibrated October 18.
   **No later eligible holdout**, so no JRA winner-hit estimate can be reported.
 - Missing verified all-runner videos and race pace scenario labels mean
