@@ -31,6 +31,7 @@ def observed(field, value):
 def audit_day(bundle):
     counts, race_gaps, horse_gaps = Counter(), Counter(), Counter()
     errors = []
+    missing_history_reasons = []
     first_race_by_name = {}
     for detail in bundle.get("details") or []:
         mismatch = observed_detail_identity_error(detail)
@@ -86,15 +87,39 @@ def audit_day(bundle):
                 runs = merge_career(restored.get("allPastRuns"), restored.get("recentRaces"), detail["date"])
                 counts["observedPriorRuns"] += len(runs)
                 counts["horsesWithoutObservedPriorRuns"] += not runs
+                if not runs:
+                    coverage = horse.get("careerCoverage") or {}
+                    state = str(coverage.get("state") or "") if isinstance(coverage, dict) else ""
+                    verified_debut = bool(horse.get("debutNoHistory") is True and state == "complete-no-starts")
+                    missing_history_reasons.append({
+                        "raceId": detail["id"], "horseNumber": number,
+                        "horseName": horse.get("name") or "",
+                        "reason": "verified-no-prior-start" if verified_debut else
+                                  (state or "acquisition-unverified"),
+                    })
                 counts["verifiedCareerArchives"] += isinstance(horse.get("careerArchive"), dict)
             except (ValueError, KeyError, TypeError, OSError) as exc:
                 errors.append({"raceId": detail["id"], "horseNumber": number,
                                "error": "career recovery: " + str(exc)[:160]})
     read_errors = list(bundle.get("readErrors") or [])
     expected = len(bundle.get("races") or [])
+    detail_ids = {str(detail.get("id") or "") for detail in bundle.get("details") or []}
+    sources = bundle.get("readbackSources") or {}
+    timestamps = bundle.get("detailUpdatedAt") or {}
+    display_errors = list(bundle.get("displayParityErrors") or [])
+    updates = [{
+        "raceId": str(row.get("id") or ""),
+        "summaryUpdatedAtEpoch": row.get("updatedAtEpoch"),
+        "detailUpdatedAtEpoch": timestamps.get(str(row.get("id") or "")),
+        "detailReadable": str(row.get("id") or "") in detail_ids,
+        "readbackSource": sources.get(str(row.get("id") or "")),
+    } for row in bundle.get("races") or [] if isinstance(row, dict)]
     return {"date": bundle["date"], "summaryRaces": expected,
             "observed": dict(counts), "missingRaceFields": dict(race_gaps),
-            "missingHorseFields": dict(horse_gaps), "readErrors": read_errors,
+            "missingHorseFields": dict(horse_gaps),
+            "missingHistoryReasons": missing_history_reasons,
+            "updateEvidence": updates, "displayParityErrors": display_errors,
+            "readErrors": read_errors,
             "validationErrors": errors,
             "displayFallbackRaces": sum(v == "display" for v in (bundle.get("readbackSources") or {}).values()),
             "allRaceReadsVerified": bool(expected) and counts["races"] == expected and not read_errors,
