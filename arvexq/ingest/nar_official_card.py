@@ -6,11 +6,69 @@ from arvexq.ingest.nar_fields.body_weight import extract as observed_body_weight
 from arvexq.ingest.nar_fields.carried_weight import extract as observed_carried_weight
 
 
+def _official_banei_rows(soup, detail, clean):
+    """Read weight facts from the EXISTING multi-row NAR official card layout.
+
+    Its runner is identified by the named .horseNum / .horseName cells.
+    Previous-race weight cells and odds must never become today's values.
+    """
+    known = {clean(str(h.get("name"))): h.get("horseNumber")
+             for h in detail.get("horses", []) or [] if h.get("name")}
+    results = {}
+    for first in soup.select("tr.tBorder"):
+        number_cell = first.select_one("td.horseNum")
+        name_cell = first.select_one("a.horseName")
+        if number_cell is None or name_cell is None:
+            continue
+        name = clean(name_cell.get_text(" ", strip=True))
+        try:
+            number = int(number_cell.get_text(" ", strip=True))
+        except (TypeError, ValueError):
+            continue
+        if known.get(name) != number:
+            continue
+        # Five consecutive outer-table rows comprise this race's horse.
+        following = []
+        for sibling in first.find_next_siblings("tr"):
+            if "tBorder" in (sibling.get("class") or []):
+                break
+            following.append(sibling)
+            if len(following) >= 4:
+                break
+        load = body = change = None
+        for row in following:
+            cells = row.find_all("td", recursive=False)
+            # Current load is uniquely the fourth cell in the row beginning
+            # with sex, coat and birth date, followed by career record.
+            if len(cells) >= 4 and cells[0].find("span", class_="male"):
+                candidate = clean(cells[3].get_text(" ", strip=True))
+                m = re.fullmatch(r"(\d{3})\s+\d+-\d+-\d+-\d+", candidate)
+                if m:
+                    load = observed_carried_weight([m.group(1)], 0, banei=True)
+            for cell in cells:
+                if "odds_weight" not in (cell.get("class") or []):
+                    continue
+                candidate = clean(cell.get_text(" ", strip=True))
+                m = re.fullmatch(r"(\d{3,4})\s*(?:kg)?\s*\\(([+-]?\d+)\\)", candidate)
+                if m:
+                    body, change = observed_body_weight(
+                        [m.group(1) + " (" + m.group(2) + ")"], "", 0, -1, banei=True,
+                    )
+        if body is not None or load is not None:
+            results[number] = {"horseNumber": number, "bodyWeight": body,
+                               "bodyWeightChange": change, "carriedWeight": load,
+                               "source": "NAR公式出馬表"}
+    return [results[n] for n in sorted(results)]
+
+
 def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
     """Return per-horse observed weight/weight-change/carried-weight fields."""
     if not html:
         return []
     soup = BeautifulSoup(html, "html.parser")
+    is_banei = (detail.get("track") == "帯広ば" or detail.get("analysisMode") == "ばんえい")
+    if is_banei and soup.select("tr.tBorder td.horseNum"):
+        return _official_banei_rows(soup, detail, clean)
     known = {
         clean(h.get("name")): int(h.get("horseNumber") or 0)
         for h in detail.get("horses", []) or []
