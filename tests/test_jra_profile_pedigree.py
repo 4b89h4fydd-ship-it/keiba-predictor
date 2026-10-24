@@ -23,7 +23,7 @@ PROFILE = """
 def test_official_profile_pedigree_parses_observed_lineage():
     assert parse_jra_profile_pedigree(PROFILE) == {
         "pedigree": {"sire": "ディーマジェスティ",
-                     "dam": "アマノブラウニイー産駒", "damSire": "サクラバクシンオー"}}
+                     "dam": "アマノブラウニイー", "damSire": "サクラバクシンオー"}}
 
 
 def test_alternative_definition_list_and_empty_page():
@@ -76,7 +76,7 @@ def test_registered_existing_source_fills_gaps_but_not_marks_or_earlier_parent()
     enriched = asyncio.run(enrich_race_missing(detail, bank_registry=registry, history_limit=5))
     p = enriched["horses"][0]["pedigree"]
     assert p["sire"] == "既存の父"  # never overwrite competing factual evidence
-    assert p["dam"] == "アマノブラウニイー産駒"
+    assert p["dam"] == "アマノブラウニイー"
     assert p["damSire"] == "サクラバクシンオー"
     assert "jra_official" in enriched["horses"][0]["_supplementalSources"]
     assert enriched["preRaceBet"] == original["preRaceBet"]
