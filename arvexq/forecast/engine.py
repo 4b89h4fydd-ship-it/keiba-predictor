@@ -47,50 +47,42 @@ def _preoff(facts, now):
 
 
 def _stage64_pace_text(race, prediction):
-    """Explain the same six-stage estimate; never run a second predictor.
+    """Explain observed early positions without claiming a proven race pace.
 
-    Tactical emphasis follows the *publicly described* pace/position approach.
-    The model still uses uncalibrated hypothetical scenarios and must say so.
+    The earlier forward/closer scenario prose treated unsupported corrections
+    as if they were tactical evidence. Never label early position as a
+    guaranteed lead or invent certainty about a pace battle.
     """
     stages = prediction["stages"]
-    styles = stages["runningStyle"]["value"] or {}
-    deltas = stages["pace"]["value"] or []
+    evidence = prediction.get("paceEvidence") or {}
     marks = stages["marks"]["value"] or {}
     ranked = marks.get("orderedWinCandidates") or []
     horses = {h["horseNumber"]: h for h in race["horses"]}
     if not ranked:
         return ""
+
     def name(no):
         return str(horses.get(no, {}).get("name") or f"{no}番")
-    leader = ranked[0]
-    front = sorted(
-        (no for no, style in styles.items()
-         if isinstance(style, (tuple, list)) and len(style) == 4),
-        key=lambda no: (-(styles[no][0] + styles[no][1]), no))
-    parts = [
-        "前走の初角位置・脚質と近走着順を別々に確認し、"
-        "同一の展開仮説から勝ち候補・印・買い目を求める。",
-        f"勝ち候補の先頭は{name(leader)}。"
-        "この順位は未校正のモデル推定で、的中率を保証しない。"
+
+    early = evidence.get("earlyPositionObservedOrder") or []
+    pieces = [
+        "近走の着順から能力を確認し、過去の初角位置は観測された脚質傾向として別に読む。",
+        f"現在の◎候補は{name(ranked[0])}。"
+        "これは能力評価を基準とした暫定候補であり、的中率を保証しない。",
     ]
-    if front:
-        parts.append("過去の位置取りから前方に運ぶ傾向が強い候補は"
-                     + "、".join(name(no) for no in front[:3]) + "。")
-    labels = ("標準隊列", "前争いの影響", "前方有利の想定", "後方浮上の想定")
-    for index, case in enumerate(deltas):
-        if not isinstance(case, dict):
-            continue
-        favored = sorted(
-            ((no, float(delta)) for no, delta in case.items() if delta > 0),
-            key=lambda row: (-row[1], row[0]))
-        if index == 0:
-            parts.append(f"展開仮説{index + 1}（{labels[0]}）を比較対象にする。")
-        elif favored:
-            parts.append(f"展開仮説{index + 1}（{labels[index] if index < len(labels) else '別想定'}）で"
-                         + "補正上位は" + "、".join(name(no) for no, _ in favored[:3]) + "。")
-    parts.append("各仮説の発生頻度と予測勝率の実測校正は未完了。"
-                 "印と買い目は同じStage64の推定分布から選ぶ。")
-    return "".join(parts)
+    if early:
+        pieces.append(
+            "初角で前方に位置した観測傾向がある馬は"
+            + "、".join(name(no) for no in early[:3]) + "。"
+            "前方にいたことと今回逃げることは同義ではない。"
+        )
+    pieces.append(
+        "枠順・発馬・騎手の選択・出走馬同士の競り合いを確認しない限り、"
+        "単騎逃げ・ハイペース・差し有利とは断定せず、"
+        "根拠のない展開補正で能力上位馬を印から外さない。"
+        "複数予想家の根拠融合・AIの独立検証・確率校正は未完了。"
+    )
+    return "".join(pieces)
 
 
 def build_prediction(facts, now=None):
