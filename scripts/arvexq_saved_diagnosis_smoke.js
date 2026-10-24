@@ -14,3 +14,29 @@ const missing=root.ARVEXQDiagnosisView.render(r,p,{...deps,original:()=>null});
 assert.ok(missing.includes('発走前の診断根拠は未保存'));
 assert.ok(!missing.includes('99.0'));
 console.log('ALL_RUNNER_DIAGNOSIS_PREOFF_ORIGINAL_POSTOFF_READONLY_PASS');
+
+// Stage64 public products must be visible for every horse at every track,
+// even after post; do not mislabel them as a verified pre-off lock.
+for(const circuit of ['中央','地方']){
+  const horses=Array.from({length:6},(_,i)=>({horseNumber:i+1,name:circuit+'馬'+(i+1)}));
+  const values=Object.fromEntries(horses.map((h,i)=>[h.horseNumber,(i+1)/10]));
+  const marks=['◎','○','▲','△','☆'].map((mark,i)=>({horseNumber:i+1,mark}));
+  const r2={id:'race-'+circuit,date:'2026-10-24',circuit,predictionStatus:'ready',
+    predictionModelVersion:'arvexq-stage64-product-v1',horses,predictionMarks:marks,
+    prediction:{raceId:'race-'+circuit,date:'2026-10-24',circuit,
+      modelVersion:'arvexq-stage64-product-v1',productionEligible:true,predictionStatus:'ready',
+      stages:{ability:{value:values},runningStyle:{value:Object.fromEntries(horses.map(h=>[h.horseNumber,[1,0,0,0]]))},
+        probability:{calibrationVerified:false,value:{win:values,top3:values}}}}};
+  const after=JSON.stringify(r2);
+  const out=root.ARVEXQDiagnosisView.render(r2,{}, {...deps,original:()=>null});
+  assert.equal((out.match(/diagnosis-merged-row/g)||[]).length,6);
+  assert.ok(out.includes('能力指数')&&out.includes('推定1着率 10.0%')&&out.includes('推定3着内率 10.0%'));
+  assert.ok(out.includes('確率は未校正')&&out.includes('公開Stage64'));
+  assert.ok(out.includes('◎')&&out.includes('☆'));
+  assert.ok(!out.includes('発走前の診断根拠は未保存')&&!out.includes('事後評価'));
+  assert.equal(JSON.stringify(r2),after);
+  const bad={...r2,prediction:{...r2.prediction,raceId:'wrong'}};
+  const refused=root.ARVEXQDiagnosisView.render(bad,{}, {...deps,original:()=>null});
+  assert.ok(refused.includes('発走前の診断根拠は未保存'));
+}
+console.log('JRA_NAR_STAGE64_ALL_RUNNER_DIAGNOSIS_VISIBLE_PASS');
