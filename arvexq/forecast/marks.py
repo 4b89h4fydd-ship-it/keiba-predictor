@@ -1,24 +1,18 @@
-"""Stage64 product marks; no ranking or probability is calculated in the UI."""
+"""Project marks computed by the calibrated three-analysis model (no rescoring)."""
+from copy import deepcopy
 
 def generate_marks(prediction):
-    if not isinstance(prediction, dict) or prediction.get("predictionStatus") != "ready":
+    if not isinstance(prediction,dict) or prediction.get("predictionStatus")!="ready":
         return []
-    stages = prediction.get("stages") or {}
-    value = ((stages.get("marks") or {}).get("value") or {})
-    order = value.get("orderedWinCandidates") or []
-    win = ((stages.get("probability") or {}).get("value") or {}).get("win") or {}
-    labels = ("◎", "○", "▲", "△", "☆")
-    return [{"horseNumber": int(no), "mark": labels[i], "winProbability": win.get(no)}
-            for i, no in enumerate(order[:5])]
+    return deepcopy(prediction.get("marks") or [])
 
 def clear_marks(detail):
-    if not isinstance(detail, dict):
+    if not isinstance(detail,dict):
         return detail
     for horse in detail.get("horses") or []:
-        if not isinstance(horse, dict):
-            continue
-        for key in ("integratedEvaluation", "mark", "predMark", "honmeiRole", "modelProbabilities"):
-            horse.pop(key, None)
-    for key in ("factorRanking", "honmeiDecision", "markMethod", "observedModelCoverage"):
-        detail.pop(key, None)
+        if isinstance(horse,dict):
+            for key in ("integratedEvaluation","mark","predMark","honmeiRole","modelProbabilities"):
+                horse.pop(key,None)
+    for key in ("factorRanking","honmeiDecision","markMethod","observedModelCoverage"):
+        detail.pop(key,None)
     return detail
