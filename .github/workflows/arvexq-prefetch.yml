@@ -38,6 +38,8 @@ name: ARVEXQ Full Prefetch
     - cron: "30 23 * * *"
     - cron: "30 2 * * *"
     - cron: "30 3,5,7,9,11 * * *"
+    # JST 14:05 / 17:05 / 20:05: collect tomorrow's published official entries using the SAME prefetch pipeline.
+    - cron: "05 5,8,11 * * *"
 
 permissions:
   contents: write
@@ -85,9 +87,13 @@ jobs:
       - name: Resolve target date
         env:
           REQUESTED_DATE: ${{ github.event.inputs.date }}
+          SCHEDULE_EXPRESSION: ${{ github.event.schedule }}
         run: |
           if [ -n "$REQUESTED_DATE" ]; then
             TARGET_DATE="$REQUESTED_DATE"
+          elif [ "$SCHEDULE_EXPRESSION" = "05 5,8,11 * * *" ]; then
+            # The scheduled day-before lane keeps manual/push/today behavior unchanged.
+            TARGET_DATE=$(TZ=Asia/Tokyo date -d tomorrow +%F)
           else
             TARGET_DATE=$(TZ=Asia/Tokyo date +%F)
           fi
