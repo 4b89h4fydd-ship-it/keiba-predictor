@@ -4,12 +4,13 @@
 
   function stage64Rows(r){
     var p=r&&r.prediction,st=p&&p.stages||{},ability=st.ability&&st.ability.value,
+        circuit=r&&({'中央':'jra','地方':'nar'}[r.circuit]||r.circuit),
         probability=st.probability&&st.probability.value||{},styles=st.runningStyle&&st.runningStyle.value,
         marks=r&&r.predictionMarks;
     if(!r||r.predictionStatus!=='ready'||r.predictionModelVersion!=='arvexq-stage64-product-v1'||
        !p||p.predictionStatus!=='ready'||p.productionEligible!==true||
        p.modelVersion!==r.predictionModelVersion||p.raceId!==r.id||p.date!==r.date||
-       p.circuit!==r.circuit||!ability||typeof ability!=='object'||
+       p.circuit!==circuit||!ability||typeof ability!=='object'||
        !Array.isArray(r.horses)||!Array.isArray(marks)||marks.length!==5)return null;
     var known={},marked={},rows={},validMarks={'◎':1,'○':1,'▲':1,'△':1,'☆':1};
     r.horses.forEach(function(h){if(h&&Number.isInteger(Number(h.horseNumber))&&Number(h.horseNumber)>0)known[String(Number(h.horseNumber))]=true});

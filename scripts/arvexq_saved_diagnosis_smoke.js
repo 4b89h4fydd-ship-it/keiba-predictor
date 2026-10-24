@@ -23,7 +23,7 @@ for(const circuit of ['中央','地方']){
   const marks=['◎','○','▲','△','☆'].map((mark,i)=>({horseNumber:i+1,mark}));
   const r2={id:'race-'+circuit,date:'2026-10-24',circuit,predictionStatus:'ready',
     predictionModelVersion:'arvexq-stage64-product-v1',horses,predictionMarks:marks,
-    prediction:{raceId:'race-'+circuit,date:'2026-10-24',circuit,
+    prediction:{raceId:'race-'+circuit,date:'2026-10-24',circuit:circuit==='中央'?'jra':'nar',
       modelVersion:'arvexq-stage64-product-v1',productionEligible:true,predictionStatus:'ready',
       stages:{ability:{value:values},runningStyle:{value:Object.fromEntries(horses.map(h=>[h.horseNumber,[1,0,0,0]]))},
         probability:{calibrationVerified:false,value:{win:values,top3:values}}}}};
@@ -45,7 +45,7 @@ console.log('JRA_NAR_STAGE64_ALL_RUNNER_DIAGNOSIS_VISIBLE_PASS');
 const nullAbilityRace={id:'race-null',date:'2026-10-24',circuit:'中央',predictionStatus:'ready',
   predictionModelVersion:'arvexq-stage64-product-v1',horses:Array.from({length:5},(_,i)=>({horseNumber:i+1,name:'N'+i})),
   predictionMarks:['◎','○','▲','△','☆'].map((m,i)=>({horseNumber:i+1,mark:m})),
-  prediction:{raceId:'race-null',date:'2026-10-24',circuit:'中央',modelVersion:'arvexq-stage64-product-v1',
+  prediction:{raceId:'race-null',date:'2026-10-24',circuit:'jra',modelVersion:'arvexq-stage64-product-v1',
     productionEligible:true,predictionStatus:'ready',stages:{ability:{value:{1:null,2:.2,3:.3,4:.4,5:.5}},
     probability:{value:{win:{1:.1},top3:{1:.3}},calibrationVerified:false}}}};
 const nullHtml=root.ARVEXQDiagnosisView.render(nullAbilityRace,
@@ -53,3 +53,9 @@ const nullHtml=root.ARVEXQDiagnosisView.render(nullAbilityRace,
   {...deps,original:()=>null,started:()=>false});
 assert.ok(!nullHtml.includes('99.0'));
 console.log('STAGE64_NULL_SCORE_NO_LEGACY_LEAK_PASS');
+
+// A distinct JRA/NAR API circuit is necessary; cross-circuit forecasts refuse.
+const illegal={...nullAbilityRace,prediction:{...nullAbilityRace.prediction,circuit:'nar'}};
+const illegalHtml=root.ARVEXQDiagnosisView.render(illegal,{}, {...deps,original:()=>null});
+assert(!illegalHtml.includes('公開Stage64'),'never display cross-circuit Stage64 data');
+console.log('JRA_NAR_API_CIRCUIT_MAPPING_AND_GUARD_PASS');
