@@ -61,6 +61,7 @@ def _existing_snapshot(race_id):
 
 def test_two_date_replay_baselines_and_public_tactics():
     judged = []
+    observed_coverage = defaultdict(lambda: defaultdict(int))
     for race_id in sorted(LABELS):
         if "帯広ば" in race_id:
             continue
@@ -91,6 +92,19 @@ def test_two_date_replay_baselines_and_public_tactics():
         distinct_front = next((h for h in win_order[:3] if h in segregated),
                               win_order[0])
         # Freeze all four candidate predictions before opening labels.
+        fact = plain["paceEvidence"]["holisticWinnerEvidence"]
+        key = ("-".join(race_id.split("-")[1:4]), source["circuit"])
+        observed_coverage[key]["races"] += 1
+        if fact["headToHead"]:
+            observed_coverage[key]["sharedPastOpposition"] += 1
+        if any(x.get("sameTrackDistanceMarginSamples", 0) > 0
+               for x in fact["byHorse"].values()):
+            observed_coverage[key]["courseComparableMargins"] += 1
+        if any(x.get("individualGateReactionSamples", 0) > 0
+               for x in fact["byHorse"].values()):
+            observed_coverage[key]["individualStartReadings"] += 1
+        if fact["firstCorner"] is not None:
+            observed_coverage[key]["verifiedFirstCornerDistance"] += 1
         challenger = (plain.get("winnerEvidenceComparison") or {}).get(
             "proposedHeadToHeadResearchChallenger")
         rematch = challenger["horseNumber"] if challenger else win_order[0]
@@ -116,6 +130,6 @@ def test_two_date_replay_baselines_and_public_tactics():
         info = "; ".join("%s %d/%d◎1着 %d/%d◎3内" % (
             method, result[1], result[0], result[2], result[0])
             for method, result in sorted(methods.items()))
-        info += "; directRivalTriggers=%d" % rematch_triggers[(date,circuit)]
+        info += "; directRivalTriggers=%d; evidenceCoverage=%s" % (rematch_triggers[(date,circuit)], dict(observed_coverage[(date,circuit)]))
         warnings.warn("ARVEXQ_RESEARCH_NOT_PREOFF %s %s: %s" %
                       (date, circuit, info), UserWarning, stacklevel=1)
