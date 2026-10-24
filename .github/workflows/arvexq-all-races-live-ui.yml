@@ -1,6 +1,11 @@
 name: ARVEXQ Horse All-Races Live UI
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/arvexq_realtime_navigation_smoke.js'
+      - '.github/workflows/arvexq-all-races-live-ui.yml'
   push:
     branches: [main]
     paths:
