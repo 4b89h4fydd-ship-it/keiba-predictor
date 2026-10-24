@@ -58,6 +58,90 @@ def _same_track_distance_evidence(horse, race):
             "source": "existing-past-runs-strictly-before-race"}
 
 
+def _public_position_tactics(race, histories):
+    """Observable components of publicly described pace analysis.
+
+    These are facts/flags, NOT an estimate of today's actual leader, nor an
+    implementation of a forecaster's undisclosed judgement. Do not feed flags
+    into a fabricated ability delta or probability without forward validation.
+    """
+    distance = race.get("distance")
+    try:
+        distance = float(distance) if distance is not None else None
+    except (TypeError, ValueError):
+        distance = None
+    profiles = {}
+    high_intent = []
+    unknown = []
+    shortened = []
+    extended = []
+    for no in sorted(histories):
+        runs = histories[no]
+        if not runs:
+            profiles[no] = {"status": "no-prior-run", "lastRunDate": None,
+                            "top3PositionObserved": None, "distanceChange": "unknown"}
+            unknown.append(no)
+            continue
+        run = runs[0]
+        positions = run.get("cornerPositions") or run.get("passing") or []
+        observed = isinstance(positions, list) and bool(positions) and all(
+            type(p) in (int, float) and p >= 1 and p <= run.get("fieldSize", 0)
+            for p in positions
+        )
+        top3 = any(p <= 3 for p in positions) if observed else None
+        old_distance = run.get("distance")
+        try:
+            old_distance = float(old_distance) if old_distance is not None else None
+        except (TypeError, ValueError):
+            old_distance = None
+        change = "unknown"
+        if distance is not None and old_distance is not None and distance > 0 and old_distance > 0:
+            if distance > old_distance:
+                change = "extension"
+                extended.append(no)
+            elif distance < old_distance:
+                change = "shortening"
+                shortened.append(no)
+            else:
+                change = "unchanged"
+        if top3 is None:
+            unknown.append(no)
+        # His published first-pass criterion includes previous top-three
+        # positions and the possibility that distance extension increases
+        # forward intent. Neither proves an actual lead today.
+        flagged = top3 is True or change == "extension"
+        if flagged:
+            high_intent.append(no)
+        profiles[no] = {
+            "status": "prior-observation" if top3 is not None else "prior-position-missing",
+            "lastRunDate": run.get("_raceDate") or run.get("date"),
+            "lastRunDistance": old_distance,
+            "top3PositionObserved": top3,
+            "distanceChange": change,
+            "forwardIntentCandidate": flagged,
+        }
+    # Horse number represents starting position along the gate. Frame number
+    # is NOT interchangeable with individual horse numbers.
+    adjacent = [[a, b] for a, b in zip(high_intent, high_intent[1:]) if b - a == 1]
+    adjacent_members = {no for pair in adjacent for no in pair}
+    separated = [no for no in high_intent if no not in adjacent_members]
+    return {
+        "source": "preoff-latest-prior-run-and-entered-horse-numbers",
+        "methods": ["prior-top-three-at-any-corner", "distance-extension-flag",
+                    "horse-number-adjacency"],
+        "observedProfiles": profiles,
+        "forwardIntentCandidates": high_intent,
+        "adjacentForwardIntentPairs": adjacent,
+        "separatedForwardIntentCandidates": separated,
+        "distanceShorteningCandidates": shortened,
+        "distanceExtensionCandidates": extended,
+        "positionUnknown": unknown,
+        "pacePredicted": False,
+        "actualLeadVerified": False,
+        "actualCompetitionVerified": False,
+    }
+
+
 def predict(race, *, expected_circuit, ability_method=None):
     owner=circuit(race)
     if owner!=expected_circuit:
@@ -133,6 +217,7 @@ def predict(race, *, expected_circuit, ability_method=None):
         "source": "preoff-prior-first-corner-observations",
         "historicalCourseEvidence": {h["horseNumber"]: _same_track_distance_evidence(h, race)
                                      for h in active},
+        "publicPositionTactics": _public_position_tactics(race, histories),
         "observedPositionProfiles": profiles,
         "earlyPositionObservedOrder": front_observed,
         "actualLeadVerified": False,
