@@ -139,6 +139,10 @@ class VideoDetectorTests(TestCase):
     def test_camera_cut_resets_tracker_and_breaks_path(self):
         cfg = config()
         cfg["cameraCutsSeconds"] = [2.]
+        cfg["calibration"]["homographies"] = {
+            "camera-0": deepcopy(cfg["calibration"]["homography"]),
+            "camera-1": deepcopy(cfg["calibration"]["homography"]),
+        }
         cfg["verifiedIdentityMap"]["camera-1"] = deepcopy(
             cfg["verifiedIdentityMap"]["camera-0"])
         count = []
@@ -154,6 +158,16 @@ class VideoDetectorTests(TestCase):
         self.assertEqual(report["manifest"]["frames"][-1]["cameraId"], "camera-1")
         self.assertEqual(report["measurements"]["runners"][0]["observedPathMeters"], 5.)
         self.assertIsNone(report["measurements"]["runners"][0]["distanceLossMeters"])
+
+    def test_camera_changes_without_calibration_cannot_measure_metres(self):
+        cfg = config()
+        cfg["cameraCutsSeconds"] = [2.]
+        with self.assertRaisesRegex(ValueError, "each camera segment"):
+            self.collect(cfg)
+        cfg["calibration"]["homographies"] = {
+            "camera-0": deepcopy(cfg["calibration"]["homography"])}
+        with self.assertRaisesRegex(ValueError, "every camera segment"):
+            self.collect(cfg)
 
     def test_identity_must_be_reviewed_and_unique(self):
         cfg = config()
