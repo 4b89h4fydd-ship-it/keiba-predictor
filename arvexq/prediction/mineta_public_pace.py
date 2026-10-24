@@ -85,6 +85,10 @@ def public_pace_factors(race):
     """
     if not isinstance(race, dict) or not isinstance(race.get("horses"), list):
         raise ValueError("full race detail required")
+    if (race.get("track") in ("帯広", "帯広ば")
+            or race.get("surface") in ("ばんえい", "障害")
+            or race.get("analysisMode") in ("ばんえい", "障害")):
+        raise ValueError("retired Banei and jumps cannot become flat-race predictions")
     circuit = race.get("circuit")
     if circuit not in ("中央", "地方", "jra", "nar"):
         raise ValueError("registered circuit required")
