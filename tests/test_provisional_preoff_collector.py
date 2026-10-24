@@ -177,3 +177,59 @@ def test_no_past_runs_marked_incomplete_not_fabricated():
     rec = provisional_capture(row, now=NOW)
     assert rec["horsesWithPastRuns"] == 0
     assert rec["historyComplete"] is False
+
+
+def test_existing_display_response_recovers_histories_hidden_by_compact_response():
+    row = detail()
+    overview = {"ok": True, "races": [
+        {k: row[k] for k in ("id", "date", "startTime")}
+    ]}
+    shallow = json.loads(json.dumps(row))
+    for horse in shallow["horses"]:
+        horse.pop("recentRaces", None)
+    calls = []
+
+    def fetch(url):
+        calls.append(url)
+        if "details=0" in url:
+            return overview
+        if url.endswith("?view=display"):
+            return {"ok": True, "detail": row}
+        if "/api/race/" in url:
+            return {"ok": True, "detail": shallow}
+        raise AssertionError("full display history must avoid day fallback")
+
+    result = collect(now=NOW, fetch=fetch)
+    assert result["captured"] == 1
+    assert result["failures"] == []
+    assert result["records"][0]["historyComplete"] is True
+    assert result["records"][0]["horsesWithPastRuns"] == 4
+    assert result["verifiedForTraining"] is False
+    assert len(calls) == 3
+
+
+def test_existing_day_details_can_rescue_two_history_empty_race_responses():
+    row = detail()
+    overview = {"ok": True, "races": [
+        {k: row[k] for k in ("id", "date", "startTime")}
+    ]}
+    shallow = json.loads(json.dumps(row))
+    for horse in shallow["horses"]:
+        horse.pop("recentRaces", None)
+    calls = []
+
+    def fetch(url):
+        calls.append(url)
+        if "details=0" in url:
+            return overview
+        if "details=1" in url:
+            return {"ok": True, "details": [row]}
+        return {"ok": True, "detail": shallow}
+
+    result = collect(now=NOW, fetch=fetch)
+    assert result["captured"] == 1
+    assert result["records"][0]["horsesWithPastRuns"] == 4
+    assert result["records"][0]["independentOfficialRoster"] is False
+    assert result["verifiedForTraining"] is False
+    assert len(calls) == 4
+    assert "details=1" in calls[-1]
