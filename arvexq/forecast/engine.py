@@ -79,6 +79,14 @@ def build_prediction(facts, now=None):
         blended = blend(race, methods, fit, quoted_odds=supplied.get("odds"))
     except (KeyError, TypeError, ValueError, OverflowError):
         return None
+    # The computed opinion clock is part of the original pre-off evidence.
+    # A forecast without a single consistent real capture cannot be sealed.
+    capture_times={o.get("capturedAt") for o in methods.values()}
+    if len(capture_times)!=1 or not next(iter(capture_times)):
+        return None
+    captured_at=next(iter(capture_times))
+    if supplied.get("capturedAt") is not None and supplied["capturedAt"]!=captured_at:
+        return None
     marks = blended["predictionMarks"]
     order = [m["horseNumber"] for m in marks]
     grouped = []
@@ -124,6 +132,10 @@ def build_prediction(facts, now=None):
     }
     return {
         "raceId": race["id"], "date": race["date"], "circuit": owner,
+        "capturedAt": captured_at,
+        "methodologyStatus": "public-method-replicas-and-two-independent-fitted-AI-models",
+        "actualForecasterPublishedPicks": False,
+        "calibrationMethod": fit.get("calibrationMethod", "actual-frozen-preoff-evaluations"),
         "modelVersion": VERSION, "predictionStatus": status,
         "productionEligible": status == "ready", "stages": stages,
         "predictionMarks": marks, "recommendedBets": grouped,
