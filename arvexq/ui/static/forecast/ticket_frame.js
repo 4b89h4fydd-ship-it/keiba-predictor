@@ -34,7 +34,8 @@ function sealedFive(r,server){
     var matches=item.kind==='馬単'?finish[0]===nums[0]&&finish[1]===nums[1]:
       item.kind==='馬連'?finish.slice(0,2).every(function(n){return nums.indexOf(n)>=0;}):
       item.kind==='ワイド'?nums.every(function(n){return finish.slice(0,3).indexOf(n)>=0;}):
-      item.kind==='3連複'?finish.slice(0,3).every(function(n){return nums.indexOf(n)>=0;}):false;
+      item.kind==='3連複'?finish.slice(0,3).every(function(n){return nums.indexOf(n)>=0;}):
+      item.kind==='3連単'?finish.slice(0,3).every(function(n,i){return n===nums[i];}):false;
     return sum+(matches&&Number.isFinite(row.prob)?row.prob:0);
    },0);
    ranked.push({item:item,combo:combo,probability:probability});
@@ -56,7 +57,10 @@ function contents(r,p){
  if(server){
    if(!server.length)return '<div class="ai-bet-box"><p class="muted">同じStage64予想から確定できる買い目はありません。別方式の買い目は混ぜません。</p></div>';
    var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+(item.combos||[]).map(function(c){return '<span class="arv-three-combo">'+esc(c.join(' - '))+'</span>';}).join('')+'</strong><p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p></div>';}).join('');
-   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">Stage64確率順・全印考慮・全券種合計最大5点</p>'+rows+'</div>';
+   var kochiFinal=r&&r.track==='高知'&&/ファイナル/.test(String(r.title||''));
+   var methodology=kochiFinal?'高知ファイナル：全出走馬から3着候補を評価・3連複と3連単の合計最大5点（未校正）':
+     'Stage64確率順・全印考慮・全券種合計最大5点';
+   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.

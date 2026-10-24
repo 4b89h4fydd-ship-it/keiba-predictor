@@ -71,3 +71,26 @@ const refresh=ctx.mergeRaceReflection(merged,{id,date,raceStatus:'確定',horses
 assert.equal(refresh.predictionStatus,'ready');
 assert.equal(refresh.recommendedBets[0].kind,'ワイド');
 console.log('STAGE64_LIVE_DETAIL_SUMMARY_PRECEDENCE_OK');
+
+
+// The active betting view must show both Kochi final three-horse wager kinds,
+// including an unmarked third runner, without consulting actual finishers.
+const ticketSource=fs.readFileSync('arvexq/ui/static/forecast/ticket_frame.js','utf8');
+const ticketWindow={};
+vm.runInNewContext(ticketSource,{window:ticketWindow});
+const kochiFinal={
+  id:'nar-2026-10-25-高知-12',date:'2026-10-25',track:'高知',
+  title:'ファイナルレースＣ３－１９記者選抜',
+  predictionStatus:'ready',recommendedBets:[
+    {kind:'3連複',combos:[[1,2,6],[1,3,6],[2,3,6]],points:3},
+    {kind:'3連単',combos:[[6,1,2],[1,2,6]],points:2}
+  ]
+};
+const finalHtml=ticketWindow.ARVEXQTicketFrame.contents(kochiFinal,{});
+assert.match(finalHtml,/高知ファイナル：全出走馬から3着候補を評価/);
+assert.match(finalHtml,/3連複/);
+assert.match(finalHtml,/3連単/);
+assert.match(finalHtml,/6 - 1 - 2/);
+const normalHtml=ticketWindow.ARVEXQTicketFrame.contents({...kochiFinal,track:'大井'},{});
+assert.match(normalHtml,/Stage64確率順・全印考慮/);
+console.log('KOCHI_FINAL_TRIPLE_UI_PASS');
