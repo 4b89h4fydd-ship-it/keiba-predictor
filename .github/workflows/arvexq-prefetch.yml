@@ -12,7 +12,6 @@ name: ARVEXQ Full Prefetch
     paths:
       - app.py
       - scripts/arvexq_prefetch.py
-      - scripts/arvexq_apply_learned_overlay.py
       - scripts/arvexq_morning_picks.js
       - scripts/arvexq_merge_morning_output.py
       - scripts/arvexq_sync_batches.py
@@ -25,7 +24,6 @@ name: ARVEXQ Full Prefetch
       - arvexq/pipeline/persisted_inputs.py
       - arvexq/prediction/**
       - arvexq/forecast/**
-      - arvexq/research/stage64/**
       - arvexq/ingest/**
       - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
@@ -595,20 +593,6 @@ jobs:
           )
           git worktree remove /tmp/arvexq-calibration-publish
 
-      - name: Replace legacy active forecasts in D1 publication payload
-        run: |
-          MODEL_PATH=".arvexq-data/research-models.json"
-          if [ ! -s "$MODEL_PATH" ]; then
-            echo '{}' > "$MODEL_PATH"
-          fi
-          PYTHONPATH=. python scripts/arvexq_apply_learned_overlay.py \
-            --bundle prefetch-payload.json \
-            --models "$MODEL_PATH" \
-            --out prefetch-learned.json \
-            --report learned-overlay-report.json
-          mv prefetch-learned.json prefetch-payload.json
-          echo "LEGACY_ACTIVE_FORECASTS_DISABLED"
-
       - name: Freeze morning selected and special predictions for all races
         run: |
           # The same UI analysis logic runs headlessly on the full prepared day.
@@ -807,30 +791,17 @@ jobs:
               # replacement model/marks were published. Validate the
               # actual D1 readback against the exact prepared race.
               new_version=str(old.get('predictionModelVersion') or '')
-              # The approved active Stage64 product is NOT the separate
-              # learned-whole-career research overlay. Require exact D1
-              # readback of the already computed marks and recommended bets.
-              if new_version == 'arvexq-stage64-product-v1' and old.get('predictionStatus') == 'ready':
+              # Only the calibrated three-analysis output is an active forecast.
+              # Verify the existing D1 readback, never recompute after the off.
+              if new_version == 'arvexq-three-analysis-vnext-1' and old.get('predictionStatus') == 'ready':
                   if d.get('predictionStatus') != 'ready':
-                      missing_new_forecast.append((rid,'stage64-status-not-persisted'))
+                      missing_new_forecast.append((rid,'new-method-status-not-persisted'))
                   if d.get('predictionModelVersion') != new_version:
-                      missing_new_forecast.append((rid,'stage64-model-not-persisted'))
+                      missing_new_forecast.append((rid,'new-method-version-not-persisted'))
                   if d.get('predictionMarks') != old.get('predictionMarks'):
-                      missing_new_forecast.append((rid,'stage64-marks-not-persisted'))
+                      missing_new_forecast.append((rid,'new-method-marks-not-persisted'))
                   if d.get('recommendedBets') != old.get('recommendedBets'):
-                      missing_new_forecast.append((rid,'stage64-bets-not-persisted'))
-              if new_version.startswith('arvexq-learned-whole-career'):
-                  if str(d.get('predictionModelVersion') or '')!=new_version:
-                      missing_new_forecast.append((rid,'model-version-not-persisted'))
-                  expected_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                                  for h in old.get('horses') or [] if isinstance(h,dict)}
-                  saved_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                               for h in d.get('horses') or [] if isinstance(h,dict)}
-                  if expected_marks!=saved_marks:
-                      missing_new_forecast.append((rid,'new-marks-not-persisted'))
-              elif old.get('legacyPresentationDisabled'):
-                  if d.get('predictionStatus')!='new-model-unavailable':
-                      missing_new_forecast.append((rid,'retired-forecast-still-active'))
+                      missing_new_forecast.append((rid,'new-method-bets-not-persisted'))
               horses=[h for h in (d.get('horses') or []) if isinstance(h,dict)]
               good=[h for h in horses if str(h.get('name') or '').strip() and int(h.get('horseNumber') or 0)>0]
               prepared_horses=[h for h in (old.get('horses') or []) if isinstance(h,dict) and int(h.get('horseNumber') or 0)>0]
