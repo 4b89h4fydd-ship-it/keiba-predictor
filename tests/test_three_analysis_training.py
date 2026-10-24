@@ -1,6 +1,6 @@
 """Chronological model fitting is research-only until verified pace/video acceptance."""
 from unittest import TestCase
-from arvexq.forecast.training import train, test_holdout
+from arvexq.forecast.training import train, test_holdout as evaluate_holdout
 
 
 def labeled(day):
@@ -27,7 +27,7 @@ class ChronologicalTrainingTests(TestCase):
         self.assertEqual(model["trainedThrough"],"2098-01-16")
         self.assertEqual(model["calibratedThrough"],"2098-01-23")
         self.assertFalse(model["scenarioWeightsValidated"])
-        results=test_holdout(model,races)
+        results=evaluate_holdout(model,races)
         self.assertEqual(results["raceCount"],5)
         self.assertIsNone(results["returnRate"])
         self.assertIsNone(results["videoLift"])
