@@ -54,7 +54,7 @@ def without_legacy_presentation(detail):
     return row
 
 
-def apply(bundle, models):
+def apply(bundle, models, *, now=None):
     out = dict(bundle)
     details = []
     changed, skipped = [], {}
@@ -76,7 +76,7 @@ def apply(bundle, models):
         if fusion and may_create_prerace_prediction(detail):
             try:
                 sources = assemble_fusion_inputs(
-                    detail, fusion['models'], fusion['calibration'])
+                    detail, fusion['models'], fusion['calibration'], now=now)
                 candidate = dict(detail)
                 candidate['fusionInputs'] = {
                     'opinions': sources['opinions'],
@@ -84,7 +84,7 @@ def apply(bundle, models):
                     'odds': sources.get('odds'),
                     'capturedAt': sources['capturedAt'],
                 }
-                pred = build_prediction(candidate)
+                pred = build_prediction(candidate, now=now)
                 if not isinstance(pred, dict) or pred.get('predictionStatus') != 'ready':
                     raise ValueError('five-method forecast cannot be verified before off')
                 marks = generate_marks(pred)
