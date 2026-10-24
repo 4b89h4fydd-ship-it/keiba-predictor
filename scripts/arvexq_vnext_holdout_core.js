@@ -55,7 +55,7 @@ function quality(r){let n=number(r.fieldSize),f=number(r.finish);return n!==null
 function history(h,cutoff){
  let m=new Map();for(let field of ["recentRaces","allPastRuns"])for(let r of h[field]||[]){
   if(!r||typeof r!=="object"||Array.isArray(r))continue;
-  let d=String(r._raceDate||r.date||"");if(d.length!==10||d>=cutoff||!/^\\d{4}-\\d{2}-\\d{2}$/.test(d)||["障害","ばんえい"].includes(r.surface))continue;
+  let d=String(r._raceDate||r.date||"");if(d.length!==10||d>=cutoff||!/^\d{4}-\d{2}-\d{2}$/.test(d)||["障害","ばんえい"].includes(r.surface))continue;
   let k=d+"|"+String(r.track||"")+"|"+String(r.raceNumber||""),old=m.get(k);
   if(old&&old.finish!==r.finish)throw Error("conflicting history");
   if(!old||Object.keys(r).length>Object.keys(old).length)m.set(k,r);
