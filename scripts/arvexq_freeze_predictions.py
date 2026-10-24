@@ -393,7 +393,12 @@ def main() -> int:
     now = datetime.now(JST)
     day = now.date().isoformat()
     day_body = request_json(f"{base}/api/day?date={day}&details=0&t={int(time.time())}")
-    races = [r for r in (day_body.get("races") or []) if isinstance(r, dict) and r.get("id")]
+    # Excluded Banei is intentionally listed in some archived D1 day manifests,
+    # but the active pre-race sealer must never request or recreate its races.
+    races = [r for r in (day_body.get("races") or [])
+             if isinstance(r, dict) and r.get("id")
+             and str(r.get("track") or "") not in ("帯広", "帯広ば")
+             and not any(f"-{track}-" in str(r["id"]) for track in ("帯広", "帯広ば"))]
     due = []
     recently_started = []
     for r in races:

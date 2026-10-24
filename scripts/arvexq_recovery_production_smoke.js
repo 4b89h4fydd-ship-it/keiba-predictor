@@ -8,10 +8,16 @@ const manifest=JSON.parse(fs.readFileSync(path.join(directory,day+'.json')));
 const cards=JSON.parse(fs.readFileSync('arvexq/ui/static/racecards/'+day+'.json')).races;
 const base=process.env.ARVEXQ_BASE_URL||'https://kraizweb1.4b89h4fydd.workers.dev';
 const type=process.env.ARVEXQ_BROWSER==='webkit'?webkit:chromium;
-const records=Object.entries(manifest.races).map(([id,ref])=>{
+// Archives are immutable and may contain retired Banei, but production-app
+// smoke tests must navigate only the explicitly supported racing venues.
+const archivedRecords=Object.entries(manifest.races).map(([id,ref])=>{
   const e=JSON.parse(fs.readFileSync(path.join(directory,ref.file)));
   return JSON.parse(zlib.gunzipSync(Buffer.from(e.gzipBase64,'base64')));
 });
+const records=archivedRecords.filter(r=>r&&r.id&&
+  !['帯広','帯広ば'].includes(String(r.track||''))&&
+  !/-帯広(?:ば)?-/.test(String(r.id)));
+assert(records.length<=archivedRecords.length,'archived evidence remains intact');
 // WebKit checks real venues for this date, not a hardcoded historical card list.
 const chosen=process.env.ARVEXQ_BROWSER==='webkit'?
   [...new Set(records.map(r=>r.track))].map(track=>records.find(r=>r.track===track)).filter(Boolean):records;

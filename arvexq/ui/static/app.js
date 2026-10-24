@@ -49,6 +49,17 @@ function courseStageFrac(r,st){
 var app=document.getElementById("app");
 var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,detailHorseNo:null,subPage:null,subPageReturnPanel:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,oddsBusy:false,oddsRefreshAt:{},oddsTimer:null,environmentTimer:null,environmentBusy:false,bootstrapReady:false,bootstrapProgress:null,resultTimer:null,homePage:null,aiStatsTrack:null,pickCircuit:null,raceReturnHomePage:null,raceReturnPickCircuit:null};
 
+/* Existing venue exclusion: never resurrect archived Banei rows in the app.
+   Race archives are retained; only active navigation and displayed lists hide them. */
+function isExcludedBanei(row){
+  var track=String(row&&row.track||'').trim(),id=String(row&&row.id||'');
+  return track==='帯広'||track==='帯広ば'||
+    /^nar-\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(id);
+}
+function activeVenueRaces(rows){
+  return Array.isArray(rows)?rows.filter(function(row){return row&&!isExcludedBanei(row)}):[];
+}
+
 // Race favorites are a user-only display preference. They never affect AI marks or bets.
 var FAVORITE_RACES_KEY="arvexq:favorite-races:v1";
 function readFavoriteRaces(){
@@ -63,7 +74,7 @@ function readFavoriteRaces(){
     }).slice(-100)
   }catch(e){return []}
 }
-var favoriteRaces=readFavoriteRaces();
+var favoriteRaces=readFavoriteRaces().filter(function(r){return !isExcludedBanei(r)});
 function isFavoriteRace(r){
   return !!r&&favoriteRaces.some(function(x){return String(x.id)===String(r.id)&&String(x.date)===String(r.date||state.date)})
 }
@@ -78,11 +89,12 @@ function toggleFavoriteRace(id,date){
   else{
     var r=state.races.find(function(x){return String(x.id)===String(id)&&String(x.date||state.date)===keyDate})||
       (state.race&&String(state.race.id)===String(id)?state.race:null);
-    if(!r)return;
+    if(!r||isExcludedBanei(r))return;
     next.push({id:String(r.id),date:keyDate,circuit:String(r.circuit||state.circuit),track:String(r.track||state.track||''),raceNumber:n(r.raceNumber),title:String(r.title||''),startTime:String(r.startTime||'')});
     next=next.slice(-100)
   }
-  try{localStorage.setItem(FAVORITE_RACES_KEY,JSON.stringify(next))}
+  try{var archivedBanei=readFavoriteRaces().filter(isExcludedBanei);
+    localStorage.setItem(FAVORITE_RACES_KEY,JSON.stringify(archivedBanei.concat(next).slice(-100)))}
   catch(e){try{window.alert('お気に入りを保存できませんでした。ブラウザの保存設定をご確認ください。')}catch(_e){}return}
   favoriteRaces=next;render()
 }
@@ -108,8 +120,8 @@ var liveCenterOpen=false,liveCenterTrack="",liveCenterCircuit="";
 
 var ARVEXQ_RACE_CACHE_SCHEMA="horse-race-source-v362";
 function cacheKey(d,c){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":races:"+d+":"+(c||state.circuit||"")}
-function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(d>=today()&&Date.now()-n(x.ts)>2*60000)return null;return x.rows}catch(e){return null}}
-function saveRaceCache(d,c,rows){try{localStorage.setItem(cacheKey(d,c),JSON.stringify({ts:Date.now(),rows:rows}))}catch(e){}}
+function loadRaceCache(d,c){try{var raw=localStorage.getItem(cacheKey(d,c));if(!raw)return null;var x=JSON.parse(raw);if(!x||!Array.isArray(x.rows))return null;if(d>=today()&&Date.now()-n(x.ts)>2*60000)return null;return activeVenueRaces(x.rows)}catch(e){return null}}
+function saveRaceCache(d,c,rows){try{localStorage.setItem(cacheKey(d,c),JSON.stringify({ts:Date.now(),rows:activeVenueRaces(rows)}))}catch(e){}}
 function fullBundleKey(d){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":fullbundle:"+String(d||"")}
 function saveFullBundle(d,body){
   try{
@@ -127,8 +139,8 @@ function loadFullBundle(d){
   }catch(e){return null}
 }
 function detailCacheKey(id){return "arvexq:"+ARVEXQ_RACE_CACHE_SCHEMA+":detail:"+String(id||"")}
-function loadDetailCache(id,allowStale){try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(!allowStale&&x.row.date>=today()&&age>2*60000)return null;var r=x.row;if(!raceDisplayCoreReady(r,r))return null;return r}catch(e){return null}}
-function saveDetailCache(id,row){try{if(!id||!row||!raceDisplayCoreReady(row,row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
+function loadDetailCache(id,allowStale){if(isExcludedBanei({id:id}))return null;try{var raw=localStorage.getItem(detailCacheKey(id));if(!raw)return null;var x=JSON.parse(raw);if(!x||!x.row)return null;var age=Date.now()-n(x.ts);if(!allowStale&&x.row.date>=today()&&age>2*60000)return null;var r=x.row;if(!raceDisplayCoreReady(r,r))return null;return r}catch(e){return null}}
+function saveDetailCache(id,row){try{if(!id||!row||isExcludedBanei(row)||!raceDisplayCoreReady(row,row))return;localStorage.setItem(detailCacheKey(id),JSON.stringify({ts:Date.now(),row:row}))}catch(e){}}
 // On upgrade, discard only obsolete device race data, never saved forecasts.
 function evictRetiredRaceCaches(){
   try{
@@ -2019,7 +2031,7 @@ function smartLiveRaceSection(){
     (body||'<div class="smart-live-empty">現在の対象レースはありません</div>')+
   '</section>'
 }
-var ARVEXQ_LOCAL_LIVE_SLUG={"帯広":"obihiro","門別":"monbetsu","盛岡":"morioka","水沢":"mizusawa","浦和":"urawa","船橋":"funabashi","大井":"ooi","川崎":"kawasaki","金沢":"kanazawa","笠松":"kasamatsu","名古屋":"nagoya","園田":"sonoda","姫路":"himeji","高知":"kouchi","佐賀":"saga"};
+var ARVEXQ_LOCAL_LIVE_SLUG={"門別":"monbetsu","盛岡":"morioka","水沢":"mizusawa","浦和":"urawa","船橋":"funabashi","大井":"ooi","川崎":"kawasaki","金沢":"kanazawa","笠松":"kasamatsu","名古屋":"nagoya","園田":"sonoda","姫路":"himeji","高知":"kouchi","佐賀":"saga"};
 var ARVEXQ_JRA_YOUTUBE_CHANNEL='UCj6AKkCWS6FJqf0o5wP45eQ';
 function liveVenueExternal(circuit,track){
   if(String(circuit||'')==='中央')return 'https://www.youtube.com/@jraofficial/live';
@@ -2971,7 +2983,7 @@ function fetchExistingForecastRevision(id,seq){
 }
 
 function openRace(id,keepStack,skipHistory,preservePanel){
-  if(!id)return;
+  if(!id||isExcludedBanei({id:id}))return;
   if(state.oddsTimer){clearTimeout(state.oddsTimer);state.oddsTimer=null}
   state.oddsBusy=false;
   if(state.environmentTimer){clearTimeout(state.environmentTimer);state.environmentTimer=null}
@@ -3224,7 +3236,7 @@ function normalizeInitialAppLaunch(){
     }
   }catch(e){}
 }
-function restoreLocation(){var u=new URL(window.location.href),saved=(window.history.state||{}).view||{},id=u.searchParams.get('race_id');navigationRestoring=true;++state.detailSeq;state.raceLoading=null;state.race=null;state.horseModalNo=n(u.searchParams.get('horse'))||null;state.detailTab=u.searchParams.get('tab')||'出走表';state.date=u.searchParams.get('date')||today();state.circuit=u.searchParams.get('circuit')||'中央';state.track=u.searchParams.get('track')||null;state.picker=u.searchParams.get('picker')==='1';state.homePage=u.searchParams.get('home')||null;state.pickCircuit=u.searchParams.get('pick_circuit')||null;state.aiStatsTrack=u.searchParams.get('ai_track')||null;state.raceReturnPicker=!!saved.returnPicker;state.raceStack=(saved.stack||[]).map(loadDetailCache).filter(Boolean);if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}var horse=state.horseModalNo;if(id){var cached=loadDetailCache(id);if(cached){state.race=cached;render()}else{openRace(id,true,true);state.horseModalNo=horse}}else render();navigationRestoring=false;routeKey=null;syncLocation()}
+function restoreLocation(){var u=new URL(window.location.href),saved=(window.history.state||{}).view||{},id=u.searchParams.get('race_id');if(isExcludedBanei({id:id,track:u.searchParams.get('track')})){id=null;u.searchParams.delete('race_id');u.searchParams.delete('track')}navigationRestoring=true;++state.detailSeq;state.raceLoading=null;state.race=null;state.horseModalNo=n(u.searchParams.get('horse'))||null;state.detailTab=u.searchParams.get('tab')||'出走表';state.date=u.searchParams.get('date')||today();state.circuit=u.searchParams.get('circuit')||'中央';state.track=u.searchParams.get('track')||null;state.picker=u.searchParams.get('picker')==='1';state.homePage=u.searchParams.get('home')||null;state.pickCircuit=u.searchParams.get('pick_circuit')||null;state.aiStatsTrack=u.searchParams.get('ai_track')||null;state.raceReturnPicker=!!saved.returnPicker;state.raceStack=(saved.stack||[]).map(loadDetailCache).filter(Boolean);if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}var horse=state.horseModalNo;if(id){var cached=loadDetailCache(id);if(cached){state.race=cached;render()}else{openRace(id,true,true);state.horseModalNo=horse}}else render();navigationRestoring=false;routeKey=null;syncLocation()}
 function installNavigation(){window.addEventListener('popstate',restoreLocation)}
 function installEdgeBack(){
     var gesture=null,suppressClickUntil=0;
@@ -3312,7 +3324,7 @@ function applyMorningArchive(rows){
   return rows
 }
 function mergeBootstrap(body){
-  var rows=(body&&body.races)||[],details=(body&&body.details)||[],pvol={};
+  var rows=activeVenueRaces(body&&body.races),details=activeVenueRaces(body&&body.details),pvol={};
   state.bootstrapReady=!!(body&&body.complete===true);
   details.forEach(function(d){
     if(!d||!d.id)return;
@@ -3361,7 +3373,7 @@ function load(force){
     state.loading=false;state.bootstrapReady=!!full.displayComplete||!!full.complete;
     render()
   }else if(listCache&&listCache.length){
-    state.races=listCache;
+    state.races=activeVenueRaces(listCache);
     hydrateInstantFromDevice(listCache);
     state.loading=false;
     render()
@@ -3419,7 +3431,7 @@ function load(force){
       return res.json()
     })
     .then(function(body){
-      var rows=Array.isArray(body)?body:(body.races||[]);
+      var rows=activeVenueRaces(Array.isArray(body)?body:(body.races||[]));
       if(!rows.length)throw Error('cloudflare-list-empty');
       if(seq!==state.requestSeq||state.date!==d)return null;
       state.bootstrapReady=true;
@@ -3430,7 +3442,8 @@ function load(force){
     })
     .then(function(rows){
       if(seq!==state.requestSeq||state.date!==d)return;
-      if(!Array.isArray(rows)||!rows.length){
+      rows=activeVenueRaces(rows);
+      if(!rows.length){
         // Never leave an iPhone open on the initial empty D1 day forever:
         // the first official schedule can be published after app startup.
         if(!state.races.length){

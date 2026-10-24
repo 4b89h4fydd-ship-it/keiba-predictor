@@ -30,7 +30,9 @@
       upcoming:"発走前",cancelled:"中止",unknown:"未取得"})[code]||"";
   }
   function allRaces(rows,opts={}){
-    const source=(rows||[]).filter(r=>r&&r.id&&r.track&&(r.circuit==="中央"||r.circuit==="地方")&&
+    const source=(rows||[]).filter(r=>r&&r.id&&r.track&&!["帯広","帯広ば"].includes(String(r.track))&&
+      !/^nar-\d{4}-\d{2}-\d{2}-(?:帯広|帯広ば)-\d{2}$/.test(String(r.id))&&
+      (r.circuit==="中央"||r.circuit==="地方")&&
       Number.isInteger(raceNo(r))&&raceNo(r)>=1&&raceNo(r)<=12);
     const group=(circuit)=>{
       const circuits=source.filter(r=>r.circuit===circuit);
