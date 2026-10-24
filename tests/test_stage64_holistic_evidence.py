@@ -20,7 +20,7 @@ def _run(date, finish, *, no=1, reaction=None, source="individual_sensor"):
 def _race():
     return {"id": "nar-2026-10-21-園田-03", "date": "2026-10-21",
             "circuit": "nar", "analysisMode": "平地", "track": "園田",
-            "surface": "ダート", "distance": 1400, "fieldSize": 4,
+            "surface": "ダート", "distance": 1400, "fieldSize": 4, "startTime": "12:30",
             "horses": [
                 {"horseNumber": 1, "frameNumber": 1,
                  "recentRaces": [_run("2026-10-04", 2, no=2, reaction=.15),
@@ -86,7 +86,7 @@ def test_preoff_first_corner_needs_identified_official_course_geometry():
     r = _race()
     geo = {"sourceKind": "official_course_geometry",
            "sourceUrl": "https://www.keiba.go.jp/guide/course/",
-           "sourcePublishedBeforeOff": True, "track": "園田",
+           "sourcePublishedBeforeOff": True, "publishedAt": "2026-09-01T12:00:00+09:00", "track": "園田",
            "distance": 1400, "surface": "ダート",
            "firstCornerDistanceMeters": 320}
     # This is a synthetic test fixture, not a measured first-corner distance.
@@ -96,6 +96,8 @@ def test_preoff_first_corner_needs_identified_official_course_geometry():
     assert value is not None and value["meters"] == 320
     for change in ({"sourceUrl": "https://example.com/course"},
                    {"distance": 1230}, {"sourcePublishedBeforeOff": False},
+                   {"publishedAt": "2026-10-21T13:00:00+09:00"},
+                   {"publishedAt": "2026-10-21T12:30:00+09:00"},
                    {"sourceKind": "unverified"}, {"firstCornerDistanceMeters": None}):
         candidate = deepcopy(r)
         candidate["courseGeometry"].update(change)
