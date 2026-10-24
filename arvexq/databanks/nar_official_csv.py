@@ -13,7 +13,7 @@ import unicodedata
 import zipfile
 from collections import defaultdict
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from .registry import DataBankRegistry, DataSource, SourceCapabilities
 
@@ -267,3 +267,80 @@ def register_nar_official_archive(registry: DataBankRegistry, paths=None):
         fetchers={"horse_history": archive.horse_history},
     ))
     return archive
+
+
+def preoff_three_way_odds(paths, race):
+    """Decode user-supplied NAR *daily* odds ZIPs through the existing CSV lane.
+
+    Official daily ZIP filename YYYYMMDD_<UNIX-timestamp>_odds.zip
+    carries an observed-at timestamp. A monthly ZIP is final odds, never
+    eligible as historical pre-off evidence. There is NO download here.
+    A documented filename alone is not proof that a quote was actually
+    published then; the caller must separately establish trusted provenance.
+    """
+    if race.get("circuit") not in ("地方", "nar", "NAR"):
+        raise ValueError("NAR-only preoff odds")
+    day = date(race.get("date"))
+    track = normalize(race.get("track"))
+    race_no = number(race.get("raceNumber") or race.get("raceNo"))
+    post = str(race.get("scheduledStartTime") or race.get("startTime") or "").strip()
+    times = re.fullmatch(r"(\d{1,2}):(\d{2})(?::\d{2})?", post)
+    if not times and re.fullmatch(r"\d{4}", post):
+        times = re.fullmatch(r"(\d{2})(\d{2})", post)
+    if not day or not track or not 1 <= race_no <= 12 or not times:
+        raise ValueError("race identity and announced post time are required")
+    hour, minute = map(int, times.groups())
+    if hour > 23 or minute > 59:
+        raise ValueError("invalid post time")
+    jst = timezone(timedelta(hours=9))
+    post_at = datetime.fromisoformat(day).replace(hour=hour, minute=minute, tzinfo=jst)
+    active_numbers = {number(h.get("horseNumber")) for h in race.get("horses") or []
+                      if isinstance(h, dict) and not any(h.get(k) for k in ("scratched","cancelled","withdrawn"))}
+    if len(active_numbers) < 3:
+        raise ValueError("active starter numbers unavailable")
+    latest = {}
+    for raw_path in paths:
+        path = Path(raw_path)
+        match = re.fullmatch(r"(\d{8})_(\d{9,11})_odds[.]zip", path.name, re.IGNORECASE)
+        if not match:
+            # Monthly odds are only final odds. Never infer historical pre-off
+            # timestamps from their filename or from a race finalization time.
+            continue
+        if date(match.group(1)) != day:
+            continue
+        observed = datetime.fromtimestamp(int(match.group(2)), tz=timezone.utc).astimezone(jst)
+        if observed >= post_at or observed.date().isoformat() != day:
+            continue
+        for filename, rows in rows_from_archive(path):
+            if not filename.endswith("_odds.csv"):
+                continue
+            for row in rows:
+                if normalize(item(row, 0)) != track or date(item(row, 1)) != day:
+                    continue
+                if number(item(row, 2)) != race_no:
+                    continue
+                kind = normalize(item(row, 3))
+                if kind not in ("3連単", "3連複"):
+                    continue
+                combo = tuple(number(item(row, i)) for i in (4, 5, 6))
+                if any(n not in active_numbers for n in combo) or len(set(combo)) != 3:
+                    continue
+                # Horse order matters for trifecta; not for trio.
+                if kind == "3連複":
+                    combo = tuple(sorted(combo))
+                try:
+                    odd = float(item(row, 7))
+                except ValueError:
+                    continue
+                if not 0 < odd < 1_000_000 or not __import__("math").isfinite(odd):
+                    continue
+                key = (kind, combo)
+                prior = latest.get(key)
+                if prior is None or prior["observedAt"] < observed.isoformat():
+                    latest[key] = {"kind":kind, "horses":list(combo), "odds":odd,
+                                   "observedAt":observed.isoformat(),
+                                   "source":"NAR official daily odds ZIP",
+                                   "archiveFile":path.name}
+                elif prior["observedAt"] == observed.isoformat() and prior["odds"] != odd:
+                    raise ValueError("conflicting official odds in identical timestamp")
+    return [latest[key] for key in sorted(latest)]
