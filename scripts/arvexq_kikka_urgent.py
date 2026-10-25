@@ -137,6 +137,28 @@ def build_and_publish(base: str, *, write: bool = False) -> dict:
         "persistedToD1": False,
     }
     if not write:
+        # Read-only pre-production simulation of exactly the D1 seal guard.
+        # Catch symbol loss BEFORE merging/writing in this critical path.
+        from scripts.arvexq_protect_sync import fetch_current, protect_detail
+        from arvexq.ingest.career_transport import pack_detail as career_pack
+        from arvexq.ingest.full_snapshot_codec import pack_detail as full_pack, unpack_detail as full_unpack
+        old = fetch_current(base, RACE_ID)
+        future = full_pack(career_pack(prepared))
+        guarded = protect_detail(old, future)
+        recovered = full_unpack(guarded)
+        old_c = (old or {}).get("kikkaCandidate") or {}
+        new_c = recovered.get("kikkaCandidate") or {}
+        check = candidate_marks(recovered)
+        print("KIKKA_GUARD_READONLY_PROBE", json.dumps({
+            "sameSourceHash": old_c.get("sourceHash") == candidate["sourceHash"],
+            "sameModelHash": old_c.get("modelHash") == candidate["modelHash"],
+            "oldCapturePresent": bool(old_c.get("capturedAt")),
+            "newCapturePresent": bool(candidate.get("capturedAt")),
+            "outputMarks": len(check or []),
+            "outputFirstMarkKeys": sorted((new_c.get("marks") or [{}])[0]),
+        }), flush=True)
+        if check != candidate_marks(prepared):
+            raise ValueError("read-only D1 guard stripped original Kikuka mark symbols")
         return outcome
     if not os.environ.get("SYNC_TOKEN"):
         raise ValueError("SYNC_TOKEN absent: no production write")
