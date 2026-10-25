@@ -211,9 +211,20 @@ def build_prediction(facts, now=None):
             "historyCoverage": career["coverageStatus"],
             "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
         }
+    # Only measure evidence coverage from active starters; missing observations
+    # remain missing and cannot turn into guessed ability scores.
+    ability_coverage = {
+        "activeRunners": len(ability_observations),
+        "withPastRuns": sum(v["fullCareerRuns"] > 0 for v in ability_observations.values()),
+        "withOpponentEvidence": sum(v["opponentEvidenceRuns"] > 0 for v in ability_observations.values()),
+        "withMarginEvidence": sum(v["marginEvidenceRuns"] > 0 for v in ability_observations.values()),
+        "withPedigree": sum(v["pedigree"]["observedFields"] > 0 for v in ability_observations.values()),
+        "withVerifiedTraining": 0,
+    }
     stages = {
         "ability": {"status": "observed-ability-inputs-not-calibrated",
                     "value": ability_observations,
+                    "coverage": ability_coverage,
                     "modelVersions": {k: v.get("modelVersion") for k, v in methods.items()},
                     "probabilityCalibrationVerified": False},
         "runningStyle": {"status": "observed-preoff-positions",
