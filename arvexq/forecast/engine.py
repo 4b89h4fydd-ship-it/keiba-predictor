@@ -185,8 +185,8 @@ def build_prediction(facts, now=None):
         }
     stages = {
         "ability": {"status": "observed-ability-inputs-not-calibrated",
-                    "value": {k: v.get("modelVersion") for k, v in methods.items()},
-                    "horseEvidence": ability_observations,
+                    "value": ability_observations,
+                    "modelVersions": {k: v.get("modelVersion") for k, v in methods.items()},
                     "probabilityCalibrationVerified": False},
         "runningStyle": {"status": "observed-preoff-positions",
                          "value": {str(e["horseNumber"]): e["pastEarlyTop3Share"]
