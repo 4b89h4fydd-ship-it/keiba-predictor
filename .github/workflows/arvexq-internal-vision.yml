@@ -26,7 +26,7 @@ jobs:
       ARVEXQ_VIDEO_FEED_URL: ${{secrets.ARVEXQ_VIDEO_FEED_URL }}
       ARVEXQ_VIDEO_FEED_TOKEN: ${{secrets.ARVEXQ_VIDEO_FEED_TOKEN }}
       ARVEXQ_VIDEO_ALLOWED_HOSTS: ${{vars.ARVEXQ_VIDEO_ALLOWED_HOSTS }}
-      ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED: ${{secrets.ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED }}
+      ARVEXQ_VISION_MODEL_DIR: ${{ github.workspace }}/.arvexq-data/vision-model
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
       - uses: actions/checkout@v4
@@ -40,9 +40,6 @@ jobs:
           if [ -z "$ARVEXQ_VIDEO_FEED_URL" ] || [ -z "$ARVEXQ_VIDEO_FEED_TOKEN" ] || [ -z "$ARVEXQ_VIDEO_ALLOWED_HOSTS" ]; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             echo "::warning::VIDEO_DATA_UNAVAILABLE: no licensed/authorized video provider configured; nothing was analyzed"
-          elif [ "$ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED" != "true" ]; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::VISION_MODEL_LICENSE_UNVERIFIED: private/commercial Ultralytics rights not confirmed; no analysis executed"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
@@ -60,6 +57,23 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends tesseract-ocr
           python -m pip install -r requirements-vision.txt
+      - name: Restore free model cache
+        if: steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data/vision-model
+          key: arvexq-apache-rtdetr-r50vd-v1
+      - name: Fetch pinned free RT-DETR model (only if absent)
+        if: steps.provider.outputs.enabled == 'true'
+        run: |
+          python scripts/arvexq_fetch_open_vision_model.py --output-dir "$ARVEXQ_VISION_MODEL_DIR"
+      - name: Cache Apache RT-DETR model
+        if: steps.provider.outputs.enabled == 'true'
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: .arvexq-data/vision-model
+          key: arvexq-apache-rtdetr-r50vd-v1
       - name: Resolve previous calendar day's video
         if: steps.provider.outputs.enabled == 'true'
         shell: bash
@@ -101,6 +115,6 @@ jobs:
       - name: Explicit no-provider receipt
         if: steps.provider.outputs.enabled != 'true'
         run: |
-          echo "VIDEO_RESEARCH_STATUS=blocked-no-authorized-video-or-model-license"
+          echo "VIDEO_RESEARCH_STATUS=blocked-no-authorized-video-source"
           echo "No race footage was analyzed. No measured horse movements were produced."
           echo "FORECAST_UPDATED=false"

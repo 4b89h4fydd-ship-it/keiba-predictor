@@ -63,10 +63,16 @@ def _download(url: str, target: Path, *, hosts: set[str], token: str,
 
 
 def process_internal_feed(*, feed_url: str, token: str, allowed_hosts: set[str],
-                          target_date: str, output_dir: Path) -> dict:
+                          target_date: str, output_dir: Path,
+                          model_dir: Path | None = None) -> dict:
     if not token or not allowed_hosts:
         raise ValueError("provider token and allowlist required")
     datetime.strptime(target_date, "%Y-%m-%d")
+    if model_dir is None:
+        model_dir = Path(os.getenv("ARVEXQ_VISION_MODEL_DIR") or ".arvexq-data/vision-model")
+    if not all((model_dir / name).is_file() for name in
+               ("model.safetensors", "config.json", "preprocessor_config.json")):
+        raise ValueError("pinned local Apache-2.0 RT-DETR model missing; run fetch-open-model first")
     output_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="arvexq-vision-") as td:
         folder = Path(td)
@@ -101,19 +107,15 @@ def process_internal_feed(*, feed_url: str, token: str, allowed_hosts: set[str],
                         or any(not str(ids.get(str(no)) or "").strip()
                                for no in config.get("horseNumbers") or [])):
                     raise ValueError("stable horse IDs for every runner required to link past video")
-                for name in ("videoSha256", "weightsSha256"):
+                for name in ("videoSha256",):
                     value = str(job.get(name) or "").lower()
                     if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
                         raise ValueError(name + " full provider SHA256 required")
                 video = folder / ("race-%02d.mp4" % i)
-                weights = folder / ("detector-%02d.pt" % i)
                 _download(job.get("videoUrl", ""), video, hosts=allowed_hosts, token=token,
                           max_bytes=900_000_000,
                           expected_sha256=job.get("videoSha256"))
-                _download(job.get("weightsUrl", ""), weights, hosts=allowed_hosts, token=token,
-                          max_bytes=300_000_000,
-                          expected_sha256=job.get("weightsSha256"))
-                report = collect_video(video, config, model_path=weights)
+                report = collect_video(video, config, model_path=model_dir)
                 compact = compact_video_evidence(report, config)
                 saved = write_evidence(output_dir, compact)
                 result["processed"] += 1
@@ -143,10 +145,6 @@ def main(argv=None) -> int:
         print(json.dumps({"status": "blocked-no-authorized-video-provider",
                           "processed": 0, "forecastUpdated": False}))
         return 2
-    if os.getenv("ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED") != "true":
-        print(json.dumps({"status": "blocked-unverified-commercial-model-license",
-                          "processed": 0, "forecastUpdated": False}))
-        return 3
     try:
         result = process_internal_feed(feed_url=url, token=token,
                                        allowed_hosts=hosts, target_date=args.date,

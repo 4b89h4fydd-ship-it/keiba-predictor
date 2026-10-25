@@ -27,13 +27,16 @@ class InternalFeedSafetyTests(TestCase):
         with patch.dict(os.environ, {"ARVEXQ_VIDEO_FEED_URL": ""}):
             self.assertEqual(main(["--date", "2026-10-24"]), 2)
 
-    def test_real_provider_without_commercial_model_license_does_not_download(self):
-        with patch.dict(os.environ, {
-            "ARVEXQ_VIDEO_FEED_URL": "https://approved.example/feed.json",
-            "ARVEXQ_VIDEO_FEED_TOKEN": "fake-only",
-            "ARVEXQ_VIDEO_ALLOWED_HOSTS": "approved.example",
-            "ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED": ""}, clear=False):
-            self.assertEqual(main(["--date", "2026-10-24"]), 3)
+    def test_authorized_provider_requires_local_free_model_before_download(self):
+        with TemporaryDirectory() as folder:
+            with patch.dict(os.environ, {
+                "ARVEXQ_VIDEO_FEED_URL": "https://approved.example/feed.json",
+                "ARVEXQ_VIDEO_FEED_TOKEN": "fake-only",
+                "ARVEXQ_VIDEO_ALLOWED_HOSTS": "approved.example",
+                "ARVEXQ_VISION_MODEL_DIR": folder}, clear=False):
+                # Missing RT-DETR model is an explicit no-data error; no
+                # remote provider video is fetched yet.
+                self.assertEqual(main(["--date", "2026-10-24"]), 1)
 
     def test_token_and_allowlist_required(self):
         with TemporaryDirectory() as folder:

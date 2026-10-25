@@ -1,8 +1,11 @@
-# Optional offline computer-vision environment only.
-# Keep these heavy packages OUT of requirements.txt and iPhone/PWA runtime.
-# Requires an explicitly supplied local COCO-horse-capable model weights file.
-ultralytics>=8.3,<9
+# Offline video analysis only. No Ultralytics/AGPL weights or paid model license.
+# Detector: PekingU/rtdetr_r50vd Apache-2.0; tracker: supervision ByteTrack MIT.
+# Commercial predictions still require authorization for the SOURCE RACE VIDEO.
+transformers>=4.45,<5
+torch>=2.3,<3
+supervision>=0.24,<1
+huggingface-hub>=0.26,<1
 opencv-python-headless>=4.10,<5
-
-# Also requires the Tesseract OCR executable (apt package tesseract-ocr).
+pillow>=10,<13
 pytesseract>=0.3.13,<1
+# OCR executable: apt package tesseract-ocr.

@@ -65,7 +65,7 @@ class FakeModel:
 
     def track(self, image, **kwargs):
         assert kwargs["classes"] == [COCO_HORSE_CLASS]
-        assert kwargs["tracker"] == "bytetrack.yaml"
+        assert kwargs["tracker"] == "bytetrack-mit"
         x = float(image * 5)
         return [FakeResult([
             (7, [x - .5, 0.0, x + .5, 1.0], .99, 17),
