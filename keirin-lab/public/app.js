@@ -27,14 +27,25 @@ async function load(){
  }else status("取得失敗："+e.message+"。公開されていない日付の可能性があります。");
 }
 }
+function raceStatus(r){
+ if(r.provisional)return {code:"scheduled",label:"開催予定",detail:"出走表未取得"};
+ if(r.cancelled||r.status==="cancelled")return {code:"cancelled",label:"中止",detail:"開催中止"};
+ if(Array.isArray(r.result_top3)&&r.result_top3.length===3&&r.payout_trifecta!=null)return {code:"result",label:"結果確定",detail:"着順・払戻取得済み"};
+ if(r.prediction_status==="confirmed"&&r.prediction_snapshot_id&&r.prediction_confirmed_at)return {code:"confirmed",label:"予想確定",detail:"発走前保存済み予想"};
+ if(Array.isArray(r.entries)&&r.entries.length>=3)return {code:"draft",label:"暫定予想",detail:"出走表取得済・予想未確定"};
+ return {code:"scheduled",label:"開催予定",detail:"出走表未取得"};
+}
 function showRaces(){
  const venue=el("venues").value, races=S.races.filter(r=>r.venue===venue).sort((a,b)=>a.race_no-b.race_no);
- el("races").innerHTML=races.map(r=>'<button type="button" class="race" data-id="'+escape(r.race_id)+'">'+r.race_no+'R <small>'+escape(r.start_time||"")+'</small></button>').join("");
+ const filter=el("raceFilter")?.value||"all";
+ const visible=races.filter(r=>filter==="all"||raceStatus(r).code===filter);
+ el("races").innerHTML=visible.map(r=>{const st=raceStatus(r);return '<button type="button" class="race" data-id="'+escape(r.race_id)+'">'+r.race_no+'R <small>'+escape(r.start_time||"")+'</small><small>'+st.label+'</small></button>'}).join("");
  [...el("races").querySelectorAll("button")].forEach(b=>b.onclick=()=>choose(b.dataset.id));
  el("detail").innerHTML="<p class='sub'>レース番号を押すと予想を計算して表示します。</p>";
 }
 function choose(id){
  const r=S.races.find(x=>String(x.race_id)===String(id));if(!r)return;
+ const st=raceStatus(r);
  if(r.provisional){el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";return;}
  const riders=r.entries.map(e=>({n:Number(e.umaban),name:e.name,score:Number(e.score),style:e.style,win:Number(e.win_rate)/100,place:Number(e.top3_rate)/100,comment:e.comment||""}));
  if(riders.some(x=>!Number.isFinite(x.score)||!Number.isFinite(x.win)||!Number.isFinite(x.place))){el("detail").textContent="必要な成績に欠損があるため推定不能です。";return}
@@ -48,7 +59,7 @@ function choose(id){
  riders.sort((a,b)=>b.p1-a.p1);combos.sort((a,b)=>b.p-a.p);
  const marks=["◎","○","▲","△","☆","","","",""];
  el("detail").innerHTML=
- '<h2>'+escape(r.venue)+' '+r.race_no+'R <span class="sub">'+escape(r.start_time||"")+'発走</span></h2>'+
+ '<h2>'+escape(r.venue)+' '+r.race_no+'R <span class="sub">'+escape(r.start_time||"")+'発走</span></h2><div class="notice">状態：'+st.label+'（'+st.detail+'）。「確定」は発走前に保存された予想か結果・払戻の記録がある場合のみ表示します。</div>'+
  '<div class="summary"><strong>'+marks[0]+' '+riders[0].n+' '+escape(riders[0].name)+'</strong><span>○ '+riders[1].n+' '+escape(riders[1].name)+'　▲ '+riders[2].n+' '+escape(riders[2].name)+'</span></div>'+
  '<h3>全選手の自動分析</h3><div class="scroll"><table><thead><tr><th>印・車番・選手</th><th>得点</th><th>直近1着率</th><th>直近3着内率</th><th>推定1着</th><th>推定3着内</th><th>コメント</th></tr></thead><tbody>'+
  riders.map((x,i)=>'<tr><td>'+marks[i]+' '+x.n+' '+escape(x.name)+'</td><td>'+x.score.toFixed(2)+'</td><td>'+fmt(x.win)+'</td><td>'+fmt(x.place)+'</td><td>'+fmt(x.p1)+'</td><td>'+fmt(x.p3)+'</td><td>'+escape(x.comment)+'</td></tr>').join("")+'</tbody></table></div>'+
@@ -56,7 +67,7 @@ function choose(id){
  combos.slice(0,12).map(x=>'<tr><td><b>'+x.key+'</b></td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
  '<p class="notice">未校正の暫定モデル。得点・直近率・脚質を使用。ライン・バンク・展開の学習済み統合、実オッズ自動取得、期待値購入判定は未実装。結果データを入力に使用していません。第三者の出走表は更新・欠損の可能性があります。</p>';
 }
-el("date").value=today();el("load").onclick=load;el("venues").onchange=showRaces;
+el("date").value=today();el("load").onclick=load;el("venues").onchange=showRaces;el("raceFilter").onchange=showRaces;
 el("todayBtn").onclick=()=>{el("date").value=today();load()};
 el("tomorrowBtn").onclick=()=>{const d=new Date(today()+"T12:00:00+09:00");d.setUTCDate(d.getUTCDate()+1);el("date").value=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);load()};
 load();
