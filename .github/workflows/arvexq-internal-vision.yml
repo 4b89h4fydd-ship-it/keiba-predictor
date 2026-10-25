@@ -26,6 +26,7 @@ jobs:
       ARVEXQ_VIDEO_FEED_URL: ${{secrets.ARVEXQ_VIDEO_FEED_URL }}
       ARVEXQ_VIDEO_FEED_TOKEN: ${{secrets.ARVEXQ_VIDEO_FEED_TOKEN }}
       ARVEXQ_VIDEO_ALLOWED_HOSTS: ${{vars.ARVEXQ_VIDEO_ALLOWED_HOSTS }}
+      ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED: ${{secrets.ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED }}
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +40,9 @@ jobs:
           if [ -z "$ARVEXQ_VIDEO_FEED_URL" ] || [ -z "$ARVEXQ_VIDEO_FEED_TOKEN" ] || [ -z "$ARVEXQ_VIDEO_ALLOWED_HOSTS" ]; then
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             echo "::warning::VIDEO_DATA_UNAVAILABLE: no licensed/authorized video provider configured; nothing was analyzed"
+          elif [ "$ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VISION_MODEL_LICENSE_UNVERIFIED: private/commercial Ultralytics rights not confirmed; no analysis executed"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
@@ -97,5 +101,6 @@ jobs:
       - name: Explicit no-provider receipt
         if: steps.provider.outputs.enabled != 'true'
         run: |
-          echo "VIDEO_RESEARCH_STATUS=blocked-no-authorized-video-source"
+          echo "VIDEO_RESEARCH_STATUS=blocked-no-authorized-video-or-model-license"
+          echo "No race footage was analyzed. No measured horse movements were produced."
           echo "FORECAST_UPDATED=false"
