@@ -64,7 +64,77 @@
             forecastText:String(rev.forecastText||''),modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
   }
 
+  // 2026 Kikuka Sho emergency route: display only verified source-bound
+  // LEARNED research marks. No Stage64 fallback, no uncalibrated wagers.
+  var KIKKA_NAMES=[
+    'エムズビギン','コンジェスタス','アウダーシア',
+    'ショウナンガルフ','ジャスティンシカゴ','バステール',
+    'ラージアンサンブル','ロブチェン','ゴーイントゥスカイ',
+    'ダノンヒストリー','アスクエジンバラ','サノノグレーター',
+    'キンググローリー','マジョレルブルー','シートゥサミット',
+    'ショウナンハヤナミ','チャリングクロス','ナリタエスペランサ'
+  ];
+  function kikkaCandidateMarks(race){
+    var c=race&&race.kikkaCandidate;
+    if(!race||race.id!=='jra-2026-10-25-京都-11'||
+       race.date!=='2026-10-25'||race.track!=='京都'||
+       Number(race.raceNumber)!==11||Number(race.distance)!==3000||
+       String(race.surface||'').indexOf('芝')<0||
+       String(race.scheduledStartTime||race.startTime||'').slice(0,5)!=='15:40'||
+       !Array.isArray(race.horses)||race.horses.length!==18||
+       !c||c.version!=='arvexq-kikka-urgent-learned-candidate-v1'||
+       c.raceId!==race.id||c.raceDate!==race.date||
+       c.modelVersion!=='arvexq-learned-whole-career-scenarios-v2'||
+       c.provisional!==true||c.productionEligible!==false||
+       c.bettingRecommended!==false||c.probabilityCalibration!=='unverified'||
+       !/^20\d\d-\d\d-\d\d$/.test(String(c.trainedThrough||''))||
+       c.trainedThrough>=race.date||
+       !/^[a-f0-9]{64}$/i.test(String(c.sourceHash||''))||
+       !/^[a-f0-9]{64}$/i.test(String(c.modelHash||''))||
+       !Array.isArray(c.marks)||!c.marks.length)return null;
+    var off=Date.parse('2026-10-25T15:40:00+09:00');
+    var captured=Date.parse(String(c.capturedAt||''));
+    if(!Number.isFinite(captured)||captured>=off||captured<Date.parse('2026-10-24T00:00:00+09:00'))return null;
+    var names={},marks={},count=0,allowed={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1};
+    for(var i=0;i<18;i++){
+      var horse=race.horses[i],no=Number(horse&&horse.horseNumber);
+      if(!Number.isInteger(no)||no<1||no>18||names[no]||String(horse.name||'')!==KIKKA_NAMES[no-1])
+        return null;
+      names[no]=true;
+    }
+    for(var j=0;j<c.marks.length;j++){
+      var r=c.marks[j],n=Number(r&&r.horseNumber),m=String(r&&r.mark||'');
+      if(!Number.isInteger(n)||!names[n]||marks[n]||!allowed[m])return null;
+      marks[n]=m;
+      if(m==='◎')count++;
+    }
+    if(count!==1||Object.keys(marks).length<5)return null;
+    return {marks:marks,capturedAt:c.capturedAt,modelVersion:c.modelVersion};
+  }
+
   function build(race){
+    if(race&&race.id==='jra-2026-10-25-京都-11'){
+      var verified=kikkaCandidateMarks(race),marks=verified&&verified.marks||{};
+      var rows=(race.horses||[]).filter(function(h){return h&&Number(h.horseNumber)>0;}).map(function(h){
+        var no=Number(h.horseNumber),mark=marks[no]||'';
+        return {horse:h,predMark:mark,serverPreoffMark:false,
+          originalPreoffMark:false,referencePostoffMark:false,
+          revisionCandidateMark:!!mark,predRank:999,winProbability:null,
+          p1Probability:null,p2Probability:null,p3Probability:null,
+          overallGrade:'',coverage:0};
+      });
+      last={active:!!verified,source:verified?'kikka-2026-learned-preoff-candidate':'',
+        scenarios:[],pace:[],forecastText:verified?
+          '菊花賞・発走前に保存した新方式の参考印。未使用レースでの勝率・3着内率の検証および確率校正は未完了。':
+          '菊花賞の発走前新方式予想は未保存です。',
+        modelVersion:verified?verified.modelVersion:'',uncalibrated:true,
+        unavailable:!verified,marks:rows.filter(function(row){return !!row.predMark}).map(function(row){
+          return {horseNumber:Number(row.horse.horseNumber),name:String(row.horse.name||''),mark:row.predMark};
+        })};
+      return {rows:rows,legacyEngineDisabled:!verified,
+        scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,
+        arrangement:[],profile:{},coverage:0};
+    }
     var server=race&&race.predictionStatus==='ready'&&race.prediction;
     if(server&&server.predictionStatus==='ready'&&Array.isArray(race.horses)){
       var stage=server.stages||{}, prob=(stage.probability&&stage.probability.value)||{}, marks=race.predictionMarks||[], by={};
