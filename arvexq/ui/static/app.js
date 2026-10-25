@@ -2560,6 +2560,32 @@ function betDetailPage(r,p){
     +'<main class="smart-main smart-race-page"><section class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section></main>'
     +cinematicFooter()+'</div>'
 }
+function sixStageAnalysisPanel(r){
+  var unified=r&&r.predictionStatus==='unified-reference-ready'&&r.unifiedForecast&&
+    r.unifiedForecast.receiptSha256&&r.predictionModelVersion===r.unifiedForecast.modelVersion;
+  var receipt=unified?r.unifiedForecast:null;
+  var marks=receipt&&Array.isArray(receipt.marks)?receipt.marks:[];
+  var exactlyOne=marks.filter(function(x){return x&&x.markSymbol==='◎'}).length===1;
+  var calibrated=!!(receipt&&receipt.probabilitiesCalibrated===true);
+  var video=!!(receipt&&receipt.videoIdentityValidated===true);
+  var plan=receipt&&receipt.ticketPlan||{};
+  var ticketReady=!!(receipt&&exactlyOne&&plan.items&&plan.items.length&&
+    plan.status!=='見送り');
+  var stages=[
+    ['① 能力分析',receipt?'同一レシートで分析済み':'学習済みモデル・検証済み入力待ち'],
+    ['② 映像分析',video?'検証済みデータを適用':'未適用・検証待ち'],
+    ['③ 展開分析',receipt?'通常隊列・前争い・後方待機を比較（発生頻度は未検証）':'未適用・検証待ち'],
+    ['④ 確率計算',receipt?(calibrated?'校正済み':'勝率・3着内率：未校正'):'未算出・未校正'],
+    ['⑤ 印',exactlyOne?'同一レシートから決定（◎1頭）':'見送り（有効な予測レシートなし）'],
+    ['⑥ 買い目',ticketReady?'同一レシートの参考候補（購入推奨・保証なし）':'見送り（条件未充足・購入推奨なし）']
+  ];
+  return '<section class="card arv-six-stage" aria-label="新方式・6段階分析">'+
+    '<h2>新方式・6段階分析</h2>'+
+    (receipt?'<p class="muted">発走前予測レシート：'+esc(String(receipt.receiptSha256).slice(0,12))+'…</p>':
+      '<p class="muted">検証済み予測レシートなし。旧方式への切り替えは行いません。</p>')+
+    stages.map(function(x){return '<div class="arv-six-stage-row" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,.25)"><b>'+esc(x[0])+'</b><div class="muted">'+esc(x[1])+'</div></div>'}).join('')+
+    '<p class="muted">未校正の確率には的中・回収率の保証はありません。</p></section>';
+}
 function renderRace(){
   var r=applySummaryEnvironment(mergeResultHorseFields(state.race)),p=null,predictionError=null;
   state.race=r;
@@ -2604,7 +2630,7 @@ function renderRace(){
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      '<div class="smart-race-content">'+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
+      '<div class="smart-race-content">'+sixStageAnalysisPanel(r)+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
   '</div>'

@@ -3231,12 +3231,12 @@ def _compact_display_snapshot(detail: dict) -> dict:
     out=public_race(detail)
     detail=out
     active_marks={}
-    if out.get("predictionStatus")=="ready":
+    if out.get("predictionStatus") in {"ready", "unified-reference-ready"}:
         active_marks={
             str(m.get("horseNumber")):m for m in (out.get("predictionMarks") or [])
-            if isinstance(m,dict) and m.get("mark") in {"◎","○","▲","△","☆"}
+            if isinstance(m,dict) and (m.get("mark") or m.get("markSymbol")) in {"◎","○","▲","△","☆"}
         }
-    if out.get("predictionStatus") != "ready":
+    if out.get("predictionStatus") not in {"ready", "unified-reference-ready"}:
         for key in ("aiEvaluation", "factorRanking", "honmeiDecision", "preRacePrediction",
                     "predictionAudit", "frozenPredictionAudit", "winnerLearningProfile",
                     "betRecommendations", "recommendedBets", "tickets", "buyList", "bets",
@@ -3255,7 +3255,7 @@ def _compact_display_snapshot(detail: dict) -> dict:
             z.pop(key,None)
         live=active_marks.get(str(z.get("horseNumber")))
         if live:
-            z["mark"]=live["mark"]
+            z["mark"]=live.get("mark") or live.get("markSymbol")
             z["markProvisional"]=True
         horses.append(z)
     out["horses"]=horses

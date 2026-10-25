@@ -39,6 +39,9 @@ def race_family(detail):
         return 'banei'
     if '障' in str(detail.get('surface') or '') or detail.get('analysisMode') == '障害' or '障害' in str(detail.get('title') or ''):
         return 'jumps'
+    # Debut races must never inherit a model fitted on experienced flat runners.
+    if detail.get('analysisMode') == '新馬' or '新馬' in str(detail.get('title') or '') or 'メイクデビュー' in str(detail.get('title') or ''):
+        return 'debut'
     return 'flat'
 
 

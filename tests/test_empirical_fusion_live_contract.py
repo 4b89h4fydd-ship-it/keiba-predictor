@@ -107,17 +107,12 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     bets = generate_tickets(output, generate_marks(output), race=src)
     assert bets
     assert 1 <= sum(x["points"] for x in bets) <= 5
+    # The empirical fusion can still be audited directly, but is not a live
+    # publication fallback when no verified unified receipt exists.
     projected = patch_time(public_race, src)
-    assert projected["predictionStatus"] == "ready"
-    assert projected["predictionModelVersion"] == VERSION
-    assert projected["predictionMarks"] == generate_marks(output)
-    assert projected["recommendedBets"] == bets
-    marked = {row["horseNumber"] for row in projected["predictionMarks"]}
-    assert set(projected["prediction"]["stages"]["pace"]["value"]["markOrder"]) == marked
-    assert all(set(combo).issubset(marked)
-               for ticket in projected["recommendedBets"]
-               for combo in ticket["combos"])
-    assert projected["prediction"]["paceEvidence"]["markLabels"]
+    assert projected["predictionStatus"] == "disabled"
+    assert not projected.get("predictionMarks")
+    assert not projected.get("recommendedBets")
     assert "fusionInputs" not in projected
     assert src == saved
 
