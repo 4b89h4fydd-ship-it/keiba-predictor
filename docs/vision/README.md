@@ -123,3 +123,21 @@ even successful detection is NOT a detection-recall percentage.
 The video pipeline must remain internal and research-only until
 authorized JRA/NAR moving race footage and independently reviewed frame
 truth are available.
+
+
+## Japanese racing video source audit (2026-10-25)
+
+Scheduled workflow: .github/workflows/arvexq-open-japan-video-audit.yml.
+It checks Wikimedia Commons metadata weekly for candidate Japanese flat and
+steeplechase race videos and EXCLUDES Obihiro/ban'ei sources. No video is
+downloaded or redistributed. Results are retained as a JSON audit artifact
+with source URLs, discovered videos, declared Creative Commons license, and
+inspected file/category counts. Category traversal is explicitly limited;
+a zero means none found in scanned categories, NOT zero on the whole web.
+
+Crucially a CC metadata entry is *not* independently verified permission to
+film at a racecourse, analyze commercial racing footage or use its contents
+to sell tips. Video must pass separate rights and provenance review before
+production ingestion. No pre-off predictions, betting picks or app pages
+are modified by this scheduled discovery. API errors and partial crawls
+show status incomplete-source-audit rather than falsely succeeding.
