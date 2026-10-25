@@ -118,7 +118,7 @@ class KikukaPreoffTests(TestCase):
         initial = deepcopy(previous)
         initial['kikkaCandidate'] = candidate(previous)
         first = protect_detail(previous, initial)
-        self.assertEqual(candidate_marks(first), initial['kikkaCandidate']['marks'])
+        self.assertEqual(candidate_marks(first), sorted(initial['kikkaCandidate']['marks'], key=lambda row: row['horseNumber']))
         later = deepcopy(first)
         later.pop('kikkaCandidate')
         later['oddsUpdatedAt'] = 'new-market'
