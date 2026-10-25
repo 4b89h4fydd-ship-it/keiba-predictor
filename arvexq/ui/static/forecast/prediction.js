@@ -135,6 +135,55 @@
         scenarios:[],plans:{},plan:null,suit:{},occ:[],pressure:0,
         arrangement:[],profile:{},coverage:0};
     }
+    // Universal race forecast: one BEFORE-OFF receipt for all panels.
+    // UI does not invent a ranking, second pace opinion, or ticket.
+    var unified=race&&race.unifiedForecast;
+    if(unified&&unified.version==='arvexq-unified-live-v1'&&
+       unified.raceId===race.id&&unified.raceDate===race.date&&
+       unified.circuit===race.circuit&&unified.researchOnly===true&&
+       unified.probabilitiesCalibrated===false&&
+       Array.isArray(unified.roster)&&Array.isArray(unified.marks)&&
+       unified.roster.length>=3&&unified.roster.length===race.horses.length&&
+       /^[a-f0-9]{64}$/i.test(unified.receiptSha256||'')&&
+       /^[a-f0-9]{64}$/i.test(unified.modelHash||'')&&
+       String(unified.trainedThrough||'')<String(race.date||'')&&
+       Date.parse(String(unified.capturedAt||''))<
+       Date.parse(String(race.date)+'T'+String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00')){
+      var roster={},seen={},markMap={},accepted=true,best=0,allow={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1};
+      unified.roster.forEach(function(x){
+        var n=Number(x&&x.horseNumber);
+        if(!Number.isInteger(n)||n<=0||roster[n])accepted=false;
+        roster[n]=String(x.name||'');
+      });
+      (race.horses||[]).forEach(function(h){
+        var n=Number(h&&h.horseNumber);
+        if(roster[n]!==String(h&&h.name||''))accepted=false;
+      });
+      unified.marks.forEach(function(x){
+        var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
+        if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
+        seen[n]=true;markMap[n]=x;if(m==='◎')best++;
+      });
+      if(accepted&&best===1){
+        var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
+          var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
+          return {horse:h,predMark:mark,serverPreoffMark:false,
+            originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
+            predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
+            p3Probability:null,overallGrade:'',coverage:0,
+            forecastProbabilityRange:obj.winProbabilityRange||null,
+            forecastTop3Range:obj.top3ProbabilityRange||null,forecastReason:obj.reason||''};
+        });
+        last={active:true,source:'arvexq-unified-preoff',scenarios:(unified.pace&&unified.pace.testedScenarios||[]),
+          pace:[],forecastText:String(unified.pace&&unified.pace.text||''),
+          modelVersion:unified.modelVersion,uncalibrated:true,unavailable:false,
+          marks:rowsU.filter(function(x){return !!x.predMark}).map(function(x){
+            return {horseNumber:Number(x.horse.horseNumber),name:String(x.horse.name||''),mark:x.predMark}
+          })};
+        return {rows:rowsU,legacyEngineDisabled:true,scenarios:[],plans:{},
+          plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
+      }
+    }
     var server=race&&race.predictionStatus==='ready'&&race.prediction;
     if(server&&server.predictionStatus==='ready'&&Array.isArray(race.horses)){
       var stage=server.stages||{}, prob=(stage.probability&&stage.probability.value)||{}, marks=race.predictionMarks||[], by={};

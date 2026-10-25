@@ -1,29 +1,9 @@
 name: ARVEXQ Kikuka Sho Emergency Preoff
 
 "on":
-  pull_request:
-    branches: [main]
-    paths:
-      - scripts/arvexq_kikka_urgent.py
-      - scripts/arvexq_protect_sync.py
-      - tests/test_kikka_urgent_preoff.py
-      - arvexq/prediction/kikka_urgent.py
-      - scripts/arvexq_kikka_frontend_smoke.cjs
-      - scripts/arvexq_kikka_production_visible_smoke.mjs
-      - arvexq/ui/static/forecast/prediction.js
-      - .github/workflows/arvexq-kikka-urgent.yml
-  push:
-    branches: [main]
-    paths:
-      - scripts/arvexq_kikka_urgent.py
-      - scripts/arvexq_protect_sync.py
-      - tests/test_kikka_urgent_preoff.py
-      - arvexq/prediction/kikka_urgent.py
-      - scripts/arvexq_kikka_frontend_smoke.cjs
-      - scripts/arvexq_kikka_production_visible_smoke.mjs
-      - arvexq/ui/static/forecast/prediction.js
-      - .github/workflows/arvexq-kikka-urgent.yml
   workflow_dispatch:
+  # 2026 Kikuka Sho has already started/ended. Never attempt an automatic
+  # retroactive before-off opinion when generic forecasting code changes.
 
 permissions:
   contents: read

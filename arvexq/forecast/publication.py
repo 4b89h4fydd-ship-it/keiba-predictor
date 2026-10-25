@@ -31,6 +31,26 @@ def public_race(detail):
         return deepcopy(value)
     if not isinstance(detail, dict): return detail
     result = project(detail)
+    # One coherent source for ability/running style/pace/probabilities/marks
+    # and observed-market ticket evaluation. This route never runs Stage64
+    # or a second ticket engine. Past race products remain locked at their
+    # genuine before-off capture timestamp; not reconstructed post-off.
+    from arvexq.prediction.unified_product import verified as verified_unified
+    active = verified_unified(detail)
+    if active:
+        result['predictionStatus'] = 'unified-reference-ready'
+        result['predictionModelVersion'] = active['modelVersion']
+        result['predictionMarks'] = [
+            {'horseNumber': r['horseNumber'], 'mark': r['markSymbol']}
+            for r in active['marks']]
+        result['forecastText'] = active['pace']['text']
+        result['recommendedBets'] = []  # Research ticket candidates, never paid advice
+        result['recommendedBetPlan'] = deepcopy(active['ticketPlan'])
+        by_no = {r['horseNumber']: r['markSymbol'] for r in active['marks']}
+        for horse in result.get('horses') or []:
+            if horse.get('horseNumber') in by_no:
+                horse['predMark'] = by_no[horse['horseNumber']]
+        return result
     # Urgent 2026 Kikuka Sho uses the date-held-out LEARNED challenger only.
     # The retired Stage64 adapter must not override this race. Its research
     # marks may be displayed explicitly as uncalibrated; no betting ticket.
