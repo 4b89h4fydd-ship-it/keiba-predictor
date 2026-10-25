@@ -112,6 +112,12 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert projected["predictionModelVersion"] == VERSION
     assert projected["predictionMarks"] == generate_marks(output)
     assert projected["recommendedBets"] == bets
+    marked = {row["horseNumber"] for row in projected["predictionMarks"]}
+    assert set(projected["prediction"]["stages"]["pace"]["value"]["markOrder"]) == marked
+    assert all(set(combo).issubset(marked)
+               for ticket in projected["recommendedBets"]
+               for combo in ticket["combos"])
+    assert projected["prediction"]["paceEvidence"]["markLabels"]
     assert "fusionInputs" not in projected
     assert src == saved
 

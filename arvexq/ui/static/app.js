@@ -1734,10 +1734,14 @@ function pacePanel(r,p){
   var prose=String(source.forecastText||r.forecastText||'').trim();
   if(isFusion){
     var front=Array.isArray(context.forwardIntentCandidates)?context.forwardIntentCandidates:[];
+    var markOrder=Array.isArray(context.markOrder)?context.markOrder:[],
+      markLabels=context.markLabels&&typeof context.markLabels==='object'?context.markLabels:{};
     details='<div class="actual-stage"><b>みねた氏の公開手法に基づく展開観測</b><div class="muted">'+
       '先行候補：'+(front.length?front.map(function(no){return esc(names[no]||no+'番')}).join('、'):'未確認')+
       '／初角までの公式距離：'+(context.firstCornerMetersOfficial!=null?esc(context.firstCornerMetersOfficial)+'m':'未取得')+
       '／先行候補の隣接：'+(context.adjacentForwardCandidates||[]).length+'組'+
+      '</div><div class="muted">同一融合結果の印順：'+
+      (markOrder.length?markOrder.map(function(no){return esc(markLabels[String(no)]||'')+esc(names[no]||no+'番')}).join(' → '):'未取得')+
       '</div></div>';
   }
   return '<section id="section-pace" class="card pace-panel-direct"><div class="ai-flow-card pace-stage-menu-card">'+

@@ -89,8 +89,18 @@ def build_prediction(facts, now=None):
         return None
     marks = blended["predictionMarks"]
     order = [m["horseNumber"] for m in marks]
+    if len(marks) != 5 or len(set(order)) != 5 or any(
+            m.get("mark") != ("◎", "○", "▲", "△", "☆")[i]
+            for i, m in enumerate(marks)):
+        return None
     grouped = []
     for ticket in blended["recommendedBets"]:
+        combo = ticket.get("combo") if isinstance(ticket, dict) else None
+        if not isinstance(combo, list) or not combo or not set(combo).issubset(set(order)):
+            # A ticket that names an unmarked runner is not the same product
+            # as this forecast. Fail closed instead of displaying mixed
+            # sources.
+            return None
         group = next((item for item in grouped if item["kind"] == ticket["kind"]), None)
         if group is None:
             group = {"kind": ticket["kind"], "combos": [], "points": 0,
@@ -100,6 +110,11 @@ def build_prediction(facts, now=None):
         group["points"] += 1
     win, podium = blended["win"], blended["top3"]
     status = "ready" if marks else "unavailable"
+    pace = dict(mineta)
+    pace["markOrder"] = order
+    pace["markLabels"] = {str(m["horseNumber"]): m["mark"] for m in marks}
+    pace["ticketHorses"] = sorted({no for ticket in blended["recommendedBets"]
+                                    for no in ticket["combo"]})
     texts = [
         "みねた氏の公開展開手法による観測項目を主体に、複数予想家と独立AIの"
         "同一過去レースでの実測的中率・回収率による重み付けで統合。",
@@ -108,7 +123,8 @@ def build_prediction(facts, now=None):
         "初角までの公式距離は" +
         (str(mineta["firstCornerMetersOfficial"]) + "m。" if mineta["firstCornerMetersOfficial"] is not None
          else "未取得。"),
-        "◎は" + str(order[0]) + "番。人による印の変更は行わない。",
+        "印は融合確率順位から機械決定し、◎は" + str(order[0]) + "番。"
+        "展開・確率・印・買い目はこの同一融合結果から作成し、人による変更は行わない。",
         "確率はモデル予測であり、個別レースの的中保証ではない。",
         ("実オッズと3着までの各着順確率が揃った買い目のみ掲載。"
          if grouped else "実オッズまたは3着までの着順確率・期待値の条件未達により買い目見送り。"),
@@ -119,7 +135,7 @@ def build_prediction(facts, now=None):
         "runningStyle": {"status": "observed-preoff-positions",
                          "value": {str(e["horseNumber"]): e["pastEarlyTop3Share"]
                                    for e in mineta["horses"]}},
-        "pace": {"status": "mineta-public-observed-context", "value": mineta,
+        "pace": {"status": "mineta-public-observed-context", "value": pace,
                  "scenarioWeightsVerified": False},
         "probability": {"status": "empirical-multi-model-weighted", "value":
                         {"win": win, "top3": podium},
@@ -141,5 +157,5 @@ def build_prediction(facts, now=None):
         "predictionMarks": marks, "recommendedBets": grouped,
         "methodWeights": blended["methodWeights"], "methodEvidence": blended["methodEvidence"],
         "calibrationRaces": blended["calibrationRaces"], "forecastText": "".join(texts),
-        "paceEvidence": mineta, "humanOverrideAllowed": False,
+        "paceEvidence": pace, "humanOverrideAllowed": False,
     }
