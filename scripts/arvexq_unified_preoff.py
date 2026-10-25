@@ -93,6 +93,10 @@ def run(base, target_date, *, publish=False, max_races=70,
     if type(max_races) is not int or not 1 <= max_races <= 150:
         raise ValueError("bounded race count required")
     summaries = day_summary(base, target_date)
+    # Reuse the established provider-enrichment path for missing histories.
+    # This is read/enrichment only; it never fabricates runs and never writes
+    # D1. If every registered provider is missing, the race remains blocked.
+    from scripts.arvexq_prefetch import _supplement_missing
     source, errors, pending = [], [], []
     for summary in summaries:
         if len(pending) >= max_races:
@@ -103,7 +107,7 @@ def run(base, target_date, *, publish=False, max_races=70,
                for token in ("帯広", "ばんえい")):
             continue
         try:
-            row = race_detail(base, summary["id"])
+            row = _supplement_missing(race_detail(base, summary["id"]))
             if (row.get("id") != summary["id"] or row.get("date") != target_date
                     or row.get("circuit") != summary.get("circuit")
                     or not row.get("horses") or _has_result_evidence(row.get("result"))):

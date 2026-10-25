@@ -21,6 +21,30 @@ class FixedDateTime(datetime):
 
 
 class UnifiedLiveTests(TestCase):
+    def test障害専用学習経路_is_not_treated_as_banei_or_flat(self):
+        source = target("中央")
+        source.update({"id": "jra-2026-10-26-京都-04",
+                       "date": "2026-10-26", "startTime": "10:30",
+                       "title": "障害未勝利", "surface": "障害",
+                       "analysisMode": "障害"})
+        for horse in source["horses"]:
+            for run in horse.get("recentRaces") or []:
+                run["surface"] = "障害"
+        training = training_race("中央")
+        training["surface"] = "障害"
+        training["analysisMode"] = "障害"
+        for horse in training["horses"]:
+            for run in horse.get("recentRaces") or []:
+                run["surface"] = "障害"
+        model = fit_model([training], circuit="中央", family="jumps", epochs=5)
+        with patch("arvexq.prediction.new_forecast.datetime", FixedDateTime):
+            product = generate(source, model,
+                               now=datetime.fromisoformat("2026-10-26T09:00:00+09:00"))
+        self.assertEqual(product["modelFamily"], "jumps")
+        self.assertEqual(product["specialHandling"], "障害専用")
+        self.assertFalse(product["videoIdentityValidated"])
+        self.assertEqual(verified(dict(source, unifiedForecast=product))["modelFamily"], "jumps")
+
     def test_both_circuits_marks_pace_and_bets_share_one_locked_source(self):
         for circuit in ("中央", "地方"):
             with self.subTest(circuit=circuit):
