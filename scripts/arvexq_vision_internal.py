@@ -143,6 +143,10 @@ def main(argv=None) -> int:
         print(json.dumps({"status": "blocked-no-authorized-video-provider",
                           "processed": 0, "forecastUpdated": False}))
         return 2
+    if os.getenv("ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED") != "true":
+        print(json.dumps({"status": "blocked-unverified-commercial-model-license",
+                          "processed": 0, "forecastUpdated": False}))
+        return 3
     try:
         result = process_internal_feed(feed_url=url, token=token,
                                        allowed_hosts=hosts, target_date=args.date,
