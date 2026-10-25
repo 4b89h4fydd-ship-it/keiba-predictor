@@ -100,6 +100,13 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert src == saved
     assert output is not None, "complete preoff inputs must produce an output"
     assert output["modelVersion"] == VERSION
+    baseline = output["stages"]["pace"]["value"]["fourPhaseHistoricalBaseline"]
+    assert set(baseline) == {str(i) for i in range(1, 6)}
+    assert output["stages"]["pace"]["value"]["fourPhaseBaselineValidated"] is False
+    assert baseline["1"]["start"]["projectedRank"] is None
+    assert baseline["1"]["thirdCorner"]["projectedRank"] is None
+    assert baseline["1"]["straight"]["projectedRank"] == 1.0
+    assert output["predictionMarks"] == raw["predictionMarks"]
     assert output["humanOverrideAllowed"] is False
     assert set(output["stages"]) == {
         "ability","runningStyle","pace","probability","marks","tickets"}
