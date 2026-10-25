@@ -1,7 +1,9 @@
-"""Stage64 product marks; no ranking or probability is calculated in the UI."""
+"""Pre-off empirical fusion marks; no ranking is calculated in the UI."""
 
 def generate_marks(prediction):
-    if not isinstance(prediction, dict) or prediction.get("predictionStatus") != "ready":
+    from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION
+    if (not isinstance(prediction, dict) or prediction.get("modelVersion") != FUSION_VERSION
+            or prediction.get("predictionStatus") != "ready"):
         return []
     stages = prediction.get("stages") or {}
     value = ((stages.get("marks") or {}).get("value") or {})
