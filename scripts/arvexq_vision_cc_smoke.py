@@ -15,7 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from collections import Counter, defaultdict
+from collections import defaultdict
 from pathlib import Path
 import tempfile
 import urllib.request
@@ -96,7 +96,9 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
         by_track = defaultdict(list)
         previous_frame_index = -1
         for i in range(max_frames):
-            frame_idx = round((i + 1) * fps / sample_hz)
+            # Align all frequencies to exactly the same [1s, 1+duration)
+            # video window; dense mode adds intermediate frames only.
+            frame_idx = round((1.0 + i / sample_hz) * fps)
             if frame_idx <= previous_frame_index:
                 continue
             previous_frame_index = frame_idx
