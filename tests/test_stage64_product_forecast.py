@@ -67,10 +67,9 @@ def test_only_verified_old_original_is_preserved_for_historical_readback():
     original = deepcopy(detail)
     published = public_race(detail)
     assert detail == original
-    assert published["predictionMarks"] == original["predictionMarks"]
-    assert published["recommendedBets"] == original["recommendedBets"]
-    assert published["predictionModelVersion"] == OLD
-    assert published["forecastText"] == original["prediction"]["forecastText"]
+    assert published["predictionStatus"] == "disabled"
+    assert "predictionMarks" not in published
+    assert "recommendedBets" not in published
 
 
 def test_incomplete_legacy_original_cannot_be_upgraded_after_off():
