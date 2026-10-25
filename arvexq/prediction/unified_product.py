@@ -116,7 +116,7 @@ def generate(race, model, *, now=None):
             continue
         evaluation = horse.get("integratedEvaluation") or {}
         symbol = evaluation.get("mark")
-        if symbol not in SYMBOLS:
+        if symbol not in ("◎", "○", "▲", "△", "☆"):
             continue
         no = int(horse["horseNumber"])
         probs = evaluation.get("modelProbabilities") or {}
