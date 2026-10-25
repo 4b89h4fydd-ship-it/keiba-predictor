@@ -210,13 +210,15 @@ def build_prediction(facts, now=None):
             "representativeComparable": career["representativeComparable"],
             "historyCoverage": career["coverageStatus"],
             "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
-            "evaluationReady": (
-                career["datedRuns"] > 0 and career["coverageStatus"] == "complete"
-                and recent["datedRuns"] > 0
-            ),
+            # The ability head has no validated runtime artifact in this
+            # deployed path. Evidence coverage alone is never a scored model.
+            "evaluationReady": False,
+            "abilityScore": None,
+            "abilityScoreStatus": "missing-validated-model-artifact",
             "evaluationBlockers": (
                 (["missing-past-runs"] if not career["datedRuns"] else [])
                 + (["career-coverage-unverified"] if career["coverageStatus"] != "complete" else [])
+                + ["missing-validated-model-artifact"]
                 + (["training-unverified"])
                 + (["bloodline-unvalidated"])
             ),
