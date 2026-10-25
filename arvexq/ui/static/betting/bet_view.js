@@ -39,7 +39,7 @@ function render(r,p,deps){
     +'<span class="arv-bet-status">'+esc(status)+'</span></div><span class="ai-bet-brand">ARVEXQ</span></div>'
     +'<p class="arv-three-provisional">'+esc(axisLabel)+'</p>'
     +'<p class="arv-three-provisional">'+esc(plan.researchOnly?
-      'この買い目候補は未校正の研究比較で、購入・的中率・回収率を推奨または保証するものではありません。':'全券種を比較し、根拠のある組み合わせをおすすめとして選定します。推定確率は未校正で的中を保証するものではありません。')+'</p>'
+      'この買い目候補は未校正の研究比較で、購入・的中率・回収率を推奨または保証するものではありません。':'全券種を比較し、根拠のある組み合わせをおすすめとして選定します。推定確率は未校正で、目標の的中率80%以上（望成90%以上）を保証するものではありません。')+'</p>'
     +(plan.noAxis&&!dataUnavailable?'<p class="arv-three-provisional">'+esc(savedV346?'保存時点の軸なし判定を維持。':'◎信頼度Cまたは◎不在：軸を固定せずワイド・馬連・3連複を比較。馬単・3連単は見送ります。')+'</p>':'')
     +(plan.referenceOnly?'<p class="arv-three-provisional">通常レースの参考買い目。朝固定の厳選レースではありません。</p>':'')
     +((plan.betWarnings||[]).length?'<div class="arv-three-check"><b>購入前に確認</b><p>条件未確認：'+esc(plan.betWarnings.join('／'))+'</p><small>オッズ・期待値を確認してから購入判断してください。</small></div>':'')
