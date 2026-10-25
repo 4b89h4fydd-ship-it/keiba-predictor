@@ -1,0 +1,71 @@
+name: ARVEXQ Kikuka Sho Emergency Preoff
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_kikka_urgent.py
+      - arvexq/prediction/kikka_urgent.py
+      - scripts/arvexq_kikka_frontend_smoke.cjs
+      - arvexq/ui/static/forecast/prediction.js
+      - .github/workflows/arvexq-kikka-urgent.yml
+  push:
+    branches: [main]
+    paths:
+      - scripts/arvexq_kikka_urgent.py
+      - arvexq/prediction/kikka_urgent.py
+      - scripts/arvexq_kikka_frontend_smoke.cjs
+      - arvexq/ui/static/forecast/prediction.js
+      - .github/workflows/arvexq-kikka-urgent.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-kikka-2026-10-25-preoff
+  cancel-in-progress: false
+
+jobs:
+  focused-kikka:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+      PYTHONPATH: .
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      ARVEXQ_COLLECT_ONLY: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install existing ARVEXQ forecasting runtime
+        run: python -m pip install -q -r requirements.txt
+      - name: Verify Kyoto 11R immutable roster and time guards
+        run: |
+          python -m unittest discover -s tests -p 'test_kikka_urgent_preoff.py' -v
+      - name: Validate iPhone Kikuka mark display is NOT Stage64
+        run: node scripts/arvexq_kikka_frontend_smoke.cjs
+      - name: Dry-run only target Kyoto 11R from D1 on PR
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/arvexq_kikka_urgent.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --out kikka-urgent-status.json
+      - name: Publish only target Kyoto 11R before 15:40 JST
+        if: github.event_name != 'pull_request'
+        run: |
+          python scripts/arvexq_kikka_urgent.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --out kikka-urgent-status.json \
+            --publish
+      - name: Record only candidate status and hashes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-kikka-preoff-status-${{ github.run_id }}
+          path: kikka-urgent-status.json
+          if-no-files-found: warn
+          retention-days: 14

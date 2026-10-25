@@ -1136,13 +1136,15 @@ function validatedHonmeiMetadata(source){
 function honmeiBadgeText(x){return x&&x.honmeiGrade?String(x.honmeiGrade):'';}
 function markRoleLabel(x){
   if(!x||x.predMark!=='◎')return '';
+  if(x.revisionCandidateMark)return '◎ 発走前参考印';
   if(x.markFrozen&&x.honmeiRole==='axis')return '保存印：◎（旧軸）';
   if(x.markFrozen&&x.honmeiRole==='win')return '保存印：◎（旧単勝）';
   return x.markFrozen&&x.honmeiRole!=='win-axis'?'保存印：◎':'◎ 本命';
 }
 function visiblePredictionMark(x){return window.ARVEXQProductionMarks.visible(x);}
-function honmeiA11yText(x){return x&&markRoleLabel(x)?
-  markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
+function honmeiA11yText(x){return x&&x.revisionCandidateMark?
+  '菊花賞の新方式AIによる発走前参考印。未校正で購入推奨ではありません':
+  x&&markRoleLabel(x)?markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){return '<div class="rc-mark-legend"></div>';}
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
@@ -1701,6 +1703,14 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){
+  if(r&&r.id==='jra-2026-10-25-京都-11'){
+    var candidate=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.current();
+    var summary=candidate&&candidate.source==='kikka-2026-learned-preoff-candidate';
+    return '<section id="section-pace" class="card pace-panel-direct"><h2>菊花賞・展開の参考分析</h2>'+
+      '<p>'+esc(summary?candidate.forecastText:
+       '発走前の新方式候補がまだ保存されていません。')+'</p>'+
+      '<p class="muted">実レース映像による隊列の検証は未完了。逃げ・先行有利などを決め打ちせず、確率校正前の参考印として表示しています。</p></section>';
+  }
   // Stage64 must own the pace conclusion. The retired visual simulator may
   // otherwise invent an unrelated order from the original racecard number.
   var live=r&&r.predictionStatus==='ready'&&r.prediction&&

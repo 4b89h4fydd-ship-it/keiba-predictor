@@ -18,7 +18,8 @@ RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking
     # Internal race-video evidence stays server-side and is never served to the PWA.
     'visionResearch', 'visionResearchHistory', 'visionResearchAppliedToProductionPrediction',
     'visionResearchStatus', 'visionResearchHistoricalRuns',
-    'videoSha256', 'modelSha256', 'verifiedIdentityMap', 'calibration'))
+    'videoSha256', 'modelSha256', 'verifiedIdentityMap', 'calibration',
+    'kikkaCandidate'))
 
 def public_race(detail):
     """JSON race mapping -> detached facts; recursively remove retired outputs."""
@@ -29,6 +30,33 @@ def public_race(detail):
         return deepcopy(value)
     if not isinstance(detail, dict): return detail
     result = project(detail)
+    # Urgent 2026 Kikuka Sho uses the date-held-out LEARNED challenger only.
+    # The retired Stage64 adapter must not override this race. Its research
+    # marks may be displayed explicitly as uncalibrated; no betting ticket.
+    from arvexq.prediction.kikka_urgent import RACE_ID, candidate_marks
+    if detail.get('id') == RACE_ID:
+        proposed = candidate_marks(detail)
+        if proposed:
+            source = detail['kikkaCandidate']
+            result['predictionStatus'] = 'candidate-analysis'
+            result['predictionModelVersion'] = source['modelVersion']
+            result['prediction'] = {
+                'modelVersion': source['modelVersion'],
+                'productionEligible': False, 'predictionStatus': 'candidate-analysis',
+                'capturedAt': source['capturedAt'], 'modelHash': source['modelHash'],
+            }
+            result['forecastText'] = ('菊花賞の発走前・新方式モデルの参考印。'
+                '勝率・3着内率は未校正で、馬券購入の推奨は行わない。')
+            result['predictionMarks'] = proposed
+            result['recommendedBets'] = []
+            by_no = {row['horseNumber']: row['mark'] for row in proposed}
+            for horse in result.get('horses') or []:
+                if horse.get('horseNumber') in by_no:
+                    horse['predMark'] = by_no[horse['horseNumber']]
+        else:
+            result['predictionStatus'] = 'new-model-unavailable'
+            result['recommendedBets'] = []
+        return result
     prediction = build_prediction(detail)
     if prediction is None:
         # A stored, verified pre-off Stage64 product is immutable race evidence.
