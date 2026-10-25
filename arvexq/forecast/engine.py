@@ -59,6 +59,8 @@ def build_prediction(facts, now=None):
     # prediction package imports forecast.engine for its compatibility adapter.
     from arvexq.prediction.empirical_fusion import blend
     from arvexq.prediction.mineta_public_pace import public_pace_factors
+    from arvexq.prediction.past_performance import analyze_past_performance
+    from arvexq.prediction.career_profile import profile_career
     if not _preoff(facts, now):
         return None
     if facts.get("track") in ("帯広", "帯広ば") or facts.get("surface") in ("ばんえい", "障害"):
@@ -151,9 +153,41 @@ def build_prediction(facts, now=None):
         ("実オッズと3着までの各着順確率が揃った買い目のみ掲載。"
          if grouped else "実オッズまたは3着までの着順確率・期待値の条件未達により買い目見送り。"),
     ]
+    # Ability stage 1: reuse the existing race-dated five-run and full-career
+    # evidence. Keep these factual observations separate from calibrated
+    # probabilities, marks and all future-stage predictions.
+    ability_observations = {}
+    for horse in race["horses"]:
+        if not isinstance(horse, dict) or type(horse.get("horseNumber")) is not int:
+            continue
+        no = horse["horseNumber"]
+        if no not in win:
+            continue
+        recent = analyze_past_performance(horse, race)
+        career = profile_career(horse, race)
+        ability_observations[str(no)] = {
+            "recentRuns": recent["datedRuns"],
+            "recentTop3Rate": recent["top3Rate"],
+            "recentFormQuality": recent["recentFormQuality"],
+            "opponentLevelMean": recent["opponentLevelMean"],
+            "opponentEvidenceRuns": recent["opponentLevelObservedRuns"],
+            "marginMean": recent["marginMean"],
+            "marginEvidenceRuns": recent["marginObservedRuns"],
+            "comparableRuns": career["comparableRuns"],
+            "comparableQuality": career["comparableQuality"],
+            "sameTrackQuality": career["sameTrackQuality"],
+            "sameDistanceQuality": career["sameDistanceQuality"],
+            "sameSurfaceQuality": career["sameSurfaceQuality"],
+            "sameGoingQuality": career["sameGoingQuality"],
+            "fullCareerRuns": career["datedRuns"],
+            "historyCoverage": career["coverageStatus"],
+            "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
+        }
     stages = {
-        "ability": {"status": "independently-evaluated-opinions",
-                    "value": {k: v.get("modelVersion") for k, v in methods.items()}},
+        "ability": {"status": "observed-ability-inputs-not-calibrated",
+                    "value": {k: v.get("modelVersion") for k, v in methods.items()},
+                    "horseEvidence": ability_observations,
+                    "probabilityCalibrationVerified": False},
         "runningStyle": {"status": "observed-preoff-positions",
                          "value": {str(e["horseNumber"]): e["pastEarlyTop3Share"]
                                    for e in mineta["horses"]}},
