@@ -27,3 +27,13 @@ def test_six_stage_ui_includes_safe_statuses():
     assert "未算出・未校正" in js
     assert "見送り（条件未充足" in js
     assert "sixStageAnalysisPanel(r)+content" in js
+
+
+def test_newcomers_are_not_mixed_with_flat_jumps_or_banei():
+    from arvexq.prediction.learned_scenarios import race_family
+    base = {"track": "東京", "surface": "芝", "title": "1勝クラス"}
+    assert race_family(base) == "flat"
+    assert race_family(dict(base, title="2歳新馬")) == "debut"
+    assert race_family(dict(base, analysisMode="新馬")) == "debut"
+    assert race_family(dict(base, surface="障害", title="障害未勝利")) == "jumps"
+    assert race_family(dict(base, track="帯広")) == "banei"
