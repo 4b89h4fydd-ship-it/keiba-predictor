@@ -18,14 +18,14 @@ async function load(){
  if(!venues.length)throw Error("表示できる開催情報なし");
  el("venues").innerHTML=venues.map(x=>'<option value="'+escape(x)+'">'+escape(x)+'</option>').join("");
  status(date+"｜"+S.races.length+"レース取得｜データ元：公開出走表（第三者提供）");
- showRaces();
+ renderVenues();
   }catch(e){
  if(date==="2026-10-26"){
  const venues=[["青森",9],["川崎",9],["名古屋",11],["小松島",12],["京王閣",12],["小田原",12],["和歌山",12]];
  S.races=venues.flatMap(([venue,n])=>Array.from({length:n},(_,i)=>({race_id:venue+"-"+(i+1),venue,race_no:i+1,entries:[],provisional:true})));
  el("venues").innerHTML=venues.map(([venue])=>'<option value="'+escape(venue)+'">'+escape(venue)+'</option>').join("");
  status(date+"｜開催予定を表示。出走表の公開を待っています。");
- showRaces();
+ renderVenues();
  }else status("取得失敗："+e.message+"。公開されていない日付の可能性があります。");
 }
 }
@@ -37,15 +37,30 @@ function raceStatus(r){
  if(Array.isArray(r.entries)&&r.entries.length>=3)return {code:"draft",label:"暫定予想",detail:"出走表取得済・予想未確定"};
  return {code:"scheduled",label:"開催予定",detail:"出走表未取得"};
 }
+function renderVenues(){
+ el("listTitle").textContent="開催場一覧";
+ el("raceTools").hidden=true;el("races").hidden=true;el("detail").hidden=true;el("venuesGrid").hidden=false;
+ const names=[...new Set(S.races.map(r=>r.venue))];
+ el("venuesGrid").innerHTML=names.map(name=>{const rr=S.races.filter(r=>r.venue===name);return '<button type="button" class="venueCard" data-venue="'+escape(name)+'"><span>'+escape(name)+'<small>'+rr.length+'レース</small></span><span aria-hidden="true">›</span></button>'}).join("");
+ [...el("venuesGrid").querySelectorAll("button")].forEach(btn=>btn.onclick=()=>openVenue(btn.dataset.venue));
+}
+function openVenue(name){
+ el("venues").value=name;el("listTitle").textContent=name+"・レース一覧";
+ el("raceTools").hidden=false;el("venuesGrid").hidden=true;el("races").hidden=false;el("detail").hidden=true;
+ showRaces();location.hash="venue="+encodeURIComponent(name);window.scrollTo(0,0);
+}
 function showRaces(){
  const venue=el("venues").value, races=S.races.filter(r=>r.venue===venue).sort((a,b)=>a.race_no-b.race_no);
  const filter=el("raceFilter")?.value||"all";
  const visible=races.filter(r=>filter==="all"||raceStatus(r).code===filter);
  el("races").innerHTML=visible.map(r=>{const st=raceStatus(r);return '<button type="button" class="race" data-id="'+escape(r.race_id)+'">'+r.race_no+'R <small>'+escape(r.start_time||"")+'</small><small>'+st.label+'</small></button>'}).join("");
  [...el("races").querySelectorAll("button")].forEach(b=>b.onclick=()=>choose(b.dataset.id));
- el("detail").innerHTML="<p class='sub'>レース番号を押すと予想を計算して表示します。</p>";
+ 
 }
 function choose(id){
+ el("detail").hidden=false;el("races").hidden=true;el("raceTools").hidden=true;el("venuesGrid").hidden=true;
+ el("listTitle").textContent="レース予想詳細";
+ location.hash="race="+encodeURIComponent(id);window.scrollTo(0,0);
  const r=S.races.find(x=>String(x.race_id)===String(id));if(!r)return;
  const st=raceStatus(r);
  if(r.provisional){el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";return;}
@@ -76,7 +91,9 @@ function choose(id){
  combos.slice(0,12).map(x=>'<tr><td><b>'+x.key+'</b></td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
  '<p class="notice">未校正の暫定モデル。得点・直近率・脚質を使用。ライン・バンク・展開の学習済み統合、実オッズ自動取得、期待値購入判定は未実装。結果データを入力に使用していません。第三者の出走表は更新・欠損の可能性があります。</p>';
 }
-el("date").value=today();el("load").onclick=load;el("venues").onchange=showRaces;el("raceFilter").onchange=showRaces;
+el("date").value=today();el("load").onclick=load;el("venues").onchange=()=>openVenue(el("venues").value);el("raceFilter").onchange=showRaces;
+el("backVenues").onclick=()=>{location.hash="";renderVenues();window.scrollTo(0,0)};
+el("backRaces").onclick=()=>openVenue(el("venues").value);
 el("todayBtn").onclick=()=>{el("date").value=today();load()};
 el("tomorrowBtn").onclick=()=>{const d=new Date(today()+"T12:00:00+09:00");d.setUTCDate(d.getUTCDate()+1);el("date").value=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);load()};
 load();
