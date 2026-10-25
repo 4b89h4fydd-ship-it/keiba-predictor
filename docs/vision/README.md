@@ -145,3 +145,28 @@ identifiers this connection reports zero coverage rather than inventing a join.
 The current shared video features remain research-only until a separately
 date-held-out, verified accuracy/ROI comparison approves their learned
 influence on production marks and betting. No app screens for video are added.
+
+
+## Commercial/internal-only license gate (2026-10-25)
+
+ARVEXQ's prediction product is intended to be monetized, even though the app is
+not distributed publicly. Ultralytics' model/runtime is AGPL-3.0 by default;
+its published license guidance says proprietary and commercial back-end use
+requires suitable Enterprise licensing unless the project meets the AGPL
+conditions. A public GitHub repository alone is **not** proof of compliance.
+For that reason the scheduled job and internal CLI will not attempt a video
+inference unless GitHub Actions secret
+`ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED=true` is configured after actual license
+review. This flag is an operator attestation, not automatically granted rights.
+
+The JRA and NAR source footage also needs separate authorized commercial-use
+rights. The existing provider feed's `rightsVerified` field represents a
+supplier/operator assertion, not an independent copyright investigation.
+Never scrape or save JRA Racing Viewer or NAR stream videos without permission.
+
+The video data are internal research artifacts; `public_race` recursively
+removes `visionResearch` and related measured speed/distance and video hashes
+before delivery to the PWA. To prove useful predictive influence, obtain
+actual licensed clips, label horse identity and tracked movement, then run a
+strict date-held-out with-vision/without-vision evaluation before permitting
+any changes to marks or betting.
