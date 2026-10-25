@@ -1709,6 +1709,16 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){
+  var verifiedSource=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.current();
+  if(r&&r.unifiedForecast&&verifiedSource&&verifiedSource.source==='arvexq-unified-preoff'){
+    var pace=r.unifiedForecast.pace||{};
+    var candidates=Array.isArray(pace.likelyForwardNumbers)?pace.likelyForwardNumbers:[];
+    var horseNames={};(r.horses||[]).forEach(function(h){if(h&&h.horseNumber)horseNames[h.horseNumber]=h.name});
+    return '<section id="section-pace" class="card pace-panel-direct"><h2>新方式・展開予想</h2>'+
+      '<p>'+esc(pace.text||'初角位置の観測不足につき展開不明')+'</p>'+
+      '<p class="muted">先行候補：'+esc(candidates.map(function(no){return (horseNames[no]||no+'番')}).join('、')||'未確認')+'</p>'+
+      '<p class="muted">能力・脚質・確率と同一モデルから印を計算。映像の全馬識別および展開発生率は未検証です。</p></section>';
+  }
   // Use only the verified same-race pre-off prediction; no on-device model.
   var live=r&&r.predictionStatus==='ready'&&r.prediction&&
     r.prediction.modelVersion==='arvexq-empirical-fusion-v1'&&
