@@ -5,6 +5,8 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
     branches: [main]
     paths:
       - scripts/arvexq_kikka_urgent.py
+      - scripts/arvexq_protect_sync.py
+      - tests/test_kikka_urgent_preoff.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
       - scripts/arvexq_kikka_production_visible_smoke.mjs
@@ -14,6 +16,8 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
     branches: [main]
     paths:
       - scripts/arvexq_kikka_urgent.py
+      - scripts/arvexq_protect_sync.py
+      - tests/test_kikka_urgent_preoff.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
       - scripts/arvexq_kikka_production_visible_smoke.mjs
