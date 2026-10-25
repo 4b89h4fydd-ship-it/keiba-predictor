@@ -965,15 +965,16 @@ function mergePublishedResult(oldResult,newResult){
 // day summary. The summary can be delayed and still say "disabled" after
 // pre-off marks/tickets have already been sealed in the authoritative detail.
 // Never let that stale summary erase a validated winner/pace/bet chain.
-function authorizedStage64Detail(detail){
-  if(!detail||detail.predictionStatus!=='ready'||
-     detail.predictionModelVersion!=='arvexq-stage64-product-v1')return false;
+function authorizedPublishedDetail(detail){
+  if(!detail||detail.predictionStatus!=='ready')return false;
+  var version=detail.predictionModelVersion;
+  if(['arvexq-empirical-fusion-v1','arvexq-stage64-product-v1'].indexOf(version)<0)return false;
   var p=detail.prediction, marks=detail.predictionMarks, tickets=detail.recommendedBets;
-  if(!p||p.modelVersion!=='arvexq-stage64-product-v1'||
+  if(!p||p.modelVersion!==version||
      p.predictionStatus!=='ready'||p.productionEligible!==true||
      p.raceId!==detail.id||p.date!==detail.date||
      !Array.isArray(marks)||marks.length!==5||
-     !Array.isArray(tickets)||!tickets.length)return false;
+     !Array.isArray(tickets)||(version!=='arvexq-empirical-fusion-v1'&&!tickets.length))return false;
   var labels=['◎','○','▲','△','☆'],seen={};
   if(!marks.every(function(m,i){
     var no=Number(m&&m.horseNumber);
@@ -990,11 +991,16 @@ function authorizedStage64Detail(detail){
 }
 function mergeRaceReflection(base,incoming,oddsRows,summary){
   base=base||{};incoming=incoming||{};summary=summary||{};
-  var sealedDetail=authorizedStage64Detail(incoming);
+  var sealedDetail=authorizedPublishedDetail(incoming);
   var out=Object.assign({},base);
   Object.keys(incoming).forEach(function(key){
     var v=incoming[key];
     if(key==='horses'||key==='result')return;
+    // A verified fused, explicit no-bet result is meaningful data. Do not
+    // drop [] and let an old/stale ticket survive a race-detail merge.
+    if(sealedDetail&&key==='recommendedBets'&&Array.isArray(v)){
+      out[key]=v.slice();return;
+    }
     if((key==='predictionModelVersion'||key==='predictionStatus'||key==='legacyPresentationDisabled')&&
        String(base.predictionModelVersion||'').indexOf('arvexq-learned-whole-career')===0&&
        String(incoming.predictionModelVersion||'')!==String(base.predictionModelVersion||''))return;
@@ -1703,23 +1709,16 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){
-  if(r&&r.id==='jra-2026-10-25-京都-11'){
-    var candidate=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.current();
-    var summary=candidate&&candidate.source==='kikka-2026-learned-preoff-candidate';
-    return '<section id="section-pace" class="card pace-panel-direct"><h2>菊花賞・展開の参考分析</h2>'+
-      '<p>'+esc(summary?candidate.forecastText:
-       '発走前の新方式候補がまだ保存されていません。')+'</p>'+
-      '<p class="muted">実レース映像による隊列の検証は未完了。逃げ・先行有利などを決め打ちせず、確率校正前の参考印として表示しています。</p></section>';
-  }
-  // Stage64 must own the pace conclusion. The retired visual simulator may
-  // otherwise invent an unrelated order from the original racecard number.
+  // Use only the verified same-race pre-off prediction; no on-device model.
   var live=r&&r.predictionStatus==='ready'&&r.prediction&&
-    r.prediction.modelVersion==='arvexq-stage64-product-v1'&&
+    r.prediction.modelVersion==='arvexq-empirical-fusion-v1'&&
     r.prediction.raceId===r.id&&r.prediction.date===r.date;
   if(!live)return '<section id="section-pace" class="card pace-panel-direct"><h2>展開予想</h2>'+
     '<p class="muted">同一レースの検証可能な発走前展開予想は未取得です。</p></section>';
   var source=r.prediction, stage=source.stages&&source.stages.pace||{},
     cases=Array.isArray(stage.value)?stage.value:[],
+    isFusion=true,
+    context=stage.value&&typeof stage.value==='object'?stage.value:{},
     names={};
   (r.horses||[]).forEach(function(h){if(h&&h.horseNumber)names[String(h.horseNumber)]=h.name||String(h.horseNumber)+'番'});
   var labels=['標準隊列','前争いの影響','前方有利の想定','後方浮上の想定'];
@@ -1733,11 +1732,19 @@ function pacePanel(r,p){
        '補正なし（標準隊列）')+'</div></div>'
   }).join('');
   var prose=String(source.forecastText||r.forecastText||'').trim();
+  if(isFusion){
+    var front=Array.isArray(context.forwardIntentCandidates)?context.forwardIntentCandidates:[];
+    details='<div class="actual-stage"><b>みねた氏の公開手法に基づく展開観測</b><div class="muted">'+
+      '先行候補：'+(front.length?front.map(function(no){return esc(names[no]||no+'番')}).join('、'):'未確認')+
+      '／初角までの公式距離：'+(context.firstCornerMetersOfficial!=null?esc(context.firstCornerMetersOfficial)+'m':'未取得')+
+      '／先行候補の隣接：'+(context.adjacentForwardCandidates||[]).length+'組'+
+      '</div></div>';
+  }
   return '<section id="section-pace" class="card pace-panel-direct"><div class="ai-flow-card pace-stage-menu-card">'+
     '<div class="ai-flow-head"><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div>'+
-    '<div class="ai-flow-sub">◎○▲△☆と買い目の基礎となる同一Stage64の展開仮説です。</div></div></div>'+
+    '<div class="ai-flow-sub">'+(isFusion?'みねた氏主体の観測と予想家・AIの統合による判断です。':'保存済み旧方式の発走前記録です。')+'</div></div></div>'+
     (prose?'<p class="forecast-text">'+esc(prose)+'</p>':'')+details+
-    '<p class="muted">仮説の発生確率・的中確率は未校正。結果から後付けで再予想していません。</p>'+
+    '<p class="muted">'+(isFusion?'過去レース実績に基づく統合。主観による印の変更なし。':'旧方式の記録。結果から後付けで再予想していません。')+'</p>'+
     '</div></section>'
 }
 function openHorseDetailPage(no){

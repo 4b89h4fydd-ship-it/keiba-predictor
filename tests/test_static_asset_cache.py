@@ -25,7 +25,7 @@ class VersionedAssetCacheTest(unittest.TestCase):
         from arvexq.forecast.engine import VERSION
         self.assertEqual(version["model"], VERSION)
         self.assertNotEqual(version["model"], "arvexq-prediction-removed")
-        self.assertEqual(version["model"], "arvexq-stage64-product-v1")
+        self.assertEqual(version["model"], "arvexq-empirical-fusion-v1")
         self.assertNotIn("three-factor", str(version).lower())
 
     def test_immutable_headers_are_only_on_versioned_asset_families(self):

@@ -491,8 +491,8 @@ def prepare(
 
 
 
-def _attach_existing_stage64_products(detail: dict[str, Any]) -> dict[str, Any]:
-    """Publish Stage64 through the existing projection without touching stored facts.
+def _attach_empirical_fusion_products(detail: dict[str, Any]) -> dict[str, Any]:
+    """Publish empirically fused pre-off predictions through the existing D1 projection.
 
     Prefetch D1 payloads previously bypassed public_race, unlike HTTP snapshots.
     Keep the original D1 record (including sealed pre-off archives and every
@@ -501,12 +501,26 @@ def _attach_existing_stage64_products(detail: dict[str, Any]) -> dict[str, Any]:
     """
     from arvexq.forecast.publication import public_race
     published = public_race(detail)
-    if published.get("predictionStatus") != "ready":
+    # The projection also preserves genuinely frozen historical Stage64 picks.
+    # This new-forecast attachment must not re-promote those as fresh D1
+    # products; only the replacement engine's own output is eligible.
+    from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION
+    if (published.get("predictionStatus") != "ready"
+            or published.get("predictionModelVersion") != FUSION_VERSION):
         return detail
     result = copy.deepcopy(detail)
     for key in ("predictionStatus", "predictionModelVersion", "prediction",
-                "predictionMarks", "recommendedBets"):
-        result[key] = copy.deepcopy(published[key])
+                "predictionMarks", "recommendedBets", "forecastText"):
+        if key in published:
+            result[key] = copy.deepcopy(published[key])
+    # Preserve original runner facts while attaching only the approved
+    # per-horse marks from the same computed prediction.
+    marks = {m["horseNumber"]: m["mark"] for m in published["predictionMarks"]}
+    result["horses"] = [
+        dict(h, predMark=marks[h["horseNumber"]])
+        if isinstance(h, dict) and h.get("horseNumber") in marks else copy.deepcopy(h)
+        for h in detail.get("horses") or []
+    ]
     return result
 
 
@@ -585,7 +599,7 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         except Exception as exc:
             analyzed[rid] = fact
             errors[rid] = f"{type(exc).__name__}: {exc}"
-    # The previous diagnosis-ready flag does not attest to Stage64 products.
+    # Diagnosis-ready does not establish full empirical method coverage.
     # Attach only products actually computed from the read-back, pre-off facts.
     from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
     eligible = 0
@@ -594,11 +608,11 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         if not may_create_prerace_prediction(detail):
             continue
         eligible += 1
-        published = _attach_existing_stage64_products(detail)
+        published = _attach_empirical_fusion_products(detail)
         if published.get("predictionStatus") == "ready" and published.get("predictionMarks"):
             analyzed[rid] = published
             products_ready += 1
-    print("PERSISTED_D1_STAGE64_PRODUCTS", "preoff=", eligible, "ready=", products_ready)
+    print("PERSISTED_D1_EMPIRICAL_FUSION_PRODUCTS", "preoff=", eligible, "ready=", products_ready)
     payload = {
         "summaries": rows,
         "details": [analyzed[str(r["id"])] for r in rows if str(r["id"]) in analyzed],

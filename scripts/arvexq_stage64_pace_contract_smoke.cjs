@@ -30,7 +30,7 @@ for (const [circuit,scenarios] of [
 ]) {
   root.ARVEXQProductionPrediction.build(race(circuit,scenarios));
   const state=root.ARVEXQProductionPrediction.current();
-  assert.equal(state.source,'stage64-preoff');
+  assert.equal(state.source,'stage64-archived');
   assert.equal(state.pace.length,scenarios.length*2);
   assert.equal(state.pace[0].horseNumber,1);
   assert.equal(state.pace[0].scenarioIndex,1);

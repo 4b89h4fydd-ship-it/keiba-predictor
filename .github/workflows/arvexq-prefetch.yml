@@ -389,7 +389,7 @@ jobs:
           jq '{races,analysis_ready,analysis_errors}' prefetch-report.json
 
       - name: Prepare previous-day research training corpus (optional)
-        timeout-minutes: 5
+        timeout-minutes: 20
         continue-on-error: true
         if: success() && env.ARVEXQ_DAY_AHEAD != '1'
         shell: bash
@@ -403,13 +403,12 @@ jobs:
           from datetime import date, timedelta
           from pathlib import Path
           target = date.fromisoformat(__import__('os').environ['TARGET_DATE'])
-          days = [target - timedelta(days=1)]
-          for offset in range(2, 9):
-              previous = target - timedelta(days=offset)
-              if previous.weekday() in (5, 6):
-                  days.append(previous)
+          # Keep the existing D1 detail endpoint and strictly earlier dates.
+          # Three days cannot reliably supply independent train/holdout
+          # cohorts for both JRA and NAR. Include two prior weekends.
+          days = [target - timedelta(days=offset) for offset in range(1, 15)]
           Path('research-training-dates.txt').write_text(
-              '\n'.join(sorted({d.isoformat() for d in days}, reverse=True)[:3]) + '\n')
+              '\n'.join(d.isoformat() for d in days) + '\n')
           PY
           mkdir -p research-training-inputs
           while IFS= read -r TRAIN_DATE; do

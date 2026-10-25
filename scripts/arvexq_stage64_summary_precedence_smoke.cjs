@@ -7,7 +7,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=src.indexOf('function authorizedStage64Detail(');
+const start=src.indexOf('function authorizedPublishedDetail(');
 const end=src.indexOf('function raceDisplayCoreReady(',start);
 assert(start>=0 && end>start,'live race merge/authoritative detail functions missing');
 const harness=src.slice(start,end);
@@ -57,19 +57,32 @@ assert.equal(merged.horses.length,5,'roster stays intact');
 // stale summary is not suppressed for such a record.
 const broken=stage64(id,date);
 broken.prediction.raceId='nar-2026-10-24-園田-04';
-assert.equal(ctx.authorizedStage64Detail(broken),false);
+assert.equal(ctx.authorizedPublishedDetail(broken),false);
 const notSealed=ctx.mergeRaceReflection({id,date,horses},broken,null,summary);
 assert.equal(notSealed.predictionStatus,'disabled');
 
 const wrongMarks=stage64(id,date);
 wrongMarks.predictionMarks[0].horseNumber=99;
-assert.equal(ctx.authorizedStage64Detail(wrongMarks),false);
+assert.equal(ctx.authorizedPublishedDetail(wrongMarks),false);
 
 // The previous server-sealed receipt wins when the incoming summary is
 // missing prediction fields; do not erase ticket evidence during refresh.
 const refresh=ctx.mergeRaceReflection(merged,{id,date,raceStatus:'確定',horses},null,{id,date});
 assert.equal(refresh.predictionStatus,'ready');
 assert.equal(refresh.recommendedBets[0].kind,'ワイド');
+// A complete fused forecast with an authenticated pre-off no-bet outcome
+// remains visible even though the stale summary still says disabled.
+const fusion=stage64(id,date);
+fusion.prediction.modelVersion='arvexq-empirical-fusion-v1';
+fusion.predictionModelVersion='arvexq-empirical-fusion-v1';
+fusion.recommendedBets=[];
+assert.equal(ctx.authorizedPublishedDetail(fusion),true);
+const fusedMerged=ctx.mergeRaceReflection({id,date,horses},fusion,null,summary);
+assert.equal(fusedMerged.predictionStatus,'ready');
+assert.equal(fusedMerged.predictionModelVersion,'arvexq-empirical-fusion-v1');
+assert.deepEqual(JSON.parse(JSON.stringify(fusedMerged.predictionMarks)),fusion.predictionMarks);
+assert.equal(fusedMerged.recommendedBets.length,0);
+
 console.log('STAGE64_LIVE_DETAIL_SUMMARY_PRECEDENCE_OK');
 
 
@@ -92,5 +105,5 @@ assert.match(finalHtml,/3連複/);
 assert.match(finalHtml,/3連単/);
 assert.match(finalHtml,/6 - 1 - 2/);
 const normalHtml=ticketWindow.ARVEXQTicketFrame.contents({...kochiFinal,track:'大井'},{});
-assert.match(normalHtml,/Stage64確率順・全印考慮/);
+assert.match(normalHtml,/旧方式の保存済み発走前買い目/);
 console.log('KOCHI_FINAL_TRIPLE_UI_PASS');

@@ -61,6 +61,8 @@ jobs:
         run: |
           node scripts/arvexq_production_boundaries_smoke.cjs
           node scripts/arvexq_stage64_summary_precedence_smoke.cjs
+      - name: Empirical Mineta-expert-multi-AI fusion and leakage guards
+        run: python -m pytest -q tests/test_empirical_fusion.py tests/test_mineta_public_pace.py tests/test_empirical_fusion_live_contract.py tests/test_fusion_settlement.py tests/test_fusion_method_models.py tests/test_fusion_ai_models.py tests/test_fusion_historical_replay.py tests/test_fusion_existing_d1_live_path.py tests/test_fusion_no_legacy_fallback.py tests/test_prefetch_fusion_version_gate.py
       - name: Stage64 pre-off API, wager marginal and scenario display contracts
         run: |
           python -m pytest -q tests/test_stage64_product_forecast.py tests/test_stage64_frozen_input_evidence.py tests/test_stage64_direct_rival_publication.py
@@ -75,3 +77,87 @@ jobs:
         run: |
           python build_static.py
           node --check dist/app-v330.js
+
+  fusion-real-d1-replay:
+    name: Real D1 JRA/NAR fusion chronological replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+      ARVEXQ_DATA_CORE: '0'
+      ARVEXQ_BOOTSTRAP_WARM: '0'
+      RACEDB_AUTO_UPDATE: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt pytest
+      - name: Read existing historical D1 details only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/arvexq-five-replay
+          for day in 2026-10-17 2026-10-18 2026-10-19 2026-10-20 2026-10-21 2026-10-22 2026-10-23 2026-10-24; do
+            python scripts/arvexq_fetch_d1_bundle.py \
+              --api-base "$CLOUDFLARE_API_BASE" --date "$day" \
+              --exclude-retired-banei --workers 3 \
+              --out "/tmp/arvexq-five-replay/$day.json" \
+              --report "/tmp/arvexq-five-replay/$day-report.json"
+          done
+      - name: Train two AI architectures and three expert/public methods then score real later races
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from collections import Counter
+          from pathlib import Path
+          import json
+          from arvexq.prediction.fusion_historical_replay import _eligible,_preoff_card
+          from arvexq.prediction.fusion_method_models import observed_buckets
+          for circuit in ('中央','地方'):
+              counts=Counter()
+              samples=[]
+              for path in sorted(Path('/tmp/arvexq-five-replay').glob('2026-*.json')):
+                  for row in json.loads(path.read_text()).get('details',[]):
+                      if row.get('circuit')!=circuit:continue
+                      counts['read']+=1
+                      if not _eligible(row,circuit):
+                          counts['not_final_or_unsettleable']+=1
+                          continue
+                      counts['official_settleable']+=1
+                      try:
+                          observed_buckets(_preoff_card(row))
+                          counts['complete_method_history']+=1
+                      except Exception as exc:
+                          counts[type(exc).__name__+':'+str(exc)[:80]]+=1
+                          if len(samples)<8:samples.append([row.get('id'),str(exc)[:90]])
+              print('REAL_FUSION_SOURCE_GATE',circuit,dict(counts),'samples',samples)
+          PY
+          python scripts/arvexq_train_research_models.py \
+            --input-dir /tmp/arvexq-five-replay \
+            --target-date 2026-10-25 \
+            --output /tmp/arvexq-fusion-models.json \
+            --report /tmp/arvexq-fusion-report.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/arvexq-fusion-report.json'))
+          print('REAL_FUSION_AUDIT',json.dumps({
+              'calibrated':d.get('fusionCalibratedCircuits'),
+              'errors':d.get('errors'),
+              'counts':{k:{'train':v['trainingRaces'],'heldout':v['validationRaces'],
+                           'excluded':len(v.get('validationExcluded') or {})}
+                        for k,v in (d.get('fusionAudits') or {}).items()},
+          },ensure_ascii=False))
+          model=json.load(open('/tmp/arvexq-fusion-models.json'))
+          missing=[]
+          for c in ('中央','地方'):
+              block=(model.get('fusion') or {}).get(c)
+              if not block or block['calibration']['nRaces']<30:
+                  missing.append(c)
+                  continue
+              print('REAL_FUSION_METRICS',c,json.dumps(
+                  block['calibration']['metrics'],ensure_ascii=False))
+          if missing:raise SystemExit('REAL_FUSION_JRA_NAR_MISSING_'+','.join(missing))
+          PY
