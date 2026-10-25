@@ -39,7 +39,7 @@ def public_race(detail):
                   if isinstance(h, dict)}
         valid = (isinstance(original, dict)
                  and detail.get('predictionStatus') == 'ready'
-                 and detail.get('predictionModelVersion') in (FUSION_VERSION, 'arvexq-stage64-product-v1')
+                 and detail.get('predictionModelVersion') == FUSION_VERSION
                  and original.get('modelVersion') == detail.get('predictionModelVersion')
                  and original.get('predictionStatus') == 'ready'
                  and original.get('productionEligible') is True
