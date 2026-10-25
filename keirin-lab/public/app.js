@@ -47,4 +47,7 @@ function choose(id){
  combos.slice(0,12).map(x=>'<tr><td><b>'+x.key+'</b></td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
  '<p class="notice">未校正の暫定モデル。得点・直近率・脚質を使用。ライン・バンク・展開の学習済み統合、実オッズ自動取得、期待値購入判定は未実装。結果データを入力に使用していません。第三者の出走表は更新・欠損の可能性があります。</p>';
 }
-el("date").value=today();el("load").onclick=load;el("venues").onchange=showRaces;load();
+el("date").value=today();el("load").onclick=load;el("venues").onchange=showRaces;
+el("todayBtn").onclick=()=>{el("date").value=today();load()};
+el("tomorrowBtn").onclick=()=>{const d=new Date(today()+"T12:00:00+09:00");d.setUTCDate(d.getUTCDate()+1);el("date").value=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);load()};
+load();
