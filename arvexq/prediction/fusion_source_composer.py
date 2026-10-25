@@ -7,7 +7,7 @@ artifacts, then sent to the existing forecast.engine/publication/seal steps.
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION, _arms
@@ -44,8 +44,14 @@ def assemble_fusion_inputs(detail, model_artifacts, fitted_calibration, *, now=N
         raise ValueError("timezone-aware model capture required")
     clock = now.astimezone(JST)
     scheduled = _off(detail)
-    if clock >= scheduled or day != clock.date().isoformat():
-        raise ValueError("current scheduled-race-day preoff capture required")
+    # The official card is intentionally available the evening before the
+    # race.  A next-day capture is still genuinely pre-off; restricting this
+    # to the calendar day silently disabled the existing day-ahead workflow.
+    if clock >= scheduled or day not in {
+            clock.date().isoformat(),
+            (clock.date() + timedelta(days=1)).isoformat(),
+    }:
+        raise ValueError("current or next-day scheduled race preoff capture required")
     if not isinstance(fitted_calibration, dict) or fitted_calibration.get("version") != FUSION_VERSION:
         raise ValueError("actual heldout calibration required")
     if fitted_calibration.get("circuit") != circuit or fitted_calibration.get("targetDate") != day:

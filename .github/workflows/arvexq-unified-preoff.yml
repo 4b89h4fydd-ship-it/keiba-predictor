@@ -8,6 +8,12 @@ name: ARVEXQ Unified Preoff Production
       - scripts/arvexq_unified_production_smoke.cjs
       - scripts/arvexq_unified_frontend_smoke.cjs
       - arvexq/prediction/unified_product.py
+      - arvexq/prediction/empirical_fusion.py
+      - arvexq/prediction/fusion_source_composer.py
+      - arvexq/prediction/fusion_historical_replay.py
+      - arvexq/prediction/fusion_method_models.py
+      - arvexq/prediction/fusion_ai_models.py
+      - scripts/arvexq_apply_learned_overlay.py
       - scripts/arvexq_protect_sync.py
       - .github/workflows/arvexq-unified-preoff.yml
   pull_request:
@@ -17,6 +23,12 @@ name: ARVEXQ Unified Preoff Production
       - scripts/arvexq_unified_production_smoke.cjs
       - scripts/arvexq_unified_frontend_smoke.cjs
       - arvexq/prediction/unified_product.py
+      - arvexq/prediction/empirical_fusion.py
+      - arvexq/prediction/fusion_source_composer.py
+      - arvexq/prediction/fusion_historical_replay.py
+      - arvexq/prediction/fusion_method_models.py
+      - arvexq/prediction/fusion_ai_models.py
+      - scripts/arvexq_apply_learned_overlay.py
       - scripts/arvexq_protect_sync.py
       - .github/workflows/arvexq-unified-preoff.yml
   workflow_dispatch:

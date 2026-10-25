@@ -75,6 +75,18 @@ def test_five_arms_real_product_marks_tickets_and_original_seal():
     assert d==original
 
 
+def test_day_ahead_card_is_a_valid_preoff_capture():
+    fitted = train_and_validate(sixty(), circuit="地方", target_date="2026-10-25")
+    d = target()
+    d["id"] = d["id"].replace("2026-10-24", "2026-10-25")
+    d["date"] = "2026-10-25"
+    d["officialPreoffTicketOdds"]["capturedAt"] = "2026-10-24T09:00:00+09:00"
+    receipt = assemble_fusion_inputs(d, fitted["models"], fitted["calibration"], now=datetime(
+        2026, 10, 24, 10, 0, tzinfo=ZoneInfo("Asia/Tokyo")))
+    assert receipt["raceDate"] == "2026-10-25"
+    assert receipt["capturedAt"] < receipt["scheduledOffAt"]
+
+
 def test_projection_of_stored_fusion_original_never_forges_postoff_pick():
     fitted=train_and_validate(sixty(),circuit="地方",target_date="2026-10-24")
     with patch("scripts.arvexq_apply_learned_overlay.may_create_prerace_prediction",return_value=True):

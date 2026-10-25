@@ -79,7 +79,7 @@ def apply(bundle, models, *, now=None):
         # five-method fusion. No added endpoint or alternative data source.
         fusion = ((models.get('fusion') or {}).get(detail.get('circuit'))
                   if isinstance(models, dict) else None)
-        if fusion and may_create_prerace_prediction(detail):
+        if fusion and may_create_prerace_prediction(detail, now=now):
             try:
                 sources = assemble_fusion_inputs(
                     detail, fusion['models'], fusion['calibration'], now=now)
@@ -149,7 +149,7 @@ def apply(bundle, models, *, now=None):
                     and (trained.get('training') or {}).get('family') == race_family(detail)
                     and (trained.get('training') or {}).get('lastDate', '9999') < str(detail.get('date') or '')
                     and str(detail.get('date') or '') >= '2026-10-26'
-                    and may_create_prerace_prediction(detail))
+                    and may_create_prerace_prediction(detail, now=now))
         if eligible:
             try:
                 unified = generate_unified(detail, trained, now=now)
@@ -168,7 +168,7 @@ def apply(bundle, models, *, now=None):
         # five-method prediction is explicitly unavailable, not a
         # different model's unverified candidate.
         if str(detail.get('date') or '') >= '2026-10-23':
-            if not may_create_prerace_prediction(detail):
+            if not may_create_prerace_prediction(detail, now=now):
                 details.append(detail)
                 skipped[str(detail['id'])] = 'post-off-original-preserved'
             else:
@@ -194,7 +194,7 @@ def apply(bundle, models, *, now=None):
         # original with a newly generated post-off learned forecast. The
         # public projection independently hides unapproved legacy opinions.
         if (str(detail.get('date') or '') >= '2026-10-23'
-                and not may_create_prerace_prediction(detail)):
+                and not may_create_prerace_prediction(detail, now=now)):
             details.append(detail)
             skipped[str(detail['id'])] = 'post-off-original-preserved'
             continue

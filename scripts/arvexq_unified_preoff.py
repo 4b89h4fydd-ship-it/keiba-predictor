@@ -29,6 +29,7 @@ from arvexq.prediction.learned_scenarios import fit_model, race_family
 from arvexq.prediction.prerace_archive import JST, post_at, sealed_lock
 from arvexq.prediction.unified_product import generate, verified
 from arvexq.forecast.engine import _has_result_evidence
+from arvexq.prediction.fusion_historical_replay import train_and_validate
 from scripts.arvexq_kikka_urgent import VALID_BASE, day_summary, race_detail
 
 
@@ -91,6 +92,46 @@ def _verified_debut(race):
     )
 
 
+def _fit_empirical_fusions(histories, target_date, circuits):
+    """Fit the existing five-method fusion from a real earlier corpus only."""
+    fitted, errors = {}, []
+    for circuit in sorted(circuits):
+        rows = histories.get((circuit, "flat"), [])
+        if len(rows) < 60:
+            errors.append({"circuit": circuit, "family": "flat",
+                           "reason": "fewer-than-60-earlier-races-for-30-30-holdout",
+                           "available": len(rows)})
+            continue
+        try:
+            fitted[circuit] = train_and_validate(
+                rows, circuit=circuit, target_date=target_date,
+                min_races=30, max_training=90, max_validation=50)
+        except (ValueError, TypeError, KeyError, OverflowError, ZeroDivisionError) as exc:
+            errors.append({"circuit": circuit, "family": "flat",
+                           "reason": type(exc).__name__ + ": " + str(exc)[:150]})
+    return fitted, errors
+
+
+def _attach_fusion_product(live, candidate):
+    """Attach only the existing sealed-fusion fields to a fresh live card."""
+    fields = ("predictionStatus", "predictionModelVersion", "prediction",
+              "predictionMarks", "recommendedBets", "forecastText",
+              "fusionMethodPreoffReceipt")
+    out = dict(live)
+    for key in fields:
+        if key in candidate:
+            out[key] = candidate[key]
+    marks = {row["horseNumber"]: row["mark"]
+             for row in candidate.get("predictionMarks") or []
+             if isinstance(row, dict) and row.get("horseNumber") is not None}
+    out["horses"] = [
+        dict(h, predMark=marks[h["horseNumber"]])
+        if isinstance(h, dict) and h.get("horseNumber") in marks else h
+        for h in live.get("horses") or []
+    ]
+    return out
+
+
 def run(base, target_date, *, publish=False, max_races=70,
         now=None, archive_dir=None):
     if base.rstrip("/") != VALID_BASE:
@@ -132,7 +173,12 @@ def run(base, target_date, *, publish=False, max_races=70,
         except (ValueError, RuntimeError, KeyError, TimeoutError) as exc:
             errors.append({"raceId": summary.get("id"), "reason": type(exc).__name__})
     needed = {(r["circuit"], race_family(r)) for r in pending}
-    histories, training_failures = _training(base, target_date, needed) if needed else ({}, [])
+    # Keep enough earlier cards for the existing 30-race training plus
+    # 30-race chronological holdout required by the five-method fusion.
+    histories, training_failures = _training(
+        base, target_date, needed, days=21, max_per_group=75) if needed else ({}, [])
+    fusion_models, fusion_failures = _fit_empirical_fusions(
+        histories, target_date, {c for c, _ in needed}) if needed else ({}, [])
     models = {}
     for circuit, family in sorted(needed):
         subset = histories.get((circuit, family), [])
@@ -159,6 +205,31 @@ def run(base, target_date, *, publish=False, max_races=70,
             except (ValueError, KeyError, TypeError):
                 pass
     for row in pending:
+        # Prefer the approved five-method empirical product for ordinary flat
+        # races when a real, circuit-specific 30/30 chronological calibration
+        # exists.  The helper reuses the established D1-overlay publication
+        # contract; it does not add an endpoint or invent missing odds.
+        if race_family(row) == "flat" and row.get("circuit") in fusion_models:
+            try:
+                from scripts.arvexq_apply_learned_overlay import apply
+                fusion_bundle, fusion_report = apply(
+                    {"details": [row]},
+                    {"fusion": {row["circuit"]: fusion_models[row["circuit"]]}},
+                    now=now,
+                )
+                candidate = (fusion_bundle.get("details") or [None])[0]
+                if (isinstance(candidate, dict)
+                        and candidate.get("predictionStatus") == "ready"
+                        and candidate.get("predictionModelVersion") == "arvexq-empirical-fusion-v1"
+                        and len(candidate.get("predictionMarks") or []) == 5):
+                    source.append((row, candidate, "fusion"))
+                    continue
+                errors.append({"raceId": row["id"],
+                               "reason": "empirical-fusion-not-ready",
+                               "detail": (fusion_report.get("fusionErrors") or {}).get(row["id"], "")})
+            except (ValueError, KeyError, TypeError, OverflowError) as exc:
+                errors.append({"raceId": row["id"],
+                               "reason": "empirical-fusion:" + str(exc)[:150]})
         debut = "新馬" in str(row.get("title") or "") or _verified_debut(row)
         key = (row["circuit"], race_family(row), debut)
         model = models.get(key)
@@ -166,10 +237,10 @@ def run(base, target_date, *, publish=False, max_races=70,
             errors.append({"raceId": row["id"], "reason": "family-model-not-trained"})
             continue
         try:
-            product = generate(row, model, now=datetime.now(JST))
+            product = generate(row, model, now=now)
             if verified(dict(row, unifiedForecast=product)) is None:
                 raise ValueError("generated receipt fails verification")
-            source.append((row, product))
+            source.append((row, product, "unified"))
         except (ValueError, KeyError, TypeError, OverflowError) as exc:
             errors.append({"raceId": row["id"], "reason": str(exc)[:180]})
     confirmed = []
@@ -178,7 +249,7 @@ def run(base, target_date, *, publish=False, max_races=70,
             raise ValueError("SYNC_TOKEN missing")
         # Independent one-race transactions. One damaged NAR history should
         # never prevent a different valid racing card's forecast from saving.
-        for row, product in source:
+        for row, product, product_kind in source:
             try:
                 if datetime.now(JST) >= post_at(row):
                     raise ValueError("off time crossed before D1 guard")
@@ -190,7 +261,9 @@ def run(base, target_date, *, publish=False, max_races=70,
                 if {h["horseNumber"]: h.get("name") for h in live["horses"]} != {
                     h["horseNumber"]: h.get("name") for h in row["horses"]}:
                     raise ValueError("roster changed since forecast")
-                updated = dict(live, unifiedForecast=product)
+                updated = (_attach_fusion_product(live, product)
+                           if product_kind == "fusion"
+                           else dict(live, unifiedForecast=product))
                 with tempfile.TemporaryDirectory(prefix="arvexq-unified-") as td:
                     payload = Path(td) / "payload.json"
                     payload.write_text(json.dumps({"summaries": [
@@ -211,9 +284,15 @@ def run(base, target_date, *, publish=False, max_races=70,
                     _run("scripts/arvexq_protect_sync.py", "--verify-post",
                          "--file", str(batches[0]), "--api-base", base)
                 final = race_detail(base, row["id"])
-                stored = verified(final)
-                if not stored or stored["receiptSha256"] != product["receiptSha256"]:
-                    raise ValueError("D1 before-off marks/pace/tickets receipt missing on readback")
+                if product_kind == "fusion":
+                    if (final.get("predictionStatus") != "ready"
+                            or final.get("predictionModelVersion") != "arvexq-empirical-fusion-v1"
+                            or len(final.get("predictionMarks") or []) != 5):
+                        raise ValueError("D1 before-off empirical fusion missing on readback")
+                else:
+                    stored = verified(final)
+                    if not stored or stored["receiptSha256"] != product["receiptSha256"]:
+                        raise ValueError("D1 before-off marks/pace/tickets receipt missing on readback")
                 confirmed.append(row["id"])
             except (ValueError, RuntimeError, KeyError, subprocess.CalledProcessError) as exc:
                 errors.append({"raceId": row["id"], "reason": str(exc)[:170]})
@@ -223,9 +302,12 @@ def run(base, target_date, *, publish=False, max_races=70,
         "eligibleUpcoming": len(pending),
         "scored": len(source), "persistedAndVerified": len(confirmed),
         "circuitFamilyModels": sorted([c + ":" + f for c, f, _ in models]),
+        "empiricalFusionCircuits": sorted(fusion_models),
+        "empiricalFusionFailures": fusion_failures[:30],
         "missingOrSkipped": errors[:100],
         "trainingReadFailures": training_failures[:30],
-        "raceIds": [r["id"] for r, _ in source],
+        "raceIds": [r["id"] for r, _, _ in source],
+        "empiricalFusionRaceIds": [r["id"] for r, _, kind in source if kind == "fusion"],
         "publishedIds": confirmed,
         "marksFromSameModel": True,
         "historicalForecastsBackfilled": False,
