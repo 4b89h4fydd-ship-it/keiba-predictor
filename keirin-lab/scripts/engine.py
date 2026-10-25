@@ -27,7 +27,7 @@ def predict(race):
     length,straight=TRACKS.get(race.get("venue"),(400,55.0))
     leader={x[0] for x in lines}
     leadcount=sum(x["n"] in leader and x["style"]=="逃" for x in riders)
-    avg=sum(x["score"] for x in riders)/len(riders)
+    video_metrics={int(m["umaban"]):m for m in race.get("video_metrics",[]) if isinstance(m,dict) and "umaban" in m}\n    avg=sum(x["score"] for x in riders)/len(riders)
     for r in riders:
         group=next(x for x in lines if r["n"] in x)
         pos=group.index(r["n"])
@@ -35,7 +35,11 @@ def predict(race):
         track+=(.10 if straight>=57 else -.05 if straight<45 else 0) if r["style"]=="追" else 0
         line=(.09 if pos==0 else .12 if pos==1 else .02) if len(group)>1 else 0
         pace=(.13 if r["style"]=="追" else -.17 if r["style"]=="逃" else .05) if leadcount>=3 else (.12 if leadcount<=1 and r["style"]=="逃" else 0)
-        z=(r["score"]-avg)/8+1.1*(r["win"]-.15)+.5*(r["place"]-.4)+(.08 if r["style"]=="逃" else 0)+track+line+pace
+        ability=(r["score"]-avg)/8+1.1*(r["win"]-.15)+.5*(r["place"]-.4)
+        development=(.08 if r["style"]=="逃" else 0)+track+line+pace
+        try: video=max(-.3,min(.3,float(video_metrics[r["n"]]["net_advantage"])))
+        except (KeyError,TypeError,ValueError):video=0
+        z=ability+development+video
         r["weight"]=math.exp(max(-8,min(8,z)))
         r["group"]=group
     total=sum(x["weight"] for x in riders);out=[]
@@ -58,4 +62,5 @@ def predict(race):
     ranked=sorted(probs.values(),key=lambda x:-x["p1"])
     marks=dict(zip(("◎","○","▲","△","☆"),(r["number"] for r in ranked[:5])))
     scenario="先行型複数・踏み合いに注意" if leadcount>=3 else "先行ライン主導に注意" if leadcount==1 else "主導権不明確・自在戦を想定"
-    return {"model":"keirin-line-track-v2-heuristic-uncalibrated","marks":marks,"riders":ranked,"trifecta":out[:20],"lines":lines,"scenario":scenario,"track":{"length":length,"straight":straight},"line_inference":"Unverified comments-derived groups","calibrated":False}
+    stages={"ability":"score and recent performance","video":{"used":bool(video_metrics),"status":"provided_metrics" if video_metrics else "unavailable"},"development":{"lines":lines,"scenario":scenario,"phases":["スタート","打鐘・主導権","最終バック","最終コーナー","直線"]},"probability":{"method":"normalized conditional-order heuristic","calibrated":False},"marks":"mechanical rank","tickets":"mechanical probability; no odds means no purchase decision"}
+    return {"stages":stages,"model":"keirin-ability-video-development-v3-uncalibrated","marks":marks,"riders":ranked,"trifecta":out[:20],"lines":lines,"scenario":scenario,"track":{"length":length,"straight":straight},"line_inference":"Unverified comments-derived groups","calibrated":False}
