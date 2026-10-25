@@ -50,8 +50,6 @@ jobs:
           python -m unittest discover -s tests -p 'test_kikka_urgent_preoff.py' -v
       - name: Validate iPhone Kikuka mark display is NOT Stage64
         run: node scripts/arvexq_kikka_frontend_smoke.cjs
-      - name: Assert actual production D1 marks display using the real PWA adapter
-        run: node scripts/arvexq_kikka_production_visible_smoke.mjs
       - name: Dry-run only target Kyoto 11R from D1 on PR
         if: github.event_name == 'pull_request'
         run: |
@@ -65,6 +63,9 @@ jobs:
             --api-base "$CLOUDFLARE_API_BASE" \
             --out kikka-urgent-status.json \
             --publish
+      - name: Verify actual D1 symbols and deployed PWA after the protected write
+        if: github.event_name != 'pull_request'
+        run: node scripts/arvexq_kikka_production_visible_smoke.mjs
       - name: Record only candidate status and hashes
         if: always()
         uses: actions/upload-artifact@v4
