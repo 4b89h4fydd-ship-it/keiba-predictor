@@ -10,9 +10,15 @@ def _race():
         "circuit": "地方",
         "track": "園田",
         "scheduledStartTime": "12:00",
-        "horses": [{"horseNumber": i} for i in range(1, 7)],
+        "horses": [
+            {"horseNumber": i, "predMark": "◎" if i == 1 else "○"}
+            for i in range(1, 7)
+        ],
         "predictionStatus": "legacy-ready",
         "aiEvaluation": {"legacy": True},
+        "prediction": {"modelVersion": "obsolete"},
+        "predictionMarks": [{"horseNumber": 1, "mark": "◎"}],
+        "recommendedBets": [{"kind": "単勝", "combo": [1]}],
     }
 
 
@@ -33,7 +39,12 @@ def test_preoff_without_fusion_never_builds_legacy_prediction():
     assert report["skipped"][detail["id"]] == "fusion-inputs-unavailable"
     assert row["predictionStatus"] == "new-model-unavailable"
     assert "aiEvaluation" not in row
+    assert "prediction" not in row
+    assert "predictionMarks" not in row
+    assert "recommendedBets" not in row
+    assert all("predMark" not in horse for horse in row["horses"])
     assert detail["aiEvaluation"] == {"legacy": True}
+    assert detail["horses"][0]["predMark"] == "◎"
 
 
 def test_failed_fusion_does_not_promote_obsolete_model():
@@ -53,5 +64,7 @@ def test_failed_fusion_does_not_promote_obsolete_model():
             {"fusion": {"地方": {"models": {}, "calibration": {}}}},
         )
     assert result["details"][0]["predictionStatus"] == "new-model-unavailable"
+    assert "predictionMarks" not in result["details"][0]
+    assert "recommendedBets" not in result["details"][0]
     assert report["skipped"][detail["id"]] == "fusion-inputs-invalid"
     assert "not enough real preoff evidence" in report["fusionErrors"][detail["id"]]
