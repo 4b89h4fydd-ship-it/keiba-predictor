@@ -25,7 +25,7 @@ if str(ROOT) not in sys.path:
 
 from arvexq.prediction.kikka_urgent import (
     RACE_ID, RACE_DATE, verified_entry, compact_candidate,
-    overlay_preserving_facts,
+    overlay_preserving_facts, candidate_marks,
 )
 from arvexq.prediction.learned_scenarios import fit_model
 from arvexq.prediction.prerace_archive import JST
@@ -173,6 +173,14 @@ def build_and_publish(base: str, *, write: bool = False) -> dict:
             raise ValueError("D1 original observed facts changed: " + ";".join(issues[:3]))
         if (stored.get("kikkaCandidate") or {}).get("sourceHash") != candidate["sourceHash"]:
             raise ValueError("D1 did not persist urgent candidate unchanged")
+        # Crucial production contract: source hash can survive while a legacy
+        # projection silently removes every literal mark key. Verify the
+        # actual restored runner+symbol mapping, not just the model hash.
+        expected_marks = candidate_marks(prepared)
+        actual_marks = candidate_marks(stored)
+        if not expected_marks or actual_marks != expected_marks:
+            raise ValueError("D1 model hash stored but visible symbols missing or altered")
+        outcome["persistedVisibleMarkCount"] = len(actual_marks)
         outcome["persistedToD1"] = True
         outcome["status"] = "preoff-learned-candidate-persisted"
     return outcome
