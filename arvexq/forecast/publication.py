@@ -32,7 +32,7 @@ def public_race(detail):
     if not isinstance(detail, dict): return detail
     result = project(detail)
     # One coherent source for ability/running style/pace/probabilities/marks
-    # and observed-market ticket evaluation. This route never runs Stage64
+    # and observed-market ticket evaluation. This route rejects retired models
     # or a second ticket engine. Past race products remain locked at their
     # genuine before-off capture timestamp; not reconstructed post-off.
     from arvexq.prediction.unified_product import verified as verified_unified
@@ -52,7 +52,7 @@ def public_race(detail):
                 horse['predMark'] = by_no[horse['horseNumber']]
         return result
     # Urgent 2026 Kikuka Sho uses the date-held-out LEARNED challenger only.
-    # The retired Stage64 adapter must not override this race. Its research
+    # Retired forecast adapters must not override this race. Its research
     # marks may be displayed explicitly as uncalibrated; no betting ticket.
     from arvexq.prediction.kikka_urgent import RACE_ID, candidate_marks
     if detail.get('id') == RACE_ID:
@@ -91,7 +91,7 @@ def public_race(detail):
                   if isinstance(h, dict)}
         valid = (isinstance(original, dict)
                  and detail.get('predictionStatus') == 'ready'
-                 and detail.get('predictionModelVersion') in (FUSION_VERSION, 'arvexq-stage64-product-v1')
+                 and detail.get('predictionModelVersion') == FUSION_VERSION
                  and original.get('modelVersion') == detail.get('predictionModelVersion')
                  and original.get('predictionStatus') == 'ready'
                  and original.get('productionEligible') is True
