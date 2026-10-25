@@ -36,7 +36,10 @@ def public_race(detail):
     # or a second ticket engine. Past race products remain locked at their
     # genuine before-off capture timestamp; not reconstructed post-off.
     from arvexq.prediction.unified_product import verified as verified_unified
-    active = verified_unified(detail)
+    # Prefer the genuine independently evidenced fusion when present; a
+    # research-only unified receipt must never shadow a valid fused forecast.
+    fused = build_prediction(detail) if isinstance(detail.get('fusionInputs'), dict) else None
+    active = verified_unified(detail) if fused is None else None
     if active:
         result['predictionStatus'] = 'unified-reference-ready'
         result['predictionModelVersion'] = active['modelVersion']
@@ -78,7 +81,7 @@ def public_race(detail):
             result['predictionStatus'] = 'new-model-unavailable'
             result['recommendedBets'] = []
         return result
-    prediction = build_prediction(detail)
+    prediction = fused if fused is not None else build_prediction(detail)
     if prediction is None:
         # A stored, verified original remains immutable historical race evidence.
         # Publishing its original marks/tickets after the off is NOT a new
