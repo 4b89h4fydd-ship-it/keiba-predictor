@@ -1,0 +1,49 @@
+name: ARVEXQ CC JRA NAR Still Photo Detection
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_jra_nar_cc_photo_smoke.py
+      - tests/test_jra_nar_open_photo_smoke.py
+      - requirements-vision.txt
+      - arvexq/vision/open_detector.py
+      - .github/workflows/arvexq-jra-nar-photo-smoke.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  japan-image-detector:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Apache-licensed detector dependencies
+        run: |
+          python -m pip install -q -r requirements-vision.txt
+      - name: Restore public Apache RT-DETR weights
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data/vision-model
+          key: arvexq-apache-rtdetr-r50vd-v1
+      - name: Fetch pinned open checkpoint and check declared license
+        run: |
+          python scripts/arvexq_fetch_open_vision_model.py --output-dir .arvexq-data/vision-model
+      - name: Check JRA and NAR separately on photographer-owned CC still images
+        run: |
+          python scripts/arvexq_jra_nar_cc_photo_smoke.py \
+            --model-dir .arvexq-data/vision-model \
+            --output .arvexq-data/jra-nar-photo-detector.json
+      - name: Save metadata only (never photos or video)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-jra-nar-cc-still-detector
+          path: .arvexq-data/jra-nar-photo-detector.json
+          if-no-files-found: warn
+          retention-days: 7
