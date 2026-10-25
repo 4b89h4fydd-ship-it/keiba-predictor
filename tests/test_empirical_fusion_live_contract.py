@@ -115,6 +115,8 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
         "sire": None, "dam": None, "damsire": None,
         "observedFields": 0, "status": "unavailable"}
     assert ability["value"]["1"]["training"]["status"] == "unverified-no-numeric-inference"
+    assert ability["value"]["1"]["staticPreoff"]["age"] is None
+    assert ability["value"]["1"]["staticPreoff"]["bodyWeight"] is None
     assert ability["value"]["1"]["recentRuns"] == 1
     assert ability["value"]["1"]["recentTop3Rate"] == 1.0
     assert ability["value"]["1"]["fullCareerRuns"] == 1
@@ -207,3 +209,20 @@ def test_maternal_pedigree_is_evidence_not_imputed_score():
         "sire": None, "dam": "母系テスト", "damsire": None,
         "observedFields": 1, "status": "observed"}
     assert revised["predictionMarks"] == original["predictionMarks"]
+
+
+def test_ability_static_race_day_observations_do_not_overwrite_predictions():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0].update({
+        "age": 4, "carriedWeight": 56.0, "bodyWeight": 480,
+        "bodyWeightChange": 4, "trainer": "厩舎テスト", "jockey": "騎手テスト",
+    })
+    updated = build_prediction(src, now=NOW)
+    static = updated["stages"]["ability"]["value"]["1"]["staticPreoff"]
+    assert static == {
+        "age": 4, "carriedWeight": 56.0, "bodyWeight": 480,
+        "bodyWeightChange": 4, "jockey": "騎手テスト", "trainer": "厩舎テスト",
+    }
+    assert updated["predictionMarks"] == original["predictionMarks"]
+    assert updated["recommendedBets"] == original["recommendedBets"]
