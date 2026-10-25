@@ -116,7 +116,26 @@ def public_pace_factors(race):
         # Distance extension is only a forward-intent research *candidate*,
         # never evidence that a horse will actually lead the field.
         candidate = last_early is True or change == "extension"
+        # The four display phases are explicitly historical observations, NOT
+        # a fabricated prediction of today's positions. Corner labels are used
+        # only when the source has an unambiguous four-corner sequence.
+        phase_evidence = {
+            "start": {"status": "unavailable", "observedPosition": None},
+            "thirdCorner": {
+                "status": "historical-observation" if last_positions and len(last_positions) == 4 else "unavailable",
+                "observedPosition": last_positions[2] if last_positions and len(last_positions) == 4 else None,
+            },
+            "fourthCorner": {
+                "status": "historical-observation" if last_positions and len(last_positions) == 4 else "unavailable",
+                "observedPosition": last_positions[3] if last_positions and len(last_positions) == 4 else None,
+            },
+            "straight": {
+                "status": "historical-finish" if type(previous.get("finish")) is int and previous["finish"] > 0 else "unavailable",
+                "observedFinish": previous.get("finish") if type(previous.get("finish")) is int and previous["finish"] > 0 else None,
+            },
+        }
         entries.append({
+            "phaseEvidence": phase_evidence,
             "horseNumber": horse["horseNumber"],
             "lastRunDate": previous.get("_raceDate") or previous.get("date"),
             "lastFirstCornerTop3": last_early,
@@ -142,6 +161,8 @@ def public_pace_factors(race):
         "adjacentForwardCandidates": adjacent,
         "forwardCandidateShare": len(candidates) / len(active),
         "horses": entries,
+        "phaseOrder": ["start", "thirdCorner", "fourthCorner", "straight"],
+        "phaseEvidenceKind": "past-race-observations-only",
         "predictedActualLead": False,
         "predictedPaceProbabilities": None,
         "winProbability": None,
