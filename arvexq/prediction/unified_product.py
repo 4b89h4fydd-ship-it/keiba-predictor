@@ -3,7 +3,7 @@
 Every visible mark, race-pace observation and candidate ticket must originate
 from the SAME previously trained, date-isolated model prediction. The video
 channel stays unavailable until independently reviewed horse identities exist.
-No after-off materialization and no Stage64 or subjective override.
+No after-off materialization and no retired or subjective override.
 """
 from __future__ import annotations
 

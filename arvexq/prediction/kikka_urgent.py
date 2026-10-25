@@ -1,4 +1,4 @@
-"""Urgent Kyoto 11R pre-off research candidate, without retired Stage64.
+"""Urgent Kyoto 11R pre-off research candidate, without retired forecasts.
 
 Only independently retrieved, D1-persisted race facts may produce this
 date-bounded challenger output. Published mark candidates are explicitly
@@ -134,7 +134,7 @@ def candidate_marks(detail: dict) -> list[dict] | None:
     """Published **research candidate** only, never a certified betting tip.
 
     Checks original pre-off timestamp, full official roster, model provenance,
-    unique ◎ and canonical source hash. No old Stage64 result is promoted.
+    unique ◎ and canonical source hash. No retired result is promoted.
     """
     c = detail.get("kikkaCandidate")
     if not isinstance(c, dict) or c.get("version") != VERSION:

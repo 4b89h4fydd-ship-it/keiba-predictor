@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-race emergency pre-off D1 read, learned candidate fit and protected publish.
 
-Does not create a Stage64 prediction, does not scrape licensed race videos, and
+Does not create a retired prediction, does not scrape licensed race videos, and
 does not mark unvalidated probabilities/tickets production-ready. The race is
 exactly the 2026 Kikuka Sho, all other races (including banei) are skipped.
 """

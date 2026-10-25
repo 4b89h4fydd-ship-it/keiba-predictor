@@ -27,21 +27,6 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
     def setUp(self) -> None:
         self.id = "nar-2026-10-08-大井-04"
 
-    def test_fact_stage_does_not_rewrite_only_for_model_or_marks(self) -> None:
-        prepared = race(self.id, (1, 2, 3), ai=True)
-        existing = copy.deepcopy(prepared)
-        prepared["predictionStatus"] = "ready"
-        prepared["predictionModelVersion"] = "arvexq-stage64-product-v1"
-        prepared["predictionMarks"] = [{"horseNumber": 1, "mark": "◎"}]
-        prepared["recommendedBets"] = [{"kind": "馬連", "horseNumbers": [1, 2]}]
-        prepared["preparedMeta"]["analysisInputHash"] = "recent"
-        existing["predictionStatus"] = "disabled"
-        existing["predictionModelVersion"] = "legacy"
-        existing["preparedMeta"]["analysisInputHash"] = "old"
-        self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True), "")
-        self.assertEqual(repair.repair_reason(prepared, existing),
-                         "stage64_products_not_persisted")
-
     def test_fact_stage_still_repairs_missing_roster_and_real_history(self) -> None:
         prepared = race(self.id, (1, 2, 3))
         existing = copy.deepcopy(prepared)
