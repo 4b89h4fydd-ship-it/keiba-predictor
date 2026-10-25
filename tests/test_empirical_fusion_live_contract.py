@@ -111,6 +111,9 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert ability["probabilityCalibrationVerified"] is False
     assert set(ability["modelVersions"]) == set(METHODS)
     assert set(ability["value"]) == {str(i) for i in range(1, 6)}
+    assert ability["value"]["1"]["pedigree"] == {
+        "sire": None, "damsire": None, "status": "unavailable"}
+    assert ability["value"]["1"]["training"]["status"] == "unverified-no-numeric-inference"
     assert ability["value"]["1"]["recentRuns"] == 1
     assert ability["value"]["1"]["recentTop3Rate"] == 1.0
     assert ability["value"]["1"]["fullCareerRuns"] == 1
@@ -180,3 +183,14 @@ def test_no_stored_independent_evidence_means_no_fake_prediction():
     bet = capture_original_bet(lock["detail"], NOW)
     assert bet["decision"] == "見送り"
     assert bet["items"] == []
+
+
+def test_phase_one_pedigree_observation_does_not_change_marks():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0]["pedigree"] = {"sire": "父系テスト", "damsire": "母父テスト"}
+    updated = build_prediction(src, now=NOW)
+    assert updated is not None
+    assert updated["stages"]["ability"]["value"]["1"]["pedigree"] == {
+        "sire": "父系テスト", "damsire": "母父テスト", "status": "observed"}
+    assert updated["predictionMarks"] == original["predictionMarks"]
