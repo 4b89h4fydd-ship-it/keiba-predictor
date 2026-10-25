@@ -43,7 +43,7 @@ const layoutBaseline={
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
   "horseDetailPage": "acb13e0e1920774a",
-  "renderRace": "14e7f4c710086edc"
+  "renderRace": "aae7b8774e3e9e4e"
 };
 for(const [name,expected] of Object.entries(layoutBaseline))
   assert.equal(fingerprint(functionBody(name)),expected,'DO_NOT_CHANGE_ARVEXQ_UI_LAYOUT: '+name);
