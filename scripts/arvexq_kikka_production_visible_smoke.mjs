@@ -43,7 +43,30 @@ async function main(){
     confidenceUncalibrated:context.ARVEXQProductionPrediction.current().uncalibrated,
     recommendedPlan:local.plan!==null
   }));
-  if(displayed.length===0)throw Error('LIVE_D1_18_HORSES_STORED_BUT_PWA_BLANK_MARKS');
+  if(displayed.length===0){
+    const names=['エムズビギン','コンジェスタス','アウダーシア','ショウナンガルフ',
+      'ジャスティンシカゴ','バステール','ラージアンサンブル','ロブチェン','ゴーイントゥスカイ',
+      'ダノンヒストリー','アスクエジンバラ','サノノグレーター','キンググローリー',
+      'マジョレルブルー','シートゥサミット','ショウナンハヤナミ',
+      'チャリングクロス','ナリタエスペランサ'];
+    const rows=detail.horses||[],marks=candidate.marks||[];
+    const mismatch=rows.filter(h=>names[Number(h.horseNumber)-1]!==String(h.name));
+    const markSymbols=[...new Set(marks.map(x=>x.mark))];
+    console.log('KIKKA_LIVE_REJECTION_REASONS',JSON.stringify({
+      version:candidate.version,raceMatch:candidate.raceId===detail.id,
+      dateMatch:candidate.raceDate===detail.date,
+      modelVersion:candidate.modelVersion,
+      provisional:candidate.provisional,productionEligible:candidate.productionEligible,
+      bettingRecommended:candidate.bettingRecommended,probabilityCalibration:candidate.probabilityCalibration,
+      trainedThrough:candidate.trainedThrough,trainedEarlier:candidate.trainedThrough<detail.date,
+      capturedAt:candidate.capturedAt,capturedEpoch:Date.parse(candidate.capturedAt),
+      sourceHashLen:String(candidate.sourceHash||'').length,modelHashLen:String(candidate.modelHash||'').length,
+      horseNameMismatchCount:mismatch.length,horseNumberInvalid:rows.filter(h=>!Number.isInteger(Number(h.horseNumber))||Number(h.horseNumber)<1||Number(h.horseNumber)>18).length,
+      markCount:marks.length,bonmeiCount:marks.filter(x=>x.mark==='◎').length,
+      markSymbols:markSymbols,
+    }));
+    throw Error('LIVE_D1_18_HORSES_STORED_BUT_PWA_BLANK_MARKS');
+  }
   if(displayed.filter(x=>x.predMark==='◎').length!==1)throw Error('INVALID_REAL_LIVE_HONMEI');
   // Ensure the public JS has the new adapter before claiming deployed to iPhone.
   const js=await fetch('https://kraizweb1.4b89h4fydd.workers.dev/app-v330.js?smoke='+Date.now(),{
