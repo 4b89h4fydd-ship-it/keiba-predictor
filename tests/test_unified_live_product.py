@@ -90,3 +90,23 @@ class UnifiedLiveTests(TestCase):
         with self.assertRaisesRegex(ValueError, "upcoming"):
             generate(row, model,
                      now=datetime.fromisoformat("2026-10-26T09:00:00+09:00"))
+
+    def test_retired_model_never_reappears_as_public_marks_or_tickets(self):
+        from arvexq.forecast.marks import generate_marks
+        from arvexq.forecast.tickets import generate_tickets
+        old = {"modelVersion": "retired-prediction-model",
+               "predictionStatus": "ready",
+               "stages": {"marks": {"value": {"orderedWinCandidates": [1, 2, 3, 4, 5]}},
+                          "probability": {"value": {"win": {1: 0.5},
+                                                    "trifecta": {(1, 2, 3): 1.0}}}}}
+        self.assertEqual(generate_marks(old), [])
+        self.assertEqual(generate_tickets(old, [{"horseNumber": 1, "mark": "◎"}]), [])
+        source = target("地方")
+        source.update({"id": "nar-2026-10-26-園田-05", "date": "2026-10-26",
+                       "startTime": "13:00", "track": "園田",
+                       "prediction": dict(old, modelVersion="arvexq-empirical-fusion-v1"),
+                       "predictionStatus": "ready",
+                       "predictionModelVersion": "retired-prediction-model"})
+        projected = public_race(source)
+        self.assertNotEqual(projected.get("predictionStatus"), "ready")
+        self.assertFalse(projected.get("predictionMarks"))
