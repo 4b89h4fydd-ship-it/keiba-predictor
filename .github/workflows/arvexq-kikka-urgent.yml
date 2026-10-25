@@ -50,6 +50,10 @@ jobs:
           python -m unittest discover -s tests -p 'test_kikka_urgent_preoff.py' -v
       - name: Validate iPhone Kikuka mark display is NOT Stage64
         run: node scripts/arvexq_kikka_frontend_smoke.cjs
+      - name: Diagnose current live D1 symbol keys on PR without writing
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: node scripts/arvexq_kikka_production_visible_smoke.mjs
       - name: Dry-run only target Kyoto 11R from D1 on PR
         if: github.event_name == 'pull_request'
         run: |
