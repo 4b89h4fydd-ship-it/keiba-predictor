@@ -170,6 +170,6 @@ def build_prediction(facts, now=None):
         "productionEligible": status == "ready", "stages": stages,
         "predictionMarks": marks, "recommendedBets": grouped,
         "methodWeights": blended["methodWeights"], "methodEvidence": blended["methodEvidence"],
-        "calibrationRaces": blended["calibrationRaces"], "forecastText": "".join(texts),
+        "calibrationRaces": blended["calibrationRaces"], "forecastText": "先行候補："+("、".join(str(n)+"番" for n in mineta["forwardIntentCandidates"]) or "未確認")+"。初角までの距離："+(str(mineta["firstCornerMetersOfficial"])+"m" if mineta["firstCornerMetersOfficial"] is not None else "未取得")+"。◎"+str(order[0])+"番。",
         "paceEvidence": pace, "humanOverrideAllowed": False,
     }

@@ -1,4 +1,4 @@
-/* Horse home: one dense "all races by venue" display; existing race detail route.
+/* Horse home: venue directory; choose a venue to open its separate race list.
    Render only races already acquired for the date. Never fabricate a meeting. */
 (function(root){
   "use strict";
@@ -43,29 +43,13 @@
         const times=races.map(clock).filter(Boolean).sort();
         const header='<div class="arv-all-venue-head"><div><b>'+esc(track)+'</b><span>1R〜12R</span></div>'+
           '<button type="button" data-track="'+esc(track)+'" data-circuit="'+esc(circuit)+'" class="arv-all-go">会場ページへ ›</button></div>';
-        const shared=root.ARVEXQUnifiedHome;
-        const liveRows=shared?.liveModel?shared.liveModel("horse",races,opts.date,clockNow(opts)):[];
-        const liveById=new Map(liveRows.map(r=>[r.id,r]));
-        const chips=Array.from({length:12},(_,i)=>{
-          const number=i+1,r=map.get(number);
-          if(!r||cancelled(r)){
-            const label=r?"中止":"未取得";
-            return '<button type="button" disabled aria-disabled="true" class="arv-all-race unavailable">'+
-              '<strong>'+number+'R</strong><small>'+esc(r&&clock(r)||label)+'</small></button>';
-          }
-          const state=raceState(r,opts),next=liveById.get(r.id)?.next;
-          return '<button type="button" class="arv-all-race '+esc(state)+(next?' next':'')+
-            '" data-race="'+esc(r.id)+'" data-race-state="'+esc(state)+'" aria-label="'+esc(track+' '+number+'R '+clock(r)+' '+liveLabel(state))+'">'+
-            '<strong>'+number+'R</strong><small>'+esc(clock(r)||"未取得")+'</small>'+
-            '<em class="arv-race-state">'+esc(liveLabel(state))+'</em></button>';
-        }).join("");
-        return '<div class="arv-all-venue">'+header+'<div class="arv-all-races-grid">'+chips+'</div></div>';
+        return '<div class="arv-all-venue">'+header+'</div>';
       }).join("");
       return '<div class="arv-all-circuit"><div class="arv-all-circuit-label"><b>'+esc(circuit)+'競馬</b><small>'+tracks.length+'会場</small></div>'+
         (cards||'<p class="arv-all-empty">この日の開催データは未取得です。未取得を「開催なし」とは判定しません。</p>')+'</div>';
     };
     return '<section class="arv-all-panel" aria-label="各会場の全レース">'+
-      '<header class="arv-all-title"><h2>各会場の全レース</h2><p>1R〜12Rを表示・自動更新　終了時刻を過ぎたレースは暗く表示</p></header>'+
+      '<header class="arv-all-title"><h2>開催場一覧</h2><p>開催場を選択すると別画面で1R〜12Rを表示します。</p></header>'+
       group("中央")+group("地方")+'</section>';
   }
   function home(rows,opts={}){return allRaces(rows,opts)}
