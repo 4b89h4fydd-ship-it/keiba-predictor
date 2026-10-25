@@ -11,7 +11,7 @@ class HorseBrandAssetsTest(unittest.TestCase):
         self.assertTrue((STATIC/'arvexq-icon-source-192.png').read_bytes().startswith(bytes([137,80,78,71])))
         self.assertTrue((STATIC/'arvexq-icon-source-512.png').read_bytes().startswith(bytes([137,80,78,71])))
         shell=(STATIC/'index.html').read_text(encoding='utf-8')
-        self.assertIn('manifest-arvexq-v362.webmanifest',shell)
+        self.assertIn('manifest-arvexq-v331.webmanifest',shell)
         self.assertIn('arvexq-touch-v362.png',shell)
         self.assertNotIn('arvexq-sport-nav',shell)
         self.assertNotIn('/kyotei/',shell)

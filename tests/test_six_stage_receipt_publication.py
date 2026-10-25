@@ -20,13 +20,11 @@ def test_no_unverified_forecast_fallback():
     assert race == original
 
 
-def test_six_stage_ui_includes_safe_statuses():
+def test_removed_six_stage_ui_does_not_reappear():
     js = (ROOT / "arvexq/ui/static/app.js").read_text(encoding="utf-8")
-    assert "新方式・6段階分析" in js
-    assert "未適用・検証待ち" in js
-    assert "未算出・未校正" in js
-    assert "見送り（条件未充足" in js
-    assert "sixStageAnalysisPanel(r)+content" in js
+    assert "新方式・6段階分析" not in js
+    assert "新方式・展開予想" not in js
+    assert "sixStageAnalysisPanel" not in js
 
 
 def test_newcomers_are_not_mixed_with_flat_jumps_or_banei():
