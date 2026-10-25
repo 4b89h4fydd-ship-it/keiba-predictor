@@ -18,6 +18,8 @@ from arvexq.prediction.fusion_source_composer import assemble_fusion_inputs
 from arvexq.forecast.engine import build_prediction
 from arvexq.forecast.marks import generate_marks
 from arvexq.forecast.tickets import generate_tickets
+from arvexq.prediction.unified_product import generate as generate_unified
+from arvexq.prediction.learned_scenarios import VERSION as UNIFIED_MODEL_VERSION, race_family
 
 
 # Retired mutable presentation fields. Do not touch immutable pre-off records,
@@ -136,6 +138,31 @@ def apply(bundle, models, *, now=None):
                 continue
             except (ValueError, TypeError, KeyError, OverflowError) as exc:
                 fusion_errors[str(detail['id'])] = type(exc).__name__ + ': ' + str(exc)
+        # The new, independent race-specific pathway is valid only for an
+        # actual earlier-trained model matching the circuit AND race family.
+        # Old test stubs/legacy models never become a production fallback.
+        # This is explicitly marked provisional; it cannot claim verified AI
+        # fusion or output odds that were not captured before the start.
+        trained = models.get(detail.get('circuit')) if isinstance(models, dict) else None
+        eligible = (isinstance(trained, dict)
+                    and trained.get('version') == UNIFIED_MODEL_VERSION
+                    and (trained.get('training') or {}).get('family') == race_family(detail)
+                    and (trained.get('training') or {}).get('lastDate', '9999') < str(detail.get('date') or '')
+                    and str(detail.get('date') or '') >= '2026-10-26'
+                    and may_create_prerace_prediction(detail))
+        if eligible:
+            try:
+                unified = generate_unified(detail, trained, now=now)
+                updated = without_legacy_presentation(detail)
+                updated['unifiedForecast'] = unified
+                updated['predictionStatus'] = 'unified-reference-ready'
+                updated['forecastText'] = unified['pace']['text']
+                details.append(updated)
+                changed.append(str(detail['id']))
+                continue
+            except (ValueError, TypeError, KeyError, OverflowError) as exc:
+                fusion_errors[str(detail['id'])] = (
+                    'unified:' + type(exc).__name__ + ': ' + str(exc))
         # From the user-approved replacement cutoff onward, do not
         # run the obsolete learned-forecast fallback at all. A missing
         # five-method prediction is explicitly unavailable, not a
@@ -190,6 +217,7 @@ def apply(bundle, models, *, now=None):
     meta['learnedForecastOverlayCount'] = len(changed)
     meta['learnedForecastOverlayResearchOnly'] = True
     meta['empiricalFusionPreoffReadyCount'] = len(fused)
+    meta['unifiedReferenceReadyCount'] = len(changed) if (bundle.get('meta') or {}).get('targetDate', '2026-10-26') >= '2026-10-26' else 0
     out['meta'] = meta
     return out, {'overlaid': changed, 'skipped': skipped,
                  'fusionPublished': fused, 'fusionErrors': fusion_errors,
