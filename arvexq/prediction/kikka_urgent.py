@@ -71,7 +71,7 @@ def compact_candidate(detail: dict, summary: dict, trained: dict, now=None) -> d
             trained_on.get("family") != "flat" or
             trained_on.get("lastDate", "9999") >= RACE_DATE):
         raise ValueError("earlier-dated JRA flat-trained model required")
-    predicted = build_forecast(detail, trained)
+    predicted = build_forecast(detail, trained, compare_research_tickets=False)
     if (predicted.get("analysisType") != "preoff-candidate"
             or predicted.get("predictionStatus") != "candidate-analysis"
             or predicted.get("productionEligible") is not False):
