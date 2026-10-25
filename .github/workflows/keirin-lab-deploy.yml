@@ -26,6 +26,14 @@ jobs:
           grep -q 'KEIRIN LAB' keirin-lab/public/index.html
           test -s keirin-lab/wrangler.toml
           test -n "${{ secrets.CLOUDFLARE_API_TOKEN }}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate KEIRIN model and browser scripts
+        run: |
+          python -m unittest discover -s keirin-lab/scripts -p 'test_*.py' -v
+          node --check keirin-lab/public/engine.js
+          node --check keirin-lab/public/app.js
       - name: Deploy standalone Cloudflare Worker
         working-directory: keirin-lab
         env:
