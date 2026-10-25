@@ -165,7 +165,18 @@ def build_prediction(facts, now=None):
             continue
         recent = analyze_past_performance(horse, race)
         career = profile_career(horse, race)
+        # Reuse the existing mass-feature schema for bloodline inputs;
+        # never infer pedigree or workout quality from missing entries.
+        pedigree = horse.get("pedigree")
+        pedigree = pedigree if isinstance(pedigree, dict) else {}
+        sire = pedigree.get("sire")
+        damsire = pedigree.get("damsire")
+        sire = sire.strip() if isinstance(sire, str) and sire.strip() else None
+        damsire = damsire.strip() if isinstance(damsire, str) and damsire.strip() else None
         ability_observations[str(no)] = {
+            "pedigree": {"sire": sire, "damsire": damsire,
+                         "status": "observed" if sire or damsire else "unavailable"},
+            "training": {"status": "unverified-no-numeric-inference"},
             "recentRuns": recent["datedRuns"],
             "recentTop3Rate": recent["top3Rate"],
             "recentFormQuality": recent["recentFormQuality"],
