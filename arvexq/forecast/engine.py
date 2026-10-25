@@ -171,11 +171,14 @@ def build_prediction(facts, now=None):
         pedigree = pedigree if isinstance(pedigree, dict) else {}
         sire = pedigree.get("sire")
         damsire = pedigree.get("damsire")
+        dam = pedigree.get("dam") or horse.get("dam")
         sire = sire.strip() if isinstance(sire, str) and sire.strip() else None
         damsire = damsire.strip() if isinstance(damsire, str) and damsire.strip() else None
+        dam = dam.strip() if isinstance(dam, str) and dam.strip() else None
         ability_observations[str(no)] = {
-            "pedigree": {"sire": sire, "damsire": damsire,
-                         "status": "observed" if sire or damsire else "unavailable"},
+            "pedigree": {"sire": sire, "dam": dam, "damsire": damsire,
+                         "observedFields": sum(v is not None for v in (sire, dam, damsire)),
+                         "status": "observed" if sire or dam or damsire else "unavailable"},
             "training": {"status": "unverified-no-numeric-inference"},
             "recentRuns": recent["datedRuns"],
             "recentTop3Rate": recent["top3Rate"],
