@@ -49,7 +49,7 @@ function choose(id){
  const r=S.races.find(x=>String(x.race_id)===String(id));if(!r)return;
  const st=raceStatus(r);
  if(r.provisional){el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";return;}
- if(r.prediction && st.code==="confirmed"){
+ if(r.prediction && (st.code==="confirmed"||st.code==="result")){
  const p=r.prediction;const marks=p.marks||{};
  const m=Object.entries(marks).map(([mark,n])=>mark+" "+n+" "+escape(r.entries.find(e=>Number(e.umaban)===Number(n))?.name||"")).join("　");
  const tt=(p.trifecta||[]).slice(0,12);
