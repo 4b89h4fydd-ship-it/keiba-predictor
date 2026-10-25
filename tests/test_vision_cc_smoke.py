@@ -119,6 +119,8 @@ class LicensedRaceSmokeTests(TestCase):
                 capture_factory=lambda p: Capture(), model_factory=FakeModel)
         self.assertEqual(baseline["sampleRateHz"], 1)
         self.assertEqual(dense["sampleRateHz"], 2)
+        self.assertEqual(dense["trackedFrameMeasurements"][0]["seconds"], 1.0)
+        self.assertEqual(dense["trackedFrameMeasurements"][-1]["seconds"], 4.5)
         self.assertEqual(baseline["trackContinuityProxies"]["tracksWithAtLeast3Detections"], 1)
         self.assertEqual(dense["trackContinuityProxies"]["longestConsecutiveSampledFrames"], 8)
         report = compare(baseline, dense)
