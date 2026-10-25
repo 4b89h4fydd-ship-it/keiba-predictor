@@ -134,3 +134,27 @@ class UnifiedLiveTests(TestCase):
         projected = public_race(source)
         self.assertNotEqual(projected.get("predictionStatus"), "ready")
         self.assertFalse(projected.get("predictionMarks"))
+
+    def test_empirical_fusion_takes_priority_over_provisional_receipt(self):
+        race = {"id": "nar-2026-10-26-園田-05", "date": "2026-10-26",
+                "startTime": "13:00", "circuit": "地方",
+                "horses": [{"horseNumber": n, "name": "Horse"+str(n)}
+                           for n in range(1, 6)],
+                "fusionInputs": {"opinions": {}, "calibration": {}}}
+        product = {"modelVersion": "arvexq-empirical-fusion-v1",
+                   "predictionStatus": "ready",
+                   "stages": {"probability": {"value": {"win": {1: 0.5}}}},
+                   "forecastText": "Empirical fusion",
+                   "productionEligible": True}
+        marks = [{"horseNumber": n, "mark": m}
+                 for n, m in enumerate(("◎", "○", "▲", "△", "☆"), 1)]
+        with patch("arvexq.forecast.publication.build_prediction", return_value=product) as build, \
+             patch("arvexq.forecast.publication.generate_marks", return_value=marks), \
+             patch("arvexq.forecast.publication.generate_tickets", return_value=[]), \
+             patch("arvexq.prediction.unified_product.verified") as unified:
+            projected = public_race(race)
+        self.assertEqual(projected["predictionStatus"], "ready")
+        self.assertEqual(projected["forecastText"], "Empirical fusion")
+        self.assertEqual(projected["predictionMarks"], marks)
+        unified.assert_not_called()
+        build.assert_called_once()
