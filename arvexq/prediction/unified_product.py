@@ -86,7 +86,9 @@ def generate(race, model, *, now=None):
         raise ValueError("timezone-aware time required")
     now = now.astimezone(JST)
     off = post_at(race)
-    if not off or now >= off or race.get("date") != now.date().isoformat() or _has_result_evidence(race.get("result")):
+    # Official next-day entries are allowed: predict before the off, never
+    # after it and never from training observations on/after target race date.
+    if not off or now >= off or race.get("date", "") < now.date().isoformat() or _has_result_evidence(race.get("result")):
         raise ValueError("only truly upcoming, date-matched races may be predicted")
     if race.get("circuit") not in ("中央", "地方") or race_family(race) == "banei":
         raise ValueError("central/local only, Obihiro banei disabled")
