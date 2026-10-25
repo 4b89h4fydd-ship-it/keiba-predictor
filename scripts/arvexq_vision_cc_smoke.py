@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections import Counter, defaultdict
 from pathlib import Path
 import tempfile
 import urllib.request
@@ -63,7 +64,10 @@ def download_cc_sample(destination: Path, *, opener=None) -> str:
 
 
 def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
+              sample_hz: float = 1.0,
               capture_factory=None, model_factory=None) -> dict:
+    if not (0 < sample_hz <= 30) or not (1 <= max_frames <= 300):
+        raise ValueError("bounded sample rate and count required")
     if capture_factory is None:
         try:
             import cv2
@@ -83,12 +87,19 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
             raise ValueError("invalid sample frame rate")
         model = model_factory(str(model_dir))
         if hasattr(model, "set_frame_rate"):
-            model.set_frame_rate(1.0)
-        # Start after first second and inspect a consecutive one-Hz window.
-        # Detector accuracy requires independent frame-level truth labels.
+            model.set_frame_rate(sample_hz)
+        # Examine distinct decoded sample times at the specified *effective*
+        # tracker update rate. At 1 Hz a racehorse often moves too far between
+        # frames for association; 4 Hz is an experimental continuity setting.
+        # These are proxy metrics, not verified identities or accuracy.
         sampled, detections, identified = [], 0, set()
+        by_track = defaultdict(list)
+        previous_frame_index = -1
         for i in range(max_frames):
-            frame_idx = round((i + 1) * fps)
+            frame_idx = round((i + 1) * fps / sample_hz)
+            if frame_idx <= previous_frame_index:
+                continue
+            previous_frame_index = frame_idx
             if hasattr(cap, "set"):
                 cap.set(1, frame_idx)
             ok, frame = cap.read()
@@ -103,8 +114,20 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
                             "trackedHorseObjects": len(boxes)})
             detections += len(boxes)
             identified.update(int(b[0]) for b in boxes)
+            for b in boxes:
+                by_track[int(b[0])].append(i)
     finally:
         cap.release()
+    # Count consecutive *sampled* frames for a temporary tracker ID.
+    # Fragments/switches cannot be certified without labelled horse identity.
+    longest_streak = {}
+    for tid, indices in by_track.items():
+        longest, streak, prior = 0, 0, None
+        for index in indices:
+            streak = streak + 1 if prior is not None and index == prior + 1 else 1
+            longest = max(longest, streak)
+            prior = index
+        longest_streak[tid] = longest
     return {
         "version": VERSION,
         "sourcePage": SOURCE_PAGE,
@@ -113,8 +136,18 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
         "sourceVideoSha256": hashlib.sha256(video.read_bytes()).hexdigest(),
         "status": ("horse-objects-detected" if detections else "no-horse-tracks-detected"),
         "testedFrames": len(sampled),
+        "sampleRateHz": sample_hz,
+        "testedDurationSeconds": round(len(sampled) / sample_hz, 3),
         "horseObjectObservations": detections,
         "distinctTemporaryTrackIds": len(identified),
+        "trackContinuityProxies": {
+            "tracksWithAtLeast3Detections": sum(len(indices) >= 3 for indices in by_track.values()),
+            "longestConsecutiveSampledFrames": max(longest_streak.values(), default=0),
+            "meanDetectionsPerTrackId": (round(detections / len(identified), 3)
+                                         if identified else None),
+            "trackLengthsByTemporaryId": {str(k): len(v) for k, v in sorted(by_track.items())},
+            "identitySwitchesVerified": False,
+        },
         "trackedFrameMeasurements": sampled,
         "horseNumberRecognitionTested": False,
         "horseIdentityAccuracyKnown": False,
@@ -130,11 +163,21 @@ def main(argv=None) -> int:
                         default=Path(".arvexq-data/vision-model"))
     parser.add_argument("--output", type=Path,
                         default=Path(".arvexq-data/vision-smoke.json"))
+    parser.add_argument("--sample-hz", type=float, default=1.0,
+                        help="Effective tracker frequency; e.g. 1 or 4 Hz")
+    parser.add_argument("--seconds", type=int, default=12,
+                        help="Duration from second 1 (bounded <=60 s)")
     args = parser.parse_args(argv)
+    if not 1 <= args.seconds <= 60 or not 0 < args.sample_hz <= 30:
+        parser.error("Invalid seconds or sample-hz")
+    samples = round(args.seconds * args.sample_hz)
+    if not 1 <= samples <= 300:
+        parser.error("Too many sampled frames")
     with tempfile.TemporaryDirectory(prefix="arvexq-public-cc-video-") as folder:
         video = Path(folder) / "licensed-clip.webm"
         download_cc_sample(video)
-        result = run_smoke(video, args.model_dir)
+        result = run_smoke(video, args.model_dir, max_frames=samples,
+                           sample_hz=args.sample_hz)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False,
                                       indent=2, sort_keys=True) + "\n",
