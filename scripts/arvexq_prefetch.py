@@ -494,8 +494,17 @@ def _attach_empirical_fusion_products(detail: dict[str, Any]) -> dict[str, Any]:
         return detail
     result = copy.deepcopy(detail)
     for key in ("predictionStatus", "predictionModelVersion", "prediction",
-                "predictionMarks", "recommendedBets"):
-        result[key] = copy.deepcopy(published[key])
+                "predictionMarks", "recommendedBets", "forecastText"):
+        if key in published:
+            result[key] = copy.deepcopy(published[key])
+    # Preserve original runner facts while attaching only the approved
+    # per-horse marks from the same computed prediction.
+    marks = {m["horseNumber"]: m["mark"] for m in published["predictionMarks"]}
+    result["horses"] = [
+        dict(h, predMark=marks[h["horseNumber"]])
+        if isinstance(h, dict) and h.get("horseNumber") in marks else copy.deepcopy(h)
+        for h in detail.get("horses") or []
+    ]
     return result
 
 
