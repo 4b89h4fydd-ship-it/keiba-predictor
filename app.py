@@ -61,7 +61,7 @@ from typing import Iterable, Iterator
 from bs4 import BeautifulSoup
 from arvexq.ingest.entry_fields.affiliation import from_text as observed_affiliation
 
-app = FastAPI(title="ARVEXQ", version="14.26-v330-racecard-stable")
+app = FastAPI(title="ARVEXQ", version="14.26-v331-racecard-stable")
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 
 PREDICTION_ENGINE_VERSION = "arvexq-mineta-margin-observed-60-40-v1"
@@ -149,8 +149,8 @@ MANIFEST = r'''{
   "name":"ARVEXQ",
   "short_name":"ARVEXQ",
   "description":"ARVEXQ — PACE · POSITION · VALUE",
-  "start_url":"/?pwa=1&v=329",
-  "id":"/arvexq-v175-install",
+  "start_url":"/?pwa=1&v=331",
+  "id":"/arvexq-v331-install",
   "icons":[{"src":"/arvexq-icon-v175-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},{"src":"/arvexq-icon-v175-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
   "scope":"/",
   "display":"standalone",
@@ -158,7 +158,7 @@ MANIFEST = r'''{
   "theme_color":"#f6f2e8",
   "lang":"ja"
 }'''
-SW = r'''const RESET_TAG="arvexq-reset-v330";
+SW = r'''const RESET_TAG="arvexq-reset-v331";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){
@@ -6158,8 +6158,8 @@ def home():
     # by the browser; Render remains the fallback for live/manual refreshes.
     boot='<script>window.__ARVEXQ_BOOTSTRAP__=null;</script>'
     html=INDEX.replace(
-        '<script src="/app-v324.js"></script>',
-        boot+'\n<script src="/app-v324.js"></script>'
+        '<script src="/app-v331.js"></script>',
+        boot+'\n<script src="/app-v331.js"></script>'
     )
     return HTMLResponse(html, headers={
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
@@ -6213,9 +6213,10 @@ def pace_preview():
 
 @app.get("/version.json")
 def version_json():
-    return Response('{"build":"v330","shell":"independent-production-boundaries","model":"arvexq-prediction-removed"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
+    return Response('{"build":"v331","shell":"independent-production-boundaries","model":"arvexq-prediction-removed"}', media_type="application/json", headers={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"})
 
 @app.get("/styles-arvexq-v324.css")
+@app.get("/styles-arvexq-v331.css")
 @app.get("/styles-arvexq-v321.css")
 @app.get("/styles-arvexq-v320.css")
 @app.get("/styles-arvexq-v319.css")
@@ -6236,12 +6237,14 @@ def version_json():
 @app.get("/styles-arvexq-v88.css")
 @app.get("/styles-v86.css")
 def styles(request: Request):
-    current=request.url.path=="/styles-arvexq-v324.css"
+    current=request.url.path=="/styles-arvexq-v331.css"
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(CSS, media_type="text/css", headers={"Cache-Control":cache})
 
 @app.get("/app-v324.js")
 @app.get("/arvexq-app-v324.js")
+@app.get("/app-v331.js")
+@app.get("/arvexq-app-v331.js")
 @app.get("/app-v321.js")
 @app.get("/arvexq-app-v321.js")
 @app.get("/app-v320.js")
@@ -6281,11 +6284,12 @@ def styles(request: Request):
 @app.get("/app-v87.js")
 @app.get("/app-v86-fix1.js")
 def appjs(request: Request):
-    current=request.url.path in {"/app-v324.js","/arvexq-app-v324.js"}
+    current=request.url.path in {"/app-v331.js","/arvexq-app-v331.js"}
     cache="public, max-age=31536000, immutable" if current else "no-cache, must-revalidate"
     return Response(JS, media_type="application/javascript", headers={"Cache-Control":cache})
 
 @app.get("/manifest-v86.webmanifest")
+@app.get("/manifest-arvexq-v331.webmanifest")
 @app.get("/manifest-arvexq-v175.webmanifest")
 @app.get("/manifest-arvexq-v173.webmanifest")
 @app.get("/manifest-arvexq-v130.webmanifest")
@@ -6294,6 +6298,7 @@ def manifest():
     return Response(MANIFEST, media_type="application/manifest+json", headers={"Cache-Control":"public, max-age=3600"})
 
 @app.get("/sw-v324-reset.js")
+@app.get("/sw-v331-reset.js")
 @app.get("/sw-v321-reset.js")
 @app.get("/sw-v320-reset.js")
 @app.get("/sw-v319-reset.js")

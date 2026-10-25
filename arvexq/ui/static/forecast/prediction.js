@@ -113,6 +113,9 @@
   }
 
   function build(race){
+    // Do not let the previous race's six-stage receipt leak into a race that
+    // has no verified unified forecast.
+    last={active:false,source:'',marks:[],scenarios:[],stages:[],pace:[],forecastText:'',modelVersion:'',uncalibrated:false,unavailable:true};
     if(race&&race.id==='jra-2026-10-25-京都-11'){
       var verified=kikkaCandidateMarks(race),marks=verified&&verified.marks||{};
       var rows=(race.horses||[]).filter(function(h){return h&&Number(h.horseNumber)>0;}).map(function(h){
@@ -125,8 +128,8 @@
       });
       last={active:!!verified,source:verified?'kikka-2026-learned-preoff-candidate':'',
         scenarios:[],pace:[],forecastText:verified?
-          '菊花賞・発走前に保存した新方式の参考印。未使用レースでの勝率・3着内率の検証および確率校正は未完了。':
-          '菊花賞の発走前新方式予想は未保存です。',
+          '菊花賞・発走前に保存した参考印。未使用レースでの勝率・3着内率の検証および確率校正は未完了。':
+          '菊花賞の発走前予想は未保存です。',
         modelVersion:verified?verified.modelVersion:'',uncalibrated:true,
         unavailable:!verified,marks:rows.filter(function(row){return !!row.predMark}).map(function(row){
           return {horseNumber:Number(row.horse.horseNumber),name:String(row.horse.name||''),mark:row.predMark};
@@ -165,6 +168,8 @@
         seen[n]=true;markMap[n]=x;if(m==='◎')best++;
       });
       if(accepted&&best===1){
+        var unifiedStages=Array.isArray(unified.paceStages)?unified.paceStages:[],
+            unifiedPlan=unifiedStages.length?{stages:unifiedStages}:null;
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
           var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
           return {horse:h,predMark:mark,serverPreoffMark:false,
@@ -181,7 +186,7 @@
             return {horseNumber:Number(x.horse.horseNumber),name:String(x.horse.name||''),mark:x.predMark}
           })};
         return {rows:rowsU,legacyEngineDisabled:true,scenarios:[],plans:{},
-          plan:null,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:0};
+          plan:unifiedPlan,suit:{},occ:[],pressure:0,arrangement:[],profile:{},coverage:1};
       }
     }
     var server=race&&race.predictionStatus==='ready'&&race.prediction;

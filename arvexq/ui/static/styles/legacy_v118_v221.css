@@ -227,7 +227,7 @@ html,body{background:#182126!important;color:#f5f3ee!important}.smart-shell,.cin
 .result-more summary{cursor:pointer;list-style:none;padding:10px 2px 8px;font-size:12px;font-weight:800;color:#9fd4ff}
 .result-more summary::-webkit-details-marker{display:none}
 .result-more summary:after{content:'＋';float:right;font-size:16px;line-height:1}
-.result-more[open] summary:after{content:'−'}
+
 .actual-order-compact>.frame-badge{background-clip:padding-box!important}
 .actual-order-compact>.frame-badge.frame1{background:#fff!important;color:#111!important}
 .actual-order-compact>.frame-badge.frame2{background:#222!important;color:#fff!important}

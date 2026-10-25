@@ -66,7 +66,7 @@ def public_race(detail):
                 'productionEligible': False, 'predictionStatus': 'candidate-analysis',
                 'capturedAt': source['capturedAt'], 'modelHash': source['modelHash'],
             }
-            result['forecastText'] = ('菊花賞の発走前・新方式モデルの参考印。'
+            result['forecastText'] = ('菊花賞の発走前モデルの参考印。'
                 '勝率・3着内率は未校正で、馬券購入の推奨は行わない。')
             result['predictionMarks'] = proposed
             result['recommendedBets'] = []

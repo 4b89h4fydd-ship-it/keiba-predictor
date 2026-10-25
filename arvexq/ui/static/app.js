@@ -1148,7 +1148,7 @@ function markRoleLabel(x){
 }
 function visiblePredictionMark(x){return window.ARVEXQProductionMarks.visible(x);}
 function honmeiA11yText(x){return x&&x.revisionCandidateMark?
-  '菊花賞の新方式AIによる発走前参考印。未校正で購入推奨ではありません':
+  '菊花賞の発走前参考印。未校正で購入推奨ではありません':
   x&&markRoleLabel(x)?markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
 function racecardMarkLegend(r){return '<div class="rc-mark-legend"></div>';}
 function racecardEntryRow(r,h,x){
@@ -1713,7 +1713,7 @@ function pacePanel(r,p){
     var pace=r.unifiedForecast.pace||{};
     var candidates=Array.isArray(pace.likelyForwardNumbers)?pace.likelyForwardNumbers:[];
     var horseNames={};(r.horses||[]).forEach(function(h){if(h&&h.horseNumber)horseNames[h.horseNumber]=h.name});
-    return '<section id="section-pace" class="card pace-panel-direct"><h2>新方式・展開予想</h2>'+
+    return '<section id="section-pace" class="card pace-panel-direct"><h2>展開予想</h2>'+
       '<p>'+esc(pace.text||'初角位置の観測不足につき展開不明')+'</p>'+
       '<p class="muted">先行候補：'+esc(candidates.map(function(no){return (horseNames[no]||no+'番')}).join('、')||'未確認')+'</p>'+
       '<p class="muted">能力・脚質・確率と同一モデルから印を計算。映像の全馬識別および展開発生率は未検証です。</p></section>';
@@ -1781,7 +1781,15 @@ function resultPanel(r){
       '<div class="muted result-status-compact">'+(final?'結果は確定扱いですが着順詳細は未取得です。':(String(r.date||'')<today()||String(r.date||'')===today()&&mins(r.startTime)<=nowMins()?'公式結果の反映待ちです。自動再確認しています。':'発走前・結果未確定'))+'</div><button type="button" data-detail-retry="'+esc(r.id)+'">結果を再確認</button>') +
   researchRecapPanel(r)+'</section>'
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+pacePanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
+function paceDisplayPanel(r,p){
+  // The primary route is the existing four-stage view.  Keep the verified
+  // server forecast as a safe fallback when a stage plan is still loading.
+  var receiptStages=r&&r.unifiedForecast&&Array.isArray(r.unifiedForecast.paceStages)?r.unifiedForecast.paceStages:[];
+  if(!p.plan&&receiptStages.length)p.plan={stages:receiptStages};
+  var plan=activeScenarioPlan(p)||p.plan||{};
+  return visiblePaceStages(plan).length?paceBoard(r,p):pacePanel(r,p);
+}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse}):'')+'</div>';if(key==='pace')return '<div class="accordion-panel">'+paceDisplayPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -1792,7 +1800,7 @@ function cinematicVenues(ctx){return '<nav class="cinema-venues">'+ctx.venues.ma
 function cinematicNumbers(ctx){return '<nav class="cinema-numbers" aria-label="レース番号">'+Array.from({length:12},function(_,i){var row=ctx.races.find(function(x){return n(x.raceNumber)===i+1});if(!row&&ctx.featured&&n(ctx.featured.raceNumber)===i+1)row=ctx.featured;return '<button '+(row?'data-race="'+esc(row.id)+'"':'disabled')+' class="'+(ctx.featured&&n(ctx.featured.raceNumber)===i+1?'active':'')+'">'+(i+1)+'R</button>'}).join('')+'</nav>'}
 function cinematicGrade(r){var g=r.grade||r.gradeLabel||'',match=String(r.title||'').match(/(?:J[・･.]?)?G[ⅠⅡⅢ123]/i);if(!g&&match)g=match[0];return g?'<span class="cinema-grade">'+esc(g)+'</span>':''}
 function cinematicTabs(r){
-  function tab(label,key){var active=state.openPanel===key;return '<button type="button" data-panel="'+key+'" aria-expanded="'+active+'" class="race-nav-v230-btn '+(active?'active':'')+'"><span class="race-nav-v230-label">'+label+'</span><span class="race-nav-v230-caret">'+(active?'−':'＋')+'</span></button>'}
+  function tab(label,key){var active=state.openPanel===key;return '<button type="button" data-panel="'+key+'" aria-expanded="'+active+'" class="race-nav-v230-btn '+(active?'active':'')+'"><span class="race-nav-v230-label">'+label+'</span></button>'}
   // v230: isolated navigation classes only. Do not inherit any legacy cinema-tabs sizing.
   return '<div class="race-nav-v230">'
     +'<div class="race-nav-v230-row race-nav-v230-top">'+tab('出走表','entry')+tab('展開予想','pace')+tab('買い目','bets')+'</div>'
@@ -2550,7 +2558,7 @@ function horseDetailPage(r,p){
     +'</header>'
     +'<main class="smart-main smart-race-page horse-detail-page"><section class="card">'
     +(x&&p.legacyEngineDisabled?
-      '<h2>'+esc(h.name||'')+'</h2><p>新方式の予想は未保存です。過去走の事実のみ表示します。</p>'+
+      '<h2>'+esc(h.name||'')+'</h2><p>発走前予想は未保存です。過去走の事実のみ表示します。</p>'+
       window.ARVEXQPastRunView.recentRows(h,r,esc):
       (x?runnerDetailBody(r,p,x):'<div class="empty">馬情報を取得中です。</div>'))
     +'</section></main>'+cinematicFooter()+'</div>'
@@ -2559,32 +2567,6 @@ function betDetailPage(r,p){
   return '<div class="smart-shell bet-detail-page-shell">'+raceSubpageTopBar(r,'おすすめ買い目')
     +'<main class="smart-main smart-race-page"><section class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section></main>'
     +cinematicFooter()+'</div>'
-}
-function sixStageAnalysisPanel(r){
-  var unified=r&&r.predictionStatus==='unified-reference-ready'&&r.unifiedForecast&&
-    r.unifiedForecast.receiptSha256&&r.predictionModelVersion===r.unifiedForecast.modelVersion;
-  var receipt=unified?r.unifiedForecast:null;
-  var marks=receipt&&Array.isArray(receipt.marks)?receipt.marks:[];
-  var exactlyOne=marks.filter(function(x){return x&&x.markSymbol==='◎'}).length===1;
-  var calibrated=!!(receipt&&receipt.probabilitiesCalibrated===true);
-  var video=!!(receipt&&receipt.videoIdentityValidated===true);
-  var plan=receipt&&receipt.ticketPlan||{};
-  var ticketReady=!!(receipt&&exactlyOne&&plan.items&&plan.items.length&&
-    plan.status!=='見送り');
-  var stages=[
-    ['① 能力分析',receipt?'同一レシートで分析済み':'学習済みモデル・検証済み入力待ち'],
-    ['② 映像分析',video?'検証済みデータを適用':'未適用・検証待ち'],
-    ['③ 展開分析',receipt?'通常隊列・前争い・後方待機を比較（発生頻度は未検証）':'未適用・検証待ち'],
-    ['④ 確率計算',receipt?(calibrated?'校正済み':'勝率・3着内率：未校正'):'未算出・未校正'],
-    ['⑤ 印',exactlyOne?'同一レシートから決定（◎1頭）':'見送り（有効な予測レシートなし）'],
-    ['⑥ 買い目',ticketReady?'同一レシートの参考候補（購入推奨・保証なし）':'見送り（条件未充足・購入推奨なし）']
-  ];
-  return '<section class="card arv-six-stage" aria-label="新方式・6段階分析">'+
-    '<h2>新方式・6段階分析</h2>'+
-    (receipt?'<p class="muted">発走前予測レシート：'+esc(String(receipt.receiptSha256).slice(0,12))+'…</p>':
-      '<p class="muted">検証済み予測レシートなし。旧方式への切り替えは行いません。</p>')+
-    stages.map(function(x){return '<div class="arv-six-stage-row" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,.25)"><b>'+esc(x[0])+'</b><div class="muted">'+esc(x[1])+'</div></div>'}).join('')+
-    '<p class="muted">未校正の確率には的中・回収率の保証はありません。</p></section>';
 }
 function renderRace(){
   var r=applySummaryEnvironment(mergeResultHorseFields(state.race)),p=null,predictionError=null;
@@ -2630,7 +2612,7 @@ function renderRace(){
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      '<div class="smart-race-content">'+sixStageAnalysisPanel(r)+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
+      '<div class="smart-race-content">'+content+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+
     '</main>'+ 
     cinematicFooter()+
   '</div>'
@@ -2820,7 +2802,8 @@ function paceStageJumpNav(active){
     +'</nav>'
 }
 function paceStagePack(p,key){
-  var plan=activeScenarioPlan(p)||p.plan||{},st=((plan.stages||[]).find(function(z){return String(z&&z.key||'')===key}))||{};
+  var aliases={first:'start',turn3:'turn3',turn4:'turn4',straight:'straight'},wanted=aliases[key]||key,
+      plan=activeScenarioPlan(p)||p.plan||{},st=((plan.stages||[]).find(function(z){return String(z&&z.key||'')===wanted||String(z&&z.key||'')===key}))||{};
   return (st.pack||[]).slice()
 }
 function paceFormationDiagram(r,p,cfg){

@@ -194,6 +194,63 @@ def generate(race, model, *, now=None):
                         "reason": "同一モデルの条件付き順序分布と実オッズによる参考候補。実測校正・ROI保証なし"}
         except (KeyError, ValueError, TypeError, OverflowError):
             pass
+    # Keep the six-step contract explicit in the stored receipt.  Every stage
+    # is a projection of this same prediction; the UI must not recompute any
+    # rank, probability, mark, or ticket on the device.  Video remains a
+    # separately gated research channel until horse identity is independently
+    # reviewed, so an absent video source is represented as unavailable.
+    ability_stage = {
+        "status": "observed-history",
+        "modelVersion": MODEL_VERSION,
+        "horseCount": len(rows),
+        "completeHistoryCount": sum(1 for row in rows if row.get("careerComplete") is True),
+    }
+    video_stage = {
+        "status": "not-applied",
+        "researchOnly": True,
+        "identityValidated": False,
+        "reason": "外部レビュー済みの全馬識別映像が未登録のため、予想へ反映していません",
+    }
+    scenario_stage = {
+        "status": "positional-sensitivity",
+        "scenarios": scenario_ids,
+        "frequencyMeasured": False,
+        "modelVersion": MODEL_VERSION,
+    }
+    probability_stage = {
+        "status": "uncalibrated",
+        "scenarioCount": len(scenarios),
+        "calibrated": False,
+        "modelVersion": MODEL_VERSION,
+    }
+    marks_stage = {
+        "status": "mechanical-single-source",
+        "uniqueHonmei": True,
+        "modelVersion": MODEL_VERSION,
+    }
+    tickets_stage = {
+        "status": bets["status"],
+        "sameModelAndMarks": bets["sameModelAndMarks"],
+        "researchOnly": True,
+        "items": len(bets["items"]),
+    }
+    # The four-panel race-flow view consumes the same scenario order used by
+    # the forecast.  Keep this as transport data in the receipt so the client
+    # only renders it and never invents a second pace ranking.
+    scenario_by_id = {str(s.get("id")): s for s in scenarios if isinstance(s, dict)}
+    usual_order = (scenario_by_id.get("usual") or scenarios[0] if scenarios else {}).get("orders") or []
+    forward_order = (scenario_by_id.get("forward") or scenario_by_id.get("usual") or (scenarios[0] if scenarios else {})).get("orders") or usual_order
+    held_order = (scenario_by_id.get("held-up") or scenario_by_id.get("usual") or (scenarios[0] if scenarios else {})).get("orders") or usual_order
+    def stage_pack(events):
+        event = events[0] if events else {}
+        order = event.get("order") if isinstance(event, dict) else []
+        return [{"no": int(no), "lane": ((idx % 5) - 2)} for idx, no in enumerate(order or [])]
+    pace_stages = [
+        {"key": "start", "pack": stage_pack(forward_order)},
+        {"key": "turn3", "pack": stage_pack(usual_order)},
+        {"key": "turn4", "pack": stage_pack(held_order)},
+        {"key": "straight", "pack": stage_pack(usual_order)},
+    ]
     product = {
         "version": VERSION, "raceId": race["id"], "raceDate": race["date"],
         "circuit": race["circuit"], "modelFamily": race_family(race),
@@ -202,7 +259,15 @@ def generate(race, model, *, now=None):
         "capturedAt": now.isoformat(), "trainedThrough": training["lastDate"],
         "modelVersion": MODEL_VERSION, "modelHash": model["modelHash"],
         "roster": roster, "marks": marks, "honmeiHorseNumber": head,
-        "pace": pace, "ticketPlan": bets,
+        "pace": pace, "paceStages": pace_stages, "ticketPlan": bets,
+        "analysisStages": {
+            "ability": ability_stage,
+            "video": video_stage,
+            "pace": scenario_stage,
+            "probability": probability_stage,
+            "marks": marks_stage,
+            "tickets": tickets_stage,
+        },
         "researchOnly": True, "probabilitiesCalibrated": False,
         "videoIdentityValidated": False, "humanOverrides": False,
         "source": "date-held-out-per-circuit-learned-whole-career-model",
