@@ -9,6 +9,7 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
       - tests/test_kikka_urgent_preoff.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
+      - scripts/arvexq_today_live_marks_audit.cjs
       - scripts/arvexq_kikka_production_visible_smoke.mjs
       - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
@@ -20,6 +21,7 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
       - tests/test_kikka_urgent_preoff.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
+      - scripts/arvexq_today_live_marks_audit.cjs
       - scripts/arvexq_kikka_production_visible_smoke.mjs
       - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
@@ -58,6 +60,10 @@ jobs:
         if: github.event_name == 'pull_request'
         continue-on-error: true
         run: node scripts/arvexq_kikka_production_visible_smoke.mjs
+      - name: Survey remaining real JRA/NAR forecast marks from D1
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: node scripts/arvexq_today_live_marks_audit.cjs
       - name: Dry-run only target Kyoto 11R from D1 on PR
         if: github.event_name == 'pull_request'
         run: |
