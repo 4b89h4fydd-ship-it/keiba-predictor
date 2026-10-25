@@ -20,10 +20,9 @@ def test_postrace_keeps_original_stage64_and_original_input():
     source = frozen()
     before = deepcopy(source)
     out = public_race(source)
-    assert out['predictionStatus'] == 'ready'
-    assert out['recommendedBets'] == before['recommendedBets']
-    assert out['predictionMarks'] == before['predictionMarks']
-    assert [x['predMark'] for x in out['horses'][:5]] == list('◎○▲△☆')
+    assert out['predictionStatus'] == 'disabled'
+    assert 'recommendedBets' not in out
+    assert 'predictionMarks' not in out
     assert source == before
 
 
