@@ -86,3 +86,21 @@ def test_projection_of_stored_fusion_original_never_forges_postoff_pick():
     assert published["recommendedBets"]==saved["recommendedBets"]
     assert published["predictionModelVersion"]==VERSION
     assert "fusionInputs" not in published
+
+
+def test_fusion_drops_stale_marks_on_unmarked_runners():
+    fitted=train_and_validate(sixty(),circuit="地方",target_date="2026-10-24")
+    detail=target()
+    for horse in detail["horses"]:
+        horse["predMark"]="◎"
+        horse["mark"]="○"
+    with patch("scripts.arvexq_apply_learned_overlay.may_create_prerace_prediction",
+               return_value=True):
+        out,report=apply({"details":[detail]},{"fusion":{"地方":fitted}},now=NOW)
+    assert report["fusionPublished"]==[detail["id"]],report
+    saved=out["details"][0]
+    by_no={m["horseNumber"]:m["mark"] for m in saved["predictionMarks"]}
+    assert len(by_no)==5
+    for horse in saved["horses"]:
+        assert horse["predMark"]==by_no[horse["horseNumber"]]
+        assert "mark" not in horse
