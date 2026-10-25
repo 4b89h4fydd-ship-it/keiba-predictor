@@ -296,10 +296,8 @@ def predict_model(detail, model):
     base = race_evidence(detail)
     missing = [r for r in base if not r['observedStarts']]
     if len(base) < 3 or (
-            missing and (
-                model['training'].get('allowMissingStarts') is not True
-                or any(not r.get('debutNoHistory') for r in missing)
-            )):
+            missing
+            and model['training'].get('allowMissingStarts') is not True):
         return {'version': VERSION, 'status': 'insufficient-history', 'reports': base, 'scenarios': []}
     for name,label in [('usual','通常の隊列'),('forward','前の位置を取り合う場合'),('held-up','想定より後ろに控える場合')]:
         rows = race_evidence(detail,scenario=name)
