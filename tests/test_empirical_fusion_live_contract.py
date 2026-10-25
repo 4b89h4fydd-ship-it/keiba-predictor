@@ -112,7 +112,8 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert set(ability["modelVersions"]) == set(METHODS)
     assert set(ability["value"]) == {str(i) for i in range(1, 6)}
     assert ability["value"]["1"]["pedigree"] == {
-        "sire": None, "damsire": None, "status": "unavailable"}
+        "sire": None, "dam": None, "damsire": None,
+        "observedFields": 0, "status": "unavailable"}
     assert ability["value"]["1"]["training"]["status"] == "unverified-no-numeric-inference"
     assert ability["value"]["1"]["recentRuns"] == 1
     assert ability["value"]["1"]["recentTop3Rate"] == 1.0
@@ -192,5 +193,17 @@ def test_phase_one_pedigree_observation_does_not_change_marks():
     updated = build_prediction(src, now=NOW)
     assert updated is not None
     assert updated["stages"]["ability"]["value"]["1"]["pedigree"] == {
-        "sire": "父系テスト", "damsire": "母父テスト", "status": "observed"}
+        "sire": "父系テスト", "dam": None, "damsire": "母父テスト",
+        "observedFields": 2, "status": "observed"}
     assert updated["predictionMarks"] == original["predictionMarks"]
+
+
+def test_maternal_pedigree_is_evidence_not_imputed_score():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0]["pedigree"] = {"dam": "母系テスト"}
+    revised = build_prediction(src, now=NOW)
+    assert revised["stages"]["ability"]["value"]["1"]["pedigree"] == {
+        "sire": None, "dam": "母系テスト", "damsire": None,
+        "observedFields": 1, "status": "observed"}
+    assert revised["predictionMarks"] == original["predictionMarks"]
