@@ -18,7 +18,8 @@ RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking
     # Internal race-video evidence stays server-side and is never served to the PWA.
     'visionResearch', 'visionResearchHistory', 'visionResearchAppliedToProductionPrediction',
     'visionResearchStatus', 'visionResearchHistoricalRuns',
-    'videoSha256', 'modelSha256', 'verifiedIdentityMap', 'calibration'))
+    'videoSha256', 'modelSha256', 'verifiedIdentityMap', 'calibration',
+    'kikkaCandidate'))
 
 def public_race(detail):
     """JSON race mapping -> detached facts; recursively remove retired outputs."""
