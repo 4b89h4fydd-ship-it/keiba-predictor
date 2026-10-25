@@ -3,7 +3,7 @@
 # Commercial predictions still require authorization for the SOURCE RACE VIDEO.
 transformers>=4.45,<5
 torch>=2.3,<3
-supervision>=0.24,<1
+supervision>=0.24,<0.28
 huggingface-hub>=0.26,<1
 opencv-python-headless>=4.10,<5
 pillow>=10,<13
