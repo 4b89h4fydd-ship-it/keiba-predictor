@@ -63,33 +63,33 @@ function choose(id){
  location.hash="race="+encodeURIComponent(id);window.scrollTo(0,0);
  const r=S.races.find(x=>String(x.race_id)===String(id));if(!r)return;
  const st=raceStatus(r);
- if(r.provisional){el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";return;}
+ if(r.provisional){el("detail").innerHTML="<button type='button' id='provisionalBack' class='back'>‹ レース一覧へ戻る</button><h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";document.getElementById('provisionalBack').onclick=()=>openVenue(r.venue);return;}
  if(r.prediction && (st.code==="confirmed"||st.code==="result")){
  const p=r.prediction;const marks=p.marks||{};
  const m=Object.entries(marks).map(([mark,n])=>mark+" "+n+" "+escape(r.entries.find(e=>Number(e.umaban)===Number(n))?.name||"")).join("　");
  const tt=(p.trifecta||[]).slice(0,12);
- el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>予想確定（暫定モデル）｜保存日時："+escape(r.prediction_confirmed_at)+"｜保存ID："+escape(r.prediction_snapshot_id)+"</p><div class='summary'>"+m+"</div><h3>保存済み全選手確率</h3><div class='scroll'><table><thead><tr><th>車番</th><th>1着確率</th><th>3着内確率</th></tr></thead><tbody>"+(p.riders||[]).map(x=>"<tr><td>"+x.number+"</td><td>"+fmt(x.p1)+"</td><td>"+fmt(x.p3)+"</td></tr>").join("")+"</tbody></table></div><h3>確定時点の3連単候補</h3><div class='scroll'><table><tbody>"+tt.map(x=>"<tr><td>"+escape(x.ticket)+"</td><td>"+fmt(x.p)+"</td></tr>").join("")+"</tbody></table></div>"+(Array.isArray(r.result_top3)?"<h3>結果確定</h3><p>"+r.result_top3.join("-")+"</p>":"")+"<p class='notice'>予想は出走前の保存値を表示し、結果取得後も上書きしません。未校正モデルで収益性は未検証です。</p>";
+ el("detail").innerHTML="<button type='button' id='savedBack' class='back'>‹ レース一覧へ戻る</button><h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>予想確定（暫定モデル）｜保存日時："+escape(r.prediction_confirmed_at)+"｜保存ID："+escape(r.prediction_snapshot_id)+"</p><div class='summary'>"+m+"</div><h3>保存済み全選手確率</h3><div class='scroll'><table><thead><tr><th>車番</th><th>1着確率</th><th>3着内確率</th></tr></thead><tbody>"+(p.riders||[]).map(x=>"<tr><td>"+x.number+"</td><td>"+fmt(x.p1)+"</td><td>"+fmt(x.p3)+"</td></tr>").join("")+"</tbody></table></div><h3>確定時点の3連単候補</h3><div class='scroll'><table><tbody>"+tt.map(x=>"<tr><td>"+escape(x.ticket)+"</td><td>"+fmt(x.p)+"</td></tr>").join("")+"</tbody></table></div>"+(Array.isArray(r.result_top3)?"<h3>結果確定</h3><p>"+r.result_top3.join("-")+"</p>":"")+"<p class='notice'>予想は出走前の保存値を表示し、結果取得後も上書きしません。未校正モデルで収益性は未検証です。</p>";
  return;
 }
- const riders=r.entries.map(e=>({n:Number(e.umaban),name:e.name,score:Number(e.score),style:e.style,win:Number(e.win_rate)/100,place:Number(e.top3_rate)/100,comment:e.comment||""}));
- if(riders.some(x=>!Number.isFinite(x.score)||!Number.isFinite(x.win)||!Number.isFinite(x.place))){el("detail").textContent="必要な成績に欠損があるため推定不能です。";return}
- const avg=riders.reduce((s,x)=>s+x.score,0)/riders.length;
- // コメントでの連係相手はユーザーに表示する。自動解釈の誤りを避け、計算には使用しない。
- riders.forEach(x=>{x.w=Math.exp(Math.max(-9,Math.min(9,(x.score-avg)/8 + 1.1*(x.win-.15)+.5*(x.place-.4)+(x.style==="逃"?.08:0))))});
- const combos=[];const sum=riders.reduce((s,x)=>s+x.w,0);
- for(const a of riders)for(const b of riders)for(const c of riders){if(a===b||b===c||a===c)continue;combos.push({key:a.n+"-"+b.n+"-"+c.n,p:a.w/sum*b.w/(sum-a.w)*c.w/(sum-a.w-b.w),a,b,c})}
- const total=combos.reduce((s,x)=>s+x.p,0);if(Math.abs(total-1)>1e-7){el("detail").textContent="計算エラー";return}
- riders.forEach(x=>{x.p1=combos.filter(c=>c.a===x).reduce((s,c)=>s+c.p,0);x.p3=combos.filter(c=>c.a===x||c.b===x||c.c===x).reduce((s,c)=>s+c.p,0)});
- riders.sort((a,b)=>b.p1-a.p1);combos.sort((a,b)=>b.p-a.p);
- const marks=["◎","○","▲","△","☆","","","",""];
- el("detail").innerHTML=
- '<h2>'+escape(r.venue)+' '+r.race_no+'R <span class="sub">'+escape(r.start_time||"")+'発走</span></h2><div class="notice">状態：'+st.label+'（'+st.detail+'）。「確定」は発走前に保存された予想か結果・払戻の記録がある場合のみ表示します。</div>'+
- '<div class="summary"><strong>'+marks[0]+' '+riders[0].n+' '+escape(riders[0].name)+'</strong><span>○ '+riders[1].n+' '+escape(riders[1].name)+'　▲ '+riders[2].n+' '+escape(riders[2].name)+'</span></div>'+
- '<h3>全選手の自動分析</h3><div class="scroll"><table><thead><tr><th>印・車番・選手</th><th>得点</th><th>直近1着率</th><th>直近3着内率</th><th>推定1着</th><th>推定3着内</th><th>コメント</th></tr></thead><tbody>'+
- riders.map((x,i)=>'<tr><td>'+marks[i]+' '+x.n+' '+escape(x.name)+'</td><td>'+x.score.toFixed(2)+'</td><td>'+fmt(x.win)+'</td><td>'+fmt(x.place)+'</td><td>'+fmt(x.p1)+'</td><td>'+fmt(x.p3)+'</td><td>'+escape(x.comment)+'</td></tr>').join("")+'</tbody></table></div>'+
- '<h3>3連単候補（全'+combos.length+'通り計算）</h3><div class="scroll"><table><thead><tr><th>買い目</th><th>モデル上の確率</th><th>損益分岐オッズ</th></tr></thead><tbody>'+
- combos.slice(0,12).map(x=>'<tr><td><b>'+x.key+'</b></td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
- '<p class="notice">未校正の暫定モデル。得点・直近率・脚質を使用。ライン・バンク・展開の学習済み統合、実オッズ自動取得、期待値購入判定は未実装。結果データを入力に使用していません。第三者の出走表は更新・欠損の可能性があります。</p>';
+
+ let p;try{p=calculateKeirin(r)}catch(e){el("detail").textContent="計算不可："+e.message;return}
+ const markItems=Object.entries(p.marks).map(([m,n])=>m+n+" "+escape(r.entries.find(e=>+e.umaban===n)?.name||"")).join("　");
+ const lines=p.lines.map(a=>a.join("－")).join(" ／ ");
+ el("detail").innerHTML='<button type="button" class="back" id="detailBack">‹ レース一覧へ戻る</button>'+
+ '<h2>'+escape(r.venue)+' '+r.race_no+'R <span class="sub">'+escape(r.start_time||"")+'発走</span></h2>'+
+ '<div class="notice">状態：'+st.label+'｜自動計算は暫定予想。保存・確定済みの予想ではありません。</div>'+
+ '<div class="summary"><strong>'+markItems+'</strong></div>'+
+ '<h3>ライン・展開予想</h3><p>想定ライン：'+escape(lines)+'</p><p>'+escape(p.scenario)+'</p>'+
+ '<p class="sub">バンク '+p.track.length+'m／みなし直線 '+p.track.straight+'m。ラインはコメントから推定。未確認車番 '+(p.uncertain_line_members.join(",")||"なし")+'</p>'+
+ '<h3>全選手の能力・確率</h3><div class="scroll"><table><thead><tr><th>車番・選手</th><th>得点</th><th>1着推定</th><th>3着内推定</th><th>選手コメント</th></tr></thead><tbody>'+
+ p.riders.map(x=>'<tr><td>'+x.number+' '+escape(x.name)+'</td><td>'+x.score.toFixed(2)+'</td><td>'+fmt(x.p1)+'</td><td>'+fmt(x.p3)+'</td><td>'+escape(x.comment)+'</td></tr>').join("")+'</tbody></table></div>'+
+ '<h3>3連単候補（'+p.trifecta.length+'通り計算）</h3><div class="scroll"><table><thead><tr><th>買い目</th><th>推定的中率</th><th>損益分岐オッズ</th></tr></thead><tbody>'+
+ p.trifecta.slice(0,15).map(x=>'<tr><td>'+x.ticket+'</td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
+ '<h3>期待値チェック</h3><div class="controls"><div><label>3連単候補</label><select id="evTicket">'+p.trifecta.slice(0,30).map(x=>'<option value="'+x.ticket+'">'+x.ticket+'</option>').join("")+'</select></div><div><label>実オッズ（倍）</label><input type="number" id="evOdds" inputmode="decimal" placeholder="オッズを入力" min="1" step="0.1"></div><button type="button" id="evCheck">期待値計算</button></div><p id="evAnswer" class="sub">実オッズ未取得のため、自動購入判定は行いません。</p>'+
+ '<p class="notice">'+escape(p.limitations)+' このモデルは過去成績による校正前であり、的中率・回収率は未検証です。</p>';
+ document.getElementById("detailBack").onclick=()=>openVenue(r.venue);
+ document.getElementById("evCheck").onclick=()=>{const selected=p.trifecta.find(x=>x.ticket===el("evTicket").value);const odd=Number(el("evOdds").value);el("evAnswer").textContent=!el("evOdds").value||!Number.isFinite(odd)||odd<1?"実オッズを入力してください。":"期待回収率 "+(selected.p*odd*100).toFixed(1)+"%。理論上の損益分岐 "+(1/selected.p).toFixed(1)+"倍（モデル未校正・購入推奨ではありません）"};
+
 }
 el("date").value=today();el("load").onclick=load;el("venues").onchange=()=>openVenue(el("venues").value);el("raceFilter").onchange=showRaces;
 el("backVenues").onclick=()=>{location.hash="";renderVenues();window.scrollTo(0,0)};
