@@ -1,6 +1,6 @@
 """Video horse detection/tracking -> provenance-checked ARVEXQ measurements.
 
-YOLO detects COCO-class horses and ByteTrack assigns temporary tracker IDs.
+Apache-2.0 RT-DETR detects COCO-class horses; MIT ByteTrack assigns temporary IDs.
 A temporary tracker ID is NEVER assumed to be an entry/horse number. An
 independently reviewed segment-specific identity map is required before the
 detection is admitted as horse-level evidence. Homography must be reviewed
@@ -38,6 +38,8 @@ def _number(value: Any) -> float:
 
 def _digest(path: Path) -> str:
     result = hashlib.sha256()
+    if path.is_dir():
+        path = path / "model.safetensors"
     with path.open("rb") as file:
         while chunk := file.read(1024 * 1024):
             result.update(chunk)
@@ -164,8 +166,9 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
     weights = Path(model_path)
     if not path.is_file() or not path.stat().st_size:
         raise ValueError("readable nonempty local video required")
-    if not weights.is_file() or not weights.stat().st_size:
-        raise ValueError("explicit local model weights required; automatic download disabled")
+    if not (weights.is_dir() and (weights / "model.safetensors").is_file()) and (
+            not weights.is_file() or not weights.stat().st_size):
+        raise ValueError("local model directory or explicit test weights required; video step never downloads")
     if capture_factory is None:
         try:
             import cv2
@@ -173,11 +176,8 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
             raise RuntimeError("OpenCV required: install requirements-vision.txt") from exc
         capture_factory = cv2.VideoCapture
     if model_factory is None:
-        try:
-            from ultralytics import YOLO
-        except ImportError as exc:
-            raise RuntimeError("Ultralytics required: install requirements-vision.txt") from exc
-        model_factory = YOLO
+        from arvexq.vision.open_detector import RTDetrByteTracker
+        model_factory = RTDetrByteTracker
     cap = capture_factory(str(path))
     try:
         if not cap.isOpened():
@@ -195,6 +195,8 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
         frame_index = 0
         cut_index = 0
         model = model_factory(str(weights))
+        if hasattr(model, "set_frame_rate"):
+            model.set_frame_rate(fps / stride)
         while True:
             success, image = cap.read()
             if not success:
@@ -206,9 +208,11 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
             while cut_index < len(cuts) and t >= cuts[cut_index]:
                 cut_index += 1
                 model = model_factory(str(weights))
+                if hasattr(model, "set_frame_rate"):
+                    model.set_frame_rate(fps / stride)
             camera = f"camera-{cut_index}"
             inference = model.track(image, persist=True, classes=[COCO_HORSE_CLASS],
-                                    tracker="bytetrack.yaml", conf=0.25, verbose=False)
+                                    tracker="bytetrack-mit", conf=0.25, verbose=False)
             tracks = _extract_boxes(inference[0] if inference else None)
             frame = {"timeSeconds": round(t, 6), "cameraId": camera, "horses": []}
             seen = set()
@@ -273,8 +277,8 @@ def collect_video(video_path: str | Path, config: dict[str, Any], *,
         "source": {"sha256": _digest(path), "rightsVerified": True,
                    "calibrationVerified": True,
                    "coordinateSystem": "ground-plane-meters"},
-        "model": {"weightsSha256": _digest(weights), "detector": "ultralytics-yolo",
-                  "horseClassId": COCO_HORSE_CLASS, "tracker": "bytetrack"},
+        "model": {"weightsSha256": _digest(weights), "detector": "apache-rtdetr-r50vd",
+                  "horseClassId": COCO_HORSE_CLASS, "tracker": "supervision-bytetrack-mit"},
         "frames": frames,
         "referencePathMetersByHorse": config.get("referencePathMetersByHorse") or {},
         "capture": {"originalDecodedFrames": frame_index, "sampledFrames": len(frames),
