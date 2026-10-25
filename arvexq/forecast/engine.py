@@ -180,6 +180,12 @@ def build_prediction(facts, now=None):
             "sameSurfaceQuality": career["sameSurfaceQuality"],
             "sameGoingQuality": career["sameGoingQuality"],
             "fullCareerRuns": career["datedRuns"],
+            "careerTop3Rate": career["top3Rate"],
+            "careerPeakFinishQuality": career["peakFinishQuality"],
+            "careerConsistency": career["stability"],
+            "classEvidenceRuns": career["classObserved"],
+            "sectionalEvidenceRuns": career["sectionalObserved"],
+            "representativeComparable": career["representativeComparable"],
             "historyCoverage": career["coverageStatus"],
             "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
         }
