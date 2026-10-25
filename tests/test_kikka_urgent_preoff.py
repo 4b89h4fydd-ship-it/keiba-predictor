@@ -112,6 +112,23 @@ class KikukaPreoffTests(TestCase):
         with self.assertRaisesRegex(ValueError, "immutable"):
             overlay_preserving_facts(row, row, row, candidate(row), PRE)
 
+    def test_live_sync_preserves_first_and_subsequent_kikka_seals(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        previous = facts()
+        initial = deepcopy(previous)
+        initial['kikkaCandidate'] = candidate(previous)
+        first = protect_detail(previous, initial)
+        self.assertEqual(candidate_marks(first), initial['kikkaCandidate']['marks'])
+        later = deepcopy(first)
+        later.pop('kikkaCandidate')
+        later['oddsUpdatedAt'] = 'new-market'
+        saved = protect_detail(first, later)
+        self.assertEqual(saved['kikkaCandidate'], first['kikkaCandidate'])
+        forged = deepcopy(saved)
+        forged['kikkaCandidate'] = candidate(previous, stamped='2026-10-25T15:41:00+09:00')
+        again = protect_detail(saved, forged)
+        self.assertEqual(again['kikkaCandidate'], first['kikkaCandidate'])
+
     def test_earlier_only_jra_training_sources(self):
         import scripts.arvexq_kikka_urgent as urgent
         mock_races = [
