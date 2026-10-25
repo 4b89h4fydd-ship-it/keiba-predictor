@@ -5,6 +5,8 @@ name: ARVEXQ Unified Preoff Production
     branches: [main]
     paths:
       - scripts/arvexq_unified_preoff.py
+      - scripts/arvexq_unified_production_smoke.cjs
+      - scripts/arvexq_unified_frontend_smoke.cjs
       - arvexq/prediction/unified_product.py
       - scripts/arvexq_protect_sync.py
       - .github/workflows/arvexq-unified-preoff.yml
@@ -12,6 +14,8 @@ name: ARVEXQ Unified Preoff Production
     branches: [main]
     paths:
       - scripts/arvexq_unified_preoff.py
+      - scripts/arvexq_unified_production_smoke.cjs
+      - scripts/arvexq_unified_frontend_smoke.cjs
       - arvexq/prediction/unified_product.py
       - scripts/arvexq_protect_sync.py
       - .github/workflows/arvexq-unified-preoff.yml
@@ -66,6 +70,9 @@ jobs:
             python scripts/arvexq_unified_preoff.py ${REQUESTED_DATE:+--date "$REQUESTED_DATE"} \
               --output unified-preoff-report.json --publish
           fi
+      - name: Check exact live D1-to-iPhone marks and ticket display after publication
+        if: github.event_name != 'pull_request'
+        run: node scripts/arvexq_unified_production_smoke.cjs unified-preoff-report.json
       - name: Archive counts and missing evidence, not full paid forecasts
         if: always()
         uses: actions/upload-artifact@v4
