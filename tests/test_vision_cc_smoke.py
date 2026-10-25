@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
+from scripts.arvexq_vision_track_ablation import compare
 from scripts.arvexq_vision_cc_smoke import (
     ATTRIBUTION, LICENSE_URL, VERSION, SOURCE_URL,
     download_cc_sample, run_smoke,
@@ -105,6 +106,30 @@ class LicensedRaceSmokeTests(TestCase):
         self.assertFalse(result["japaneseRaceForecastAccuracyProved"])
         self.assertFalse(result["predictionApplied"])
         self.assertTrue(cap.released)
+
+    def test_dense_track_proxy_and_no_betting_claim(self):
+        with TemporaryDirectory() as td:
+            clip = Path(td) / "sample.webm"
+            clip.write_bytes(b"local fixture")
+            baseline = run_smoke(
+                clip, Path(td), max_frames=4,
+                capture_factory=lambda p: Capture(), model_factory=FakeModel)
+            dense = run_smoke(
+                clip, Path(td), max_frames=8, sample_hz=2,
+                capture_factory=lambda p: Capture(), model_factory=FakeModel)
+        self.assertEqual(baseline["sampleRateHz"], 1)
+        self.assertEqual(dense["sampleRateHz"], 2)
+        self.assertEqual(dense["trackedFrameMeasurements"][0]["seconds"], 1.0)
+        self.assertEqual(dense["trackedFrameMeasurements"][-1]["seconds"], 4.5)
+        self.assertEqual(baseline["trackContinuityProxies"]["tracksWithAtLeast3Detections"], 1)
+        self.assertEqual(dense["trackContinuityProxies"]["longestConsecutiveSampledFrames"], 8)
+        report = compare(baseline, dense)
+        self.assertEqual(report["dense"]["temporaryTrackIds"], 1)
+        self.assertFalse(report["improvedHorseIdentityProven"])
+        self.assertIsNone(report["horseIdentitySwitchRate"])
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            modified = dict(dense, sourceVideoSha256="b" * 64)
+            compare(baseline, modified)
 
     def test_direct_cc_download_with_bounded_size(self):
         with TemporaryDirectory() as td:
