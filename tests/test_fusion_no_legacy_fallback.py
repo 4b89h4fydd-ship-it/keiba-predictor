@@ -68,3 +68,30 @@ def test_failed_fusion_does_not_promote_obsolete_model():
     assert "recommendedBets" not in result["details"][0]
     assert report["skipped"][detail["id"]] == "fusion-inputs-invalid"
     assert "not enough real preoff evidence" in report["fusionErrors"][detail["id"]]
+
+
+def test_stage64_saved_original_is_not_promoted_into_active_public_projection():
+    from arvexq.forecast.publication import public_race
+
+    d = _race()
+    d["date"] = "2026-10-24"
+    d["predictionStatus"] = "ready"
+    d["predictionModelVersion"] = "arvexq-stage64-product-v1"
+    d["prediction"] = {
+        "modelVersion": "arvexq-stage64-product-v1",
+        "predictionStatus": "ready",
+        "productionEligible": True,
+        "raceId": d["id"],
+        "date": d["date"],
+    }
+    d["predictionMarks"] = [
+        {"horseNumber": n, "mark": mark}
+        for n, mark in enumerate(("◎", "○", "▲", "△", "☆"), start=1)
+    ]
+    d["recommendedBets"] = []
+    old = dict(d)
+    projected = public_race(d)
+    assert projected["predictionStatus"] == "disabled"
+    assert "predictionMarks" not in projected
+    assert "recommendedBets" not in projected
+    assert d["predictionMarks"] == old["predictionMarks"]
