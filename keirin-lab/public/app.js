@@ -79,11 +79,11 @@ function choose(id){
  '<h2>'+escape(r.venue)+' '+r.race_no+'R <span class="sub">'+escape(r.start_time||"")+'発走</span></h2>'+
  '<div class="notice">状態：'+st.label+'｜自動計算は暫定予想。保存・確定済みの予想ではありません。</div>'+
  '<div class="summary"><strong>'+markItems+'</strong></div>'+
- '<h3>ライン・展開予想</h3><p>想定ライン：'+escape(lines)+'</p><p>'+escape(p.scenario)+'</p>'+
+ '<h3>① 能力分析</h3><p>競走得点・近況・脚質を評価。</p><h3>② 映像分析</h3><p>'+(p.stages.video.used?'映像指標を反映':'映像未取得・補正なし')+'</p><h3>③ 展開分析</h3><p>スタート → 打鐘 → 最終バック → 最終コーナー → 直線</p><h3>想定ライン・展開</h3><p>想定ライン：'+escape(lines)+'</p><p>'+escape(p.scenario)+'</p>'+
  '<p class="sub">バンク '+p.track.length+'m／みなし直線 '+p.track.straight+'m。ラインはコメントから推定。未確認車番 '+(p.uncertain_line_members.join(",")||"なし")+'</p>'+
- '<h3>全選手の能力・確率</h3><div class="scroll"><table><thead><tr><th>車番・選手</th><th>得点</th><th>1着推定</th><th>3着内推定</th><th>選手コメント</th></tr></thead><tbody>'+
+ '<h3>④ 確率計算・⑤ 印</h3><h3>全選手の能力・確率</h3><div class="scroll"><table><thead><tr><th>車番・選手</th><th>得点</th><th>1着推定</th><th>3着内推定</th><th>選手コメント</th></tr></thead><tbody>'+
  p.riders.map(x=>'<tr><td>'+x.number+' '+escape(x.name)+'</td><td>'+x.score.toFixed(2)+'</td><td>'+fmt(x.p1)+'</td><td>'+fmt(x.p3)+'</td><td>'+escape(x.comment)+'</td></tr>').join("")+'</tbody></table></div>'+
- '<h3>3連単候補（'+p.trifecta.length+'通り計算）</h3><div class="scroll"><table><thead><tr><th>買い目</th><th>推定的中率</th><th>損益分岐オッズ</th></tr></thead><tbody>'+
+ '<h3>⑥ 買い目・3連単候補（'+p.trifecta.length+'通り計算）</h3><div class="scroll"><table><thead><tr><th>買い目</th><th>推定的中率</th><th>損益分岐オッズ</th></tr></thead><tbody>'+
  p.trifecta.slice(0,15).map(x=>'<tr><td>'+x.ticket+'</td><td>'+fmt(x.p)+'</td><td>'+(1/x.p).toFixed(1)+'倍</td></tr>').join("")+'</tbody></table></div>'+
  '<h3>期待値チェック</h3><div class="controls"><div><label>3連単候補</label><select id="evTicket">'+p.trifecta.slice(0,30).map(x=>'<option value="'+x.ticket+'">'+x.ticket+'</option>').join("")+'</select></div><div><label>実オッズ（倍）</label><input type="number" id="evOdds" inputmode="decimal" placeholder="オッズを入力" min="1" step="0.1"></div><button type="button" id="evCheck">期待値計算</button></div><p id="evAnswer" class="sub">実オッズ未取得のため、自動購入判定は行いません。</p>'+
  '<p class="notice">'+escape(p.limitations)+' このモデルは過去成績による校正前であり、的中率・回収率は未検証です。</p>';
