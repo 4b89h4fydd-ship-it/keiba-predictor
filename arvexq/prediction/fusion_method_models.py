@@ -18,7 +18,7 @@ from arvexq.prediction.mineta_public_pace import public_pace_factors
 from arvexq.prediction.past_performance import analyze_past_performance
 from arvexq.prediction.empirical_fusion import _timestamp
 
-VERSION = "arvexq-fusion-observed-method-buckets-v1"
+VERSION = "arvexq-fusion-observed-method-buckets-v2-video"
 METHODS = ("mineta", "expert:form", "expert:course")
 HISTORICAL_PRIOR = 0.5  # symmetric Jeffreys smoothing, NOT a ranking weight
 
@@ -48,7 +48,30 @@ def _binrate(value):
     return "none" if value == 0 else "low" if value < .34 else "mid" if value < .67 else "high"
 
 
-def _bucket(method, pace, entry, analysis):
+def _verified_video_bucket(horse):
+    """Summarize only externally reviewed, prior-race video evidence.
+
+    Missing or provisional OCR/identity evidence remains ``unknown``. The
+    bucket is learned from earlier labelled races; it is never a hand-written
+    score or a fabricated correction.
+    """
+    rows = horse.get("visionResearchHistory") or []
+    valid = [row for row in rows if isinstance(row, dict)
+             and row.get("researchOnly") is True
+             and row.get("identitySource") == "externally-reviewed"
+             and type(row.get("trackingCoverage")) in (int, float)
+             and row["trackingCoverage"] >= .8]
+    if not valid:
+        return {"status": "unknown", "count": 0}
+    return {
+        "status": "verified",
+        "count": len(valid),
+        "slowdown": any(int(row.get("possibleSlowdownEvents") or 0) > 0 for row in valid),
+        "distanceLoss": any(row.get("distanceLossMeters") is not None for row in valid),
+    }
+
+
+def _bucket(method, pace, entry, analysis, video):
     if method == "mineta":
         no = entry["horseNumber"]
         neighbors = {n for pair in pace["adjacentForwardCandidates"] for n in pair}
@@ -66,6 +89,9 @@ def _bucket(method, pace, entry, analysis):
             "marginPresent": analysis["marginObservedRuns"] > 0,
             "opponentLevelPresent": analysis["opponentLevelObservedRuns"] > 0,
             "frontFadeTwice": analysis["frontFadeCount"] >= 2,
+            "videoStatus": video["status"],
+            "videoSlowdown": video.get("slowdown"),
+            "videoDistanceLoss": video.get("distanceLoss"),
         }, sort_keys=True, ensure_ascii=False)
     if method == "expert:course":
         return json.dumps({
@@ -91,8 +117,9 @@ def observed_buckets(detail):
         # Its form and course buckets are explicitly "unknown"/zero-observed;
         # historical debutants train the corresponding prior probabilities.
         # Never invent a previous performance just to force five marks.
+        video = _verified_video_bucket(horse)
         for method in METHODS:
-            out[method][no] = _bucket(method, pace, by_no[no], analysis)
+            out[method][no] = _bucket(method, pace, by_no[no], analysis, video)
     return out
 
 

@@ -26,6 +26,7 @@ HORSE_PREOFF_KEYS = frozenset((
     "horseNumber", "name", "age", "sex", "frameNumber", "jockey",
     "trainer", "carriedWeight", "weight", "recentRaces", "allPastRuns",
     "careerArchive", "careerTransport", "pastRaces", "history", "runs",
+    "visionResearchHistory",
 ))
 RACE_PREOFF_KEYS = frozenset((
     "id", "date", "circuit", "track", "surface", "distance", "distanceM",

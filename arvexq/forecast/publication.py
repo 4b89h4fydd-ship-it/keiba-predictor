@@ -20,7 +20,7 @@ RETIRED_KEYS = frozenset(('aiEvaluation', 'integratedEvaluation', 'factorRanking
     'visionResearch', 'visionResearchHistory', 'visionResearchAppliedToProductionPrediction',
     'visionResearchStatus', 'visionResearchHistoricalRuns',
     'videoSha256', 'modelSha256', 'verifiedIdentityMap', 'calibration',
-    'kikkaCandidate'))
+    'visionResearch', 'visionResearchHistory', 'kikkaCandidate'))
 
 def public_race(detail):
     """JSON race mapping -> detached facts; recursively remove retired outputs."""

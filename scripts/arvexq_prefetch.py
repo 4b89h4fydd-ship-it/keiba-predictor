@@ -315,8 +315,20 @@ def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[
     vision_samples = sum(len(h.get("visionResearchHistory") or [])
                          for h in (out.get("horses") or []) if isinstance(h, dict))
     if vision_samples:
-        pm["visionResearchStatus"] = "internal-unvalidated-not-applied-to-marks"
+        verified_samples = sum(
+            1 for h in (out.get("horses") or []) if isinstance(h, dict)
+            for row in (h.get("visionResearchHistory") or [])
+            if isinstance(row, dict)
+            and row.get("researchOnly") is True
+            and row.get("identitySource") == "externally-reviewed"
+            and type(row.get("trackingCoverage")) in (int, float)
+            and row["trackingCoverage"] >= .8
+        )
+        pm["visionResearchStatus"] = (
+            "verified-historical-video-available"
+            if verified_samples else "provisional-video-not-applied")
         pm["visionResearchHistoricalRuns"] = vision_samples
+        pm["visionResearchVerifiedRuns"] = verified_samples
     active = active_horses(out)
     with_history = sum(
         1 for h in active

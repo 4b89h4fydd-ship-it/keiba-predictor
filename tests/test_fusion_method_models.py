@@ -4,8 +4,9 @@ from datetime import date, timedelta
 import pytest
 
 from arvexq.prediction.fusion_method_models import (
-    METHODS, fit_observed_methods, predict_observed_methods,
+    METHODS, fit_observed_methods, predict_observed_methods, observed_buckets,
 )
+import json
 
 OFF = "2026-10-24T12:00:00+09:00"
 CAPTURE = "2026-10-24T10:00:00+09:00"
@@ -85,3 +86,20 @@ def test_future_result_only_comes_from_validation_not_as_a_feature():
     models = fit_observed_methods(earlier, circuit="地方", target_date="2026-10-24")
     assert all(m["trainingThrough"] == "2026-09-30" for m in models.values())
     assert all(len(m["trainingRaceIds"]) == 30 for m in models.values())
+
+
+def test_reviewed_prior_video_is_a_fusion_feature_but_provisional_video_is_unknown():
+    current = race()
+    current["horses"][0]["visionResearchHistory"] = [{
+        "raceId": "nar-2026-08-01-園田-01", "raceDate": "2026-08-01",
+        "researchOnly": True, "identitySource": "externally-reviewed",
+        "trackingCoverage": .95, "possibleSlowdownEvents": 1,
+        "distanceLossMeters": 12.0,
+    }]
+    bucket = json.loads(observed_buckets(current)["expert:form"][1])
+    assert bucket["videoStatus"] == "verified"
+    assert bucket["videoSlowdown"] is True
+    assert bucket["videoDistanceLoss"] is True
+    current["horses"][0]["visionResearchHistory"][0]["identitySource"] = "automated-ocr-provisional"
+    unknown = json.loads(observed_buckets(current)["expert:form"][1])
+    assert unknown["videoStatus"] == "unknown"
