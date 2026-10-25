@@ -16,6 +16,8 @@ import html
 import json
 from pathlib import Path
 import re
+import time
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
@@ -57,21 +59,47 @@ def _license(metadata: dict) -> tuple[str, str, str, bool]:
     return short, link, artist, valid
 
 
+_LAST_API_CALL = 0.0
+
+
 def commons_api(params: dict) -> dict:
-    query = urlencode({"action": "query", "format": "json", "formatversion": "2", **params})
+    """Rate-limited Wikimedia API reader with bounded 429/5xx retries."""
+    global _LAST_API_CALL
+    query = urlencode({"action": "query", "format": "json",
+                       "formatversion": "2", **params})
     req = Request(API + "?" + query, headers={
-        "User-Agent": "ARVEXQ-research-source-audit/1.0 (GitHub keiba-predictor)",
+        "User-Agent": "ARVEXQ-source-audit/1.0 (https://github.com/4b89h4fydd-ship-it/keiba-predictor)",
         "Accept": "application/json"})
-    with urlopen(req, timeout=25) as response:
-        if hasattr(response, "geturl") and urlsplit(response.geturl()).hostname != "commons.wikimedia.org":
-            raise ValueError("Wikimedia API unexpected redirect")
-        body = response.read(2_000_001)
-    if len(body) > 2_000_000:
-        raise ValueError("Wikimedia API oversized response")
-    data = json.loads(body.decode("utf-8"))
-    if not isinstance(data, dict) or data.get("error"):
-        raise ValueError("Wikimedia API returned an error")
-    return data
+    for attempt in range(5):
+        # Commons is a volunteer-hosted site. Avoid request bursts in CI.
+        gap = time.monotonic() - _LAST_API_CALL
+        if gap < 1.0:
+            time.sleep(1.0 - gap)
+        _LAST_API_CALL = time.monotonic()
+        try:
+            with urlopen(req, timeout=25) as response:
+                if (hasattr(response, "geturl")
+                        and urlsplit(response.geturl()).hostname != "commons.wikimedia.org"):
+                    raise ValueError("Wikimedia API unexpected redirect")
+                body = response.read(2_000_001)
+            if len(body) > 2_000_000:
+                raise ValueError("Wikimedia API oversized response")
+            data = json.loads(body.decode("utf-8"))
+            if not isinstance(data, dict) or data.get("error"):
+                raise ValueError("Wikimedia API returned an error")
+            return data
+        except HTTPError as exc:
+            if exc.code not in (429, 500, 502, 503, 504) or attempt == 4:
+                raise
+            delay = [3, 6, 12, 18][attempt]
+            requested = exc.headers.get("Retry-After") if exc.headers else None
+            if requested is not None:
+                try:
+                    delay = max(delay, min(30, int(requested)))
+                except ValueError:
+                    pass
+            time.sleep(delay)
+    raise ValueError("Wikimedia retry budget exhausted")
 
 
 def _info(client, title: str) -> dict | None:
@@ -157,7 +185,8 @@ def discover(*, client=commons_api, max_categories: int = 20,
                 if not continuation:
                     break
             except Exception as exc:
-                errors.append({"category": category, "reason": type(exc).__name__})
+                errors.append({"category": category, "reason": type(exc).__name__,
+                               "httpStatus": getattr(exc, "code", None)})
                 break
         if limit_hit:
             break
