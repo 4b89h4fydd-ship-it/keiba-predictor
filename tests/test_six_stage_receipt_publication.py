@@ -20,13 +20,14 @@ def test_no_unverified_forecast_fallback():
     assert race == original
 
 
-def test_six_stage_ui_includes_safe_statuses():
+def test_race_ui_keeps_four_stage_pace_without_six_stage_explanation():
     js = (ROOT / "arvexq/ui/static/app.js").read_text(encoding="utf-8")
-    assert "新方式・6段階分析" in js
-    assert "未適用・検証待ち" in js
-    assert "未算出・未校正" in js
-    assert "見送り（条件未充足" in js
-    assert "sixStageAnalysisPanel(r)+content" in js
+    assert "function sixStageAnalysisPanel(" not in js
+    assert "sixStageAnalysisPanel(r)+content" not in js
+    assert "paceStageMenu(r,p)" in js
+    for phase in ("スタート", "3コーナー", "4コーナー", "ラスト"):
+        assert phase in js
+    assert "if(mark==='注')mark='';" in js
 
 
 def test_newcomers_are_not_mixed_with_flat_jumps_or_banei():
