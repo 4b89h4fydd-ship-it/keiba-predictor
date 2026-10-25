@@ -70,3 +70,20 @@ def test_retired_banei_and_jumps_are_not_cast_as_flat():
         source["track"], source["surface"] = track, surface
         with pytest.raises(ValueError, match="retired Banei"):
             public_pace_factors(source)
+
+
+def test_four_phase_evidence_does_not_invent_race_positions():
+    source = race()
+    source["horses"][0]["recentRaces"][0]["cornerPositions"] = [2, 3, 4, 5]
+    result = public_pace_factors(source)
+    assert result["phaseOrder"] == ["start", "thirdCorner", "fourthCorner", "straight"]
+    observed = result["horses"][0]["phaseEvidence"]
+    assert observed["start"]["observedPosition"] is None
+    assert observed["thirdCorner"]["observedPosition"] == 4
+    assert observed["fourthCorner"]["observedPosition"] == 5
+    assert observed["straight"]["observedFinish"] == 2
+    # Two-corner race history cannot be mislabelled as 3C/4C evidence.
+    missing = result["horses"][1]["phaseEvidence"]
+    assert missing["thirdCorner"]["status"] == "unavailable"
+    assert missing["fourthCorner"]["observedPosition"] is None
+    assert result["predictedPaceProbabilities"] is None
