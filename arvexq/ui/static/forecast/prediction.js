@@ -138,7 +138,10 @@
     // Universal race forecast: one BEFORE-OFF receipt for all panels.
     // UI does not invent a ranking, second pace opinion, or ticket.
     var unified=race&&race.unifiedForecast;
-    if(unified&&unified.version==='arvexq-unified-live-v1'&&
+    var hasFusion=race&&race.predictionStatus==='ready'&&race.prediction&&
+      race.prediction.modelVersion==='arvexq-empirical-fusion-v1'&&
+      race.predictionModelVersion==='arvexq-empirical-fusion-v1';
+    if(!hasFusion&&unified&&unified.version==='arvexq-unified-live-v1'&&
        unified.raceId===race.id&&unified.raceDate===race.date&&
        unified.circuit===race.circuit&&unified.researchOnly===true&&
        unified.probabilitiesCalibrated===false&&
