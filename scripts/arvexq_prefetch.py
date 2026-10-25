@@ -485,7 +485,12 @@ def _attach_empirical_fusion_products(detail: dict[str, Any]) -> dict[str, Any]:
     """
     from arvexq.forecast.publication import public_race
     published = public_race(detail)
-    if published.get("predictionStatus") != "ready":
+    # The projection also preserves genuinely frozen historical Stage64 picks.
+    # This new-forecast attachment must not re-promote those as fresh D1
+    # products; only the replacement engine's own output is eligible.
+    from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION
+    if (published.get("predictionStatus") != "ready"
+            or published.get("predictionModelVersion") != FUSION_VERSION):
         return detail
     result = copy.deepcopy(detail)
     for key in ("predictionStatus", "predictionModelVersion", "prediction",
