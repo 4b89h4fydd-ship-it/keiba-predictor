@@ -78,7 +78,10 @@ def public_race(detail):
             result['predictionStatus'] = 'new-model-unavailable'
             result['recommendedBets'] = []
         return result
-    prediction = build_prediction(detail)
+    # No legacy or independently generated live forecast fallback: only a verified
+    # unified pre-off receipt can originate new predictions. Immutable archived
+    # originals may still be displayed by the guarded branch below.
+    prediction = None
     if prediction is None:
         # A stored, verified original remains immutable historical race evidence.
         # Publishing its original marks/tickets after the off is NOT a new
