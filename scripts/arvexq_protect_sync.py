@@ -114,6 +114,15 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         return out
     from arvexq.prediction.forecast_revisions import preserve_revisions
     out = preserve_revisions(old, out)
+    # Preserve the FIRST authentic date-held-out, pre-off unified receipt.
+    # A later result update, card repair, or old prefetch may add facts but
+    # must never replace these observed before-off marks, pace or ticket plan.
+    from arvexq.prediction.unified_product import verified as verified_unified
+    earlier_unified = verified_unified(old)
+    if earlier_unified:
+        out['unifiedForecast'] = copy.deepcopy(earlier_unified)
+    elif 'unifiedForecast' in out and not verified_unified(out):
+        raise ValueError('unverified or tampered unified forecast receipt')
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.
@@ -352,6 +361,13 @@ def _verify_one_published_detail(detail: dict[str, Any], actual: dict[str, Any] 
         bet = detail.get("preRaceBet")
         if isinstance(bet, dict) and (actual or {}).get("preRaceBet") != bet:
             raise RuntimeError("D1_PRE_RACE_BET_POST_VERIFY_MISMATCH " + rid)
+    from arvexq.prediction.unified_product import verified as verified_unified
+    requested_unified = verified_unified(detail)
+    if requested_unified:
+        final_unified = verified_unified(actual or {})
+        if (not final_unified or
+                final_unified.get('receiptSha256') != requested_unified['receiptSha256']):
+            raise RuntimeError('D1_UNIFIED_FORECAST_MARKS_POST_VERIFY_MISMATCH ' + rid)
     if revised and (actual or {}).get("modelMarkRevisions") != revised:
         raise RuntimeError("D1_MODEL_MARK_REVISION_POST_VERIFY_MISMATCH " + rid)
     if isinstance(feature_archive, dict):
@@ -400,7 +416,7 @@ def verify_published(body: dict[str, Any], *, base: str, read=fetch_current,
             h for h in detail.get("horses") or []
             if isinstance(h, dict) and isinstance(h.get("careerArchive"), dict)
         ]
-        if not lock and not revised and not feature_archive and not horse_archives:
+        if not lock and not revised and not feature_archive and not horse_archives and not detail.get('unifiedForecast'):
             continue
         rid = str(detail["id"])
         for attempt in range(len(retry_delays) + 1):
