@@ -76,7 +76,7 @@ def _decide(analysis):
     return marks, ranges, reasons
 
 
-def build_forecast(detail, model=None):
+def build_forecast(detail, model=None, *, compare_research_tickets=True):
     result = deepcopy(detail)
     start = post_at(detail)
     now = datetime.now(JST)
@@ -148,8 +148,14 @@ def build_forecast(detail, model=None):
         ev['forecastText'] = ''.join(parts)
         prose.append(ev['forecastText'])
     result['forecastText'] = ''.join(prose)
-    result['recommendedBetPlan'] = (compare_tickets(result, analysis['scenarios'], model_version=VERSION)
-                                    if head else {'decision': '見送り', 'items': [], 'reason': result['honmeiDecision']['reason']})
+    result['recommendedBetPlan'] = (
+        compare_tickets(result, analysis['scenarios'], model_version=VERSION)
+        if head and compare_research_tickets else {
+            'decision': '見送り', 'items': [],
+            'reason': ('菊花賞の発走前参考印のみ。未使用データで馬券回収率を確認するまで買い目を確定しない'
+                       if head else result['honmeiDecision']['reason']),
+        }
+    )
     # preRacePrediction / preRaceBet remain byte-for-byte equivalent values.
     # Never seal this retrospective analysis as an original forecast.
     return result
