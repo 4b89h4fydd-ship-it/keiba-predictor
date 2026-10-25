@@ -203,7 +203,7 @@ def prepare_seal(detail: dict, *, now: datetime, build=None, assign=None) -> dic
                for h in active) and detail.get("analysisMode") not in ("新馬", "障害"):
         return {"status": "missing-historical-evidence"}
     # Keep the existing immutable D1 seal. For the approved 2026-10-23+
-    # production forecast, consume independently validated fusion rather than Stage64.
+    # production forecast, consume independently validated empirical fusion.
     # Explicit test-injected assign/build functions retain their old contract.
     if detail.get("date", "") >= "2026-10-23" and assign is None and build is None:
         from arvexq.forecast.engine import build_prediction
@@ -368,7 +368,7 @@ def encode_sealed_d1_sync_detail(detail: dict, *, max_row_bytes: int = 1_800_000
     if not isinstance(detail, dict) or not detail.get("id"):
         raise ValueError("race identity required for pre-race sync")
     packed = pack_detail(detail)
-    # JSON object keys are strings. Stage64 probability maps may hold integer
+    # JSON object keys are strings. Probability maps may hold integer
     # horse-number keys in memory; compare the actual JSON transport contract.
     expected = json.loads(json.dumps(detail, ensure_ascii=False, allow_nan=False))
     if unpack_detail(packed) != expected or KEY not in packed:
