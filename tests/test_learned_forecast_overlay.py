@@ -25,7 +25,7 @@ class OverlayTests(unittest.TestCase):
         self.assertEqual(report['overlaid'], [])
         self.assertEqual(report['skipped'][race['id']], 'post-off-original-preserved')
 
-    def test_future_race_continues_approved_overlay_policy(self):
+    def test_future_race_disables_legacy_overlay_when_fusion_is_unavailable(self):
         race = {'id': 'jra-2026-10-25-東京-09', 'date': '2026-10-25',
                 'circuit': '中央', 'startTime': '14:15'}
         model = {'中央': {'training': {'lastDate': '2026-10-24'}}}
@@ -35,10 +35,11 @@ class OverlayTests(unittest.TestCase):
                       return_value={'id':race['id'], 'recommendedBetPlan': {'items': []},
                                     'predictionModelVersion': 'research-learned'}) as build:
             payload, report = apply({'details': [race]}, model)
-            build.assert_called_once()
-        self.assertEqual(report['overlaid'], [race['id']])
-        self.assertEqual(payload['details'][0]['predictionModelVersion'],
-                         'research-learned')
+            build.assert_not_called()
+        self.assertEqual(report['overlaid'], [])
+        self.assertEqual(report['skipped'][race['id']], 'fusion-inputs-unavailable')
+        self.assertEqual(payload['details'][0]['predictionStatus'],
+                         'new-model-unavailable')
 
     def test_new_forecast_preserves_original_and_does_not_publish_unverified_tickets(self):
         detail = {'id': 'race-1', 'date': '2026-10-18', 'circuit': '中央',
