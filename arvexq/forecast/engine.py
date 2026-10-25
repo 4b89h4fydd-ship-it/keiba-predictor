@@ -122,6 +122,14 @@ def build_prediction(facts, now=None):
     ]
     pace["verifiedHistoricalVideoRuns"] = len(verified_video)
     pace["videoAppliedToFusion"] = bool(verified_video)
+    # The existing pace stage carries the four-phase historical baseline.
+    # It is descriptive only; never silently feed uncalibrated ranks into
+    # the fused win probabilities, marks, or ticket decisions.
+    pace["fourPhaseHistoricalBaseline"] = {
+        str(entry["horseNumber"]): entry["phaseProjection"]
+        for entry in mineta["horses"]
+    }
+    pace["fourPhaseBaselineValidated"] = False
     pace["markOrder"] = order
     pace["markLabels"] = {str(m["horseNumber"]): m["mark"] for m in marks}
     pace["ticketHorses"] = sorted({no for ticket in blended["recommendedBets"]
