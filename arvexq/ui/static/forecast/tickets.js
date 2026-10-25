@@ -49,9 +49,10 @@
         x.combo.every(function(no){return model.roster.some(function(h){return h.horseNumber===no})})
       }).slice(0,5);
       var plan={decision:options.length?'参考候補・購入推奨なし':'見送り',
-        researchOnly:true,referenceOnly:true,modelVersion:model.modelVersion,
+        researchOnly:true,referenceOnly:true,notForPurchase:true,
+        modelVersion:model.modelVersion,
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
-        fixedAt:model.capturedAt,items:options.map(function(x){
+        referenceCapturedAt:model.capturedAt,items:options.map(function(x){
           return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1,
             reason:'未校正の同一モデル。勝率・回収率の実測検証は未完了'};
         }),referenceBudget:{points:options.length,totalYen:options.length*100}};
