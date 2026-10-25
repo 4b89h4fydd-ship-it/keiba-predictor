@@ -30,6 +30,7 @@ from arvexq.prediction.kikka_urgent import (
 from arvexq.prediction.learned_scenarios import fit_model
 from arvexq.prediction.prerace_archive import JST
 from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+from arvexq.ingest.full_snapshot_codec import unpack_detail as unpack_full
 from scripts.arvexq_fetch_d1_bundle import get_json, detail_from_response
 
 VALID_BASE = "https://kraiz-api.4b89h4fydd.workers.dev"
@@ -157,8 +158,21 @@ def build_and_publish(base: str, *, write: bool = False) -> dict:
             raise ValueError("one-race emergency must emit exactly one guarded D1 batch")
         # The final guarded write still must occur BEFORE the official off.
         verified_entry(prepared, summary, datetime.now(JST))
+        def check_prepared_symbols(stage):
+            batch = json.loads(batches[0].read_text(encoding="utf-8"))
+            full = unpack_full((batch.get("details") or [{}])[0])
+            rows = (full.get("kikkaCandidate") or {}).get("marks") or []
+            keys = sorted(rows[0]) if rows and isinstance(rows[0], dict) else []
+            expected = candidate_marks(prepared)
+            actual = candidate_marks(full)
+            print("KIKKA_SYMBOL_TRANSPORT", stage, "storedRowKeys=", keys,
+                  "verifiedSymbols=", len(actual or []), flush=True)
+            if not expected or actual != expected:
+                raise ValueError("Kikuka symbols stripped during " + stage)
+        check_prepared_symbols("batch-pre-guard")
         _run("scripts/arvexq_protect_sync.py",
              "--file", str(batches[0]), "--api-base", base)
+        check_prepared_symbols("batch-post-guard")
         _run("scripts/arvexq_d1_capacity_guard.py",
              "--file", str(batches[0]), "--api-base", base, "--max-bytes", "4000000")
         _run("scripts/arvexq_protect_sync.py", "--verify-post",
@@ -179,7 +193,9 @@ def build_and_publish(base: str, *, write: bool = False) -> dict:
         expected_marks = candidate_marks(prepared)
         actual_marks = candidate_marks(stored)
         if not expected_marks or actual_marks != expected_marks:
-            raise ValueError("D1 model hash stored but visible symbols missing or altered")
+            rows = (stored.get("kikkaCandidate") or {}).get("marks") or []
+            keys = sorted(rows[0]) if rows and isinstance(rows[0], dict) else []
+            raise ValueError("D1 model hash stored but visible symbols missing or altered; storedMarkKeys=" + ",".join(keys))
         outcome["persistedVisibleMarkCount"] = len(actual_marks)
         outcome["persistedToD1"] = True
         outcome["status"] = "preoff-learned-candidate-persisted"
