@@ -27,6 +27,14 @@ class InternalFeedSafetyTests(TestCase):
         with patch.dict(os.environ, {"ARVEXQ_VIDEO_FEED_URL": ""}):
             self.assertEqual(main(["--date", "2026-10-24"]), 2)
 
+    def test_real_provider_without_commercial_model_license_does_not_download(self):
+        with patch.dict(os.environ, {
+            "ARVEXQ_VIDEO_FEED_URL": "https://approved.example/feed.json",
+            "ARVEXQ_VIDEO_FEED_TOKEN": "fake-only",
+            "ARVEXQ_VIDEO_ALLOWED_HOSTS": "approved.example",
+            "ARVEXQ_ULTRALYTICS_LICENSE_VERIFIED": ""}, clear=False):
+            self.assertEqual(main(["--date", "2026-10-24"]), 3)
+
     def test_token_and_allowlist_required(self):
         with TemporaryDirectory() as folder:
             with self.assertRaisesRegex(ValueError, "token and allowlist"):
