@@ -10,6 +10,8 @@ async function load(){
  const url="https://raw.githubusercontent.com/snarfnet/keirin-data/main/entries_"+compact+".json";
  const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("出走表未公開（HTTP "+r.status+"）");
  const data=await r.json();
+ let snapshots={};try{const sr=await fetch("/snapshots/"+date+".json",{cache:"no-store"});if(sr.ok){const saved=await sr.json();snapshots=saved.races||{}}}catch(_e){}
+ for(const race of data.races||[]){const saved=snapshots[String(race.race_id)];if(saved){race.prediction=saved.prediction;race.prediction_snapshot_id=saved.prediction_snapshot_id;race.prediction_confirmed_at=saved.prediction_confirmed_at;race.prediction_status=saved.prediction?"confirmed":undefined;race.result_top3=saved.result_top3;race.payout_trifecta=saved.payout_trifecta}}
  if(!Array.isArray(data.races))throw Error("出走表形式が不正");
  S.races=data.races.filter(x=>Array.isArray(x.entries)&&x.entries.length>=3);
  const venues=[...new Set(S.races.map(x=>x.venue))];
@@ -31,7 +33,7 @@ function raceStatus(r){
  if(r.provisional)return {code:"scheduled",label:"開催予定",detail:"出走表未取得"};
  if(r.cancelled||r.status==="cancelled")return {code:"cancelled",label:"中止",detail:"開催中止"};
  if(Array.isArray(r.result_top3)&&r.result_top3.length===3&&r.payout_trifecta!=null)return {code:"result",label:"結果確定",detail:"着順・払戻取得済み"};
- if(r.prediction_status==="confirmed"&&r.prediction_snapshot_id&&r.prediction_confirmed_at)return {code:"confirmed",label:"予想確定",detail:"発走前保存済み予想"};
+ if(r.prediction&&r.prediction_status==="confirmed"&&r.prediction_snapshot_id&&r.prediction_confirmed_at)return {code:"confirmed",label:"予想確定",detail:"発走前保存済み予想"};
  if(Array.isArray(r.entries)&&r.entries.length>=3)return {code:"draft",label:"暫定予想",detail:"出走表取得済・予想未確定"};
  return {code:"scheduled",label:"開催予定",detail:"出走表未取得"};
 }
@@ -47,6 +49,13 @@ function choose(id){
  const r=S.races.find(x=>String(x.race_id)===String(id));if(!r)return;
  const st=raceStatus(r);
  if(r.provisional){el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>開催予定のみ確認済み。出走表公開待ちのため予想はまだ表示できません。公開後に再読み込みしてください。</p>";return;}
+ if(r.prediction && st.code==="confirmed"){
+ const p=r.prediction;const marks=p.marks||{};
+ const m=Object.entries(marks).map(([mark,n])=>mark+" "+n+" "+escape(r.entries.find(e=>Number(e.umaban)===Number(n))?.name||"")).join("　");
+ const tt=(p.trifecta||[]).slice(0,12);
+ el("detail").innerHTML="<h2>"+escape(r.venue)+" "+r.race_no+"R</h2><p class='notice'>予想確定（暫定モデル）｜保存日時："+escape(r.prediction_confirmed_at)+"｜保存ID："+escape(r.prediction_snapshot_id)+"</p><div class='summary'>"+m+"</div><h3>保存済み全選手確率</h3><div class='scroll'><table><thead><tr><th>車番</th><th>1着確率</th><th>3着内確率</th></tr></thead><tbody>"+(p.riders||[]).map(x=>"<tr><td>"+x.number+"</td><td>"+fmt(x.p1)+"</td><td>"+fmt(x.p3)+"</td></tr>").join("")+"</tbody></table></div><h3>確定時点の3連単候補</h3><div class='scroll'><table><tbody>"+tt.map(x=>"<tr><td>"+escape(x.ticket)+"</td><td>"+fmt(x.p)+"</td></tr>").join("")+"</tbody></table></div>"+(Array.isArray(r.result_top3)?"<h3>結果確定</h3><p>"+r.result_top3.join("-")+"</p>":"")+"<p class='notice'>予想は出走前の保存値を表示し、結果取得後も上書きしません。未校正モデルで収益性は未検証です。</p>";
+ return;
+}
  const riders=r.entries.map(e=>({n:Number(e.umaban),name:e.name,score:Number(e.score),style:e.style,win:Number(e.win_rate)/100,place:Number(e.top3_rate)/100,comment:e.comment||""}));
  if(riders.some(x=>!Number.isFinite(x.score)||!Number.isFinite(x.win)||!Number.isFinite(x.place))){el("detail").textContent="必要な成績に欠損があるため推定不能です。";return}
  const avg=riders.reduce((s,x)=>s+x.score,0)/riders.length;
