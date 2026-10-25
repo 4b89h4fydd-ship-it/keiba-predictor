@@ -114,6 +114,16 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         return out
     from arvexq.prediction.forecast_revisions import preserve_revisions
     out = preserve_revisions(old, out)
+    # Kyoto G1 emergency learned candidate is an immutable pre-off research
+    # artifact. Later odds/results or a failed full-day prefetch may not erase
+    # or forge it. Ignore a changed challenger from the same race entirely.
+    from arvexq.prediction.kikka_urgent import RACE_ID, candidate_marks
+    if str(old.get('id') or '') == RACE_ID:
+        original_marks = candidate_marks(old)
+        if original_marks:
+            out['kikkaCandidate'] = copy.deepcopy(old['kikkaCandidate'])
+        else:
+            out.pop('kikkaCandidate', None)
     # The full morning prediction is a permanent, first-published record.
     # It must survive a later live odds refresh, prefetch or result repair.
     baseline = old.get("morningMarkSnapshot")
