@@ -125,6 +125,9 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert ability["value"]["1"]["recentRuns"] == 1
     assert ability["value"]["1"]["recentTop3Rate"] == 1.0
     assert ability["value"]["1"]["fullCareerRuns"] == 1
+    assert ability["value"]["1"]["evaluationReady"] is False
+    assert "career-coverage-unverified" in ability["value"]["1"]["evaluationBlockers"]
+    assert "training-unverified" in ability["value"]["1"]["evaluationBlockers"]
     assert ability["value"]["1"]["careerTop3Rate"] == 1.0
     assert ability["value"]["1"]["careerPeakFinishQuality"] == 1.0
     assert ability["value"]["1"]["careerConsistency"] is None
