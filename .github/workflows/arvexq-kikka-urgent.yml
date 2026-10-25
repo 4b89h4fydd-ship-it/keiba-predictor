@@ -1,6 +1,12 @@
 name: ARVEXQ Kikuka Sho Emergency Preoff
 
 "on":
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/arvexq_kikka_urgent.py
+      - arvexq/prediction/kikka_urgent.py
+      - .github/workflows/arvexq-kikka-urgent.yml
   push:
     branches: [main]
     paths:
@@ -36,7 +42,14 @@ jobs:
       - name: Verify Kyoto 11R immutable roster and time guards
         run: |
           python -m unittest discover -s tests -p 'test_kikka_urgent_preoff.py' -v
-      - name: Compute and publish only Kyoto 11R before 15:40 JST
+      - name: Dry-run only target Kyoto 11R from D1 on PR
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/arvexq_kikka_urgent.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --out kikka-urgent-status.json
+      - name: Publish only target Kyoto 11R before 15:40 JST
+        if: github.event_name != 'pull_request'
         run: |
           python scripts/arvexq_kikka_urgent.py \
             --api-base "$CLOUDFLARE_API_BASE" \
