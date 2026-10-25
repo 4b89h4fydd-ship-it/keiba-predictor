@@ -9,6 +9,7 @@ name: ARVEXQ CC-Licensed Real Video Smoke
       - arvexq/vision/open_detector.py
       - requirements-vision.txt
       - .github/workflows/arvexq-cc-video-smoke.yml
+      - scripts/arvexq_vision_track_ablation.py
   workflow_dispatch:
 
 permissions:
@@ -34,16 +35,32 @@ jobs:
       - name: Download and verify pinned Apache checkpoint
         run: |
           python scripts/arvexq_fetch_open_vision_model.py --output-dir .arvexq-data/vision-model
-      - name: Run real CC BY-SA horse video smoke (no race predictions)
+      - name: Real footage, baseline 1 Hz sampling (no race predictions)
         run: |
           python scripts/arvexq_vision_cc_smoke.py \
             --model-dir .arvexq-data/vision-model \
-            --output .arvexq-data/vision-smoke.json
+            --sample-hz 1 --seconds 8 \
+            --output .arvexq-data/vision-smoke-1hz.json
+      - name: Real footage, denser 4 Hz tracking
+        run: |
+          python scripts/arvexq_vision_cc_smoke.py \
+            --model-dir .arvexq-data/vision-model \
+            --sample-hz 4 --seconds 8 \
+            --output .arvexq-data/vision-smoke-4hz.json
+      - name: Compare continuity (never claim ID accuracy)
+        run: |
+          python scripts/arvexq_vision_track_ablation.py \
+            --baseline .arvexq-data/vision-smoke-1hz.json \
+            --dense .arvexq-data/vision-smoke-4hz.json \
+            --output .arvexq-data/vision-continuity-ablation.json
       - name: Preserve non-media audit only
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-cc-vision-smoke
-          path: .arvexq-data/vision-smoke.json
+          path: |
+            .arvexq-data/vision-smoke-1hz.json
+            .arvexq-data/vision-smoke-4hz.json
+            .arvexq-data/vision-continuity-ablation.json
           if-no-files-found: warn
           retention-days: 7
