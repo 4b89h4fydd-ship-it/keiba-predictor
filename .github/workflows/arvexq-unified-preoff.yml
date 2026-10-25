@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install established forecasting runtime
-        run: python -m pip install -q -r requirements.txt
+        run: python -m pip install -q -r requirements.txt pytest
       - name: Validate actual JRA/NAR unified forecasts and D1 preservation
         run: python -m pytest tests/test_unified_live_product.py -q
       - name: Validate exact iPhone production adapter
