@@ -112,8 +112,17 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
                 tracker="bytetrack-mit", conf=0.25, verbose=False)
             from arvexq.vision.video_detector import _extract_boxes
             boxes = _extract_boxes(result[0] if result else None)
-            sampled.append({"seconds": round(frame_idx / fps, 2),
-                            "trackedHorseObjects": len(boxes)})
+            sampled.append({
+                "seconds": round(frame_idx / fps, 3),
+                "trackedHorseObjects": len(boxes),
+                # Retain bounded model boxes and ephemeral visual track IDs
+                # only: no video, frames, or inferred horse number.
+                "tracks": [
+                    {"trackId": int(track), "bbox": [round(float(v), 2) for v in bounds],
+                     "confidence": round(float(score), 4)}
+                    for track, score, _, _, bounds in boxes
+                ],
+            })
             detections += len(boxes)
             identified.update(int(b[0]) for b in boxes)
             for b in boxes:
@@ -151,6 +160,12 @@ def run_smoke(video: Path, model_dir: Path, *, max_frames: int = 12,
             "identitySwitchesVerified": False,
         },
         "trackedFrameMeasurements": sampled,
+        "observedFrames": [
+            {"seconds": frame["seconds"], "tracks": frame["tracks"]}
+            for frame in sampled
+        ],
+        "independentlyAnnotated": False,
+        "horseIdentityAccuracy": None,
         "horseNumberRecognitionTested": False,
         "horseIdentityAccuracyKnown": False,
         "metresCalibrationTested": False,
