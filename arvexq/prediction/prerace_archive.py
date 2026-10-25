@@ -83,18 +83,6 @@ def restore_seal(
     old = existing if isinstance(existing, dict) else {}
     old_lock = sealed_lock(old)
     if not old_lock:
-        # Preserve a genuine previously stored pre-off research observation
-        # through later routine D1 detail updates without fabricating a seal.
-        older = old.get("researchShadow")
-        if (isinstance(older, dict) and isinstance(older.get("stage64"), dict)
-                and str(old.get("id") or "") == str(out.get("id") or "")
-                and str(old.get("date") or "") == str(out.get("date") or "")):
-            newer = out.get("researchShadow")
-            if newer is None or isinstance(newer, dict):
-                preserved = copy.deepcopy(older)
-                preserved.update(copy.deepcopy(newer or {}))
-                preserved["stage64"] = copy.deepcopy(older["stage64"])
-                out["researchShadow"] = preserved
         return out
     if str(old.get("id") or "") != str(out.get("id") or ""):
         return out
