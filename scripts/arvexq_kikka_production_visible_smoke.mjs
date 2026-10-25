@@ -63,7 +63,8 @@ async function main(){
       sourceHashLen:String(candidate.sourceHash||'').length,modelHashLen:String(candidate.modelHash||'').length,
       horseNameMismatchCount:mismatch.length,horseNumberInvalid:rows.filter(h=>!Number.isInteger(Number(h.horseNumber))||Number(h.horseNumber)<1||Number(h.horseNumber)>18).length,
       markCount:marks.length,bonmeiCount:marks.filter(x=>x.mark==='◎').length,
-      markSymbols:markSymbols,
+      markSymbols:markSymbols,firstMarkType:typeof marks[0],firstMarkKeys:Object.keys(marks[0]||{}),
+      firstMarkIsArray:Array.isArray(marks[0]), firstMarkNullCount:marks.filter(x=>x===null).length,
     }));
     throw Error('LIVE_D1_18_HORSES_STORED_BUT_PWA_BLANK_MARKS');
   }
