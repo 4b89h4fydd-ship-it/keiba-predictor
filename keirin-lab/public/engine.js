@@ -22,6 +22,8 @@ function calculateKeirin(race){
  const leaders=new Set(lines.groups.map(group=>group[0]));
  const leadCount=riders.filter(r=>leaders.has(r.n)&&r.style==="逃").length;
  const crowded=leadCount>=3;
+ const vision=Array.isArray(race.video_metrics)?race.video_metrics:[];
+ const evidence={ability:"score / recent win and top-three rates",video:vision.length?"video metrics available":"not available; zero contribution",development:"line / pace / track heuristics",calibration:"not calibrated"};
  const scores=riders.map(r=>{
   const group=lines.groups.find(g=>g.includes(r.n))||[r.n],pos=group.indexOf(r.n);
   const straight=track[1];
@@ -29,7 +31,11 @@ function calculateKeirin(race){
   const sprintBonus=r.style==="追"?(straight>=57?.10:straight<45?-.05:0):0;
   const lineBonus=group.length>=2?(pos===0?.09:pos===1?.12:.02):0;
   const paceBonus=crowded?(r.style==="追"?.13:r.style==="逃"?-.17:.05):leadCount<=1&&r.style==="逃"?.12:0;
-  return {...r,group,pos,weight:Math.exp(Math.max(-8,Math.min(8,(r.score-avg)/8+1.1*(r.win-.15)+.5*(r.place-.4)+(r.style==="逃"?.08:0)+startBonus+sprintBonus+lineBonus+paceBonus)))};
+  const vm=vision.find(x=>Number(x.umaban)===r.n);
+  const videoCorrection=vm&&Number.isFinite(Number(vm.net_advantage))?Math.max(-.3,Math.min(.3,Number(vm.net_advantage))):0;
+  const ability=(r.score-avg)/8+1.1*(r.win-.15)+.5*(r.place-.4);
+  const development=(r.style==="逃"?.08:0)+startBonus+sprintBonus+lineBonus+paceBonus;
+  return {...r,group,pos,ability,development,videoCorrection,weight:Math.exp(Math.max(-8,Math.min(8,ability+development+videoCorrection)))};
  });
  // Plackett-Luce ordering probability. Simple joint probability model only.
  const total=scores.reduce((s,r)=>s+r.weight,0),combos=[];
@@ -47,5 +53,6 @@ function calculateKeirin(race){
  const ranked=[...byN.values()].sort((a,b)=>b.p1-a.p1);
  const marks=Object.fromEntries(["◎","○","▲","△","☆"].map((m,i)=>[m,ranked[i]?.number]).filter(x=>x[1]!=null));
  const scenario=crowded?"先行型が複数で踏み合う想定。差し・捲りの浮上に注意":leadCount===1?"主導権争いが少ない想定。先行ラインが残る展開に注意":"先行主導権が不明確。自在・番手の動きを重視";
- return {model:"keirin-line-track-v2-heuristic-uncalibrated",marks,riders:ranked,trifecta:combos,lines:lines.groups,uncertain_line_members:lines.uncertain,track:{length:track[0],straight:track[1],estimated:!TRACKS[race.venue]},scenario,limitations:"ラインは選手コメントによる暫定推定。風・実戦位置取り・オッズは未反映。確率校正未実施。"};
+ const stages={ability:scores.map(x=>({number:x.n,score:x.ability})),video:{status:vision.length?"provided_metrics":"unavailable",used:vision.length>0},development:{lines:lines.groups,scenario,track:{length:track[0],straight:track[1]},phases:["スタート","打鐘・主導権","最終バック","最終コーナー","直線"]},probability:{method:"normalized conditional-order heuristic",calibrated:false},marks:"derived mechanically from rank",tickets:"derived mechanically from trifecta probabilities; no odds => no EV buy decision"};
+ return {stages,evidence,model:"keirin-ability-video-development-v3-uncalibrated",marks,riders:ranked,trifecta:combos,lines:lines.groups,uncertain_line_members:lines.uncertain,track:{length:track[0],straight:track[1],estimated:!TRACKS[race.venue]},scenario,limitations:"ラインは選手コメントによる暫定推定。風・実戦位置取り・オッズは未反映。確率校正未実施。"};
 }
