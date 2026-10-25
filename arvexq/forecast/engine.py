@@ -210,6 +210,16 @@ def build_prediction(facts, now=None):
             "representativeComparable": career["representativeComparable"],
             "historyCoverage": career["coverageStatus"],
             "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
+            "evaluationReady": (
+                career["datedRuns"] > 0 and career["coverageStatus"] == "complete"
+                and recent["datedRuns"] > 0
+            ),
+            "evaluationBlockers": (
+                (["missing-past-runs"] if not career["datedRuns"] else [])
+                + (["career-coverage-unverified"] if career["coverageStatus"] != "complete" else [])
+                + (["training-unverified"])
+                + (["bloodline-unvalidated"])
+            ),
         }
     # Only measure evidence coverage from active starters; missing observations
     # remain missing and cannot turn into guessed ability scores.
