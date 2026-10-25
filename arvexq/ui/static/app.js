@@ -1708,57 +1708,17 @@ function diagnosisPanel(r,p){
 }
 function historyPanel(r){return '<section id="section-history" class="card"><h2>過去走（直近5走）</h2>'+(r.horses||[]).map(function(h){var runs=window.ARVEXQPastRunView.visible(h,r,5),count=runs.length,status=h.debutNoHistory?'新馬・既走なし':(count>=5?'5/5走取得済':count+'/5走・履歴補完中'),career=careerCoverageLabel(h);if(career)status+='・全キャリア'+career;return '<article class="horse-card"><button data-horse-open="'+esc(h.horseNumber)+'">'+esc(h.horseNumber)+' '+esc(h.name)+'</button><small class="muted" style="margin-left:8px">'+esc(status)+'</small>'+ (runs.length?runs.map(function(z){return '<div class="recent">'+esc(z.date||'—')+' '+esc(z.track||'—')+' '+esc(z.title||'')+' '+esc(z.distance||'—')+'m　'+esc(z.finish||z.finishStatus||'—')+'着　通過 '+esc((z.cornerPositions||[]).join('-')||'—')+'</div>'}).join(''): '<p>'+(h.debutNoHistory?'新馬：既走データなし':'履歴補完中。取得できた実走だけを表示します。')+'</p>')+'</article>'}).join('')+'</section>'}
 function pacePanel(r,p){
-  var verifiedSource=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.current();
-  if(r&&r.unifiedForecast&&verifiedSource&&verifiedSource.source==='arvexq-unified-preoff'){
-    var pace=r.unifiedForecast.pace||{};
-    var candidates=Array.isArray(pace.likelyForwardNumbers)?pace.likelyForwardNumbers:[];
-    var horseNames={};(r.horses||[]).forEach(function(h){if(h&&h.horseNumber)horseNames[h.horseNumber]=h.name});
-    return '<section id="section-pace" class="card pace-panel-direct"><h2>新方式・展開予想</h2>'+
-      '<p>'+esc(pace.text||'初角位置の観測不足につき展開不明')+'</p>'+
-      '<p class="muted">先行候補：'+esc(candidates.map(function(no){return (horseNames[no]||no+'番')}).join('、')||'未確認')+'</p>'+
-      '<p class="muted">能力・脚質・確率と同一モデルから印を計算。映像の全馬識別および展開発生率は未検証です。</p></section>';
-  }
-  // Use only the verified same-race pre-off prediction; no on-device model.
-  var live=r&&r.predictionStatus==='ready'&&r.prediction&&
-    r.prediction.modelVersion==='arvexq-empirical-fusion-v1'&&
-    r.prediction.raceId===r.id&&r.prediction.date===r.date;
-  if(!live)return '<section id="section-pace" class="card pace-panel-direct"><h2>展開予想</h2>'+
-    '<p class="muted">同一レースの検証可能な発走前展開予想は未取得です。</p></section>';
-  var source=r.prediction, stage=source.stages&&source.stages.pace||{},
-    cases=Array.isArray(stage.value)?stage.value:[],
-    isFusion=true,
-    context=stage.value&&typeof stage.value==='object'?stage.value:{},
-    names={};
-  (r.horses||[]).forEach(function(h){if(h&&h.horseNumber)names[String(h.horseNumber)]=h.name||String(h.horseNumber)+'番'});
-  var labels=['標準隊列','前争いの影響','前方有利の想定','後方浮上の想定'];
-  var details=cases.map(function(delta,i){
-    if(!delta||typeof delta!=='object')return '';
-    var changes=Object.keys(delta).map(function(no){return {no:no,value:Number(delta[no])}})
-      .filter(function(x){return Number.isFinite(x.value)&&x.value>0})
-      .sort(function(a,b){return b.value-a.value||Number(a.no)-Number(b.no)});
-    return '<div class="actual-stage"><b>仮説'+(i+1)+'：'+esc(labels[i]||'別想定')+'</b><div class="muted">'+
-      (changes.length?'相対的に有利な候補：'+changes.slice(0,3).map(function(x){return esc(names[x.no]||x.no+'番')}).join('、'):
-       '補正なし（標準隊列）')+'</div></div>'
-  }).join('');
-  var prose=String(source.forecastText||r.forecastText||'').trim();
-  if(isFusion){
-    var front=Array.isArray(context.forwardIntentCandidates)?context.forwardIntentCandidates:[];
-    var markOrder=Array.isArray(context.markOrder)?context.markOrder:[],
-      markLabels=context.markLabels&&typeof context.markLabels==='object'?context.markLabels:{};
-    details='<div class="actual-stage"><b>みねた氏の公開手法に基づく展開観測</b><div class="muted">'+
-      '先行候補：'+(front.length?front.map(function(no){return esc(names[no]||no+'番')}).join('、'):'未確認')+
-      '／初角までの公式距離：'+(context.firstCornerMetersOfficial!=null?esc(context.firstCornerMetersOfficial)+'m':'未取得')+
-      '／先行候補の隣接：'+(context.adjacentForwardCandidates||[]).length+'組'+
-      '</div><div class="muted">同一融合結果の印順：'+
-      (markOrder.length?markOrder.map(function(no){return esc(markLabels[String(no)]||'')+esc(names[no]||no+'番')}).join(' → '):'未取得')+
-      '</div></div>';
-  }
-  return '<section id="section-pace" class="card pace-panel-direct"><div class="ai-flow-card pace-stage-menu-card">'+
-    '<div class="ai-flow-head"><div class="ai-flow-copy"><div class="ai-flow-title">AI展開予想</div>'+
-    '<div class="ai-flow-sub">'+(isFusion?'みねた氏主体の観測と予想家・AIの統合による判断です。':'保存済み旧方式の発走前記録です。')+'</div></div></div>'+
-    (prose?'<p class="forecast-text">'+esc(prose)+'</p>':'')+details+
-    '<p class="muted">'+(isFusion?'過去レース実績に基づく統合。主観による印の変更なし。':'旧方式の記録。結果から後付けで再予想していません。')+'</p>'+
-    '</div></section>'
+  // Keep the four-stage navigation, but never present local-only synthetic
+  // positions as a verified forecast from an unrelated model.
+  var live=window.ARVEXQProductionPrediction&&window.ARVEXQProductionPrediction.current();
+  var receipt=r&&r.unifiedForecast&&live&&live.source==='arvexq-unified-preoff';
+  var pace=receipt?r.unifiedForecast.pace||{}:{};
+  var candidates=Array.isArray(pace.likelyForwardNumbers)?pace.likelyForwardNumbers:[];
+  var names={};(r.horses||[]).forEach(function(h){if(h&&h.horseNumber)names[h.horseNumber]=h.name});
+  return '<section id="section-pace" class="card pace-panel-direct"><h2>展開予想</h2>'+
+    (candidates.length?'<p>先行候補：'+esc(candidates.map(function(no){return names[no]||no+'番'}).join('、'))+'</p>':'')+
+    '<p class="muted">4局面の検証済み隊列データがない場合は、隊列を推測表示しません。</p>'+
+    paceStageMenu(r,p)+'</section>';
 }
 function openHorseDetailPage(no){
   no=n(no,0);if(!no||!state.race)return;
@@ -2560,32 +2520,6 @@ function betDetailPage(r,p){
     +'<main class="smart-main smart-race-page"><section class="card bet-card-clean">'+aiBetRecommendation(r,p)+'</section></main>'
     +cinematicFooter()+'</div>'
 }
-function sixStageAnalysisPanel(r){
-  var unified=r&&r.predictionStatus==='unified-reference-ready'&&r.unifiedForecast&&
-    r.unifiedForecast.receiptSha256&&r.predictionModelVersion===r.unifiedForecast.modelVersion;
-  var receipt=unified?r.unifiedForecast:null;
-  var marks=receipt&&Array.isArray(receipt.marks)?receipt.marks:[];
-  var exactlyOne=marks.filter(function(x){return x&&x.markSymbol==='◎'}).length===1;
-  var calibrated=!!(receipt&&receipt.probabilitiesCalibrated===true);
-  var video=!!(receipt&&receipt.videoIdentityValidated===true);
-  var plan=receipt&&receipt.ticketPlan||{};
-  var ticketReady=!!(receipt&&exactlyOne&&plan.items&&plan.items.length&&
-    plan.status!=='見送り');
-  var stages=[
-    ['① 能力分析',receipt?'同一レシートで分析済み':'学習済みモデル・検証済み入力待ち'],
-    ['② 映像分析',video?'検証済みデータを適用':'未適用・検証待ち'],
-    ['③ 展開分析',receipt?'通常隊列・前争い・後方待機を比較（発生頻度は未検証）':'未適用・検証待ち'],
-    ['④ 確率計算',receipt?(calibrated?'校正済み':'勝率・3着内率：未校正'):'未算出・未校正'],
-    ['⑤ 印',exactlyOne?'同一レシートから決定（◎1頭）':'見送り（有効な予測レシートなし）'],
-    ['⑥ 買い目',ticketReady?'同一レシートの参考候補（購入推奨・保証なし）':'見送り（条件未充足・購入推奨なし）']
-  ];
-  return '<section class="card arv-six-stage" aria-label="新方式・6段階分析">'+
-    '<h2>新方式・6段階分析</h2>'+
-    (receipt?'<p class="muted">発走前予測レシート：'+esc(String(receipt.receiptSha256).slice(0,12))+'…</p>':
-      '<p class="muted">検証済み予測レシートなし。旧方式への切り替えは行いません。</p>')+
-    stages.map(function(x){return '<div class="arv-six-stage-row" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,.25)"><b>'+esc(x[0])+'</b><div class="muted">'+esc(x[1])+'</div></div>'}).join('')+
-    '<p class="muted">未校正の確率には的中・回収率の保証はありません。</p></section>';
-}
 function renderRace(){
   var r=applySummaryEnvironment(mergeResultHorseFields(state.race)),p=null,predictionError=null;
   state.race=r;
@@ -2612,7 +2546,7 @@ function renderRace(){
   if(!state.scenarioCode||!p.plans||!p.plans[state.scenarioCode])state.scenarioCode=top?top.code:null;
   if(state.subPage==='horse')return horseDetailPage(r,p);
   if(state.subPage==='bets')return betDetailPage(r,p);
-  if(state.subPage==='pace-stage')return paceStagePage(r,p);
+  if(state.subPage==='pace-stage')return paceStagePendingPage(r);
   var content='';
   try{
     content=detailTabs(r,p)
@@ -2630,7 +2564,7 @@ function renderRace(){
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      '<div class="smart-race-content">'+sixStageAnalysisPanel(r)+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
+      '<div class="smart-race-content">'+content+window.ARVEXQPredictionFrame.render()+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+ 
     '</main>'+ 
     cinematicFooter()+
   '</div>'
