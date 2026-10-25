@@ -21,39 +21,7 @@ def pull(day):
         return None
     return data if isinstance(data.get("races"), list) else None
 
-def predict(entries):
-    riders=[]
-    for e in entries:
-        try:
-            n=int(e["umaban"]); score=float(e["score"])
-            win=float(e["win_rate"])/100; place=float(e["top3_rate"])/100
-        except (KeyError,TypeError,ValueError):
-            return None
-        if not 0<=win<=place<=1:
-            return None
-        riders.append({"n":n,"score":score,"win":win,"place":place,"style":e.get("style","")})
-    if len(riders)<3 or len(set(x["n"] for x in riders))!=len(riders):
-        return None
-    import math
-    mean=sum(x["score"] for x in riders)/len(riders)
-    for x in riders:
-        x["w"]=math.exp(max(-9,min(9,(x["score"]-mean)/8+1.1*(x["win"]-.15)+.5*(x["place"]-.4)+(.08 if x["style"]=="逃" else 0))))
-    total=sum(x["w"] for x in riders)
-    output=[]
-    for a in riders:
-        for b in riders:
-            for c in riders:
-                if len({a["n"],b["n"],c["n"]})!=3: continue
-                p=a["w"]/total*b["w"]/(total-a["w"])*c["w"]/(total-a["w"]-b["w"])
-                output.append({"ticket":f'{a["n"]}-{b["n"]}-{c["n"]}',"p":round(p,9)})
-    output.sort(key=lambda x:x["p"],reverse=True)
-    bynum={x["n"]:{"number":x["n"],"p1":0,"p3":0} for x in riders}
-    for x in output:
-        a,b,c=map(int,x["ticket"].split("-"))
-        bynum[a]["p1"]+=x["p"]
-        for n in (a,b,c): bynum[n]["p3"]+=x["p"]
-    rank=sorted(bynum.values(),key=lambda x:x["p1"],reverse=True)
-    return {"model":"keirin-score-heuristic-v1-uncalibrated","marks":dict(zip(["◎","○","▲","△","☆"],[x["number"] for x in rank[:5]])), "riders":rank,"trifecta":output[:20]}
+from engine import predict
 
 def main():
     now=dt.datetime.now(JST)
@@ -83,7 +51,7 @@ def main():
                     scheduled=None
                 # Freeze before departure only, never on historical/late input.
                 if scheduled and now<scheduled:
-                    prediction=predict(race["entries"])
+                    prediction=predict(race)
                     if prediction:
                         record["prediction"]=prediction
                         record["prediction_confirmed_at"]=now.isoformat()
