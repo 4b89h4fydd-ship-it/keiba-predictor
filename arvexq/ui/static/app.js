@@ -2569,7 +2569,7 @@ function sixStageAnalysisPanel(r){
   var calibrated=!!(receipt&&receipt.probabilitiesCalibrated===true);
   var video=!!(receipt&&receipt.videoIdentityValidated===true);
   var plan=receipt&&receipt.ticketPlan||{};
-  var ticketReady=!!(receipt&&exactlyOne&&calibrated&&plan.items&&plan.items.length&&
+  var ticketReady=!!(receipt&&exactlyOne&&plan.items&&plan.items.length&&
     plan.status!=='見送り');
   var stages=[
     ['① 能力分析',receipt?'同一レシートで分析済み':'学習済みモデル・検証済み入力待ち'],
