@@ -65,7 +65,7 @@
   }
 
   // 2026 Kikuka Sho emergency route: display only verified source-bound
-  // LEARNED research marks. No Stage64 fallback, no uncalibrated wagers.
+  // LEARNED research marks. No retired-model fallback or uncalibrated wagers.
   var KIKKA_NAMES=[
     'エムズビギン','コンジェスタス','アウダーシア',
     'ショウナンガルフ','ジャスティンシカゴ','バステール',
@@ -185,7 +185,8 @@
       }
     }
     var server=race&&race.predictionStatus==='ready'&&race.prediction;
-    if(server&&server.predictionStatus==='ready'&&Array.isArray(race.horses)){
+    if(server&&server.modelVersion==='arvexq-empirical-fusion-v1'&&
+       server.predictionStatus==='ready'&&Array.isArray(race.horses)){
       var stage=server.stages||{}, prob=(stage.probability&&stage.probability.value)||{}, marks=race.predictionMarks||[], by={};
       marks.forEach(function(x){by[String(Number(x.horseNumber))]=x});
       var rows=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
@@ -208,7 +209,7 @@
             paceRows.push({scenarioIndex:index+1,horseNumber:no,delta:delta});
         });
       });
-      last={active:marks.length>0,source:server.modelVersion==='arvexq-empirical-fusion-v1'?'empirical-fusion-preoff':'stage64-archived',scenarios:[],pace:paceRows,
+      last={active:marks.length>0,source:'empirical-fusion-preoff',scenarios:[],pace:paceRows,
         forecastText:String(server.forecastText||''),
         modelVersion:server.modelVersion||'',uncalibrated:!(stage.probability&&stage.probability.calibrationVerified===true),unavailable:!marks.length,
         marks:marks.map(function(x){var h=race.horses.find(function(y){return Number(y.horseNumber)===Number(x.horseNumber)})||{};return {horseNumber:Number(x.horseNumber),name:String(h.name||''),mark:String(x.mark||'')}})};
