@@ -93,3 +93,33 @@ the same timestamps as the prediction's observedFrames. Each labelled horse
 entry has the stable visual `horseId` and bounding box
 `[x1,y1,x2,y2]`. Reported scores apply ONLY to that
 reviewed clip and do not authorize deployment to live forecasts.
+
+
+## Japanese racecourse domain smoke — open CC still photos (2026-10-25)
+
+The Tokyo Yushun JRA and Sonoda NAR CC photographer photos are useful
+for checking whether the horse detector generalizes to actual Japanese
+racecourse images, without copying protected broadcaster race video.
+
+- JRA: Nadaraikon, "Roger Barows Tokyo Yushun 2019(IMG2).jpg",
+  https://commons.wikimedia.org/wiki/File:Roger_Barows_Tokyo_Yushun_2019(IMG2).jpg,
+  Creative Commons Attribution-ShareAlike 3.0.
+- NAR: Fusianasan1350, "Jingi and Centurion 201001.jpg",
+  https://commons.wikimedia.org/wiki/File:Jingi_and_Centurion_201001.jpg,
+  Creative Commons Attribution-ShareAlike 4.0.
+
+The workflow .github/workflows/arvexq-jra-nar-photo-smoke.yml downloads
+only these photographer-owned openly licensed JPEGs and the pinned
+Apache-2.0 RT-DETR model. It runs horse-class object detection and
+saves only counts, scores, source URL, artist credit, license, SHA256;
+raw images are not persisted in output artifacts or checked into GitHub.
+
+**Caveat:** These are still photos, NOT race-video frames or horse-number
+labels. No vision tracking rate, complete-runner coverage, OCR horse
+identity correctness, sectional pace or betting outcome can be measured
+from this test. The test also lacks independent full-frame labels, so
+even successful detection is NOT a detection-recall percentage.
+
+The video pipeline must remain internal and research-only until
+authorized JRA/NAR moving race footage and independently reviewed frame
+truth are available.
