@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.prediction.mass_model_export import export_all_runtimes
-from arvexq.prediction.mass_model_training import train_all_heads
+from arvexq.prediction.mass_model_export import export_all_runtimes, export_head_runtime
+from arvexq.prediction.mass_model_training import train_all_heads, train_head
 
 
 def load_jsonl(path: str | Path) -> list[dict]:
@@ -32,14 +32,20 @@ def main() -> int:
     parser.add_argument("dataset",help="Frozen training JSONL from export_mass_training_dataset.py")
     parser.add_argument("model_dir",help="Directory for CatBoost/vectorizer artifacts")
     parser.add_argument("runtime_dir",help="Directory for standalone runtime exports")
+    parser.add_argument("--head", choices=("ability",), default=None,
+                        help="Train/export the existing ability head only")
     args=parser.parse_args()
 
     rows=load_jsonl(args.dataset)
     races=len({str(r.get("raceId") or "") for r in rows})
     if races<40:
         raise SystemExit(f"refuse training: only {races} frozen races; collect more true pre-race snapshots")
-    result=train_all_heads(rows,args.model_dir)
-    exported=export_all_runtimes(args.model_dir,args.runtime_dir)
+    if args.head == "ability":
+        result={"heads":{"ability":train_head(rows,"ability",args.model_dir)}}
+        exported={"heads":{"ability":export_head_runtime("ability",args.model_dir,args.runtime_dir)}}
+    else:
+        result=train_all_heads(rows,args.model_dir)
+        exported=export_all_runtimes(args.model_dir,args.runtime_dir)
     print(json.dumps({"training":result,"export":exported},ensure_ascii=False,indent=2))
     return 0
 
