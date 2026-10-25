@@ -1,0 +1,34 @@
+name: KEIRIN LAB Pre-race Snapshot and Result Sync
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: keirin-lab-snapshot-write
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download entries and freeze pre-race predictions
+        run: python keirin-lab/scripts/sync_snapshots.py
+      - name: Commit KEIRIN snapshots only
+        run: |
+          git config user.name 'keirin-lab-bot'
+          git config user.email 'keirin-lab-bot@users.noreply.github.com'
+          git add keirin-lab/public/snapshots/
+          if git diff --cached --quiet; then
+            echo 'No snapshot change'
+          else
+            git commit -m 'Update KEIRIN pre-race snapshots and results'
+            git push
+          fi
