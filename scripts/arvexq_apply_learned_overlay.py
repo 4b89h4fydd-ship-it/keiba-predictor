@@ -27,7 +27,8 @@ LEGACY_ACTIVE_FIELDS = (
     'predictionModelVersion', 'markEngineVersion', 'markDefinitions',
     'gradeDefinitions', 'scenarioAnalysis', 'honmeiDecision',
     'recommendedBetPlan', 'forecastText', 'probabilityModelStatus',
-    'productionEligible',
+    'productionEligible', 'prediction', 'predictionMarks',
+    'recommendedBets', 'tickets', 'buyList', 'bets',
 )
 
 
@@ -48,6 +49,9 @@ def without_legacy_presentation(detail):
             continue
         horse = dict(horse)
         horse.pop('integratedEvaluation', None)
+        # The old UI also reads marks directly from horse rows.
+        for key in ('predMark', 'mark', '印', 'honmeiRole'):
+            horse.pop(key, None)
         horses.append(horse)
     if isinstance(row.get('horses'), list):
         row['horses'] = horses
