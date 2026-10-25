@@ -122,8 +122,11 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         original_marks = candidate_marks(old)
         if original_marks:
             out['kikkaCandidate'] = copy.deepcopy(old['kikkaCandidate'])
-        else:
+        elif 'kikkaCandidate' in old:
+            # Invalid older evidence must not be used to authorize a refresh.
             out.pop('kikkaCandidate', None)
+        elif 'kikkaCandidate' in out and candidate_marks(out) is None:
+            raise ValueError('new Kikuka challenger cannot be verified')
     # The full morning prediction is a permanent, first-published record.
     # It must survive a later live odds refresh, prefetch or result repair.
     baseline = old.get("morningMarkSnapshot")
