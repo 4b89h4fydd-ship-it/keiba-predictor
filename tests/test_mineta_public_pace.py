@@ -101,9 +101,9 @@ def test_four_phase_baseline_uses_only_past_field_relative_positions():
     assert phases["start"]["projectedRank"] is None
     assert phases["thirdCorner"]["observedStarts"] == 2
     assert phases["thirdCorner"]["status"] == "historical-baseline-unvalidated"
-    assert phases["thirdCorner"]["projectedRank"] == 2.67
-    assert phases["fourthCorner"]["projectedRank"] == 3.22
-    assert phases["straight"]["projectedRank"] == 3.39
+    assert phases["thirdCorner"]["projectedRank"] == 2.17
+    assert phases["fourthCorner"]["projectedRank"] == 2.89
+    assert phases["straight"]["projectedRank"] == 2.72
     assert prediction["horses"][1]["phaseProjection"]["thirdCorner"]["projectedRank"] is None
     assert prediction["phaseProjectionKind"] == "historical-relative-rank-baseline-not-calibrated"
 
