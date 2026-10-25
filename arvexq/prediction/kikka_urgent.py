@@ -14,6 +14,7 @@ from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction, veri
 from arvexq.prediction.new_forecast import build_forecast
 from arvexq.prediction.learned_scenarios import VERSION as LEARNED_VERSION
 from arvexq.prediction.prerace_archive import JST, post_at
+from arvexq.forecast.engine import _has_result_evidence
 
 RACE_ID = "jra-2026-10-25-京都-11"
 RACE_DATE = "2026-10-25"
@@ -52,7 +53,7 @@ def verified_entry(detail: dict, summary: dict, now=None) -> None:
     expected = {i: name for i, name in enumerate(EXPECTED, 1)}
     if len(current) != 18 or current != expected or (source and source != expected):
         raise ValueError("official 18-runner roster mismatch: no inferred runners")
-    if detail.get("result") or str(detail.get("raceStatus") or "") in ("確定", "終了", "速報"):
+    if _has_result_evidence(detail.get("result")) or str(detail.get("raceStatus") or "") in ("確定", "終了", "速報"):
         raise ValueError("race result already present: no retrospective preoff prediction")
     if not may_create_prerace_prediction(detail, now):
         raise ValueError("official 15:40 scheduled start passed")
@@ -126,3 +127,58 @@ def overlay_preserving_facts(detail: dict, source: dict, summary: dict, candidat
     out = deepcopy(source)
     out["kikkaCandidate"] = deepcopy(candidate)
     return out
+
+
+
+def candidate_marks(detail: dict) -> list[dict] | None:
+    """Published **research candidate** only, never a certified betting tip.
+
+    Checks original pre-off timestamp, full official roster, model provenance,
+    unique ◎ and canonical source hash. No old Stage64 result is promoted.
+    """
+    c = detail.get("kikkaCandidate")
+    if not isinstance(c, dict) or c.get("version") != VERSION:
+        return None
+    if (detail.get("id") != RACE_ID or detail.get("date") != RACE_DATE
+            or c.get("raceId") != RACE_ID or c.get("raceDate") != RACE_DATE
+            or c.get("modelVersion") != LEARNED_VERSION
+            or c.get("productionEligible") is not False
+            or c.get("provisional") is not True
+            or c.get("bettingRecommended") is not False
+            or not isinstance(c.get("modelHash"), str)
+            or len(c["modelHash"]) != 64):
+        return None
+    from datetime import datetime
+    try:
+        captured = datetime.fromisoformat(c["capturedAt"])
+        if captured.tzinfo is None:
+            return None
+        deadline = datetime.fromisoformat(RACE_DATE + "T15:40:00+09:00")
+        if captured.astimezone(JST) >= deadline:
+            return None
+    except (ValueError, TypeError, KeyError):
+        return None
+    runners = {h.get("horseNumber"): h.get("name") for h in detail.get("horses") or []
+               if isinstance(h, dict)}
+    if runners != {i: name for i, name in enumerate(EXPECTED, 1)}:
+        return None
+    marks = c.get("marks")
+    if not isinstance(marks, list) or not marks:
+        return None
+    indexed = {}
+    for row in marks:
+        if not isinstance(row, dict):
+            return None
+        no, mark = row.get("horseNumber"), row.get("mark")
+        if type(no) is not int or no not in runners or no in indexed or mark not in MARKS:
+            return None
+        indexed[no] = mark
+    if sum(mark == "◎" for mark in indexed.values()) != 1:
+        return None
+    hashed = sha256(json.dumps({
+        "raceId": RACE_ID, "roster": EXPECTED, "modelHash": c["modelHash"],
+        "marks": sorted(indexed.items()),
+    }, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+    if hashed != c.get("sourceHash"):
+        return None
+    return [{"horseNumber": no, "mark": symbol} for no, symbol in sorted(indexed.items())]
