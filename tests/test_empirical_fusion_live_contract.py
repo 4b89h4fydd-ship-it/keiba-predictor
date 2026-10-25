@@ -109,12 +109,14 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert output["predictionMarks"] == raw["predictionMarks"]
     ability = output["stages"]["ability"]
     assert ability["probabilityCalibrationVerified"] is False
-    assert ability["horseEvidence"]["1"]["recentRuns"] == 1
-    assert ability["horseEvidence"]["1"]["recentTop3Rate"] == 1.0
-    assert ability["horseEvidence"]["1"]["fullCareerRuns"] == 1
-    assert ability["horseEvidence"]["1"]["sameDistanceQuality"] == 1.0
-    assert ability["horseEvidence"]["1"]["opponentLevelMean"] is None
-    assert ability["horseEvidence"]["1"]["marginMean"] is None
+    assert set(ability["modelVersions"]) == set(METHODS)
+    assert set(ability["value"]) == {str(i) for i in range(1, 6)}
+    assert ability["value"]["1"]["recentRuns"] == 1
+    assert ability["value"]["1"]["recentTop3Rate"] == 1.0
+    assert ability["value"]["1"]["fullCareerRuns"] == 1
+    assert ability["value"]["1"]["sameDistanceQuality"] == 1.0
+    assert ability["value"]["1"]["opponentLevelMean"] is None
+    assert ability["value"]["1"]["marginMean"] is None
     assert output["humanOverrideAllowed"] is False
     assert set(output["stages"]) == {
         "ability","runningStyle","pace","probability","marks","tickets"}
