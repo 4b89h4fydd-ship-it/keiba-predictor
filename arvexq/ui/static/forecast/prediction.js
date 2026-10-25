@@ -103,7 +103,7 @@
       names[no]=true;
     }
     for(var j=0;j<c.marks.length;j++){
-      var r=c.marks[j],n=Number(r&&r.horseNumber),m=String(r&&r.mark||'');
+      var r=c.marks[j],n=Number(r&&r.horseNumber),m=String(r&&(r.markSymbol||r.mark)||'');
       if(!Number.isInteger(n)||!names[n]||marks[n]||!allowed[m])return null;
       marks[n]=m;
       if(m==='◎')count++;
