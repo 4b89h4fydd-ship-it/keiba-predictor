@@ -66,7 +66,7 @@ def main() -> int:
     p.add_argument("--retries", type=int, default=4)
     p.add_argument("--allow-missing-details", action="store_true")
     p.add_argument("--exclude-retired-banei", action="store_true",
-                   help="For flat JRA/NAR research only: omit explicitly retired Banei summaries")
+                   help="Deprecated compatibility flag; retired Banei is always excluded")
     p.add_argument("--allow-empty-day", action="store_true", help="Accept an explicitly empty D1 day for cold-start publication")
     args = p.parse_args()
 
@@ -75,7 +75,7 @@ def main() -> int:
     day = get_json(day_url, args.timeout, args.retries)
     races = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id")]
     retired = []
-    if args.exclude_retired_banei:
+    if True:  # Retired Banei must never enter active D1 prefetch/readback.
         retired = [r for r in races if str(r.get("track") or "") in ("帯広","帯広ば")
                    or "-帯広-" in str(r["id"]) or "-帯広ば-" in str(r["id"])]
         races = [r for r in races if r not in retired]
