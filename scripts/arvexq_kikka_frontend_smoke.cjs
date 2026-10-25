@@ -31,9 +31,9 @@ const candidate=()=>({
   provisional:true,productionEligible:false,bettingRecommended:false,
   probabilityCalibration:'unverified',modelHash:'a'.repeat(64),sourceHash:'b'.repeat(64),
   marks:[
-    {horseNumber:8,mark:'◎'},{horseNumber:10,mark:'○'},
-    {horseNumber:9,mark:'▲'},{horseNumber:6,mark:'△'},
-    {horseNumber:5,mark:'☆'}
+    {horseNumber:8,markSymbol:'◎'},{horseNumber:10,markSymbol:'○'},
+    {horseNumber:9,markSymbol:'▲'},{horseNumber:6,markSymbol:'△'},
+    {horseNumber:5,markSymbol:'☆'}
   ],
 });
 {

@@ -108,7 +108,7 @@ def compact_candidate(detail: dict, summary: dict, trained: dict, now=None) -> d
         "verifiedWinRate": False, "verifiedTop3Rate": False,
         "probabilityCalibration": "unverified",
         "bettingRecommended": False,
-        "marks": [{"horseNumber": no, "mark": mark} for no, mark in exact],
+        "marks": [{"horseNumber": no, "markSymbol": mark} for no, mark in exact],
         "label": "菊花賞・発走前の新方式候補（学習済み／実測校正は未完了）",
     }
 
@@ -169,7 +169,7 @@ def candidate_marks(detail: dict) -> list[dict] | None:
     for row in marks:
         if not isinstance(row, dict):
             return None
-        no, mark = row.get("horseNumber"), row.get("mark")
+        no, mark = row.get("horseNumber"), row.get("markSymbol", row.get("mark"))
         if type(no) is not int or no not in runners or no in indexed or mark not in MARKS:
             return None
         indexed[no] = mark

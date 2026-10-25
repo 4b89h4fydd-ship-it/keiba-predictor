@@ -53,7 +53,8 @@ def candidate(detail, *, stamped="2026-10-25T14:20:00+09:00", marks=None):
             "modelVersion": LEARNED_VERSION, "modelHash": model_hash,
             "sourceHash": digest, "provisional": True,
             "productionEligible": False, "bettingRecommended": False,
-            "marks": marks}
+            "marks": [{"horseNumber": row["horseNumber"], "markSymbol": row["mark"]} for row in marks],
+            "probabilityCalibration": "unverified"}
 
 
 class KikukaPreoffTests(TestCase):
@@ -118,7 +119,9 @@ class KikukaPreoffTests(TestCase):
         initial = deepcopy(previous)
         initial['kikkaCandidate'] = candidate(previous)
         first = protect_detail(previous, initial)
-        self.assertEqual(candidate_marks(first), sorted(initial['kikkaCandidate']['marks'], key=lambda row: row['horseNumber']))
+        self.assertEqual(candidate_marks(first),
+                         [{"horseNumber": x["horseNumber"], "mark": x["markSymbol"]}
+                          for x in sorted(initial['kikkaCandidate']['marks'], key=lambda row: row['horseNumber'])])
         later = deepcopy(first)
         later.pop('kikkaCandidate')
         later['oddsUpdatedAt'] = 'new-market'
@@ -128,6 +131,24 @@ class KikukaPreoffTests(TestCase):
         forged['kikkaCandidate'] = candidate(previous, stamped='2026-10-25T15:41:00+09:00')
         again = protect_detail(saved, forged)
         self.assertEqual(again['kikkaCandidate'], first['kikkaCandidate'])
+
+    def test_repair_missing_mark_field_only_when_hash_matches(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        old = facts()
+        damaged = candidate(old)
+        damaged['marks'] = [{'horseNumber': row['horseNumber']} for row in damaged['marks']]
+        old['kikkaCandidate'] = damaged
+        updated = deepcopy(old)
+        updated['kikkaCandidate'] = candidate(old, stamped='2026-10-25T14:25:00+09:00')
+        with patch('arvexq.pipeline.persisted_inputs.may_create_prerace_prediction', return_value=True):
+            restored = protect_detail(old, updated)
+        self.assertEqual(restored['kikkaCandidate']['capturedAt'], damaged['capturedAt'])
+        self.assertIsNotNone(candidate_marks(restored))
+        forged = deepcopy(updated)
+        forged['kikkaCandidate']['sourceHash'] = '0'*64
+        with patch('arvexq.pipeline.persisted_inputs.may_create_prerace_prediction', return_value=True):
+            retained = protect_detail(old, forged)
+        self.assertEqual(retained['kikkaCandidate'], damaged)
 
     def test_earlier_only_jra_training_sources(self):
         import scripts.arvexq_kikka_urgent as urgent

@@ -7,6 +7,7 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
       - scripts/arvexq_kikka_urgent.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
+      - scripts/arvexq_kikka_production_visible_smoke.mjs
       - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
   push:
@@ -15,6 +16,7 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
       - scripts/arvexq_kikka_urgent.py
       - arvexq/prediction/kikka_urgent.py
       - scripts/arvexq_kikka_frontend_smoke.cjs
+      - scripts/arvexq_kikka_production_visible_smoke.mjs
       - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
   workflow_dispatch:
@@ -61,6 +63,9 @@ jobs:
             --api-base "$CLOUDFLARE_API_BASE" \
             --out kikka-urgent-status.json \
             --publish
+      - name: Verify actual D1 symbols and deployed PWA after the protected write
+        if: github.event_name != 'pull_request'
+        run: node scripts/arvexq_kikka_production_visible_smoke.mjs
       - name: Record only candidate status and hashes
         if: always()
         uses: actions/upload-artifact@v4
