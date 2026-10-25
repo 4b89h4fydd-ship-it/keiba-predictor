@@ -87,3 +87,29 @@ def test_four_phase_evidence_does_not_invent_race_positions():
     assert missing["thirdCorner"]["status"] == "unavailable"
     assert missing["fourthCorner"]["observedPosition"] is None
     assert result["predictedPaceProbabilities"] is None
+
+
+def test_four_phase_baseline_uses_only_past_field_relative_positions():
+    source = race()
+    source["horses"][0]["recentRaces"][0]["cornerPositions"] = [2, 3, 4, 5]
+    source["horses"][0]["recentRaces"].append({
+        "date": "2026-10-18", "finish": 4, "fieldSize": 5,
+        "cornerPositions": [1, 2, 2, 3], "distance": 1400
+    })
+    prediction = public_pace_factors(source)
+    phases = prediction["horses"][0]["phaseProjection"]
+    assert phases["start"]["projectedRank"] is None
+    assert phases["thirdCorner"]["observedStarts"] == 2
+    assert phases["thirdCorner"]["status"] == "historical-baseline-unvalidated"
+    assert phases["thirdCorner"]["projectedRank"] == 2.67
+    assert phases["fourthCorner"]["projectedRank"] == 3.22
+    assert phases["straight"]["projectedRank"] == 3.39
+    assert prediction["horses"][1]["phaseProjection"]["thirdCorner"]["projectedRank"] is None
+    assert prediction["phaseProjectionKind"] == "historical-relative-rank-baseline-not-calibrated"
+
+
+def test_four_phase_baseline_has_no_data_for_debutant():
+    source = race()
+    source["horses"][0]["recentRaces"] = []
+    phases = public_pace_factors(source)["horses"][0]["phaseProjection"]
+    assert all(phase["projectedRank"] is None for phase in phases.values())
