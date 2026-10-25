@@ -134,7 +134,39 @@ def public_pace_factors(race):
                 "observedFinish": previous.get("finish") if type(previous.get("finish")) is int and previous["finish"] > 0 else None,
             },
         }
+        # A cautious baseline from prior races only. This is a descriptive
+        # projected relative rank, NOT an empirically calibrated race simulation.
+        phase_projection = {"start": {"status": "unavailable", "projectedRank": None}}
+        for key, index in (("thirdCorner", 2), ("fourthCorner", 3)):
+            samples = [
+                (row[index] - 1) / (run["fieldSize"] - 1)
+                for run in runs for row in [_positions(run)]
+                if row is not None and len(row) == 4 and run["fieldSize"] > 1
+            ]
+            phase_projection[key] = {
+                "status": "historical-baseline-unvalidated" if samples else "unavailable",
+                "observedStarts": len(samples),
+                "meanRelativePosition": round(sum(samples) / len(samples), 6) if samples else None,
+                "projectedRank": (
+                    round(1 + (len(active) - 1) * sum(samples) / len(samples), 2)
+                    if samples else None
+                ),
+            }
+        finish_samples = [
+            (run["finish"] - 1) / (run["fieldSize"] - 1)
+            for run in runs if run["fieldSize"] > 1
+        ]
+        phase_projection["straight"] = {
+            "status": "historical-baseline-unvalidated" if finish_samples else "unavailable",
+            "observedStarts": len(finish_samples),
+            "meanRelativePosition": round(sum(finish_samples) / len(finish_samples), 6) if finish_samples else None,
+            "projectedRank": (
+                round(1 + (len(active) - 1) * sum(finish_samples) / len(finish_samples), 2)
+                if finish_samples else None
+            ),
+        }
         entries.append({
+            "phaseProjection": phase_projection,
             "phaseEvidence": phase_evidence,
             "horseNumber": horse["horseNumber"],
             "lastRunDate": previous.get("_raceDate") or previous.get("date"),
@@ -163,6 +195,7 @@ def public_pace_factors(race):
         "horses": entries,
         "phaseOrder": ["start", "thirdCorner", "fourthCorner", "straight"],
         "phaseEvidenceKind": "past-race-observations-only",
+        "phaseProjectionKind": "historical-relative-rank-baseline-not-calibrated",
         "predictedActualLead": False,
         "predictedPaceProbabilities": None,
         "winProbability": None,
