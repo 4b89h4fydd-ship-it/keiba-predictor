@@ -109,6 +109,11 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert output["predictionMarks"] == raw["predictionMarks"]
     ability = output["stages"]["ability"]
     assert ability["probabilityCalibrationVerified"] is False
+    assert ability["coverage"] == {
+        "activeRunners": 5, "withPastRuns": 5,
+        "withOpponentEvidence": 0, "withMarginEvidence": 0,
+        "withPedigree": 0, "withVerifiedTraining": 0,
+    }
     assert set(ability["modelVersions"]) == set(METHODS)
     assert set(ability["value"]) == {str(i) for i in range(1, 6)}
     assert ability["value"]["1"]["pedigree"] == {
