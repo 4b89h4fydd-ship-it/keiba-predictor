@@ -118,11 +118,19 @@ def apply(bundle, models, *, now=None):
                           for name, opinion in sources['opinions'].items()},
                 }
                 labels = {row['horseNumber']: row['mark'] for row in marks}
-                ready['horses'] = [
-                    dict(h, predMark=labels.get(h.get('horseNumber'), h.get('predMark','')))
-                    if isinstance(h, dict) else h
-                    for h in detail.get('horses') or []
-                ]
+                ready['horses'] = []
+                for horse in detail.get('horses') or []:
+                    if not isinstance(horse, dict):
+                        ready['horses'].append(horse)
+                        continue
+                    runner = dict(horse)
+                    # Never retain an obsolete runner mark for an unmarked
+                    # starter; only this prediction's five marks are active.
+                    for key in ('predMark', 'mark', '印', 'honmeiRole'):
+                        runner.pop(key, None)
+                    if runner.get('horseNumber') in labels:
+                        runner['predMark'] = labels[runner['horseNumber']]
+                    ready['horses'].append(runner)
                 details.append(ready)
                 fused.append(str(detail['id']))
                 continue
