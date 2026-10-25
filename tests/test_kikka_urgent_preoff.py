@@ -132,6 +132,24 @@ class KikukaPreoffTests(TestCase):
         again = protect_detail(saved, forged)
         self.assertEqual(again['kikkaCandidate'], first['kikkaCandidate'])
 
+    def test_legacy_original_mark_gets_additive_display_symbol_alias(self):
+        from scripts.arvexq_protect_sync import protect_detail
+        prior = facts()
+        preserved = candidate(prior)
+        for mark in preserved['marks']:
+            mark['mark'] = mark.pop('markSymbol')
+        prior['kikkaCandidate'] = preserved
+        original = deepcopy(prior)
+        incoming = deepcopy(prior)
+        incoming.pop('kikkaCandidate')
+        guarded = protect_detail(prior, incoming)
+        self.assertEqual(prior, original)
+        self.assertEqual(candidate_marks(prior), candidate_marks(guarded))
+        for old, new in zip(prior['kikkaCandidate']['marks'], guarded['kikkaCandidate']['marks']):
+            self.assertEqual(new['mark'], old['mark'])
+            self.assertEqual(new['markSymbol'], old['mark'])
+        self.assertEqual(guarded['kikkaCandidate']['sourceHash'], preserved['sourceHash'])
+
     def test_repair_missing_mark_field_only_when_hash_matches(self):
         from scripts.arvexq_protect_sync import protect_detail
         old = facts()

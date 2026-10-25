@@ -121,7 +121,18 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     if str(old.get('id') or '') == RACE_ID:
         original_marks = candidate_marks(old)
         if original_marks:
-            out['kikkaCandidate'] = copy.deepcopy(old['kikkaCandidate'])
+            # D1 retains the authentic before-off 'mark' originals, but the
+            # display projection removes the legacy 'mark' key. Supply an
+            # ADDITIVE markSymbol transport alias instead of overwriting the
+            # real protected marks, model hash, capture time or source hash.
+            original = copy.deepcopy(old['kikkaCandidate'])
+            if isinstance(original.get('marks'), list):
+                for row in original['marks']:
+                    if isinstance(row, dict) and row.get('mark') and not row.get('markSymbol'):
+                        row['markSymbol'] = row['mark']
+            out['kikkaCandidate'] = original
+            if candidate_marks(out) != original_marks:
+                raise ValueError('Kikuka display symbol alias did not preserve original hash')
         elif 'kikkaCandidate' in old:
             # Oct 25 D1 had marks that LOST their literal "mark" key in an
             # old projection. It still preserves the authentic model/source
