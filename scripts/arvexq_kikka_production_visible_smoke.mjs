@@ -3,6 +3,8 @@
 /** Read-only production D1 AND production PWA real forecast smoke.
  * Real runner names, predictions, or user data are never printed to CI logs.
  */
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
 const vm=require('node:vm'), fs=require('node:fs'), assert=require('node:assert/strict');
 const target='jra-2026-10-25-京都-11', base='https://kraiz-api.4b89h4fydd.workers.dev';
 async function json(url){
