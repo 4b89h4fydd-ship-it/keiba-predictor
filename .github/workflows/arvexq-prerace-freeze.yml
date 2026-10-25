@@ -25,7 +25,6 @@ name: ARVEXQ Server Pre-Race Seal
       - arvexq/ingest/fallback_enrichment.py
       - arvexq/prediction/prerace_archive.py
       - arvexq/forecast/**
-      - arvexq/research/stage64/**
       - .github/workflows/arvexq-prerace-freeze.yml
   schedule:
     # Every 5 minutes in the Japanese racing window (JST 07:00-23:59).
