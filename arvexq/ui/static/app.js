@@ -961,20 +961,20 @@ function mergePublishedResult(oldResult,newResult){
   else if(!priorFinal&&reflectUseful(next.status))out.status=next.status;
   return out
 }
-// A full D1 detail's actual sealed Stage64 product outranks the lightweight
+// A verified empirical-fusion prediction in full D1 detail outranks the lightweight
 // day summary. The summary can be delayed and still say "disabled" after
 // pre-off marks/tickets have already been sealed in the authoritative detail.
 // Never let that stale summary erase a validated winner/pace/bet chain.
 function authorizedPublishedDetail(detail){
   if(!detail||detail.predictionStatus!=='ready')return false;
   var version=detail.predictionModelVersion;
-  if(['arvexq-empirical-fusion-v1','arvexq-stage64-product-v1'].indexOf(version)<0)return false;
+  if(version!=='arvexq-empirical-fusion-v1')return false;
   var p=detail.prediction, marks=detail.predictionMarks, tickets=detail.recommendedBets;
   if(!p||p.modelVersion!==version||
      p.predictionStatus!=='ready'||p.productionEligible!==true||
      p.raceId!==detail.id||p.date!==detail.date||
      !Array.isArray(marks)||marks.length!==5||
-     !Array.isArray(tickets)||(version!=='arvexq-empirical-fusion-v1'&&!tickets.length))return false;
+     !Array.isArray(tickets))return false;
   var labels=['◎','○','▲','△','☆'],seen={};
   if(!marks.every(function(m,i){
     var no=Number(m&&m.horseNumber);
