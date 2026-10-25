@@ -123,8 +123,29 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         if original_marks:
             out['kikkaCandidate'] = copy.deepcopy(old['kikkaCandidate'])
         elif 'kikkaCandidate' in old:
-            # Invalid older evidence must not be used to authorize a refresh.
-            out.pop('kikkaCandidate', None)
+            # Oct 25 D1 had marks that LOST their literal "mark" key in an
+            # old projection. It still preserves the authentic model/source
+            # SHA256. Repair ONLY the exact same before-off original hash,
+            # using newly generated, independently verified symbol fields.
+            # Do not modify a legitimate original or admit arbitrary new tips.
+            from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
+            old_c = old['kikkaCandidate']
+            new_c = out.get('kikkaCandidate')
+            same_original = (isinstance(old_c, dict) and isinstance(new_c, dict)
+                             and old_c.get('modelHash') == new_c.get('modelHash')
+                             and old_c.get('sourceHash') == new_c.get('sourceHash')
+                             and old_c.get('raceId') == new_c.get('raceId')
+                             and old_c.get('capturedAt') and new_c.get('capturedAt'))
+            if same_original and candidate_marks(out) and may_create_prerace_prediction(out):
+                # Keep the first real model's original pre-off capture time.
+                new_c['capturedAt'] = old_c['capturedAt']
+                if candidate_marks(out) is None:
+                    raise ValueError('Kikuka original capture timestamp invalid')
+                out['kikkaCandidate'] = new_c
+            else:
+                # Preserve even the invalid original bytes instead of erasing
+                # historic evidence or letting a foreign update overwrite it.
+                out['kikkaCandidate'] = copy.deepcopy(old_c)
         elif 'kikkaCandidate' in out and candidate_marks(out) is None:
             raise ValueError('new Kikuka challenger cannot be verified')
     # The full morning prediction is a permanent, first-published record.
