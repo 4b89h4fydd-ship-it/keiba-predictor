@@ -55,3 +55,41 @@ do not automatically adjust production marks, probabilities or betting.
 
 Note: free/open-source model licensing does not guarantee free compute.
 GitHub Actions usage quotas, large files and video processing limits apply.
+
+
+## Ground-truth accuracy evaluation (2026-10-25)
+
+The public CC-licensed Vienna harness video is a **detector/tracker technical
+check only**; it does not display JRA/NAR entry numbers and has not been
+independently annotated with horse identities. Merely detecting 87 objects
+across 32 frames is not detection accuracy, racehorse ID correctness, or
+evidence of better Japanese racing predictions.
+
+New: a benchmark comparing actual video detection boxes with separately
+human-reviewed, frame-complete truth. It computes IoU-matched precision and
+recall, global track identity F1 (IDF1-like), and **adjacent matched** identity
+switch counts. Missing annotations always cause failure, not a zero or 100%
+accuracy display.
+
+Each real-video smoke run now archives the anonymous frame-level detection
+boxes and a template for independent human annotation, **not** videos or
+automatically assumed labels. The template deliberately declares
+`reviewed: false`. It must never be used as truth without independently checking every
+sampled frame including all missed horses, using stable identities for
+the same horse across frames.
+
+Example once actual reviewed annotations exist:
+
+    python scripts/arvexq_vision_benchmark.py \
+      --prediction .arvexq-data/vision-smoke-4hz.json \
+      --truth approved-independent-ground-truth.json \
+      --output .arvexq-data/vision-accuracy-audit.json
+
+The reviewed truth JSON must include `videoSha256`, an annotation
+attestation with method `independent-manual-review`,
+`reviewed: true`, independent annotator and version, and
+`usedModelPredictionsAsTruth: false`. It must include exactly
+the same timestamps as the prediction's observedFrames. Each labelled horse
+entry has the stable visual `horseId` and bounding box
+`[x1,y1,x2,y2]`. Reported scores apply ONLY to that
+reviewed clip and do not authorize deployment to live forecasts.

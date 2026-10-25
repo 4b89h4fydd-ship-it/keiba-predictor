@@ -10,6 +10,8 @@ name: ARVEXQ CC-Licensed Real Video Smoke
       - requirements-vision.txt
       - .github/workflows/arvexq-cc-video-smoke.yml
       - scripts/arvexq_vision_track_ablation.py
+      - scripts/arvexq_vision_benchmark.py
+      - arvexq/vision/benchmark.py
   workflow_dispatch:
 
 permissions:
@@ -53,6 +55,12 @@ jobs:
             --baseline .arvexq-data/vision-smoke-1hz.json \
             --dense .arvexq-data/vision-smoke-4hz.json \
             --output .arvexq-data/vision-continuity-ablation.json
+      - name: Create unreviewed human-label template (NOT accuracy)
+        run: |
+          python scripts/arvexq_vision_benchmark.py \
+            --prediction .arvexq-data/vision-smoke-4hz.json \
+            --template \
+            --output .arvexq-data/vision-label-template.json
       - name: Preserve non-media audit only
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,5 +70,6 @@ jobs:
             .arvexq-data/vision-smoke-1hz.json
             .arvexq-data/vision-smoke-4hz.json
             .arvexq-data/vision-continuity-ablation.json
+            .arvexq-data/vision-label-template.json
           if-no-files-found: warn
           retention-days: 7
