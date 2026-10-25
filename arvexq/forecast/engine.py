@@ -1,6 +1,6 @@
 """Existing public pre-off forecast entry point: empirical Mineta/expert/AI fusion.
 
-Stage64 does NOT execute. There is no synthetic fallback if independently
+Retired forecast engines do not execute. There is no synthetic fallback if independently
 recorded pre-off forecasts, earlier evaluation weights or genuine odds are
 missing. Frozen historical originals are handled by publication.py.
 """
