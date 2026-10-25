@@ -93,6 +93,22 @@ class LearnedScenariosTests(TestCase):
         self.assertFalse(any(h['integratedEvaluation']['mark'] for h in result['horses']))
         self.assertEqual(result['recommendedBetPlan']['decision'],'見送り')
 
+    def test_verified_zero_start_runner_uses_debut_path_only(self):
+        d = target('地方')
+        d['horses'][0]['recentRaces'] = []
+        d['horses'][0]['_careerHistoryAudit'] = {
+            'complete': True, 'reportedStarts': 0,
+        }
+        model = fit_model([training_race('地方')], circuit='地方',
+                          allow_missing_starts=True)
+        result = build_forecast(d, model)
+        report = next(x for x in result['scenarioAnalysis']['reports']
+                      if x['horseNumber'] == 1)
+        self.assertTrue(report['debutNoHistory'])
+        self.assertEqual(result['predictionStatus'],'candidate-analysis')
+        self.assertTrue(any(h['integratedEvaluation']['mark'] == '◎'
+                            for h in result['horses']))
+
     def test_no_model_never_falls_back_to_fixed_weight_candidate(self):
         result = build_forecast(target('地方'))
         self.assertEqual(result['predictionStatus'],'missing-trained-model')

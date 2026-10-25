@@ -279,6 +279,28 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
     for cand in candidates[:4]:
         listing_html = get(f"{BASE}/horse/result/{cand['id']}/")
         listing = parse_listing(listing_html)
+        try:
+            total = parse_total(get(f"{BASE}/horse/{cand['id']}/"))
+        except Exception:
+            total = None
+        # A genuine unraced horse may have no result table at all.  The
+        # identity-verified profile's explicit 0戦 total is still a valid
+        # date-bound observation, and must reach the dedicated debut path;
+        # it is not a synthetic prior run.  Non-zero totals still require a
+        # complete, parseable result listing below.
+        if listing is None and total == 0:
+            matches.append(({
+                "starts": 0,
+                "asOfRaceDate": cutoff,
+                "startDates": [],
+                "nonFinishStarts": 0,
+                "source": SOURCE,
+                "sourceHorseId": cand["id"],
+                "basis": "source-total-zero-no-results-table",
+                "sourceTotalStarts": 0,
+                "listedStarts": 0,
+            }, []))
+            continue
         if listing is None or any(not r.get("date") or r.get("kind") == "unknown" for r in listing):
             continue
         dates = sorted({r["date"] for r in listing
@@ -288,10 +310,6 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
         # The birth year or an observed prior start must independently verify
         # this exact-name candidate before partial performance is accepted.
         runs = parse_verified_runs(listing_html, cutoff, dates, limit)
-        try:
-            total = parse_total(get(f"{BASE}/horse/{cand['id']}/"))
-        except Exception:
-            total = None
         stats = build_stats(listing, total, cutoff, cand["id"])
         if stats is None and (not runs or not (born is not None or known)):
             continue

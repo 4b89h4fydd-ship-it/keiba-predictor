@@ -80,6 +80,17 @@ def _training(base, target_date, needed, *, days=16, max_per_group=35):
     return cache, failures
 
 
+def _verified_debut(race):
+    """Return true only when the existing career audit proves zero starts."""
+    return any(
+        isinstance(h, dict)
+        and isinstance(h.get("_careerHistoryAudit"), dict)
+        and h["_careerHistoryAudit"].get("complete") is True
+        and h["_careerHistoryAudit"].get("reportedStarts") == 0
+        for h in race.get("horses") or []
+    )
+
+
 def run(base, target_date, *, publish=False, max_races=70,
         now=None, archive_dir=None):
     if base.rstrip("/") != VALID_BASE:
@@ -130,10 +141,14 @@ def run(base, target_date, *, publish=False, max_races=70,
             continue
         try:
             models[(circuit, family, False)] = fit_model(
-                subset, circuit=circuit, family=family, epochs=60)
+                subset, circuit=circuit, family=family,
+                allow_missing_starts=any(_verified_debut(r) for r in pending
+                                         if r.get("circuit") == circuit
+                                         and race_family(r) == family),
+                epochs=60)
         except (ValueError, TypeError) as exc:
             errors.append({"circuit": circuit, "family": family, "reason": str(exc)[:150]})
-    if any("新馬" in str(r.get("title") or "") for r in pending):
+    if any("新馬" in str(r.get("title") or "") or _verified_debut(r) for r in pending):
         for circuit, family in needed:
             if family != "flat":
                 continue
@@ -144,7 +159,7 @@ def run(base, target_date, *, publish=False, max_races=70,
             except (ValueError, KeyError, TypeError):
                 pass
     for row in pending:
-        debut = "新馬" in str(row.get("title") or "")
+        debut = "新馬" in str(row.get("title") or "") or _verified_debut(row)
         key = (row["circuit"], race_family(row), debut)
         model = models.get(key)
         if model is None:

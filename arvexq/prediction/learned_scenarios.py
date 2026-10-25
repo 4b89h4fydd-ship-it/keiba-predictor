@@ -132,6 +132,11 @@ def evidence(horse, detail):
               _median([(r['fieldSize']-rank)/(r['fieldSize']-1) for r in comparable
                        if (rank := _number(r.get('last3fRank'))) is not None and 1 <= rank <= r['fieldSize']])]
     audit = horse.get('_careerHistoryAudit') or {}
+    debut_no_history = bool(
+        not runs
+        and audit.get('complete') is True
+        and audit.get('reportedStarts') == 0
+    )
     old_track = recent.get('track')
     transfer = ('中央から地方' if old_track in JRA_TRACKS and detail.get('circuit') == '地方' else
                 '地方から中央' if old_track and old_track not in JRA_TRACKS and detail.get('circuit') == '中央' else None)
@@ -143,6 +148,7 @@ def evidence(horse, detail):
     fields = ('sire', 'dam', 'trainer', 'jockey', 'carriedWeight', 'bodyWeight', 'bodyWeightChange')
     return {'horseNumber': int(horse['horseNumber']), 'name': horse.get('name', ''),
             'observedStarts': n, 'careerComplete': audit.get('complete') is True,
+            'debutNoHistory': debut_no_history,
             'careerCoverageStatus': audit.get('status', 'unverified'),
             'featureValues': dict(zip(FEATURES, values)), 'rateEvidence': rates,
             'positionObservations': [v for v in early if v is not None],
@@ -288,9 +294,12 @@ def predict_model(detail, model):
         raise ValueError('model artifact hash mismatch')
     scenarios = []
     base = race_evidence(detail)
+    missing = [r for r in base if not r['observedStarts']]
     if len(base) < 3 or (
-            any(not r['observedStarts'] for r in base)
-            and model['training'].get('allowMissingStarts') is not True):
+            missing and (
+                model['training'].get('allowMissingStarts') is not True
+                or any(not r.get('debutNoHistory') for r in missing)
+            )):
         return {'version': VERSION, 'status': 'insufficient-history', 'reports': base, 'scenarios': []}
     for name,label in [('usual','通常の隊列'),('forward','前の位置を取り合う場合'),('held-up','想定より後ろに控える場合')]:
         rows = race_evidence(detail,scenario=name)
