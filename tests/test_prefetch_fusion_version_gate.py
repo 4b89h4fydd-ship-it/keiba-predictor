@@ -19,9 +19,13 @@ def test_retired_stage64_projection_is_not_attached():
 
 
 def test_replacement_forecast_projection_is_attached_without_mutating_source():
-    original = {"id": "nar-2026-10-26-園田-01", "horses": []}
+    original = {"id": "nar-2026-10-26-園田-01", "horses": [
+        {"horseNumber": 1, "name": "馬一"},
+        {"horseNumber": 2, "name": "馬二"},
+    ]}
     projected = {
         "predictionStatus": "ready", "predictionModelVersion": VERSION,
+        "forecastText": "展開予想の検証コメント",
         "prediction": {"modelVersion": VERSION},
         "predictionMarks": [{"horseNumber": 1, "mark": "◎"}],
         "recommendedBets": [],
@@ -30,4 +34,8 @@ def test_replacement_forecast_projection_is_attached_without_mutating_source():
         result = _attach_empirical_fusion_products(original)
     assert result["predictionModelVersion"] == VERSION
     assert result["predictionMarks"] == projected["predictionMarks"]
+    assert result["forecastText"] == "展開予想の検証コメント"
+    assert result["horses"][0]["predMark"] == "◎"
+    assert "predMark" not in result["horses"][1]
+    assert "predMark" not in original["horses"][0]
     assert "prediction" not in original
