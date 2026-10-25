@@ -77,12 +77,12 @@ class KikukaPreoffTests(TestCase):
         row["result"] = {"status": "未確定", "finishers": [], "payouts": {}}
         verified_entry(row, deepcopy(row), PRE)
 
-    def test_candidate_public_projection_is_not_a_bet_or_stage64(self):
+    def test_candidate_public_projection_is_not_a_bet_or_retired_forecast(self):
         race = facts()
         race["kikkaCandidate"] = candidate(race)
         original = deepcopy(race)
         with patch("arvexq.forecast.publication.build_prediction",
-                   side_effect=AssertionError("Stage64 never allowed for this race")):
+                   side_effect=AssertionError("Retired forecasts never allowed for this race")):
             published = public_race(race)
         self.assertEqual(published["predictionStatus"], "candidate-analysis")
         self.assertEqual([r["mark"] for r in published["predictionMarks"]

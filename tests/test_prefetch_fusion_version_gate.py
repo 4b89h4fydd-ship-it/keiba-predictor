@@ -5,12 +5,12 @@ from arvexq.prediction.empirical_fusion import VERSION
 from scripts.arvexq_prefetch import _attach_empirical_fusion_products
 
 
-def test_retired_stage64_projection_is_not_attached():
+def test_retired_projection_is_not_attached():
     original = {"id": "nar-2026-10-26-園田-01", "horses": []}
     projected = {
         "predictionStatus": "ready",
-        "predictionModelVersion": "arvexq-stage64-product-v1",
-        "prediction": {"modelVersion": "arvexq-stage64-product-v1"},
+        "predictionModelVersion": "retired-prediction-model",
+        "prediction": {"modelVersion": "retired-prediction-model"},
         "predictionMarks": [], "recommendedBets": [],
     }
     with patch("arvexq.forecast.publication.public_race", return_value=projected):

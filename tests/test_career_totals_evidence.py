@@ -90,6 +90,15 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(set(out), {"careerStartEvidence"})  # no runs: prediction inputs unchanged
         self.assertEqual(out["careerStartEvidence"]["starts"], 3)
 
+    def test_explicit_zero_start_profile_proves_debut_without_result_table(self):
+        get = fake_site(horse_page("2023100001"),
+                        {"2023100001": ("<p>no result table</p>", top_html(0))})
+        out = nk.fetch_verified_career(get, {"name": "テスト", "age": "3"}, RACE)
+        self.assertEqual(out["careerStartEvidence"]["starts"], 0)
+        self.assertEqual(out["careerStartEvidence"]["basis"],
+                         "source-total-zero-no-results-table")
+        self.assertEqual(out["careerStartEvidence"]["startDates"], [])
+
     def test_ambiguous_identity_is_not_evidence(self):
         get = fake_site(search_list(("2022100001", "テスト"), ("2019100009", "テスト")),
                         {"2022100001": (listing_html(ROWS), top_html(4)),

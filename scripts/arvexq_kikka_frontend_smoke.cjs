@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const source=fs.readFileSync('arvexq/ui/static/forecast/prediction.js','utf8');
 const context={
   ARVEXQProductionTickets:{build(){throw Error('cannot calculate betting advice for Kikuka');
-  },validatedReceipt(){throw Error('cannot use old sealed Stage64 for Kikuka')}}
+  },validatedReceipt(){throw Error('cannot use retired sealed forecast for Kikuka')}}
 };
 vm.runInNewContext(source,context,{filename:'arvexq/ui/static/forecast/prediction.js'});
 vm.runInNewContext(fs.readFileSync('arvexq/ui/static/forecast/marks.js','utf8'),context);
@@ -19,8 +19,8 @@ const base=()=>({
   id:'jra-2026-10-25-京都-11',date:'2026-10-25',track:'京都',
   raceNumber:11,distance:3000,surface:'芝',startTime:'15:40',
   scheduledStartTime:'15:40',predictionStatus:'ready',
-  // Must ignore any pre-existing Stage64 production forecast.
-  prediction:{modelVersion:'arvexq-stage64-product-v1',predictionStatus:'ready'},
+  // Must ignore any pre-existing retired production forecast.
+  prediction:{modelVersion:'retired-prediction-model',predictionStatus:'ready'},
   horses:names.map((name,i)=>({horseNumber:i+1,name})),
 });
 const candidate=()=>({
@@ -62,4 +62,4 @@ for(const update of [
   assert.equal(p.rows.some(x=>!!x.predMark),false,'tampered candidate must not show marks');
   assert.equal(context.ARVEXQProductionPrediction.current().active,false);
 }
-console.log('KIKKA_PWA_PROVISIONAL_MARKS_OK no Stage64/no tickets, 8 negative cases');
+console.log('KIKKA_PWA_PROVISIONAL_MARKS_OK no retired forecast/no tickets, 8 negative cases');

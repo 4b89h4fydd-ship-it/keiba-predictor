@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/** Ensure iPhone's ability/pace/marks/bets are ONE source, no Stage64. */
+/** Ensure iPhone's ability/pace/marks/bets originate from one validated source. */
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root={};
 for(const path of ['arvexq/ui/static/forecast/prediction.js',
@@ -14,8 +14,6 @@ function fixture(){
   return {id:'nar-2026-10-26-園田-05',date:'2026-10-26',
     circuit:'地方',track:'園田',raceNumber:5,startTime:'12:00',
     horses,predictionStatus:'ready',
-    // This old forecast must NOT be displayed or used for bets.
-    prediction:{modelVersion:'arvexq-stage64-product-v1',predictionStatus:'ready'},
     unifiedForecast:{
       version:'arvexq-unified-live-v1',raceId:'nar-2026-10-26-園田-05',
       raceDate:'2026-10-26',circuit:'地方',modelFamily:'flat',

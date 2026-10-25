@@ -25,7 +25,6 @@ name: ARVEXQ Full Prefetch
       - arvexq/pipeline/persisted_inputs.py
       - arvexq/prediction/**
       - arvexq/forecast/**
-      - arvexq/research/stage64/**
       - arvexq/ingest/**
       - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
@@ -834,18 +833,15 @@ jobs:
               # replacement model/marks were published. Validate the
               # actual D1 readback against the exact prepared race.
               new_version=str(old.get('predictionModelVersion') or '')
-              # The approved active Stage64 product is NOT the separate
-              # learned-whole-career research overlay. Require exact D1
-              # readback of the already computed marks and recommended bets.
-              if new_version == 'arvexq-stage64-product-v1' and old.get('predictionStatus') == 'ready':
+              if new_version == 'arvexq-empirical-fusion-v1' and old.get('predictionStatus') == 'ready':
                   if d.get('predictionStatus') != 'ready':
-                      missing_new_forecast.append((rid,'stage64-status-not-persisted'))
+                      missing_new_forecast.append((rid,'fusion-status-not-persisted'))
                   if d.get('predictionModelVersion') != new_version:
-                      missing_new_forecast.append((rid,'stage64-model-not-persisted'))
+                      missing_new_forecast.append((rid,'fusion-model-not-persisted'))
                   if d.get('predictionMarks') != old.get('predictionMarks'):
-                      missing_new_forecast.append((rid,'stage64-marks-not-persisted'))
+                      missing_new_forecast.append((rid,'fusion-marks-not-persisted'))
                   if d.get('recommendedBets') != old.get('recommendedBets'):
-                      missing_new_forecast.append((rid,'stage64-bets-not-persisted'))
+                      missing_new_forecast.append((rid,'fusion-bets-not-persisted'))
               if new_version.startswith('arvexq-learned-whole-career'):
                   if str(d.get('predictionModelVersion') or '')!=new_version:
                       missing_new_forecast.append((rid,'model-version-not-persisted'))

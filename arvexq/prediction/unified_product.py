@@ -3,7 +3,7 @@
 Every visible mark, race-pace observation and candidate ticket must originate
 from the SAME previously trained, date-isolated model prediction. The video
 channel stays unavailable until independently reviewed horse identities exist.
-No after-off materialization and no Stage64 or subjective override.
+No after-off materialization and no retired or subjective override.
 """
 from __future__ import annotations
 
@@ -197,7 +197,11 @@ def generate(race, model, *, now=None):
     product = {
         "version": VERSION, "raceId": race["id"], "raceDate": race["date"],
         "circuit": race["circuit"], "modelFamily": race_family(race),
-        "specialHandling": ("新馬・既走ゼロを欠損として分離" if "新馬" in str(race.get("title") or "")
+        "specialHandling": ("新馬・既走ゼロを専用処理" if (
+                                "新馬" in str(race.get("title") or "")
+                                or any((h.get("debutNoHistory") is True)
+                                       for h in (prediction.get("scenarioAnalysis", {}).get("reports") or []))
+                            )
                             else "障害専用" if race_family(race) == "jumps" else "通常"),
         "capturedAt": now.isoformat(), "trainedThrough": training["lastDate"],
         "modelVersion": MODEL_VERSION, "modelHash": model["modelHash"],
