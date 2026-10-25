@@ -6,12 +6,16 @@ name: ARVEXQ Kikuka Sho Emergency Preoff
     paths:
       - scripts/arvexq_kikka_urgent.py
       - arvexq/prediction/kikka_urgent.py
+      - scripts/arvexq_kikka_frontend_smoke.cjs
+      - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
   push:
     branches: [main]
     paths:
       - scripts/arvexq_kikka_urgent.py
       - arvexq/prediction/kikka_urgent.py
+      - scripts/arvexq_kikka_frontend_smoke.cjs
+      - arvexq/ui/static/forecast/prediction.js
       - .github/workflows/arvexq-kikka-urgent.yml
   workflow_dispatch:
 
@@ -42,6 +46,8 @@ jobs:
       - name: Verify Kyoto 11R immutable roster and time guards
         run: |
           python -m unittest discover -s tests -p 'test_kikka_urgent_preoff.py' -v
+      - name: Validate iPhone Kikuka mark display is NOT Stage64
+        run: node scripts/arvexq_kikka_frontend_smoke.cjs
       - name: Dry-run only target Kyoto 11R from D1 on PR
         if: github.event_name == 'pull_request'
         run: |
