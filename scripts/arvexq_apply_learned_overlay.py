@@ -124,8 +124,22 @@ def apply(bundle, models, *, now=None):
                 continue
             except (ValueError, TypeError, KeyError, OverflowError) as exc:
                 fusion_errors[str(detail['id'])] = type(exc).__name__ + ': ' + str(exc)
-        # No new live Stage64 prediction may be published. Previous frozen
-        # Stage64 receipts are already handled by the immutable-seal guard.
+        # From the user-approved replacement cutoff onward, do not
+        # run the obsolete learned-forecast fallback at all. A missing
+        # five-method prediction is explicitly unavailable, not a
+        # different model's unverified candidate.
+        if str(detail.get('date') or '') >= '2026-10-23':
+            if not may_create_prerace_prediction(detail):
+                details.append(detail)
+                skipped[str(detail['id'])] = 'post-off-original-preserved'
+            else:
+                details.append(without_legacy_presentation(detail))
+                skipped[str(detail['id'])] = (
+                    'fusion-inputs-unavailable' if not fusion
+                    else 'fusion-inputs-invalid')
+            continue
+        # Preserve historical sealed originals and keep the pre-cutoff
+        # research behavior only for historical diagnostic compatibility.
         circuit = detail.get('circuit')
         model = models.get(circuit)
         if not isinstance(model, dict):
