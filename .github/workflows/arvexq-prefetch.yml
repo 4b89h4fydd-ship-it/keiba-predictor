@@ -935,7 +935,7 @@ jobs:
           unexpected_analysis=[]
           for rid in missing_analysis:
               row=returned.get(rid) or {}
-              if row.get('predictionStatus') == 'disabled':
+              if row.get('predictionStatus') in ('disabled','unified-reference-ready'):
                   meta=row.get('preparedMeta') if isinstance(row.get('preparedMeta'),dict) else {}
                   unavailable_analysis.append({
                       'raceId':rid,
