@@ -14,7 +14,10 @@ export default {async fetch(request,env,ctx){
   if(url.pathname.startsWith('/api/forecast-revisions/')||url.pathname.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
   if(url.pathname==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
-      try{const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));if(restored)return restored}
+      try{
+        const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));
+        if(restored){restored.headers.set('x-arvexq-readback','full-preoff');return restored}
+      }
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
   }
   if(url.pathname==='/api/admin/snapshot-export')return snapshotExport(request,env);

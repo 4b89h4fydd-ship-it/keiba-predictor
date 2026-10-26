@@ -290,6 +290,12 @@ jobs:
           with open('api-private-storage-audit.json','w') as f:json.dump(metrics,f,indent=2)
           print('API_HEALTH_AND_READONLY_STORAGE_PASS',json.dumps(metrics))
           PY
+      - name: Verify restored pre-off forecast readback
+        if: ${{ !inputs.verify_only }}
+        run: |
+          python scripts/arvexq_prediction_readback.py \
+            --api-base https://kraiz-api.4b89h4fydd.workers.dev \
+            --date "$(TZ=Asia/Tokyo date +%F)"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,3 +1,7 @@
+// This route is the canonical D1-to-app readback for compressed full details.
+// Do not fall through to the thin index: it can legitimately carry disabled
+// presentation fields while its lossless envelope still contains a sealed
+// pre-off unifiedForecast.
 const KEY='arvexqFullPayload',VERSION='arvexq-full-payload-v1';
 export async function restoreBytes(envelope){
   const ref=envelope&&envelope[KEY];
