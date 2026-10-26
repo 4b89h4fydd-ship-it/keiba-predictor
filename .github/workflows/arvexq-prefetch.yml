@@ -931,8 +931,26 @@ jobs:
               # Do not fail the race card publication. Static archive is separately
               # deployed and verified by the Cloudflare Web Deploy workflow.
           print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
-          if missing_analysis:
-              raise SystemExit('D1_ANALYSIS_INCOMPLETE: '+str(missing_analysis[:20]))
+          unavailable_analysis=[]
+          unexpected_analysis=[]
+          for rid in missing_analysis:
+              row=returned.get(rid) or {}
+              if row.get('predictionStatus') == 'disabled':
+                  meta=row.get('preparedMeta') if isinstance(row.get('preparedMeta'),dict) else {}
+                  unavailable_analysis.append({
+                      'raceId':rid,
+                      'status':'disabled',
+                      'reason':(row.get('dataCoreHealth') or meta.get('reason')
+                                or meta.get('supplementalSearch')
+                                or 'verified analysis inputs were insufficient')})
+              else:
+                  unexpected_analysis.append(rid)
+          print('D1_ANALYSIS_UNAVAILABLE',json.dumps(unavailable_analysis,ensure_ascii=False))
+          print('D1_ANALYSIS_GENERATION_SUMMARY',json.dumps({
+              'prepared':len(expected),'generated':len(expected)-len(unavailable_analysis),
+              'unavailable':len(unavailable_analysis),'unexpected':len(unexpected_analysis)}))
+          if unexpected_analysis:
+              raise SystemExit('D1_ANALYSIS_INCOMPLETE: '+str(unexpected_analysis[:20]))
           if missing_horse_history:
               raise SystemExit('D1_HORSE_HISTORY_INCOMPLETE: '+str(missing_horse_history[:25]))
           if missing_new_forecast:
