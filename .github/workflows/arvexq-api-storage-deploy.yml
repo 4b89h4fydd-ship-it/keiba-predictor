@@ -176,9 +176,21 @@ jobs:
               # module; worker.js is its imported legacy implementation and
               # also exports a fetch handler.  Require that explicit entry
               # when present, and remain fail-closed for any other ambiguity.
-              preferred=[name for name in entry if name=='worker-entry.js']
+              preferred=[name for name in module_names if name=='worker-entry.js']
               if preferred:
                   assert len(preferred)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
+                  source_maps=[json.loads(body) for header,body in modules
+                               if b'worker-entry.js.map' in header]
+                  assert len(source_maps)==1, 'UNKNOWN_BUNDLE_ENTRY_SOURCEMAP_MISSING'
+                  mapped=dict(zip(source_maps[0].get('sources') or [],
+                                  source_maps[0].get('sourcesContent') or []))
+                  entry_source=mapped.get('worker-entry.js')
+                  assert entry_source is not None, 'UNKNOWN_BUNDLE_ENTRY_SOURCE_MISSING'
+                  assert 'export default' in entry_source and 'fetch' in entry_source, \
+                      'UNKNOWN_BUNDLE_ENTRY_EXPORT_FETCH_MISSING'
+                  entry_body=next(body for header,body in modules
+                                   if b'name="worker-entry.js"' in header and b'.js.map' not in header)
+                  assert b'fetch' in entry_body, 'UNKNOWN_BUNDLE_FETCH_MISSING'
                   entry=preferred
               else:
                   assert len(entry)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
