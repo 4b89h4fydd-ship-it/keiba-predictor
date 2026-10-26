@@ -122,7 +122,11 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     if earlier_unified:
         out['unifiedForecast'] = copy.deepcopy(earlier_unified)
     elif 'unifiedForecast' in out and not verified_unified(out):
-        raise ValueError('unverified or tampered unified forecast receipt')
+        # Do not publish an unverifiable receipt, but do not discard the
+        # independently verified racecard/empirical forecast either.  An
+        # invalid new candidate is a field-level quarantine case; an existing
+        # valid receipt was already retained above and remains immutable.
+        out.pop('unifiedForecast', None)
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.
