@@ -80,3 +80,31 @@ class MassModelRuntime:
             for head in ("ability", "win", "podium", "value", "danger")
             if (self.runtime_dir / f"{head}.manifest.json").exists()
         }
+
+
+def predict_ability_for_race(race: dict[str, Any], runtime_dir: str | Path) -> dict[int, float]:
+    """Run the existing trained ability head over the existing race feature matrix.
+
+    Explicit artifact path only: does not enable an unvalidated model in the
+    live forecast, infer absent artifacts or affect marks/tickets.
+    """
+    from arvexq.prediction.mass_feature_factory import build_race_feature_matrix
+
+    runtime = MassModelRuntime(runtime_dir)
+    manifest = Path(runtime_dir) / "ability.manifest.json"
+    if not manifest.is_file():
+        raise FileNotFoundError("missing trained ability runtime manifest")
+    rows = build_race_feature_matrix(race.get("horses") or [], race)
+    results: dict[int, float] = {}
+    for row in rows:
+        horse = row["horse"]
+        no = horse.get("horseNumber")
+        if type(no) is not int or no < 1 or no in results:
+            raise ValueError("ambiguous race horse number")
+        score = runtime.load_head("ability").predict(row["features"])
+        if not math.isfinite(score) or not 0 <= score <= 1:
+            raise ValueError("invalid ability model score")
+        results[no] = score
+    if len(results) < 3:
+        raise ValueError("incomplete ability race roster")
+    return results
