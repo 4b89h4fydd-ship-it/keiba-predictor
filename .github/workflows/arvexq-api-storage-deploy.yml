@@ -160,7 +160,10 @@ jobs:
               module_names=[]
               entry=[]
               directory=Path('.arvexq-production-overlay');directory.mkdir(exist_ok=True)
-              for header,body in modules:
+          for header,body in modules:
+              # Source maps are preserved in the raw multipart backup but are
+              # not executable Worker modules and have no entry filename.
+              if b'.js.map' in header: continue
                   match=re.search(rb'(?:filename|name)="([^"/]+\.m?js)"',header)
                   assert match, 'UNKNOWN_BUNDLE_MODULE_NAME_MISSING'
                   name=match.group(1).decode('utf-8','replace')
