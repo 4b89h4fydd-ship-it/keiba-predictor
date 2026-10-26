@@ -172,7 +172,16 @@ jobs:
                   (directory/name).write_bytes(body)
                   if b'export default' in body and b'fetch' in body:
                       entry.append(name)
-              assert len(entry)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
+              # The live source map identifies worker-entry.js as the public
+              # module; worker.js is its imported legacy implementation and
+              # also exports a fetch handler.  Require that explicit entry
+              # when present, and remain fail-closed for any other ambiguity.
+              preferred=[name for name in entry if name=='worker-entry.js']
+              if preferred:
+                  assert len(preferred)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
+                  entry=preferred
+              else:
+                  assert len(entry)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
               for name in ('api_forecast_revisions.mjs','api_storage_audit.mjs',
                            'api_snapshot_export.mjs','api_full_snapshot.mjs'):
                   (directory/name).write_bytes((Path('workers')/name).read_bytes())
