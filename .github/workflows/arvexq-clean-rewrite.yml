@@ -1,0 +1,21 @@
+name: ARVEXQ Clean Rewrite Tests
+on:
+  push:
+    branches:
+      - rewrite/arvexq-clean-engine-20261028
+    paths:
+      - rewrite/**
+      - .github/workflows/arvexq-clean-rewrite.yml
+  workflow_dispatch:
+jobs:
+  clean-contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run replacement-engine contract tests
+        run: python -m unittest discover -s rewrite -p 'test_*.py' -v
