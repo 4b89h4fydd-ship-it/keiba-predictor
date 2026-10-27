@@ -5,6 +5,7 @@ on:
       - rewrite/arvexq-clean-engine-20261028
     paths:
       - rewrite/**
+      - tests/clean_engine/**
       - .github/workflows/arvexq-clean-rewrite.yml
   workflow_dispatch:
 jobs:
@@ -18,4 +19,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run replacement-engine contract tests
-        run: python -m unittest discover -s rewrite -p 'test_*.py' -v
+        run: |
+          python -m unittest discover -s rewrite -p 'test_*.py' -v
+          python -m unittest discover -s tests/clean_engine -v
