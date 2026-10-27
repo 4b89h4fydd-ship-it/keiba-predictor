@@ -146,7 +146,7 @@
        unified.circuit===race.circuit&&unified.researchOnly===true&&
        unified.probabilitiesCalibrated===false&&
        Array.isArray(unified.roster)&&Array.isArray(unified.marks)&&
-       unified.roster.length>=3&&unified.roster.length===race.horses.length&&
+       unified.roster.length>=3&&Array.isArray(race.horses)&&
        /^[a-f0-9]{64}$/i.test(unified.receiptSha256||'')&&
        /^[a-f0-9]{64}$/i.test(unified.modelHash||'')&&
        String(unified.trainedThrough||'')<String(race.date||'')&&
@@ -160,7 +160,12 @@
       });
       (race.horses||[]).forEach(function(h){
         var n=Number(h&&h.horseNumber);
-        if(roster[n]!==String(h&&h.name||''))accepted=false;
+        if(!Number.isInteger(n)||n<=0)return;
+        // Scratched/withdrawn entries may remain on the public racecard;
+        // a verified receipt contains only the active pre-off roster.
+        if(!Object.prototype.hasOwnProperty.call(roster,n)){
+          if(!(h.scratched||h.withdrawn||h.cancelled||h.status==='取消'||h.status==='除外'))accepted=false;
+        }else if(roster[n]!==String(h&&h.name||''))accepted=false;
       });
       unified.marks.forEach(function(x){
         var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
@@ -172,6 +177,7 @@
             unifiedPlan=unifiedStages.length?{stages:unifiedStages}:null;
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
           var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
+          if(mark==='注')mark='';
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             predRank:999,winProbability:null,p1Probability:null,p2Probability:null,

@@ -144,6 +144,7 @@ jobs:
       - name: Betting marks and ticket reconciliation regression
         run: |
           node --check arvexq/ui/static/app.js
+          node scripts/arvexq_unified_receipt_marks_smoke.cjs
           node scripts/arvexq_bet_role_guide_smoke.js
           node scripts/arvexq_race_source_integrity_smoke.js
           node scripts/arvexq_empirical_selection_smoke.js
