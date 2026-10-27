@@ -30,7 +30,7 @@ jobs:
       - name: Install browser validation runtime
         run: |
           python -m pip install playwright==1.62.0
-          python -m playwright install --with-deps chromium
+          python -m playwright install --with-deps --only-shell chromium
       - name: Replay captured real races through API and browser
         shell: bash
         run: |

@@ -36,7 +36,7 @@
 - 地方全頭照合: https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510222700000001
 
 公開ページを取得し、URL・取得時刻・HTTP状態・元バイトSHA256を保存。原HTMLは
-`/workspace/arvexq-evidence/run3/sources/`に保管し、リポジトリへは正規化した事実データの
+`/workspace/arvexq-evidence/run4/sources/`に保管し、リポジトリへは正規化した事実データの
 テスト用キャプチャだけを追加。キャッシュは再読込時に元バイトハッシュを照合する。
 NAR公式の動的出馬表はrobots.txtで巡回禁止だったため新コレクターで使用しない。
 楽天のrobots.txtは対象パスを禁止せず60秒の間隔を指定。コレクターは間隔と禁止を尊重。
@@ -91,7 +91,7 @@ API:
 - `GET /api/v1/races/{race_id}/horses/{number}`: 馬詳細、証拠、欠損項目。
 
 両レース200。全頭数18/10、分析行数18/10、3シナリオの各4段階を確認。
-実HTTPレスポンス全文は`/workspace/arvexq-evidence/api-final/`。
+実HTTPレスポンス全文は`/workspace/arvexq-evidence/api-final4/`。
 機械可読の要約は[api-evidence.json](api-evidence.json)。
 保存後の独立再オープンで入力・分析・receiptが一致。変更・削除・異なる内容での再保存を
 拒否。APIはSQLiteをread-onlyで開く。破損時はhealthも500/`ok:false`で返す。
@@ -103,7 +103,7 @@ Chromium（390×844、ja-JP）で両レース合格。通信の成功レスポ�
 
 既存CSSと主要な画面枠・操作導線を再利用した独立画面であり、既存全画面の
 ピクセル一致・全機能互換・PWAオフライン対応を証明するものではない。
-スクリーンショットは`/workspace/arvexq-evidence/browser-final4/`。
+スクリーンショットは`/workspace/arvexq-evidence/browser-final5/`。
 [ブラウザ結果](browser-evidence.json)、[保存結果](execution-summary.json)、
 [全頭照合](roster-evidence.json)も参照。
 

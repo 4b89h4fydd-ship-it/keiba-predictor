@@ -24,6 +24,11 @@ class SliceTests(unittest.TestCase):
             self.assertTrue(all(p['date']<race['date'] for h in race['horses'] for p in h['histories']))
             self.assertTrue(all(h['odds'] is not None for h in race['horses']))
         self.assertTrue(any(h.get('unscored_history') for h in CASES[1]['horses']))
+        for horse in CASES[1]['horses']:
+            self.assertTrue(horse['pedigree'][0].startswith('父：'))
+            self.assertTrue(horse['pedigree'][1].startswith('母：'))
+            self.assertTrue(horse['pedigree'][2].startswith('母父：'))
+            self.assertNotIn(horse['name'], ' '.join(horse['pedigree']))
 
     def test_four_stages_all_horses_every_scenario(self):
         for race in CASES:

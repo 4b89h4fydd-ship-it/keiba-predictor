@@ -5,11 +5,11 @@
     "horses": 18,
     "analysis_rows": 18,
     "scenarios": 3,
-    "api_response_sha256": "3f0549bcb82ba656763d0f57de6e27c96ec6ad246fe800dd1a0e1b20fdc4fa51",
+    "api_response_sha256": "06fd8527dd3e2bb06f517450d146e6187f671ebae93cf337e1dd38c600e23854",
     "receipt": {
       "input_sha256": "94fd489b2a01b4ec1ea21f895ebd10bb0e6eaf8da3defe57d5722463f28b8d4f",
       "analysis_sha256": "52afbceb4423276fdf4ef434e2310fb35757429c82bb46b401504802db6a23db",
-      "generated_at": "2026-10-27T16:36:12.743469+00:00",
+      "generated_at": "2026-10-27T16:47:41.883591+00:00",
       "analysis_type": "retrospective",
       "pre_off_original": false
     },
@@ -22,11 +22,11 @@
     "horses": 10,
     "analysis_rows": 10,
     "scenarios": 3,
-    "api_response_sha256": "a25ffcd79b7a8631bb963b2bfdc91db7293863daa15fdcacbc2f64ac60cf5d9d",
+    "api_response_sha256": "0ed67fe2e785413d9f04ae4f1bd5f1a4c1a79496e671ee370b3bbf1e6de4313a",
     "receipt": {
-      "input_sha256": "754ce7a7e2f74f224c0fcf76434b0035fd5a22c5bb30d582cf98ce85e20fc47e",
+      "input_sha256": "e9906be545ca92259b3e07c5d2a4673c48ed88876ac8145b9a5776fc12356411",
       "analysis_sha256": "f443131635b4521634c80b45b91f1c50e1ca4965eca5a8b17923003f5a0cf0ed",
-      "generated_at": "2026-10-27T16:36:12.802978+00:00",
+      "generated_at": "2026-10-27T16:47:41.939295+00:00",
       "analysis_type": "retrospective",
       "pre_off_original": false
     },

@@ -16,7 +16,7 @@
     "receipt": {
       "input_sha256": "94fd489b2a01b4ec1ea21f895ebd10bb0e6eaf8da3defe57d5722463f28b8d4f",
       "analysis_sha256": "52afbceb4423276fdf4ef434e2310fb35757429c82bb46b401504802db6a23db",
-      "generated_at": "2026-10-27T16:36:12.743469+00:00",
+      "generated_at": "2026-10-27T16:47:41.883591+00:00",
       "analysis_type": "retrospective",
       "pre_off_original": false
     },
@@ -37,9 +37,9 @@
       "9": "☆"
     },
     "receipt": {
-      "input_sha256": "754ce7a7e2f74f224c0fcf76434b0035fd5a22c5bb30d582cf98ce85e20fc47e",
+      "input_sha256": "e9906be545ca92259b3e07c5d2a4673c48ed88876ac8145b9a5776fc12356411",
       "analysis_sha256": "f443131635b4521634c80b45b91f1c50e1ca4965eca5a8b17923003f5a0cf0ed",
-      "generated_at": "2026-10-27T16:36:12.802978+00:00",
+      "generated_at": "2026-10-27T16:47:41.939295+00:00",
       "analysis_type": "retrospective",
       "pre_off_original": false
     },

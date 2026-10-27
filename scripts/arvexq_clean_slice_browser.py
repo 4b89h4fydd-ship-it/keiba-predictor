@@ -27,6 +27,7 @@ def run(base, directory):
             assert '見送り' in page.locator('#section-bets').inner_text()
             for row in document['analysis']['rows']:
                 button=page.locator('button[data-horse="'+str(row['number'])+'"]')
+                assert button.locator('..').locator('[data-ai-mark]').get_attribute('data-ai-mark')==row['mark']
                 button.click()
                 page.wait_for_selector('#horse-dialog[open]')
                 heading=page.locator('#horse-detail h2').inner_text()

@@ -142,14 +142,17 @@ def nar_card(html, source):
                             'last3f':float(trailing[1]) if trailing else None,
                             'class':text(route), 'opponent':list(cell.stripped_strings)[-1],
                             'going':text(cell.select_one('.stateInfo')) or None, 'source':source})
-        pedigree = [x.strip() for x in name_cell.stripped_strings]
+        parent_names = [str(x).strip() for x in name_cell.find_all(string=True, recursive=False) if str(x).strip()]
+        maternal_sire = re.search(r'\(([^)]+)\)', text(name_cell.select_one('.append')))
+        pedigree = (['父：'+parent_names[0], '母：'+parent_names[1],
+                     '母父：'+maternal_sire[1]] if len(parent_names)==2 and maternal_sire else None)
         horses.append({'number':int(text(row.select_one('td.number'))), 'frame':frame,
                        'horse_id':link['href'].split('/')[-1], 'name':text(link),
                        'sex':age[1] if age else None, 'age':int(age[2]) if age else None,
                        'jockey':text(jockey), 'carried_weight':number(profile, r'\d{2}\.\d'),
                        'trainer':lines[-1] if lines else None,
                        'body_weight':number(text(row.select_one('td.weightDistance'))),
-                       'pedigree':pedigree[:3], 'odds':number(text(name_cell.select_one('.rate'))),
+                       'pedigree':pedigree, 'odds':number(text(name_cell.select_one('.rate'))),
                        'cancelled':False, 'unscored_history':unscored, 'histories':history, 'source':source})
     return {'id':'nar-2025-10-22-園田-01', 'date':'2025-10-22', 'circuit':'地方',
             'track':'園田', 'race_number':1, 'title':'Ｃ３二 ３歳以上', 'surface':'ダ', 'distance':1400,
