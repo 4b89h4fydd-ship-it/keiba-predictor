@@ -1188,8 +1188,8 @@ function morningSavedMarkRows(r){
       predRank:999,singleWinSuitable:!!z.singleWinSuitable};
   })
 }
-function minimalRacecardPanel(r){
-  var receiptRows=morningSavedMarkRows(r);
+function minimalRacecardPanel(r,p){
+  var receiptRows=p&&Array.isArray(p.rows)?p.rows:morningSavedMarkRows(r);
   return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){var z=receiptRows.find(function(x){return n(x.horse&&x.horse.horseNumber)===n(h.horseNumber)});return racecardEntryRow(r,h,z)}).join('')
     +'</div></section></div>';
@@ -1197,7 +1197,7 @@ function minimalRacecardPanel(r){
 function safeEntryPanel(r,p){
   try{return runnerStyleSection(r,p)}catch(error){
     traceRaceDetail(r.id,'section-failed',{section:'entry-decoration',message:String(error&&error.message||error)});
-    return minimalRacecardPanel(r)
+    return minimalRacecardPanel(r,p)
   }
 }
 var racePredictionTasks=new WeakMap();
@@ -2602,7 +2602,7 @@ function renderRace(){
   }catch(e){
     predictionError=predictionError||e;
     state.openPanel='entry';
-    content=minimalRacecardPanel(r)
+    content=minimalRacecardPanel(r,p)
   }
   if(predictionError&&content.indexOf('AI解析はバックグラウンド')<0){
     content='<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析の一部を再取得中です。出走表の表示は継続します。</div>'+content
