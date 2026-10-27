@@ -1,0 +1,4270 @@
+{
+  "id": "jra-2025-10-26-京都-11",
+  "date": "2025-10-26",
+  "circuit": "中央",
+  "track": "京都",
+  "race_number": 11,
+  "title": "菊花賞 GI",
+  "surface": "芝",
+  "distance": 3000,
+  "starts_at": "2025-10-26T15:40:00+09:00",
+  "declared_count": 18,
+  "field_count_basis": "published_card_rows; independently cross-check official roster",
+  "source": {
+    "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+    "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+    "status": 200,
+    "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+    "bytes": 130072,
+    "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+    "content_type": "text/html;charset=UTF-8"
+  },
+  "horses": [
+    {
+      "number": 1,
+      "frame": 1,
+      "horse_id": "2022104733",
+      "name": "コーチェラバレー",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "西村 淳也",
+      "carried_weight": 57.0,
+      "trainer": "安田 翔伍",
+      "body_weight": 438.0,
+      "pedigree": [
+        "父： キズナ",
+        "母：キャンプロック",
+        "(母父：Myboycharlie)"
+      ],
+      "odds": 107.0,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-13",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040308",
+          "title": "生田特",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 6,
+          "finish": 1,
+          "time_seconds": 145.7,
+          "margin_seconds": -0.2,
+          "corners": [
+            5,
+            5,
+            5,
+            6
+          ],
+          "last3f": 33.9,
+          "class": "生田特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+            "fetched_at": "2026-10-27T16:22:16.975805+00:00",
+            "status": 200,
+            "sha256": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113",
+            "bytes": 153067,
+            "file": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-07",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505030109",
+          "title": "稲城特",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 12,
+          "finish": 5,
+          "time_seconds": 146.3,
+          "margin_seconds": 2.0,
+          "corners": [
+            12,
+            12,
+            12,
+            11
+          ],
+          "last3f": 34.2,
+          "class": "稲城特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+            "fetched_at": "2026-10-27T16:22:16.975805+00:00",
+            "status": 200,
+            "sha256": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113",
+            "bytes": 153067,
+            "file": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508020511",
+          "title": "京都新",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 10,
+          "finish": 7,
+          "time_seconds": 135.6,
+          "margin_seconds": 0.9,
+          "corners": [
+            10,
+            10,
+            9,
+            9
+          ],
+          "last3f": 33.9,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+            "fetched_at": "2026-10-27T16:22:16.975805+00:00",
+            "status": 200,
+            "sha256": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113",
+            "bytes": 153067,
+            "file": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010509",
+          "title": "ゆきや",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 12,
+          "finish": 3,
+          "time_seconds": 145.0,
+          "margin_seconds": 0.4,
+          "corners": [
+            9,
+            9,
+            8,
+            10
+          ],
+          "last3f": 34.4,
+          "class": "ゆきや",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+            "fetched_at": "2026-10-27T16:22:16.975805+00:00",
+            "status": 200,
+            "sha256": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113",
+            "bytes": 153067,
+            "file": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-09",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2510010605",
+          "title": "新馬",
+          "track": "小倉",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 12,
+          "finish": 1,
+          "time_seconds": 124.1,
+          "margin_seconds": -0.4,
+          "corners": [
+            5,
+            5,
+            5,
+            3
+          ],
+          "last3f": 35.1,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104733/",
+            "fetched_at": "2026-10-27T16:22:16.975805+00:00",
+            "status": 200,
+            "sha256": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113",
+            "bytes": 153067,
+            "file": "be498c13b9135a3144f65dc4630cfd54fff61c6f2bb04e2dcbe4ae9913ac1113.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 6,
+      "unscored_history": []
+    },
+    {
+      "number": 2,
+      "frame": 1,
+      "horse_id": "2022104615",
+      "name": "アマキヒ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "戸崎 圭太",
+      "carried_weight": 57.0,
+      "trainer": "国枝 栄",
+      "body_weight": 492.0,
+      "pedigree": [
+        "父： ブラックタイド",
+        "母： アパパネ",
+        "(母父： キングカメハメハ )"
+      ],
+      "odds": 45.9,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-17",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2504020808",
+          "title": "阿賀野",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 134.3,
+          "margin_seconds": -0.3,
+          "corners": [
+            6,
+            6,
+            5,
+            4
+          ],
+          "last3f": 35.0,
+          "class": "阿賀野",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505020111",
+          "title": "青葉賞",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 13,
+          "finish": 5,
+          "time_seconds": 145.0,
+          "margin_seconds": 0.2,
+          "corners": [
+            8,
+            7,
+            6,
+            6
+          ],
+          "last3f": 34.0,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-23",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506020806",
+          "title": "3歳",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 12,
+          "finish": 1,
+          "time_seconds": 120.0,
+          "margin_seconds": -0.0,
+          "corners": [
+            10,
+            10,
+            2,
+            2
+          ],
+          "last3f": 35.8,
+          "class": "3歳",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-09",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505010409",
+          "title": "ゆりか",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 11,
+          "finish": 3,
+          "time_seconds": 148.2,
+          "margin_seconds": 0.4,
+          "corners": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "last3f": 33.9,
+          "class": "ゆりか",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-28",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2406050911",
+          "title": "ホープ",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 17,
+          "time_seconds": 122.7,
+          "margin_seconds": 2.2,
+          "corners": [
+            9,
+            11,
+            12,
+            16
+          ],
+          "last3f": 36.5,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-27",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2405040805",
+          "title": "新馬",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 15,
+          "finish": 1,
+          "time_seconds": 121.7,
+          "margin_seconds": -0.0,
+          "corners": [
+            1,
+            1,
+            1
+          ],
+          "last3f": 34.0,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104615/",
+            "fetched_at": "2026-10-27T16:22:19.166634+00:00",
+            "status": 200,
+            "sha256": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c",
+            "bytes": 154267,
+            "file": "c285c5012a25c35e192433325d311e77d1b843db200f3814773796211033410c.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 6,
+      "unscored_history": []
+    },
+    {
+      "number": 3,
+      "frame": 2,
+      "horse_id": "2022105580",
+      "name": "ライトトラック",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "和田 竜二",
+      "carried_weight": 57.0,
+      "trainer": "友道 康夫",
+      "body_weight": 474.0,
+      "pedigree": [
+        "父： キタサンブラック",
+        "母： レッドレイチェル",
+        "(母父：Medaglia d Oro)"
+      ],
+      "odds": 41.9,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105580/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040711",
+          "title": "神戸新",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 10,
+          "finish": 5,
+          "time_seconds": 146.9,
+          "margin_seconds": 0.5,
+          "corners": [
+            6,
+            5,
+            5,
+            6
+          ],
+          "last3f": 33.0,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105580/",
+            "fetched_at": "2026-10-27T16:22:21.172138+00:00",
+            "status": 200,
+            "sha256": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af",
+            "bytes": 147240,
+            "file": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508021211",
+          "title": "白百合",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 11,
+          "finish": 1,
+          "time_seconds": 105.3,
+          "margin_seconds": -0.0,
+          "corners": [
+            7,
+            7
+          ],
+          "last3f": 34.5,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105580/",
+            "fetched_at": "2026-10-27T16:22:21.172138+00:00",
+            "status": 200,
+            "sha256": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af",
+            "bytes": 147240,
+            "file": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508020505",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 15,
+          "finish": 1,
+          "time_seconds": 108.0,
+          "margin_seconds": -0.3,
+          "corners": [
+            9,
+            9
+          ],
+          "last3f": 35.4,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105580/",
+            "fetched_at": "2026-10-27T16:22:21.172138+00:00",
+            "status": 200,
+            "sha256": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af",
+            "bytes": 147240,
+            "file": "0e91ea0da75516decf45093a3d5c6cca7fa31cf7f043df994219ea6884f458af.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 3,
+      "unscored_history": []
+    },
+    {
+      "number": 4,
+      "frame": 2,
+      "horse_id": "2022106611",
+      "name": "ヤマニンブークリエ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "横山 典弘",
+      "carried_weight": 57.0,
+      "trainer": "松永 幹夫",
+      "body_weight": 516.0,
+      "pedigree": [
+        "父： キタサンブラック",
+        "母： ヤマニンプードレ",
+        "(母父：チチカステナンゴ)"
+      ],
+      "odds": 14.1,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040511",
+          "title": "セント",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 12,
+          "finish": 2,
+          "time_seconds": 130.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            5,
+            5,
+            6,
+            6
+          ],
+          "last3f": 34.4,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505030509",
+          "title": "町田特",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 145.4,
+          "margin_seconds": -0.3,
+          "corners": [
+            3,
+            3,
+            3,
+            4
+          ],
+          "last3f": 34.8,
+          "class": "町田特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505020111",
+          "title": "青葉賞",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 13,
+          "finish": 8,
+          "time_seconds": 145.3,
+          "margin_seconds": 0.5,
+          "corners": [
+            5,
+            7,
+            6,
+            6
+          ],
+          "last3f": 34.3,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-23",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010806",
+          "title": "3歳",
+          "track": "阪神",
+          "surface": "ダ",
+          "distance": 1800,
+          "field_size": 16,
+          "finish": 2,
+          "time_seconds": 114.5,
+          "margin_seconds": 1.1,
+          "corners": [
+            7,
+            7,
+            11,
+            11
+          ],
+          "last3f": 38.3,
+          "class": "3歳",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010109",
+          "title": "すみれ",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 8,
+          "finish": 4,
+          "time_seconds": 132.0,
+          "margin_seconds": 1.0,
+          "corners": [
+            4,
+            4,
+            4,
+            5
+          ],
+          "last3f": 35.6,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-28",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2406050911",
+          "title": "ホープ",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 14,
+          "time_seconds": 122.0,
+          "margin_seconds": 1.5,
+          "corners": [
+            11,
+            11,
+            11,
+            13
+          ],
+          "last3f": 35.9,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408060409",
+          "title": "黄菊賞",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 9,
+          "finish": 2,
+          "time_seconds": 120.5,
+          "margin_seconds": 0.5,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 34.6,
+          "class": "黄菊賞",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408050605",
+          "title": "新馬",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 11,
+          "finish": 1,
+          "time_seconds": 109.5,
+          "margin_seconds": -0.0,
+          "corners": [
+            6,
+            6
+          ],
+          "last3f": 34.8,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022106611/",
+            "fetched_at": "2026-10-27T16:22:23.218961+00:00",
+            "status": 200,
+            "sha256": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2",
+            "bytes": 154685,
+            "file": "e04b4578cb90cfd7dafe0576eae8d78c0844b46978449b6d450deb999587bbd2.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 4,
+      "unscored_history": []
+    },
+    {
+      "number": 5,
+      "frame": 3,
+      "horse_id": "2022103995",
+      "name": "ジョバンニ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "松山 弘平",
+      "carried_weight": 57.0,
+      "trainer": "杉山 晴紀",
+      "body_weight": 478.0,
+      "pedigree": [
+        "父： エピファネイア",
+        "母：ベアフットレディ",
+        "(母父：Footstepsinthesand)"
+      ],
+      "odds": 11.9,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040711",
+          "title": "神戸新",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 10,
+          "finish": 3,
+          "time_seconds": 146.8,
+          "margin_seconds": 0.4,
+          "corners": [
+            4,
+            3,
+            3,
+            3
+          ],
+          "last3f": 33.1,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505021211",
+          "title": "東京優",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 18,
+          "finish": 8,
+          "time_seconds": 144.5,
+          "margin_seconds": 0.8,
+          "corners": [
+            8,
+            8,
+            9,
+            9
+          ],
+          "last3f": 34.3,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506030811",
+          "title": "皐月賞",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 4,
+          "time_seconds": 117.4,
+          "margin_seconds": 0.4,
+          "corners": [
+            6,
+            6,
+            11,
+            10
+          ],
+          "last3f": 34.3,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-22",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010711",
+          "title": "若葉S",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 119.0,
+          "margin_seconds": -0.0,
+          "corners": [
+            3,
+            3,
+            3,
+            2
+          ],
+          "last3f": 34.4,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-28",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2406050911",
+          "title": "ホープ",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 2,
+          "time_seconds": 120.8,
+          "margin_seconds": 0.3,
+          "corners": [
+            7,
+            7,
+            9,
+            7
+          ],
+          "last3f": 34.8,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-23",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408060711",
+          "title": "京都2",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 8,
+          "finish": 2,
+          "time_seconds": 121.1,
+          "margin_seconds": 0.2,
+          "corners": [
+            8,
+            8,
+            5,
+            5
+          ],
+          "last3f": 34.3,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2407030608",
+          "title": "野路菊",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 5,
+          "finish": 2,
+          "time_seconds": 122.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            3,
+            3,
+            3,
+            4
+          ],
+          "last3f": 33.3,
+          "class": "野路菊",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-07-07",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2410030405",
+          "title": "新馬",
+          "track": "小倉",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 7,
+          "finish": 1,
+          "time_seconds": 110.1,
+          "margin_seconds": -0.2,
+          "corners": [
+            3,
+            3,
+            2,
+            1
+          ],
+          "last3f": 34.7,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103995/",
+            "fetched_at": "2026-10-27T16:22:25.374312+00:00",
+            "status": 200,
+            "sha256": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad",
+            "bytes": 155774,
+            "file": "da5b1b9646c945ac43f76f1d5348f7828c7604fa0ba13d315e1185f49ad446ad.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 5,
+      "unscored_history": []
+    },
+    {
+      "number": 6,
+      "frame": 3,
+      "horse_id": "2022105109",
+      "name": "ミラージュナイト",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "藤岡 佑介",
+      "carried_weight": 57.0,
+      "trainer": "辻野 泰之",
+      "body_weight": 492.0,
+      "pedigree": [
+        "父：バゴ",
+        "母： ラキシス",
+        "(母父： ディープインパクト )"
+      ],
+      "odds": 15.2,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2501020311",
+          "title": "札日刊",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 14,
+          "finish": 1,
+          "time_seconds": 123.5,
+          "margin_seconds": -0.4,
+          "corners": [
+            9,
+            9,
+            5,
+            3
+          ],
+          "last3f": 36.2,
+          "class": "札日刊",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2501010609",
+          "title": "3歳上",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 121.0,
+          "margin_seconds": -0.1,
+          "corners": [
+            9,
+            9,
+            9,
+            6
+          ],
+          "last3f": 34.1,
+          "class": "3歳上",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010109",
+          "title": "すみれ",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 8,
+          "finish": 2,
+          "time_seconds": 131.2,
+          "margin_seconds": 0.2,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 35.0,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-25",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010809",
+          "title": "若駒S",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 10,
+          "finish": 3,
+          "time_seconds": 122.5,
+          "margin_seconds": 0.2,
+          "corners": [
+            7,
+            7,
+            9,
+            8
+          ],
+          "last3f": 34.8,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-06",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010205",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 122.9,
+          "margin_seconds": -0.2,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 35.2,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-19",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2405040503",
+          "title": "未勝利",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 7,
+          "finish": 4,
+          "time_seconds": 119.8,
+          "margin_seconds": 1.1,
+          "corners": [
+            2,
+            2,
+            2
+          ],
+          "last3f": 35.6,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-09-22",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2407030705",
+          "title": "新馬",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 11,
+          "finish": 2,
+          "time_seconds": 124.6,
+          "margin_seconds": 0.3,
+          "corners": [
+            4,
+            5,
+            5,
+            5
+          ],
+          "last3f": 33.9,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105109/",
+            "fetched_at": "2026-10-27T16:22:27.173850+00:00",
+            "status": 200,
+            "sha256": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785",
+            "bytes": 154292,
+            "file": "8fc21a13ae9602a8dd6691e6759748782aa9eba381d8508426ef4da965be4785.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 5,
+      "unscored_history": []
+    },
+    {
+      "number": 7,
+      "frame": 4,
+      "horse_id": "2022104714",
+      "name": "ショウヘイ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "岩田 望来",
+      "carried_weight": 57.0,
+      "trainer": "友道 康夫",
+      "body_weight": 472.0,
+      "pedigree": [
+        "父： サートゥルナーリア",
+        "母： オーロトラジェ",
+        "(母父： オルフェーヴル )"
+      ],
+      "odds": 7.9,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040711",
+          "title": "神戸新",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 10,
+          "finish": 2,
+          "time_seconds": 146.5,
+          "margin_seconds": 0.1,
+          "corners": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "last3f": 32.9,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505021211",
+          "title": "東京優",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 18,
+          "finish": 3,
+          "time_seconds": 144.0,
+          "margin_seconds": 0.3,
+          "corners": [
+            3,
+            3,
+            4,
+            4
+          ],
+          "last3f": 34.3,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508020511",
+          "title": "京都新",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 10,
+          "finish": 1,
+          "time_seconds": 134.7,
+          "margin_seconds": -0.4,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 33.8,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-09",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508010411",
+          "title": "きさら",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 10,
+          "finish": 4,
+          "time_seconds": 108.0,
+          "margin_seconds": 1.0,
+          "corners": [
+            5,
+            4
+          ],
+          "last3f": 36.3,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408070604",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 14,
+          "finish": 1,
+          "time_seconds": 108.9,
+          "margin_seconds": -0.4,
+          "corners": [
+            3,
+            4
+          ],
+          "last3f": 34.6,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408070105",
+          "title": "新馬",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 13,
+          "finish": 2,
+          "time_seconds": 109.5,
+          "margin_seconds": 0.1,
+          "corners": [
+            2,
+            1
+          ],
+          "last3f": 33.2,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104714/",
+            "fetched_at": "2026-10-27T16:22:29.157779+00:00",
+            "status": 200,
+            "sha256": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224",
+            "bytes": 152403,
+            "file": "9650e039a907c7a8256160d5a89582520f959fc0df29daf57a2b957b6b100224.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 4,
+      "unscored_history": []
+    },
+    {
+      "number": 8,
+      "frame": 4,
+      "horse_id": "2022107282",
+      "name": "レクスノヴァス",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "横山 和生",
+      "carried_weight": 57.0,
+      "trainer": "上村 洋行",
+      "body_weight": 484.0,
+      "pedigree": [
+        "父： キタサンブラック",
+        "母： ウルティマミューズ",
+        "(母父： キングカメハメハ )"
+      ],
+      "odds": 20.4,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-17",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2501010812",
+          "title": "阿寒湖",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2600,
+          "field_size": 14,
+          "finish": 1,
+          "time_seconds": 163.2,
+          "margin_seconds": -0.5,
+          "corners": [
+            2,
+            3,
+            3,
+            3
+          ],
+          "last3f": 36.4,
+          "class": "阿寒湖",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2502011208",
+          "title": "3歳上",
+          "track": "函館",
+          "surface": "芝",
+          "distance": 2600,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 159.0,
+          "margin_seconds": -0.3,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 35.0,
+          "class": "3歳上",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-29",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2502010609",
+          "title": "臥牛山",
+          "track": "函館",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 10,
+          "finish": 2,
+          "time_seconds": 119.1,
+          "margin_seconds": 0.0,
+          "corners": [
+            9,
+            9,
+            8,
+            5
+          ],
+          "last3f": 34.1,
+          "class": "臥牛山",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2502010206",
+          "title": "未勝利",
+          "track": "函館",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 13,
+          "finish": 1,
+          "time_seconds": 119.6,
+          "margin_seconds": -0.2,
+          "corners": [
+            7,
+            7,
+            7,
+            5
+          ],
+          "last3f": 34.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-29",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509020105",
+          "title": "未勝利",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 15,
+          "finish": 2,
+          "time_seconds": 122.6,
+          "margin_seconds": 0.2,
+          "corners": [
+            4,
+            4,
+            3,
+            3
+          ],
+          "last3f": 35.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-05",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010105",
+          "title": "新馬",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 3,
+          "time_seconds": 122.2,
+          "margin_seconds": 0.5,
+          "corners": [
+            17,
+            16,
+            16,
+            13
+          ],
+          "last3f": 34.5,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022107282/",
+            "fetched_at": "2026-10-27T16:22:31.138137+00:00",
+            "status": 200,
+            "sha256": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18",
+            "bytes": 153283,
+            "file": "ff9723bcb650c31c9954779eae2f888ae74a9c1fc617254d928059218d95fd18.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 5,
+      "unscored_history": []
+    },
+    {
+      "number": 9,
+      "frame": 5,
+      "horse_id": "2022104685",
+      "name": "エネルジコ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "C.ルメール",
+      "carried_weight": 57.0,
+      "trainer": "高柳 瑞樹",
+      "body_weight": 456.0,
+      "pedigree": [
+        "父： ドゥラメンテ",
+        "母：エノラ",
+        "(母父：Noverre)"
+      ],
+      "odds": 3.8,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104685/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-31",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2504030411",
+          "title": "新潟記",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 17,
+          "finish": 2,
+          "time_seconds": 118.1,
+          "margin_seconds": 0.1,
+          "corners": [
+            5,
+            4
+          ],
+          "last3f": 32.9,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104685/",
+            "fetched_at": "2026-10-27T16:22:33.021020+00:00",
+            "status": 200,
+            "sha256": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b",
+            "bytes": 145946,
+            "file": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505020111",
+          "title": "青葉賞",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 13,
+          "finish": 1,
+          "time_seconds": 144.8,
+          "margin_seconds": -0.1,
+          "corners": [
+            10,
+            11,
+            12,
+            12
+          ],
+          "last3f": 33.4,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104685/",
+            "fetched_at": "2026-10-27T16:22:33.021020+00:00",
+            "status": 200,
+            "sha256": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b",
+            "bytes": 145946,
+            "file": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-02",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505010209",
+          "title": "セント",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 13,
+          "finish": 1,
+          "time_seconds": 108.2,
+          "margin_seconds": -0.2,
+          "corners": [
+            9,
+            9,
+            10
+          ],
+          "last3f": 34.0,
+          "class": "セント",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104685/",
+            "fetched_at": "2026-10-27T16:22:33.021020+00:00",
+            "status": 200,
+            "sha256": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b",
+            "bytes": 145946,
+            "file": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2405040605",
+          "title": "新馬",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 108.5,
+          "margin_seconds": -0.2,
+          "corners": [
+            11,
+            10,
+            11
+          ],
+          "last3f": 33.3,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104685/",
+            "fetched_at": "2026-10-27T16:22:33.021020+00:00",
+            "status": 200,
+            "sha256": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b",
+            "bytes": 145946,
+            "file": "c70056d0f6eba3a61326902343f31eeb4b4ddc84b01118499a9c031c4806679b.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 1,
+      "unscored_history": []
+    },
+    {
+      "number": 10,
+      "frame": 5,
+      "horse_id": "2022101193",
+      "name": "ジーティーアダマン",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "北村 友一",
+      "carried_weight": 57.0,
+      "trainer": "上村 洋行",
+      "body_weight": 492.0,
+      "pedigree": [
+        "父： ルーラーシップ",
+        "母： カウニスクッカ",
+        "(母父： マンハッタンカフェ )"
+      ],
+      "odds": 85.2,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022101193/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040511",
+          "title": "セント",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 12,
+          "finish": 11,
+          "time_seconds": 132.1,
+          "margin_seconds": 1.3,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 36.2,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022101193/",
+            "fetched_at": "2026-10-27T16:22:34.840516+00:00",
+            "status": 200,
+            "sha256": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15",
+            "bytes": 153509,
+            "file": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506030811",
+          "title": "皐月賞",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 14,
+          "time_seconds": 118.2,
+          "margin_seconds": 1.2,
+          "corners": [
+            3,
+            3,
+            4,
+            6
+          ],
+          "last3f": 35.7,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022101193/",
+            "fetched_at": "2026-10-27T16:22:34.840516+00:00",
+            "status": 200,
+            "sha256": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15",
+            "bytes": 153509,
+            "file": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010109",
+          "title": "すみれ",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 8,
+          "finish": 1,
+          "time_seconds": 131.0,
+          "margin_seconds": -0.2,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 35.1,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022101193/",
+            "fetched_at": "2026-10-27T16:22:34.840516+00:00",
+            "status": 200,
+            "sha256": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15",
+            "bytes": 153509,
+            "file": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-05",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010105",
+          "title": "新馬",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 121.7,
+          "margin_seconds": -0.3,
+          "corners": [
+            1,
+            1,
+            2,
+            1
+          ],
+          "last3f": 35.5,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022101193/",
+            "fetched_at": "2026-10-27T16:22:34.840516+00:00",
+            "status": 200,
+            "sha256": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15",
+            "bytes": 153509,
+            "file": "bb9fa950370bc47034d7f7123bedaefcdee159741bb912482c5b17fd044b4c15.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 7,
+      "unscored_history": []
+    },
+    {
+      "number": 11,
+      "frame": 6,
+      "horse_id": "2022104902",
+      "name": "マイユニバース",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "武 豊",
+      "carried_weight": 57.0,
+      "trainer": "武 幸四郎",
+      "body_weight": 464.0,
+      "pedigree": [
+        "父： レイデオロ",
+        "母： チャーチクワイア",
+        "(母父： ネオユニヴァース )"
+      ],
+      "odds": 9.1,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040610",
+          "title": "九十九",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2500,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 152.0,
+          "margin_seconds": -1.2,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 34.1,
+          "class": "九十九",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508021211",
+          "title": "白百合",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 11,
+          "finish": 5,
+          "time_seconds": 105.6,
+          "margin_seconds": 0.3,
+          "corners": [
+            7,
+            6
+          ],
+          "last3f": 35.0,
+          "class": "L",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-17",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508020709",
+          "title": "あずさ",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 10,
+          "finish": 1,
+          "time_seconds": 120.8,
+          "margin_seconds": -0.1,
+          "corners": [
+            8,
+            8,
+            7,
+            5
+          ],
+          "last3f": 35.1,
+          "class": "あずさ",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010509",
+          "title": "ゆきや",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 12,
+          "finish": 2,
+          "time_seconds": 144.7,
+          "margin_seconds": 0.1,
+          "corners": [
+            4,
+            6,
+            6,
+            6
+          ],
+          "last3f": 34.3,
+          "class": "ゆきや",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-11",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010305",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 136.5,
+          "margin_seconds": -0.1,
+          "corners": [
+            6,
+            6,
+            9,
+            8
+          ],
+          "last3f": 35.1,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-16",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408060502",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "ダ",
+          "distance": 1800,
+          "field_size": 11,
+          "finish": 3,
+          "time_seconds": 114.7,
+          "margin_seconds": 0.5,
+          "corners": [
+            2,
+            3,
+            6,
+            6
+          ],
+          "last3f": 38.7,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2404040702",
+          "title": "未勝利",
+          "track": "新潟",
+          "surface": "ダ",
+          "distance": 1800,
+          "field_size": 12,
+          "finish": 2,
+          "time_seconds": 114.1,
+          "margin_seconds": 0.3,
+          "corners": [
+            3,
+            3,
+            4,
+            3
+          ],
+          "last3f": 37.4,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-09-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2401020802",
+          "title": "未勝利",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 12,
+          "finish": 12,
+          "time_seconds": 130.5,
+          "margin_seconds": 5.0,
+          "corners": [
+            1,
+            1,
+            1,
+            2
+          ],
+          "last3f": 42.2,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-08-10",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2401020101",
+          "title": "未勝利",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 7,
+          "finish": 2,
+          "time_seconds": 109.5,
+          "margin_seconds": 0.1,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 34.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-07-28",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2401010405",
+          "title": "新馬",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 12,
+          "finish": 5,
+          "time_seconds": 111.7,
+          "margin_seconds": 1.2,
+          "corners": [
+            10,
+            10,
+            9,
+            9
+          ],
+          "last3f": 35.4,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104902/",
+            "fetched_at": "2026-10-27T16:22:36.670161+00:00",
+            "status": 200,
+            "sha256": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e",
+            "bytes": 158216,
+            "file": "f0e5317b5e8eee0d34ab17443416810e133fda2bad1ef8197b8742d62563716e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 5,
+      "unscored_history": []
+    },
+    {
+      "number": 12,
+      "frame": 6,
+      "horse_id": "2022104736",
+      "name": "ゲルチュタール",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "坂井 瑠星",
+      "carried_weight": 57.0,
+      "trainer": "杉山 晴紀",
+      "body_weight": 524.0,
+      "pedigree": [
+        "父：ブリックスアンドモルタル",
+        "母： キラービューティ",
+        "(母父： ゼンノロブロイ )"
+      ],
+      "odds": 9.2,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2504030311",
+          "title": "日本海",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 16,
+          "finish": 1,
+          "time_seconds": 132.1,
+          "margin_seconds": -0.1,
+          "corners": [
+            3,
+            3,
+            2,
+            1
+          ],
+          "last3f": 34.8,
+          "class": "日本海",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-14",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509030308",
+          "title": "三田特",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 6,
+          "finish": 1,
+          "time_seconds": 146.0,
+          "margin_seconds": -0.9,
+          "corners": [
+            2,
+            2,
+            2,
+            1
+          ],
+          "last3f": 35.2,
+          "class": "三田特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505020111",
+          "title": "青葉賞",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 13,
+          "finish": 3,
+          "time_seconds": 144.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            5,
+            5,
+            5,
+            5
+          ],
+          "last3f": 34.0,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010509",
+          "title": "ゆきや",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 12,
+          "finish": 1,
+          "time_seconds": 144.6,
+          "margin_seconds": -0.1,
+          "corners": [
+            4,
+            3,
+            3,
+            2
+          ],
+          "last3f": 34.7,
+          "class": "ゆきや",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-19",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506010711",
+          "title": "京成杯",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 14,
+          "finish": 10,
+          "time_seconds": 121.9,
+          "margin_seconds": 2.0,
+          "corners": [
+            7,
+            7,
+            7,
+            6
+          ],
+          "last3f": 37.9,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2406050109",
+          "title": "葉牡丹",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 12,
+          "finish": 2,
+          "time_seconds": 118.8,
+          "margin_seconds": 0.0,
+          "corners": [
+            8,
+            8,
+            8,
+            7
+          ],
+          "last3f": 34.5,
+          "class": "葉牡丹",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-09-08",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2407030205",
+          "title": "新馬",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 7,
+          "finish": 1,
+          "time_seconds": 122.9,
+          "margin_seconds": -0.1,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 34.1,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104736/",
+            "fetched_at": "2026-10-27T16:22:38.565307+00:00",
+            "status": 200,
+            "sha256": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e",
+            "bytes": 150758,
+            "file": "c07ef7539478d88f0a279b084b567470e00b9e6fbbd9f46fc8c01d1f5d50782e.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 2,
+      "unscored_history": []
+    },
+    {
+      "number": 13,
+      "frame": 7,
+      "horse_id": "2022105827",
+      "name": "アロンディ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "団野 大成",
+      "carried_weight": 57.0,
+      "trainer": "武 英智",
+      "body_weight": 452.0,
+      "pedigree": [
+        "父：ハービンジャー",
+        "母： パドゥヴァルス",
+        "(母父： エピファネイア )"
+      ],
+      "odds": 214.4,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-27",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040807",
+          "title": "3歳上",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 16,
+          "finish": 1,
+          "time_seconds": 133.6,
+          "margin_seconds": -0.1,
+          "corners": [
+            10,
+            10,
+            9,
+            10
+          ],
+          "last3f": 34.5,
+          "class": "3歳上",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-02",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507030304",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 14,
+          "finish": 1,
+          "time_seconds": 119.4,
+          "margin_seconds": -0.2,
+          "corners": [
+            10,
+            9,
+            6,
+            4
+          ],
+          "last3f": 34.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-16",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509010605",
+          "title": "未勝利",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 16,
+          "finish": 6,
+          "time_seconds": 123.7,
+          "margin_seconds": 0.3,
+          "corners": [
+            6,
+            9,
+            8,
+            9
+          ],
+          "last3f": 36.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-11",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010305",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 18,
+          "finish": 3,
+          "time_seconds": 136.9,
+          "margin_seconds": 0.4,
+          "corners": [
+            3,
+            4,
+            3,
+            2
+          ],
+          "last3f": 35.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408070704",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 16,
+          "finish": 4,
+          "time_seconds": 121.6,
+          "margin_seconds": 0.8,
+          "corners": [
+            7,
+            9,
+            6,
+            3
+          ],
+          "last3f": 35.3,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-03",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408060203",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 8,
+          "finish": 2,
+          "time_seconds": 121.9,
+          "margin_seconds": 0.2,
+          "corners": [
+            4,
+            4,
+            5,
+            5
+          ],
+          "last3f": 36.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-12",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2404040306",
+          "title": "未勝利",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 14,
+          "finish": 3,
+          "time_seconds": 122.4,
+          "margin_seconds": 0.1,
+          "corners": [
+            6,
+            6,
+            7,
+            8
+          ],
+          "last3f": 35.7,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-07-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2410030801",
+          "title": "未勝利",
+          "track": "小倉",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 9,
+          "finish": 3,
+          "time_seconds": 111.1,
+          "margin_seconds": 0.9,
+          "corners": [
+            5,
+            5,
+            3,
+            2
+          ],
+          "last3f": 36.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-07-14",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2410030605",
+          "title": "新馬",
+          "track": "小倉",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 7,
+          "finish": 3,
+          "time_seconds": 127.2,
+          "margin_seconds": 0.1,
+          "corners": [
+            5,
+            5,
+            5,
+            6
+          ],
+          "last3f": 38.0,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105827/",
+            "fetched_at": "2026-10-27T16:22:40.428857+00:00",
+            "status": 200,
+            "sha256": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5",
+            "bytes": 157833,
+            "file": "dd226796255a69389618f9d68bf4413dd46d4eed565ae93193147c9086d719f5.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 6,
+      "unscored_history": []
+    },
+    {
+      "number": 14,
+      "frame": 7,
+      "horse_id": "2022104614",
+      "name": "エキサイトバイオ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "荻野 極",
+      "carried_weight": 57.0,
+      "trainer": "今野 貞一",
+      "body_weight": 480.0,
+      "pedigree": [
+        "父： レイデオロ",
+        "母： アニメイトバイオ",
+        "(母父： ゼンノロブロイ )"
+      ],
+      "odds": 82.6,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-06-29",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2503020211",
+          "title": "ラジN",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 14,
+          "finish": 1,
+          "time_seconds": 106.9,
+          "margin_seconds": -0.1,
+          "corners": [
+            7,
+            8,
+            7,
+            7
+          ],
+          "last3f": 34.8,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-17",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508020709",
+          "title": "あずさ",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 10,
+          "finish": 2,
+          "time_seconds": 120.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            2,
+            3,
+            4,
+            2
+          ],
+          "last3f": 35.5,
+          "class": "あずさ",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507020604",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 13,
+          "finish": 1,
+          "time_seconds": 122.1,
+          "margin_seconds": -0.0,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 34.8,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507020105",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 4,
+          "time_seconds": 121.3,
+          "margin_seconds": 0.4,
+          "corners": [
+            3,
+            3,
+            3,
+            2
+          ],
+          "last3f": 35.7,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-06",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2507010205",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 3,
+          "time_seconds": 123.4,
+          "margin_seconds": 0.5,
+          "corners": [
+            3,
+            4,
+            5,
+            5
+          ],
+          "last3f": 35.3,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-14",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2407040505",
+          "title": "未勝利",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 4,
+          "time_seconds": 123.0,
+          "margin_seconds": 0.4,
+          "corners": [
+            9,
+            9,
+            6,
+            5
+          ],
+          "last3f": 35.3,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-12",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408050305",
+          "title": "新馬",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 13,
+          "finish": 8,
+          "time_seconds": 122.0,
+          "margin_seconds": 1.3,
+          "corners": [
+            12,
+            12,
+            11,
+            11
+          ],
+          "last3f": 34.4,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022104614/",
+            "fetched_at": "2026-10-27T16:22:42.394572+00:00",
+            "status": 200,
+            "sha256": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f",
+            "bytes": 151054,
+            "file": "c3e764873ef6a2e095e6adb9b9a052c444e36d155883b7203fff9f2791d7d68f.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 2,
+      "unscored_history": []
+    },
+    {
+      "number": 15,
+      "frame": 7,
+      "horse_id": "2022105099",
+      "name": "エリキング",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "川田 将雅",
+      "carried_weight": 57.0,
+      "trainer": "中内田 充正",
+      "body_weight": 508.0,
+      "pedigree": [
+        "父： キズナ",
+        "母：ヤングスター",
+        "(母父：High Chaparral)"
+      ],
+      "odds": 4.3,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2509040711",
+          "title": "神戸新",
+          "track": "阪神",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 10,
+          "finish": 1,
+          "time_seconds": 146.4,
+          "margin_seconds": -0.1,
+          "corners": [
+            7,
+            7,
+            7,
+            7
+          ],
+          "last3f": 32.3,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-01",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505021211",
+          "title": "東京優",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 18,
+          "finish": 5,
+          "time_seconds": 144.3,
+          "margin_seconds": 0.6,
+          "corners": [
+            14,
+            14,
+            14,
+            14
+          ],
+          "last3f": 33.4,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506030811",
+          "title": "皐月賞",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 11,
+          "time_seconds": 118.0,
+          "margin_seconds": 1.0,
+          "corners": [
+            9,
+            8,
+            11,
+            10
+          ],
+          "last3f": 34.9,
+          "class": "GI",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-23",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408060711",
+          "title": "京都2",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 8,
+          "finish": 1,
+          "time_seconds": 120.9,
+          "margin_seconds": -0.2,
+          "corners": [
+            4,
+            5,
+            3,
+            3
+          ],
+          "last3f": 34.2,
+          "class": "GIII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-09-21",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2407030608",
+          "title": "野路菊",
+          "track": "中京",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 5,
+          "finish": 1,
+          "time_seconds": 122.8,
+          "margin_seconds": -0.1,
+          "corners": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "last3f": 33.4,
+          "class": "野路菊",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-06-23",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2408040805",
+          "title": "新馬",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 10,
+          "finish": 1,
+          "time_seconds": 112.1,
+          "margin_seconds": -0.2,
+          "corners": [
+            5,
+            3
+          ],
+          "last3f": 34.3,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105099/",
+            "fetched_at": "2026-10-27T16:22:44.552374+00:00",
+            "status": 200,
+            "sha256": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381",
+            "bytes": 149519,
+            "file": "fe6e137bb2e5035ccffdaee3e31bec64ad7c2a89f437729d63af09809d1b5381.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 2,
+      "unscored_history": []
+    },
+    {
+      "number": 16,
+      "frame": 8,
+      "horse_id": "2022103406",
+      "name": "ラーシャローム",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "岩田 康誠",
+      "carried_weight": 57.0,
+      "trainer": "奥村 武",
+      "body_weight": 470.0,
+      "pedigree": [
+        "父： トーセンラー",
+        "母： アンジェリカス",
+        "(母父：ハービンジャー)"
+      ],
+      "odds": 179.1,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-08-16",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2501010707",
+          "title": "3歳上",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2600,
+          "field_size": 9,
+          "finish": 1,
+          "time_seconds": 162.4,
+          "margin_seconds": -0.0,
+          "corners": [
+            5,
+            5,
+            4,
+            3
+          ],
+          "last3f": 35.1,
+          "class": "3歳上",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-03",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2501010412",
+          "title": "積丹特",
+          "track": "札幌",
+          "surface": "芝",
+          "distance": 2600,
+          "field_size": 8,
+          "finish": 6,
+          "time_seconds": 165.8,
+          "margin_seconds": 1.3,
+          "corners": [
+            6,
+            6,
+            2,
+            4
+          ],
+          "last3f": 36.1,
+          "class": "積丹特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-29",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2503020202",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 2600,
+          "field_size": 16,
+          "finish": 1,
+          "time_seconds": 160.6,
+          "margin_seconds": -0.0,
+          "corners": [
+            11,
+            11,
+            11,
+            9
+          ],
+          "last3f": 35.7,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-27",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2503010605",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 14,
+          "finish": 6,
+          "time_seconds": 121.0,
+          "margin_seconds": 1.2,
+          "corners": [
+            12,
+            12,
+            12,
+            10
+          ],
+          "last3f": 35.7,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-09",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2508010406",
+          "title": "未勝利",
+          "track": "京都",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 13,
+          "finish": 9,
+          "time_seconds": 137.1,
+          "margin_seconds": 1.4,
+          "corners": [
+            10,
+            10,
+            3,
+            3
+          ],
+          "last3f": 37.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-01-25",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506010805",
+          "title": "新馬",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 10,
+          "time_seconds": 126.6,
+          "margin_seconds": 3.0,
+          "corners": [
+            13,
+            13,
+            11,
+            11
+          ],
+          "last3f": 37.1,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103406/",
+            "fetched_at": "2026-10-27T16:22:46.483232+00:00",
+            "status": 200,
+            "sha256": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087",
+            "bytes": 154358,
+            "file": "5c2685a1c6a3f867246979dcc169acba4b707252a5a96e2d6f58b34f82558087.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 6,
+      "unscored_history": []
+    },
+    {
+      "number": 17,
+      "frame": 8,
+      "horse_id": "2022103310",
+      "name": "レイヤードレッド",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "嶋田 純次",
+      "carried_weight": 57.0,
+      "trainer": "手塚 貴久",
+      "body_weight": 484.0,
+      "pedigree": [
+        "父： フィエールマン",
+        "母： エキナシア",
+        "(母父：スニッツェル)"
+      ],
+      "odds": 265.1,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-20",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040607",
+          "title": "3歳上",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 120.5,
+          "margin_seconds": -0.0,
+          "corners": [
+            4,
+            3,
+            3,
+            3
+          ],
+          "last3f": 34.7,
+          "class": "3歳上",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-06",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040109",
+          "title": "古作特",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 11,
+          "finish": 7,
+          "time_seconds": 108.0,
+          "margin_seconds": 0.6,
+          "corners": [
+            3,
+            3,
+            2,
+            3
+          ],
+          "last3f": 34.2,
+          "class": "古作特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-29",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2503020204",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 15,
+          "finish": 1,
+          "time_seconds": 122.2,
+          "margin_seconds": -0.2,
+          "corners": [
+            3,
+            3,
+            3,
+            4
+          ],
+          "last3f": 35.0,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-25",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2504010806",
+          "title": "未勝利",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 16,
+          "finish": 7,
+          "time_seconds": 139.9,
+          "margin_seconds": 0.9,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 38.4,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-04",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2504010205",
+          "title": "未勝利",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 2000,
+          "field_size": 16,
+          "finish": 2,
+          "time_seconds": 123.1,
+          "margin_seconds": 0.2,
+          "corners": [
+            2,
+            2,
+            2,
+            2
+          ],
+          "last3f": 36.4,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-13",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2503010205",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 16,
+          "finish": 5,
+          "time_seconds": 109.2,
+          "margin_seconds": 0.2,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 35.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-08",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2406050403",
+          "title": "未勝利",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 12,
+          "finish": 8,
+          "time_seconds": 109.3,
+          "margin_seconds": 0.9,
+          "corners": [
+            10,
+            9,
+            8,
+            9
+          ],
+          "last3f": 34.9,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-16",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2403030507",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 16,
+          "finish": 2,
+          "time_seconds": 110.2,
+          "margin_seconds": 0.2,
+          "corners": [
+            2,
+            2,
+            2,
+            1
+          ],
+          "last3f": 36.3,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-10-27",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2404040801",
+          "title": "未勝利",
+          "track": "新潟",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 18,
+          "finish": 2,
+          "time_seconds": 108.3,
+          "margin_seconds": 0.7,
+          "corners": [
+            8,
+            7
+          ],
+          "last3f": 35.4,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-06-30",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2403020201",
+          "title": "未勝利",
+          "track": "福島",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 7,
+          "finish": 4,
+          "time_seconds": 108.7,
+          "margin_seconds": 0.5,
+          "corners": [
+            3,
+            3,
+            2,
+            2
+          ],
+          "last3f": 36.6,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-06-08",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2405030305",
+          "title": "新馬",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 1600,
+          "field_size": 8,
+          "finish": 4,
+          "time_seconds": 96.0,
+          "margin_seconds": 0.9,
+          "corners": [
+            3,
+            2
+          ],
+          "last3f": 34.4,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022103310/",
+            "fetched_at": "2026-10-27T16:22:48.500386+00:00",
+            "status": 200,
+            "sha256": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1",
+            "bytes": 167130,
+            "file": "712a2f989bdc1f12a8819deb212e24ae229cef5da63c8b61f6f1437f35aaf9f1.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 12,
+      "unscored_history": []
+    },
+    {
+      "number": 18,
+      "frame": 8,
+      "horse_id": "2022105466",
+      "name": "レッドバンデ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "佐々木 大輔",
+      "carried_weight": 57.0,
+      "trainer": "大竹 正博",
+      "body_weight": 482.0,
+      "pedigree": [
+        "父： キズナ",
+        "母：フィオドラ",
+        "(母父：Lord of England)"
+      ],
+      "odds": 17.4,
+      "history_url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+      "cancelled": false,
+      "source": {
+        "url": "https://sports.yahoo.co.jp/keiba/race/denma/2508030911",
+        "fetched_at": "2026-10-27T16:22:14.716298+00:00",
+        "status": 200,
+        "sha256": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7",
+        "bytes": 130072,
+        "file": "5976fc77f52b6999978c510ad21a1d81b256cb71017290c15bf7dc3cb4c784f7.html",
+        "content_type": "text/html;charset=UTF-8"
+      },
+      "histories": [
+        {
+          "date": "2025-09-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506040511",
+          "title": "セント",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 12,
+          "finish": 3,
+          "time_seconds": 130.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "last3f": 34.7,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+            "fetched_at": "2026-10-27T16:22:50.695572+00:00",
+            "status": 200,
+            "sha256": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4",
+            "bytes": 151842,
+            "file": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-07",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505030109",
+          "title": "稲城特",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 12,
+          "finish": 1,
+          "time_seconds": 144.3,
+          "margin_seconds": -0.8,
+          "corners": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "last3f": 34.0,
+          "class": "稲城特",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+            "fetched_at": "2026-10-27T16:22:50.695572+00:00",
+            "status": 200,
+            "sha256": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4",
+            "bytes": 151842,
+            "file": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-26",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505020111",
+          "title": "青葉賞",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 2400,
+          "field_size": 13,
+          "finish": 4,
+          "time_seconds": 144.9,
+          "margin_seconds": 0.1,
+          "corners": [
+            12,
+            11,
+            11,
+            9
+          ],
+          "last3f": 33.8,
+          "class": "GII",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+            "fetched_at": "2026-10-27T16:22:50.695572+00:00",
+            "status": 200,
+            "sha256": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4",
+            "bytes": 151842,
+            "file": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-15",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2506020505",
+          "title": "未勝利",
+          "track": "中山",
+          "surface": "芝",
+          "distance": 2200,
+          "field_size": 18,
+          "finish": 1,
+          "time_seconds": 133.8,
+          "margin_seconds": -0.5,
+          "corners": [
+            9,
+            10,
+            5,
+            2
+          ],
+          "last3f": 34.5,
+          "class": "未勝利",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+            "fetched_at": "2026-10-27T16:22:50.695572+00:00",
+            "status": 200,
+            "sha256": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4",
+            "bytes": 151842,
+            "file": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-02-02",
+          "race_key": "https://sports.yahoo.co.jp/keiba/race/index/2505010205",
+          "title": "新馬",
+          "track": "東京",
+          "surface": "芝",
+          "distance": 1800,
+          "field_size": 15,
+          "finish": 3,
+          "time_seconds": 111.0,
+          "margin_seconds": 0.5,
+          "corners": [
+            7,
+            7,
+            6
+          ],
+          "last3f": 33.6,
+          "class": "新馬",
+          "opponent": null,
+          "going": null,
+          "source": {
+            "url": "https://sports.yahoo.co.jp/keiba/directory/horse/2022105466/",
+            "fetched_at": "2026-10-27T16:22:50.695572+00:00",
+            "status": 200,
+            "sha256": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4",
+            "bytes": 151842,
+            "file": "74e37ced8c1e8ddae655563fabd7763867f9c754669159c8c6dc3b60a33d1ed4.html",
+            "content_type": "text/html;charset=UTF-8"
+          }
+        }
+      ],
+      "excluded_same_or_future_rows": 5,
+      "unscored_history": []
+    }
+  ],
+  "roster_check": {
+    "race_id": "jra-2025-10-26-京都-11",
+    "card_horses": 18,
+    "independent_horses": 18,
+    "exact_number_name_match": true,
+    "fields_read": [
+      "number",
+      "name"
+    ],
+    "results_not_passed_to_analysis": true,
+    "source": {
+      "encoding": "cp932",
+      "url": "https://www.jra.go.jp/datafile/seiseki/g1/kikka/result/kikka2025.html",
+      "fetched_at": "2026-10-27T16:36:10.222098+00:00",
+      "status": 200,
+      "sha256": "a036d8537f9133d7d800cb28183de2b4f7540dca731c2b43cfff3d2194f58549",
+      "bytes": 85809,
+      "file": "a036d8537f9133d7d800cb28183de2b4f7540dca731c2b43cfff3d2194f58549.html",
+      "content_type": "text/html"
+    }
+  }
+}

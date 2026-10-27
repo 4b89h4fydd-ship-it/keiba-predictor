@@ -1,0 +1,35 @@
+{
+  "cases": [
+    {
+      "race_id": "jra-2025-10-26-京都-11",
+      "horses": 18,
+      "all_horse_dialogs": true,
+      "four_stages_three_scenarios_match_api": true,
+      "marks_match_api": true,
+      "reload_identical": true,
+      "date_circuit_navigation": true,
+      "horizontal_overflow": false,
+      "bet_decision": "見送り",
+      "screenshot": "jra-2025-10-26-京都-11.png",
+      "passed": true
+    },
+    {
+      "race_id": "nar-2025-10-22-園田-01",
+      "horses": 10,
+      "all_horse_dialogs": true,
+      "four_stages_three_scenarios_match_api": true,
+      "marks_match_api": true,
+      "reload_identical": true,
+      "date_circuit_navigation": true,
+      "horizontal_overflow": false,
+      "bet_decision": "見送り",
+      "screenshot": "nar-2025-10-22-園田-01.png",
+      "passed": true
+    }
+  ],
+  "page_errors": [],
+  "api_outage": {
+    "visible_error": true,
+    "fake_race_rows": 0
+  }
+}

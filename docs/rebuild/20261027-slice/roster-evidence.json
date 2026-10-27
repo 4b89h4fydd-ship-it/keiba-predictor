@@ -1,0 +1,32 @@
+[
+  {
+    "race_id": "jra-2025-10-26-京都-11",
+    "card_horses": 18,
+    "independent_horses": 18,
+    "exact_number_name_match": true,
+    "fields_read": [
+      "number",
+      "name"
+    ],
+    "results_not_passed_to_analysis": true,
+    "source": {
+      "url": "https://www.jra.go.jp/datafile/seiseki/g1/kikka/result/kikka2025.html",
+      "sha256": "a036d8537f9133d7d800cb28183de2b4f7540dca731c2b43cfff3d2194f58549"
+    }
+  },
+  {
+    "race_id": "nar-2025-10-22-園田-01",
+    "card_horses": 10,
+    "independent_horses": 10,
+    "exact_number_name_match": true,
+    "fields_read": [
+      "number",
+      "name"
+    ],
+    "results_not_passed_to_analysis": true,
+    "source": {
+      "url": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510222700000001",
+      "sha256": "427a0bd2481eb3e7157bd7b70d99053bce5826068fa1f4aa9e90fc7ac303c4b2"
+    }
+  }
+]

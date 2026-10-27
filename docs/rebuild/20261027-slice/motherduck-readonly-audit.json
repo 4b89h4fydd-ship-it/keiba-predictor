@@ -1,0 +1,914 @@
+[
+  {
+    "race_id": "nar-2026-10-22-園田-01",
+    "stored_sha256": "41a389745cbc9b8f0fb7e983a60765a8e5279e4c9b8b9fb26533feb5bbdd51b6",
+    "current_json_sha256": "e1a94a577f23a406fb6e5b8edc16b0a3d6a709f7d16a9f5443903d8bcea26ebd",
+    "hash_basis_resolved": false,
+    "warehouse_writes": 0,
+    "embedded_original_bytes": 753802,
+    "embedded_original_length_verified": true,
+    "embedded_original_sha256": "ba3bb0066a2d4a1abe3d8717bda731afbe7c8a44034f4b0d7925f33934214c87",
+    "embedded_original_hash_verified": true,
+    "horse_projection_differences": {
+      "1": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "2": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "3": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "4": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "5": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "6": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "7": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "8": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "9": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "10": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "careerCoverage",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "researchEvidence",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      }
+    },
+    "top_level_changes_except_envelope": [
+      "horses"
+    ],
+    "matching_serializations": [],
+    "conclusion": "embedded originals verified; stored-column hash basis unresolved; do not modify originals"
+  },
+  {
+    "race_id": "nar-2026-10-22-園田-02",
+    "stored_sha256": "3979bdba27560780837faebe1d83aa5bb8a8df215349d9d377b476de3dc5490b",
+    "current_json_sha256": "a43c3e52009f26a5a09ddb55f156b4542c26290cbb33e4300a2da86e6d1ce6a0",
+    "hash_basis_resolved": false,
+    "warehouse_writes": 0,
+    "embedded_original_bytes": 614228,
+    "embedded_original_length_verified": true,
+    "embedded_original_sha256": "3e75e000b67f0db4936e7a28de5d77121b49f6093a8e775bddac21dde4fb1201",
+    "embedded_original_hash_verified": true,
+    "horse_projection_differences": {
+      "1": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "2": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "3": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "4": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "5": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "6": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "7": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "8": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "9": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "10": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      }
+    },
+    "top_level_changes_except_envelope": [
+      "horses"
+    ],
+    "matching_serializations": [],
+    "conclusion": "embedded originals verified; stored-column hash basis unresolved; do not modify originals"
+  },
+  {
+    "race_id": "nar-2026-10-22-園田-03",
+    "stored_sha256": "2d64807010ac88e49ecb80bc3a1d43f60e127626a3b760c080eed297fa7b17ad",
+    "current_json_sha256": "a6a4bffbca539f17738e3a23ffc6637e7570dd708a5045853de7e7e587fc2ad7",
+    "hash_basis_resolved": false,
+    "warehouse_writes": 0,
+    "embedded_original_bytes": 102374,
+    "embedded_original_length_verified": true,
+    "embedded_original_sha256": "bb1ee69627b8fca51884ea8638c3b0196ee0508c492a61611ab78317b547ec43",
+    "embedded_original_hash_verified": true,
+    "horse_projection_differences": {
+      "1": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "2": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "3": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "4": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "5": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "6": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      }
+    },
+    "top_level_changes_except_envelope": [
+      "horses"
+    ],
+    "matching_serializations": [],
+    "conclusion": "embedded originals verified; stored-column hash basis unresolved; do not modify originals"
+  },
+  {
+    "race_id": "nar-2026-10-22-園田-04",
+    "stored_sha256": "f9bdc77b2455f3bc099479a40176fe5842a875d7cadbe3170af357ce4ea092a4",
+    "current_json_sha256": "e97d16b0064abf153b2a27ee7fd4d6f5dbf23fcb4b2bb2be4603ca0c0de0de79",
+    "hash_basis_resolved": false,
+    "warehouse_writes": 0,
+    "embedded_original_bytes": 803357,
+    "embedded_original_length_verified": true,
+    "embedded_original_sha256": "367aef55d38fe673c86532ad3fba12ef4d866d109652c7b92a4af89f9ca06a71",
+    "embedded_original_hash_verified": true,
+    "horse_projection_differences": {
+      "1": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "2": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "3": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "4": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "5": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "6": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "7": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "8": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "9": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "10": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "11": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      }
+    },
+    "top_level_changes_except_envelope": [
+      "horses"
+    ],
+    "matching_serializations": [],
+    "conclusion": "embedded originals verified; stored-column hash basis unresolved; do not modify originals"
+  },
+  {
+    "race_id": "nar-2026-10-22-園田-05",
+    "stored_sha256": "4899733305025258d115541cc48ee5a3958d3200d197deb946f1b4c8a8066de7",
+    "current_json_sha256": "0268b46affeb481595b7476119227635662ad1ee9fe0bf5fdf3194fd8675f237",
+    "hash_basis_resolved": false,
+    "warehouse_writes": 0,
+    "embedded_original_bytes": 346321,
+    "embedded_original_length_verified": true,
+    "embedded_original_sha256": "30e69fea0bc50fa6c1a74a62b2e7e86954573d9868421843dbf9c1cd73fd090d",
+    "embedded_original_hash_verified": true,
+    "horse_projection_differences": {
+      "1": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "2": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "3": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "4": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "5": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "6": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "7": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "8": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "9": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "10": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      },
+      "11": {
+        "omitted_from_projection": [
+          "_careerHistoryAudit",
+          "_supplementalSources",
+          "allPastRuns",
+          "careerArchive",
+          "collectionState",
+          "integratedEvaluation",
+          "jockeyProfile",
+          "jockeyStats",
+          "precomputedMetrics",
+          "recentRaces",
+          "trainerProfile",
+          "trainerStats"
+        ],
+        "changed_values": []
+      }
+    },
+    "top_level_changes_except_envelope": [
+      "horses"
+    ],
+    "matching_serializations": [],
+    "conclusion": "embedded originals verified; stored-column hash basis unresolved; do not modify originals"
+  }
+]
