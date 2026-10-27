@@ -146,7 +146,7 @@
        unified.circuit===race.circuit&&unified.researchOnly===true&&
        unified.probabilitiesCalibrated===false&&
        Array.isArray(unified.roster)&&Array.isArray(unified.marks)&&
-       unified.roster.length>=3&&unified.roster.length===race.horses.length&&
+       unified.roster.length>=3&&Array.isArray(race.horses)&&
        /^[a-f0-9]{64}$/i.test(unified.receiptSha256||'')&&
        /^[a-f0-9]{64}$/i.test(unified.modelHash||'')&&
        String(unified.trainedThrough||'')<String(race.date||'')&&
@@ -158,10 +158,23 @@
         if(!Number.isInteger(n)||n<=0||roster[n])accepted=false;
         roster[n]=String(x.name||'');
       });
+      var cardSeen={},activeCount=0;
       (race.horses||[]).forEach(function(h){
-        var n=Number(h&&h.horseNumber);
-        if(roster[n]!==String(h&&h.name||''))accepted=false;
+        var n=Number(h&&h.horseNumber),status=String(h&&h.status||'').trim();
+        if(!h||!Number.isInteger(n)||n<=0||cardSeen[n]){accepted=false;return;}
+        cardSeen[n]=true;
+        // Same withdrawal statuses as the existing server runner-status gate.
+        var inactive=!!(h.scratched||h.withdrawn)||
+          /競走除外|出走取消|競走取消|欠場/.test(status)||status==='取消'||status==='除外';
+        if(inactive){
+          if(Object.prototype.hasOwnProperty.call(roster,n))accepted=false;
+          return;
+        }
+        activeCount++;
+        if(!Object.prototype.hasOwnProperty.call(roster,n)||
+           roster[n]!==String(h.name||''))accepted=false;
       });
+      if(activeCount!==unified.roster.length)accepted=false;
       unified.marks.forEach(function(x){
         var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
         if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
