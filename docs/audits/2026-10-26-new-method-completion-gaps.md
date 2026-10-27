@@ -84,3 +84,29 @@ Independent Components 40348403725 failure:
 |mineta proxy|8/49|17/49|4900|1910|38.98%|
 
 精度改善の証明ではない。新規公式過去レースの追加取得・新馬/障害の専用検証・全券種評価は未実施。
+
+## 2026-10-27 継続修復
+コード abc10d604c0fc54ff4a46c16129f696e260cccd7。
+- mineta_public_pace: anyコーナー判定を最初の観測位置へ修正。後半の押し上げを序盤先行と誤認しない。
+  最初の観測コーナーはスタート計測ではない。回帰2件を追加。
+- forecast/prediction.js: #499を照合。取消・除外・欠場を除いた全馬の本人一致で原票を表示。
+  欠落・重複・馬名違い・原票に残った取消馬は拒否。実JS実行テストを追加。
+- app.js: 補助描画失敗時に基本出走表へ戻しても検証済みp.rowsを保持。
+  出典のない印は既存visible gateで拒否。実復旧関数を例外付きで検証。
+- CSS/レイアウト/保存原本は変更せず、main統合・本番デプロイなし。
+
+Validation 40459933147 SUCCESS: 1144 passed / 3 skipped / 70 subtests passed。
+PWAビルド・構文・保存圧縮・pipeline invariantsもsuccess。
+Existing Forecast Revision UI 40459933224 SUCCESS。
+Recovery Regression 40459933239のproductionジョブ122042289636 SUCCESS:
+現行本番の出走表・原票・API障害・複数開催場・JRA/NAR過去日・iPhone WebKitの読取検査。
+これは修正候補の本番反映や全レース予想完成を意味しない。
+同workflow候補browserジョブは記録時点で依存ブラウザのインストール中。
+
+Independent Components 40459933029 FAILURE:
+CSS固定検査未解消。実D1は再度425/425詳細・欠損0だが、中央の未使用期間30R不足で停止。
+地方は学習90/後続検証49/除外1。同期間の再実行を新規独立検証と扱わない。
+精度改善は主張しない。
+
+環境はspec revision 4でpending/offline。ローカル実行・新規公式データ追加取得・
+独立検証期間拡大・4段階モデル完成・新馬障害専用受入・全工程完成は未実施。
