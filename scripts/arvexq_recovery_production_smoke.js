@@ -102,12 +102,12 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       originalHonmeiHorseNumbers:originalHonmei});
     if(deployedPolicy!=='unified-win-axis-v1')console.log('PRODUCTION_LEGACY_HONMEI_POLICY '+r.id);
     // An intentionally aborted API prefetch may throw a WebKit access-control
-    // pageerror. Ignore only that known effect inside the explicit outage
+    // pageerror (including WebKit's normalized `https: /` URL). Ignore only that known effect inside the explicit outage
     // scenario; never ignore any other runtime error.
     const unexpected=errors.filter(message=>!(
       page._arvexqIntentionalApiOutage &&
       /Fetch API cannot load/.test(message) &&
-      /kraiz-api\.4b89h4fydd\.workers\.dev\/api\//.test(message) &&
+      /kraiz-api\.4b89h4fydd\.workers\.dev\s*\/api\//.test(message) &&
       /due to access control checks/.test(message)
     ));
     assert.equal(unexpected.length,0,'runtime errors '+unexpected.join(';'));
