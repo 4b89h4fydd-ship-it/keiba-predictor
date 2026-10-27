@@ -120,8 +120,12 @@ def build_prediction(facts, now=None):
         and type(row.get("trackingCoverage")) in (int, float)
         and row["trackingCoverage"] >= .8
     ]
-    pace["verifiedHistoricalVideoRuns"] = len(verified_video)
-    pace["videoAppliedToFusion"] = bool(verified_video)
+    pace["videoReviewCandidateRuns"] = len(verified_video)
+    # blend() consumes opinions, calibration and odds; research rows alone
+    # do not apply a validated video correction.
+    pace["verifiedHistoricalVideoRuns"] = 0
+    pace["videoAppliedToFusion"] = False
+    pace["videoApplicationStatus"] = "not-applied-awaiting-validation"
     pace["markOrder"] = order
     pace["markLabels"] = {str(m["horseNumber"]): m["mark"] for m in marks}
     pace["ticketHorses"] = sorted({no for ticket in blended["recommendedBets"]
@@ -130,9 +134,7 @@ def build_prediction(facts, now=None):
         "みねた氏の公開展開手法による観測項目を主体に、複数予想家と独立AIの"
         "同一過去レースでの実測的中率・回収率による重み付けで統合。",
         "中央と地方は別々に検証。",
-        ("外部レビュー済み・過去レース一致の映像計測" + str(len(verified_video))
-         + "走を融合特徴量へ反映。" if verified_video else
-         "条件を満たす映像計測はなく、映像値は予想へ反映していない。"),
+        "映像補正は未適用・検証待ち。映像値は予想へ反映していない。",
         "先行候補は" + "、".join(str(n) + "番" for n in mineta["forwardIntentCandidates"]) + "。",
         "初角までの公式距離は" +
         (str(mineta["firstCornerMetersOfficial"]) + "m。" if mineta["firstCornerMetersOfficial"] is not None

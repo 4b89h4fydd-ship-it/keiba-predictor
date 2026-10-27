@@ -112,7 +112,8 @@ def public_pace_factors(race):
         change = ("unknown" if race_distance is None or prior_distance is None else
                   "extension" if race_distance > prior_distance else
                   "shortening" if race_distance < prior_distance else "same")
-        last_early = any(p <= 3 for p in last_positions) if last_positions else None
+        # Use the first recorded corner only; a late advance is not early pace.
+        last_early = last_positions[0] <= 3 if last_positions else None
         # Distance extension is only a forward-intent research *candidate*,
         # never evidence that a horse will actually lead the field.
         candidate = last_early is True or change == "extension"
@@ -122,7 +123,7 @@ def public_pace_factors(race):
             "lastFirstCornerTop3": last_early,
             "observedCornerStarts": len(valid),
             "pastEarlyTop3Share": (
-                sum(any(p <= 3 for p in row) for row in valid) / len(valid)
+                sum(row[0] <= 3 for row in valid) / len(valid)
                 if valid else None),
             "lastRunDistanceChange": change,
             "forwardIntentCandidate": candidate if last_early is not None or

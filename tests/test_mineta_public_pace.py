@@ -70,3 +70,28 @@ def test_retired_banei_and_jumps_are_not_cast_as_flat():
         source["track"], source["surface"] = track, surface
         with pytest.raises(ValueError, match="retired Banei"):
             public_pace_factors(source)
+
+
+def test_late_advance_is_not_early_top_three():
+    source = race()
+    horse = source["horses"][0]
+    horse["recentRaces"] = [
+        {"date": "2026-10-20", "finish": 2, "fieldSize": 10,
+         "cornerPositions": [8, 7, 3, 2], "distance": 1400},
+        {"date": "2026-10-19", "finish": 4, "fieldSize": 10,
+         "cornerPositions": [2, 4, 5, 4], "distance": 1400},
+    ]
+    before = deepcopy(source)
+    entry = public_pace_factors(source)["horses"][0]
+    assert entry["lastFirstCornerTop3"] is False
+    assert entry["pastEarlyTop3Share"] == .5
+    assert entry["forwardIntentCandidate"] is False
+    assert source == before
+
+
+def test_late_retreat_does_not_erase_observed_early_position():
+    source = race()
+    source["horses"][0]["recentRaces"][0]["cornerPositions"] = [2, 5, 8, 9]
+    entry = public_pace_factors(source)["horses"][0]
+    assert entry["lastFirstCornerTop3"] is True
+    assert entry["pastEarlyTop3Share"] == 1
