@@ -46,24 +46,9 @@ JST = ZoneInfo("Asia/Tokyo")
 # only changes at an explicit version boundary: when a candidate has
 # beaten this configuration on unseen races, bump MODEL_KEY and the
 # frozen weights together. Never drift silently.
-FROZEN_V1_WEIGHTS = {
-    "jra_flat": {
-        "form": 0.30, "speed": 0.20, "distance": 0.10, "track": 0.05,
-        "surface": 0.10, "condition": 0.05, "jockey": 0.10,
-        "closing": 0.05, "consistency": 0.05,
-    },
-    "nar": {
-        "form": 0.32, "speed": 0.20, "distance": 0.10, "track": 0.08,
-        "surface": 0.05, "condition": 0.05, "jockey": 0.10,
-        "closing": 0.05, "consistency": 0.05,
-    },
-    "jumps": {
-        "form": 0.35, "speed": 0.10, "distance": 0.10, "track": 0.10,
-        "surface": 0.05, "condition": 0.05, "jockey": 0.10,
-        "closing": 0.05, "consistency": 0.10,
-    },
-    "debut": {},
-}
+from rewrite.analysis.lane_config import LANE_WEIGHTS as FROZEN_V1_WEIGHTS  # noqa: E402
+# (weights live in rewrite/analysis/lane_config.py, shared with the
+# production publish lane so display and seals never diverge)
 
 
 def scheduled_start(detail: dict, date: str) -> datetime | None:
