@@ -193,16 +193,31 @@ class RacePayloadTests(unittest.TestCase):
         self.assertTrue(all(i["kind"] in ui_kinds for i in items))
         self.assertIs(self.unified["ticketPlan"]["sameModelAndMarks"], True)
 
-    def test_no_ev_numbers_when_unvalidated(self):
+    def test_win_ev_shown_only_as_uncalibrated_estimate(self):
+        # The purchase-candidate lanes still carry no EV numbers.
         for bet in self.detail["recommendedBets"]:
             self.assertIsNone(bet["expectedValue"])
             self.assertIsNone(bet["stakeUnits"])
-        self.assertIsNone(self.unified["ticketPlan"]["expectedValue"])
+        plan_block = self.unified["ticketPlan"]
+        self.assertIsNone(plan_block["expectedValue"])
         self.assertEqual(
-            self.unified["ticketPlan"]["expectedValueStatus"],
-            "suppressed-calibration-not-validated",
-        )
-        self.assertIn("未校正", self.unified["ticketPlan"]["reason"])
+            plan_block["expectedValueStatus"], "uncalibrated-estimate")
+        self.assertIn("未校正", plan_block["reason"])
+        self.assertIn("推定値", plan_block["reason"])
+        # Every fixture horse has real win odds (5.0): each estimate
+        # must equal the model win probability x those odds.
+        estimates = plan_block["winExpectedValues"]
+        self.assertEqual(len(estimates), 5)
+        for entry in estimates:
+            self.assertAlmostEqual(entry["odds"], 5.0)
+            self.assertAlmostEqual(
+                entry["expectedValue"],
+                entry["winProbability"] * entry["odds"],
+                delta=1e-3,
+            )
+        # Combination items never carry an EV figure (no real odds).
+        for item in plan_block["items"]:
+            self.assertNotIn("expectedValue", item)
 
     def test_missing_provenance_fails_closed(self):
         payload = build_payload(self.race, provenance=None)

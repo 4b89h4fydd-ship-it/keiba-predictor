@@ -38,6 +38,34 @@ class TicketTests(unittest.TestCase):
         self.assertEqual(plan.ev_tickets, ())
         self.assertEqual(plan.suppressed.get("ev_win"), "calibration-not-validated")
 
+    def test_win_ev_estimates_match_probability_times_real_odds(self):
+        plan = generate_tickets(self.forecast, self.odds, calibration_validated=False)
+        # The EV ticket lane stays suppressed, but display estimates
+        # exist for every runner with real win odds.
+        self.assertEqual(plan.ev_tickets, ())
+        estimates = {t.selection[0]: t for t in plan.win_ev_estimates}
+        self.assertEqual(set(estimates), set(self.odds))
+        for runner in self.forecast.runners:
+            ticket = estimates[runner.number]
+            self.assertEqual(ticket.lane, "ev-estimate")
+            self.assertEqual(ticket.odds_status, "actual")
+            self.assertIsNone(ticket.stake_units)
+            self.assertAlmostEqual(
+                ticket.expected_return,
+                round(runner.p_win * self.odds[runner.number], 4),
+                places=6,
+            )
+        # Sorted by expected value, highest first.
+        values = [t.expected_return for t in plan.win_ev_estimates]
+        self.assertEqual(values, sorted(values, reverse=True))
+        # No real odds -> no estimates, nothing invented.
+        empty = generate_tickets(self.forecast, {}, calibration_validated=False)
+        self.assertEqual(empty.win_ev_estimates, ())
+        # Partial odds -> estimates only for those horses.
+        partial = generate_tickets(self.forecast, {2: 8.0},
+                                    calibration_validated=False)
+        self.assertEqual([t.selection for t in partial.win_ev_estimates], [(2,)])
+
     def test_non_win_ev_marked_odds_unavailable(self):
         plan = generate_tickets(self.forecast, self.odds, calibration_validated=True)
         for t in plan.probability_tickets:

@@ -2,19 +2,25 @@
 
 Probabilities for all seven ticket kinds come from the Plackett-Luce
 distribution over the forecast strengths. Expected value is computed
-ONLY where real odds exist and calibration has been validated:
+ONLY where real odds exist:
 
 - The production odds source currently publishes win odds only, so
   EV is possible for win tickets and nothing else. Other kinds carry
   ``odds_status="unavailable"`` and no EV figure is invented.
-- While the probability layer is uncalibrated, EV tickets are
-  suppressed entirely and the plan says why. Probability-ranked
-  tickets are still produced, explicitly labelled uncalibrated.
+- While the probability layer is uncalibrated, EV *tickets* (the
+  purchase-candidate lane) are suppressed entirely and the plan says
+  why. Probability-ranked tickets are still produced, explicitly
+  labelled uncalibrated.
+- Separately, per-horse win EV *estimates* (model win probability x
+  real win odds) are exposed for display, always labelled as
+  uncalibrated estimates; they never enter the EV ticket lane and
+  carry no stake sizing.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations, permutations
+from math import isfinite
 from typing import Optional
 
 from ..safety.probability import distribution, expected_return, ticket_probability
@@ -59,6 +65,9 @@ class TicketPlan:
     ev_tickets: tuple
     probability_tickets: tuple
     suppressed: dict  # reason -> count or explanation
+    # Display-only win EV estimates (lane="ev-estimate"), one per
+    # runner with real win odds. Never purchase candidates.
+    win_ev_estimates: tuple = ()
 
 
 def _candidates(forecast: RaceForecast, kind: str, ranked: list[int]) -> list[tuple]:
@@ -151,9 +160,35 @@ def generate_tickets(
                 odds_status="actual",
                 stake_units=round(min(kelly, 0.05), 4),
             ))
+    # Display-only win EV estimates: model win probability x real win
+    # odds for EVERY runner that has real odds, regardless of the
+    # calibration gate above. These are uncalibrated estimates for
+    # display; the EV ticket lane stays gated on validated
+    # calibration, and no stake sizing is attached here.
+    estimates: list[Ticket] = []
+    for runner in forecast.runners:
+        if runner.p_win is None:
+            continue
+        raw_odds = win_odds.get(runner.number)
+        if raw_odds is None:
+            continue
+        try:
+            odds_value = float(raw_odds)
+        except (TypeError, ValueError):
+            continue
+        if not isfinite(odds_value) or odds_value < 1:
+            continue
+        estimates.append(Ticket(
+            kind="win", selection=(runner.number,),
+            probability=round(runner.p_win, 4), odds=odds_value,
+            expected_return=round(runner.p_win * odds_value, 4),
+            lane="ev-estimate", odds_status="actual", stake_units=None,
+        ))
+    estimates.sort(key=lambda t: (-(t.expected_return or 0.0), t.selection))
     return TicketPlan(
         race_id=forecast.race_id,
         ev_tickets=tuple(ev_tickets),
         probability_tickets=tuple(probability_tickets),
         suppressed=suppressed,
+        win_ev_estimates=tuple(estimates),
     )

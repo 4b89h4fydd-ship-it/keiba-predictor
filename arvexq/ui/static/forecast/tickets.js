@@ -48,10 +48,23 @@
         Array.isArray(x.combo)&&x.combo.length>=2&&
         x.combo.every(function(no){return model.roster.some(function(h){return h.horseNumber===no})})
       }).slice(0,5);
+      var rosterNames={};
+      (model.roster||[]).forEach(function(h){rosterNames[h.horseNumber]=h.name||''});
+      var winEv=(model.ticketPlan.winExpectedValues||[]).filter(function(x){return x&&
+        Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>0&&
+        Number.isFinite(Number(x.odds))&&Number(x.odds)>=1&&
+        Number.isFinite(Number(x.winProbability))&&
+        model.roster.some(function(h){return h.horseNumber===x.horseNumber})
+      }).map(function(x){
+        return {horseNumber:x.horseNumber,name:rosterNames[x.horseNumber]||'',
+          winProbability:Number(x.winProbability),odds:Number(x.odds),
+          expectedValue:Number(x.expectedValue)};
+      });
       var plan={decision:options.length?'参考候補・購入推奨なし':'見送り',
         researchOnly:true,referenceOnly:true,notForPurchase:true,
         modelVersion:model.modelVersion,
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
+        winExpectedValues:winEv,
         referenceCapturedAt:model.capturedAt,items:options.map(function(x){
           return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1,
             reason:'未校正の同一モデル。勝率・回収率の実測検証は未完了'};

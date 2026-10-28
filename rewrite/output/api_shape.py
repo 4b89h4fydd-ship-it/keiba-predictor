@@ -336,16 +336,25 @@ def _diagnosis(forecast: RaceForecast) -> list[dict]:
 
 def _ticket_reason(plan: TicketPlan) -> str:
     if plan.probability_tickets:
-        base = (
-            "未校正の確率による参考候補。確率校正が未検証のため期待値は"
-            "算出せず、購入推奨ではありません"
-        )
+        if plan.win_ev_estimates:
+            base = "未校正の確率による参考候補。購入推奨ではありません"
+        else:
+            base = (
+                "未校正の確率による参考候補。確率校正が未検証のため期待値は"
+                "算出せず、購入推奨ではありません"
+            )
     else:
         base = "確率候補が基準に達しないため見送り"
     suppressed = plan.suppressed or {}
     notes = []
     if suppressed.get("ev_win") == "calibration-not-validated":
-        notes.append("単勝の期待値は確率未校正のため抑制")
+        if plan.win_ev_estimates:
+            notes.append(
+                "単勝の期待値は未校正の推定値として表示"
+                "（確率校正・実測検証は未完了）"
+            )
+        else:
+            notes.append("単勝の期待値は確率未校正のため抑制")
     if any(str(k).startswith("ev_") and v == "odds-unavailable"
            for k, v in suppressed.items()):
         notes.append("複合券種は発走前の実オッズ不足のため期待値を算出しない")
@@ -366,6 +375,18 @@ def _ticket_plan_block(plan: TicketPlan) -> dict:
     ]
     items.sort(key=lambda item: (-item["probability"], item["combo"]))
     items = items[:MAX_UI_TICKET_ITEMS]
+    # Win EV estimates (uncalibrated): model win probability x real
+    # win odds, only for runners whose win odds actually exist.
+    # Combination kinds have no real odds and stay without EV.
+    win_ev = [
+        {
+            "horseNumber": ticket.selection[0],
+            "winProbability": ticket.probability,
+            "odds": ticket.odds,
+            "expectedValue": ticket.expected_return,
+        }
+        for ticket in plan.win_ev_estimates
+    ]
     return {
         "status": "参考候補" if items else "見送り",
         "items": items,
@@ -373,7 +394,11 @@ def _ticket_plan_block(plan: TicketPlan) -> dict:
         "sameModelAndMarks": True,
         "maximumPoints": MAX_UI_TICKET_ITEMS,
         "expectedValue": None,
-        "expectedValueStatus": "suppressed-calibration-not-validated",
+        "expectedValueStatus": (
+            "uncalibrated-estimate" if win_ev
+            else "suppressed-calibration-not-validated"
+        ),
+        "winExpectedValues": win_ev,
         "suppressed": {k: str(v) for k, v in (plan.suppressed or {}).items()},
     }
 
@@ -496,7 +521,10 @@ def race_payload(
             "probability": {"status": forecast.probability_status,
                             "calibrated": PROBABILITIES_CALIBRATED},
             "marks": {"status": "mechanical-from-probability"},
-            "tickets": {"status": "probability-only-ev-suppressed"},
+            "tickets": {"status": (
+                "win-ev-uncalibrated-estimate" if tickets.win_ev_estimates
+                else "probability-only-ev-suppressed"
+            )},
         },
         "researchOnly": RESEARCH_ONLY,
         "probabilitiesCalibrated": PROBABILITIES_CALIBRATED,
