@@ -6,8 +6,10 @@ name: arvexq-rewrite-publish
 
 on:
   schedule:
-    # JST 06:05 / 10:05 / 13:05 / 20:05
-    - cron: "05 21,1,4,11 * * *"
+    # Hourly :05, JST 06:05-20:05 (UTC 21:05 prev day - 11:05)
+    - cron: "05 0-11,21-23 * * *"
+    # Extra evening runs :35, JST 17:35-20:35 (UTC 08:35-11:35)
+    - cron: "35 8-11 * * *"
   workflow_dispatch:
     inputs:
       date:
