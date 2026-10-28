@@ -12,7 +12,6 @@ name: ARVEXQ Full Prefetch
     paths:
       - app.py
       - scripts/arvexq_prefetch.py
-      - scripts/arvexq_apply_learned_overlay.py
       - scripts/arvexq_morning_picks.js
       - scripts/arvexq_merge_morning_output.py
       - scripts/arvexq_sync_batches.py
@@ -614,21 +613,6 @@ jobs:
             fi
           )
           git worktree remove /tmp/arvexq-calibration-publish
-
-      - name: Replace legacy active forecasts in D1 publication payload
-        if: env.ARVEXQ_DAY_AHEAD != '1'
-        run: |
-          MODEL_PATH=".arvexq-data/research-models.json"
-          if [ ! -s "$MODEL_PATH" ]; then
-            echo '{}' > "$MODEL_PATH"
-          fi
-          PYTHONPATH=. python scripts/arvexq_apply_learned_overlay.py \
-            --bundle prefetch-payload.json \
-            --models "$MODEL_PATH" \
-            --out prefetch-learned.json \
-            --report learned-overlay-report.json
-          mv prefetch-learned.json prefetch-payload.json
-          echo "LEGACY_ACTIVE_FORECASTS_DISABLED"
 
       - name: Freeze morning selected and special predictions for all races
         if: env.ARVEXQ_DAY_AHEAD != '1'
