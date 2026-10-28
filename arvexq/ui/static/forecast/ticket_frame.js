@@ -71,7 +71,11 @@ function contents(r,p){
    return '<div class="ai-bet-box"><p class="muted">保存済み旧方式の買い目データが未取得です。</p></div>';
  var service=root.ARVEXQProductionTickets;
  var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
- if(!plan||!plan.fixedAt||!Array.isArray(plan.items)||!plan.items.length){
+ // The unified reference plan carries its pre-off capture time as
+ // referenceCapturedAt instead of fixedAt; both mean the combinations
+ // were fixed before the off (the unified gate enforces capturedAt<post).
+ var fixedAt=plan&&(plan.fixedAt||plan.referenceCapturedAt);
+ if(!plan||!fixedAt||!Array.isArray(plan.items)||!plan.items.length){
    return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p>'+revisionStatus(r)+'</div>';
  }
  var list=plan.items.map(function(item){
@@ -85,7 +89,7 @@ function contents(r,p){
  }).join('');
  return '<div class="ai-bet-box arv-three-bet">'+
    '<div class="ai-bet-title">おすすめ買い目</div>'+
-   '<p class="arv-three-fixed">発走前固定 '+esc(plan.fixedAt)+'</p>'+
+   '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+
    '<section class="arv-three-section"><h3>おすすめ買い目</h3>'+list+'</section>'+
    '<p class="arv-three-provisional">保存された組み合わせをそのまま表示。発走後の再計算はしていません。</p>'+
    '</div>';
