@@ -114,19 +114,22 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         return out
     from arvexq.prediction.forecast_revisions import preserve_revisions
     out = preserve_revisions(old, out)
-    # Preserve the FIRST authentic date-held-out, pre-off unified receipt.
-    # A later result update, card repair, or old prefetch may add facts but
-    # must never replace these observed before-off marks, pace or ticket plan.
-    from arvexq.prediction.unified_product import verified as verified_unified
-    earlier_unified = verified_unified(old)
-    if earlier_unified:
-        out['unifiedForecast'] = copy.deepcopy(earlier_unified)
-    elif 'unifiedForecast' in out and not verified_unified(out):
-        # Do not publish an unverifiable receipt, but do not discard the
-        # independently verified racecard/empirical forecast either.  An
-        # invalid new candidate is a field-level quarantine case; an existing
-        # valid receipt was already retained above and remains immutable.
-        out.pop('unifiedForecast', None)
+    # Forecast blocks are owned by the rewrite publish lane
+    # (scripts/arvexq_rewrite_publish.py). Any other lane's write preserves
+    # the stored forecast blocks verbatim and drops its own forecast fields;
+    # only an incoming detail carrying the lane's preparedMeta.rewritePublish
+    # marker may replace them. (This replaces the former first-receipt-wins
+    # rule that pinned forecasts to the retired learned-scenarios model.)
+    from arvexq.prediction.unified_product import MODEL_VERSION as REWRITE_MODEL_VERSION
+    marker = ((out.get('preparedMeta') or {}).get('rewritePublish') or {})
+    if marker.get('modelVersion') != REWRITE_MODEL_VERSION:
+        for key in ('unifiedForecast', 'prediction', 'predictionMarks',
+                    'recommendedBets', 'forecastText', 'predictionStatus',
+                    'predictionModelVersion', 'preRaceBet'):
+            if key in old:
+                out[key] = copy.deepcopy(old[key])
+            else:
+                out.pop(key, None)
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.

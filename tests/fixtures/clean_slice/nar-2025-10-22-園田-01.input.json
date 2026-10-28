@@ -1,0 +1,1874 @@
+{
+  "id": "nar-2025-10-22-園田-01",
+  "date": "2025-10-22",
+  "circuit": "地方",
+  "track": "園田",
+  "race_number": 1,
+  "title": "Ｃ３二 ３歳以上",
+  "surface": "ダ",
+  "distance": 1400,
+  "starts_at": "2025-10-22T10:40:00+09:00",
+  "declared_count": 10,
+  "field_count_basis": "published_card_rows; no independent declared-count field",
+  "source": {
+    "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+    "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+    "status": 200,
+    "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+    "bytes": 138787,
+    "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+    "content_type": "text/html; charset=UTF-8"
+  },
+  "horses": [
+    {
+      "number": 1,
+      "frame": 1,
+      "horse_id": "1120240203",
+      "name": "フィールマイセンス",
+      "sex": "牝",
+      "age": 3,
+      "jockey": "山本太",
+      "carried_weight": 55.0,
+      "trainer": "南弘樹",
+      "body_weight": 451.0,
+      "pedigree": [
+        "父：エスポワールシチー",
+        "母：パフュームボム",
+        "母父：プリサイスエンド"
+      ],
+      "odds": 81.1,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-10-08",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510082700000001",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 6,
+          "time_seconds": 98.3,
+          "margin_seconds": 3.1,
+          "corners": [
+            8,
+            8,
+            7,
+            7
+          ],
+          "last3f": 41.8,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "クレスコロッ",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-24",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509242700000002",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 9,
+          "time_seconds": 94.7,
+          "margin_seconds": 1.6,
+          "corners": [
+            6,
+            7,
+            9,
+            8
+          ],
+          "last3f": 40.2,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "コワモテハマ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-11",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509112700000001",
+          "title": "Ｃ３四　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 2,
+          "time_seconds": 95.7,
+          "margin_seconds": 0.1,
+          "corners": [
+            5,
+            5,
+            4,
+            3
+          ],
+          "last3f": 41.1,
+          "class": "Ｃ３四　Ｃ３",
+          "opponent": "オーシンキャ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-29",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508292700000002",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 3,
+          "time_seconds": 95.4,
+          "margin_seconds": 1.5,
+          "corners": [
+            8,
+            8,
+            8,
+            8
+          ],
+          "last3f": 39.9,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "メイショウコ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-07",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508072700000002",
+          "title": "播州加東市産",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 6,
+          "time_seconds": 96.4,
+          "margin_seconds": 0.8,
+          "corners": [
+            8,
+            8,
+            8,
+            9
+          ],
+          "last3f": 42.1,
+          "class": "播州加東市産",
+          "opponent": "レンガノコブ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 2,
+      "frame": 2,
+      "horse_id": "1120210583",
+      "name": "メイショウマサカリ",
+      "sex": "牡",
+      "age": 7,
+      "jockey": "小牧太",
+      "carried_weight": 57.0,
+      "trainer": "小牧毅",
+      "body_weight": 476.0,
+      "pedigree": [
+        "父：メイショウボーラー",
+        "母：メイショウレクセラ",
+        "母父：キングカメハメハ"
+      ],
+      "odds": 2.6,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-08-01",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508012700000006",
+          "title": "中森あきない",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 3,
+          "time_seconds": 93.6,
+          "margin_seconds": 0.2,
+          "corners": [
+            7,
+            9,
+            9,
+            7
+          ],
+          "last3f": 40.5,
+          "class": "中森あきない",
+          "opponent": "ハギノヴェル",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-17",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507172700000008",
+          "title": "Ｃ２一　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 8,
+          "time_seconds": 93.5,
+          "margin_seconds": 1.7,
+          "corners": [
+            6,
+            6,
+            7,
+            7
+          ],
+          "last3f": 40.7,
+          "class": "Ｃ２一　Ｃ２",
+          "opponent": "シュタールペ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-26",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202506262700000006",
+          "title": "Ｃ２二　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 7,
+          "time_seconds": 95.3,
+          "margin_seconds": 2.3,
+          "corners": [
+            9,
+            9,
+            8,
+            8
+          ],
+          "last3f": 41.5,
+          "class": "Ｃ２二　Ｃ２",
+          "opponent": "フルリール",
+          "going": "重",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-06-04",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202506042700000004",
+          "title": "耀山（かかや",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 12,
+          "finish": 5,
+          "time_seconds": 94.5,
+          "margin_seconds": 2.2,
+          "corners": [
+            8,
+            9,
+            8,
+            10
+          ],
+          "last3f": 41.4,
+          "class": "耀山（かかや",
+          "opponent": "シャッフルガ",
+          "going": "重",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-23",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202505232700000007",
+          "title": "Ｃ２二　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 2,
+          "time_seconds": 93.6,
+          "margin_seconds": 0.8,
+          "corners": [
+            5,
+            5,
+            5,
+            5
+          ],
+          "last3f": 39.4,
+          "class": "Ｃ２二　Ｃ２",
+          "opponent": "アドーネ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 3,
+      "frame": 3,
+      "horse_id": "2620200207",
+      "name": "トランセンデンタル",
+      "sex": "牡",
+      "age": 7,
+      "jockey": "山田雄",
+      "carried_weight": 57.0,
+      "trainer": "小村正",
+      "body_weight": 473.0,
+      "pedigree": [
+        "父：トランセンド",
+        "母：ジュンプリンセス",
+        "母父：タイキシャトル"
+      ],
+      "odds": 305.3,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-10-01",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510012700000004",
+          "title": "文保寺楼門ス",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1230,
+          "field_size": 12,
+          "finish": 9,
+          "time_seconds": 84.5,
+          "margin_seconds": 1.9,
+          "corners": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "last3f": 40.8,
+          "class": "文保寺楼門ス",
+          "opponent": "テーオーパー",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-19",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509192700000004",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 7,
+          "time_seconds": 94.5,
+          "margin_seconds": 1.2,
+          "corners": [
+            8,
+            9,
+            9,
+            7
+          ],
+          "last3f": 39.8,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "ローザーブル",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-05",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509052700000003",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 7,
+          "finish": 7,
+          "time_seconds": 98.3,
+          "margin_seconds": 3.1,
+          "corners": [
+            6,
+            5,
+            6,
+            7
+          ],
+          "last3f": 41.7,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "タンバアズキ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-20",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508202700000008",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 7,
+          "finish": 7,
+          "time_seconds": 95.4,
+          "margin_seconds": 2.5,
+          "corners": [
+            7,
+            7,
+            7,
+            7
+          ],
+          "last3f": 40.1,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ダイシチセイ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-06",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508062700000004",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 9,
+          "time_seconds": 96.9,
+          "margin_seconds": 4.0,
+          "corners": [
+            9,
+            9,
+            9,
+            9
+          ],
+          "last3f": 42.3,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ギャラン",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 4,
+      "frame": 4,
+      "horse_id": "1120250165",
+      "name": "カフジウヴァ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "吉村智",
+      "carried_weight": 57.0,
+      "trainer": "保利平",
+      "body_weight": 454.0,
+      "pedigree": [
+        "父：Ｅｎｇｌｉｓｈ　Ｃｈａ",
+        "母：Ｏｖｅｒ　Ｓｅｒｖｅｄ",
+        "母父：Ｂｌａｃｋ　Ｍｉｎｎａ"
+      ],
+      "odds": 1.7,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-06-04",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202506042700000007",
+          "title": "３歳Ｃ１二",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 7,
+          "finish": 3,
+          "time_seconds": 94.6,
+          "margin_seconds": 1.4,
+          "corners": [
+            4,
+            4,
+            3,
+            4
+          ],
+          "last3f": 40.9,
+          "class": "３歳Ｃ１二",
+          "opponent": "カットバック",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-05-04",
+          "race_key": null,
+          "title": "",
+          "track": "Ｊ京都",
+          "surface": "芝",
+          "distance": 1400,
+          "field_size": 18,
+          "finish": 16,
+          "time_seconds": 84.0,
+          "margin_seconds": 2.6,
+          "corners": [
+            13,
+            13
+          ],
+          "last3f": 36.1,
+          "class": "",
+          "opponent": "サンタンカ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-05",
+          "race_key": null,
+          "title": "",
+          "track": "Ｊ阪神",
+          "surface": "芝",
+          "distance": 1400,
+          "field_size": 17,
+          "finish": 11,
+          "time_seconds": 83.2,
+          "margin_seconds": 1.1,
+          "corners": [
+            13,
+            14
+          ],
+          "last3f": 35.3,
+          "class": "",
+          "opponent": "アジュマン",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-24",
+          "race_key": null,
+          "title": "",
+          "track": "Ｊ京都",
+          "surface": "ダ",
+          "distance": 1200,
+          "field_size": 16,
+          "finish": 11,
+          "time_seconds": 74.3,
+          "margin_seconds": 1.7,
+          "corners": [
+            10,
+            10
+          ],
+          "last3f": 37.9,
+          "class": "",
+          "opponent": "レーンアジリ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-11-03",
+          "race_key": null,
+          "title": "",
+          "track": "Ｊ東京",
+          "surface": "芝",
+          "distance": 1400,
+          "field_size": 16,
+          "finish": 9,
+          "time_seconds": 84.6,
+          "margin_seconds": 0.9,
+          "corners": [
+            3,
+            3
+          ],
+          "last3f": 34.6,
+          "class": "",
+          "opponent": "カラヴァジェ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 5,
+      "frame": 5,
+      "horse_id": "1120240597",
+      "name": "アラタマオーソ",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "田野豊",
+      "carried_weight": 57.0,
+      "trainer": "高本友",
+      "body_weight": 471.0,
+      "pedigree": [
+        "父：フリオーソ",
+        "母：オウケンハート",
+        "母父：ジャングルポケット"
+      ],
+      "odds": 132.8,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-10-03",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510032700000002",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 6,
+          "time_seconds": 95.7,
+          "margin_seconds": 2.1,
+          "corners": [
+            8,
+            10,
+            10,
+            10
+          ],
+          "last3f": 40.8,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "テンクウワー",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-18",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509182700000001",
+          "title": "Ｃ３三　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 8,
+          "time_seconds": 97.1,
+          "margin_seconds": 1.8,
+          "corners": [
+            9,
+            9,
+            9,
+            9
+          ],
+          "last3f": 40.6,
+          "class": "Ｃ３三　Ｃ３",
+          "opponent": "エイシンラー",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-29",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508292700000012",
+          "title": "不撓不屈（フ",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 820,
+          "field_size": 12,
+          "finish": 12,
+          "time_seconds": null,
+          "margin_seconds": null,
+          "corners": [
+            12,
+            12
+          ],
+          "last3f": 39.7,
+          "class": "不撓不屈（フ",
+          "opponent": "メイショウバ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-06",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508062700000005",
+          "title": "Ｃ３　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 820,
+          "field_size": 10,
+          "finish": 7,
+          "time_seconds": null,
+          "margin_seconds": null,
+          "corners": [
+            8,
+            8
+          ],
+          "last3f": 37.7,
+          "class": "Ｃ３　Ｃ３",
+          "opponent": "モンシャトー",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-17",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507172700000001",
+          "title": "春哉（はるか",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 820,
+          "field_size": 12,
+          "finish": 12,
+          "time_seconds": null,
+          "margin_seconds": null,
+          "corners": [
+            12,
+            12
+          ],
+          "last3f": 40.0,
+          "class": "春哉（はるか",
+          "opponent": "アスクサステ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 6,
+      "frame": 6,
+      "horse_id": "720230421",
+      "name": "シュタイナー",
+      "sex": "牡",
+      "age": 5,
+      "jockey": "高畑皓",
+      "carried_weight": 57.0,
+      "trainer": "三宅直",
+      "body_weight": 451.0,
+      "pedigree": [
+        "父：ルーラーシップ",
+        "母：ジュモー",
+        "母父：タニノギムレット"
+      ],
+      "odds": 244.7,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-10-02",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510022700000001",
+          "title": "祝！メッセー",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 8,
+          "time_seconds": 97.2,
+          "margin_seconds": 2.6,
+          "corners": [
+            9,
+            9,
+            10,
+            10
+          ],
+          "last3f": 43.3,
+          "class": "祝！メッセー",
+          "opponent": "スマートコマ",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-18",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509182700000003",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 9,
+          "time_seconds": 96.3,
+          "margin_seconds": 2.7,
+          "corners": [
+            8,
+            8,
+            9,
+            9
+          ],
+          "last3f": 42.2,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "ビップピュア",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-04",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509042700000007",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 8,
+          "finish": 7,
+          "time_seconds": 95.5,
+          "margin_seconds": 2.4,
+          "corners": [
+            8,
+            8,
+            8,
+            8
+          ],
+          "last3f": 41.8,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "サンライズプ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-21",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508212700000004",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 8,
+          "time_seconds": 95.4,
+          "margin_seconds": 2.5,
+          "corners": [
+            9,
+            9,
+            9,
+            9
+          ],
+          "last3f": 40.6,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ラブカレン",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-07",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508072700000005",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 9,
+          "time_seconds": 95.8,
+          "margin_seconds": 2.1,
+          "corners": [
+            10,
+            10,
+            10,
+            10
+          ],
+          "last3f": 40.2,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "テイケイアン",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 7,
+      "frame": 7,
+      "horse_id": "1120220317",
+      "name": "シェナクィーン",
+      "sex": "牝",
+      "age": 5,
+      "jockey": "山本咲",
+      "carried_weight": 55.0,
+      "trainer": "山口浩",
+      "body_weight": 479.0,
+      "pedigree": [
+        "父：ホッコータルマエ",
+        "母：リアンローズ",
+        "母父：スターリングローズ"
+      ],
+      "odds": 10.6,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-07-16",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507162700000002",
+          "title": "乃井野（のい",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 2,
+          "time_seconds": 95.4,
+          "margin_seconds": 0.1,
+          "corners": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "last3f": 42.4,
+          "class": "乃井野（のい",
+          "opponent": "マジェンカ",
+          "going": "重",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-23",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202504232700000002",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 12,
+          "finish": 4,
+          "time_seconds": 95.4,
+          "margin_seconds": 2.1,
+          "corners": [
+            5,
+            5,
+            6,
+            4
+          ],
+          "last3f": 42.2,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "ルクスソレイ",
+          "going": "重",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-04-01",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202504012700000001",
+          "title": "Ｃ３三　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 12,
+          "finish": 5,
+          "time_seconds": 95.2,
+          "margin_seconds": 0.7,
+          "corners": [
+            3,
+            3,
+            3,
+            3
+          ],
+          "last3f": 41.6,
+          "class": "Ｃ３三　Ｃ３",
+          "opponent": "レディーペガ",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-03-06",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202503062800000002",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "姫路",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 9,
+          "time_seconds": 98.7,
+          "margin_seconds": 2.7,
+          "corners": [
+            7,
+            7,
+            8,
+            9
+          ],
+          "last3f": 42.8,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "エナフクキタ",
+          "going": "重",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2024-12-25",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202412252700000006",
+          "title": "Ｃ２二　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 12,
+          "finish": 9,
+          "time_seconds": 94.7,
+          "margin_seconds": 1.4,
+          "corners": [
+            8,
+            8,
+            9,
+            7
+          ],
+          "last3f": 41.3,
+          "class": "Ｃ２二　Ｃ２",
+          "opponent": "ジェイデン",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 8,
+      "frame": 7,
+      "horse_id": "120240399",
+      "name": "シュヴァルツスター",
+      "sex": "牡",
+      "age": 3,
+      "jockey": "大柿一",
+      "carried_weight": 57.0,
+      "trainer": "徳本慶",
+      "body_weight": 498.0,
+      "pedigree": [
+        "父：ワンアンドオンリー",
+        "母：セミニョン",
+        "母父：マンハッタンカフェ"
+      ],
+      "odds": 109.5,
+      "cancelled": false,
+      "unscored_history": [
+        {
+          "date": "2025-08-28",
+          "status": "取消",
+          "reason": "historical_cancellation_or_nonfinish_not_scored",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "histories": [
+        {
+          "date": "2025-10-09",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510092700000001",
+          "title": "Ｃ３二　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 9,
+          "time_seconds": 96.6,
+          "margin_seconds": 2.0,
+          "corners": [
+            8,
+            6,
+            9,
+            9
+          ],
+          "last3f": 41.1,
+          "class": "Ｃ３二　Ｃ３",
+          "opponent": "サクラトップ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-25",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509252700000001",
+          "title": "Ｃ３三　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 9,
+          "finish": 9,
+          "time_seconds": 96.4,
+          "margin_seconds": 1.2,
+          "corners": [
+            4,
+            4,
+            4,
+            8
+          ],
+          "last3f": 41.6,
+          "class": "Ｃ３三　Ｃ３",
+          "opponent": "ミヤビルーナ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-11",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509112700000001",
+          "title": "Ｃ３四　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 4,
+          "time_seconds": 96.3,
+          "margin_seconds": 0.7,
+          "corners": [
+            7,
+            7,
+            5,
+            5
+          ],
+          "last3f": 41.6,
+          "class": "Ｃ３四　Ｃ３",
+          "opponent": "オーシンキャ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-13",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508132700000002",
+          "title": "桧山進次郎☆",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 8,
+          "finish": 3,
+          "time_seconds": 96.0,
+          "margin_seconds": 0.8,
+          "corners": [
+            7,
+            8,
+            3,
+            3
+          ],
+          "last3f": 41.7,
+          "class": "桧山進次郎☆",
+          "opponent": "ゼンノクレバ",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 9,
+      "frame": 8,
+      "horse_id": "1120210748",
+      "name": "ニシノフォーリーフ",
+      "sex": "牡",
+      "age": 6,
+      "jockey": "☆高橋愛",
+      "carried_weight": 56.0,
+      "trainer": "山口浩",
+      "body_weight": 400.0,
+      "pedigree": [
+        "父：ローズキングダム",
+        "母：ニシノクローバー",
+        "母父：アドマイヤオーラ"
+      ],
+      "odds": 23.4,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-09-05",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509052700000003",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 7,
+          "finish": 6,
+          "time_seconds": 97.2,
+          "margin_seconds": 2.0,
+          "corners": [
+            7,
+            7,
+            7,
+            6
+          ],
+          "last3f": 39.5,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "タンバアズキ",
+          "going": "不",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-22",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508222700000005",
+          "title": "Ｃ３　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1230,
+          "field_size": 7,
+          "finish": 6,
+          "time_seconds": 82.3,
+          "margin_seconds": 2.0,
+          "corners": [
+            7,
+            5,
+            6,
+            6
+          ],
+          "last3f": 39.9,
+          "class": "Ｃ３　Ｃ３",
+          "opponent": "エイシンボー",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-08",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508082700000003",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 7,
+          "time_seconds": 93.9,
+          "margin_seconds": 1.3,
+          "corners": [
+            9,
+            9,
+            9,
+            8
+          ],
+          "last3f": 39.9,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ノリウッドテ",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-23",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507232700000006",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 6,
+          "time_seconds": 94.6,
+          "margin_seconds": 1.3,
+          "corners": [
+            5,
+            5,
+            7,
+            6
+          ],
+          "last3f": 41.5,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ユイノオトシ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-09",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507092700000005",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 3,
+          "time_seconds": 93.6,
+          "margin_seconds": 1.0,
+          "corners": [
+            6,
+            6,
+            7,
+            7
+          ],
+          "last3f": 41.5,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "サトノアヴァ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    },
+    {
+      "number": 10,
+      "frame": 8,
+      "horse_id": "1120240064",
+      "name": "エレガントフルール",
+      "sex": "牝",
+      "age": 4,
+      "jockey": "大山真",
+      "carried_weight": 55.0,
+      "trainer": "小村正",
+      "body_weight": 453.0,
+      "pedigree": [
+        "父：ヴィクトワールピサ",
+        "母：アペラシオン",
+        "母父：アドマイヤムーン"
+      ],
+      "odds": 7.4,
+      "cancelled": false,
+      "unscored_history": [],
+      "histories": [
+        {
+          "date": "2025-10-01",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510012700000002",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 9,
+          "time_seconds": 97.9,
+          "margin_seconds": 2.8,
+          "corners": [
+            6,
+            6,
+            7,
+            9
+          ],
+          "last3f": 43.6,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ラクプエル",
+          "going": "稍",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-09-17",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202509172700000006",
+          "title": "Ｃ３一　Ｃ３",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 8,
+          "time_seconds": 94.7,
+          "margin_seconds": 3.1,
+          "corners": [
+            3,
+            4,
+            4,
+            5
+          ],
+          "last3f": 42.5,
+          "class": "Ｃ３一　Ｃ３",
+          "opponent": "ハギノインス",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-22",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508222700000007",
+          "title": "Ｃ２二　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 4,
+          "time_seconds": 92.8,
+          "margin_seconds": 1.7,
+          "corners": [
+            1,
+            1,
+            1,
+            2
+          ],
+          "last3f": 41.9,
+          "class": "Ｃ２二　Ｃ２",
+          "opponent": "ワカミヤイリ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-08-14",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202508142700000001",
+          "title": "パカっと楽し",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 12,
+          "finish": 10,
+          "time_seconds": 95.4,
+          "margin_seconds": 2.9,
+          "corners": [
+            7,
+            7,
+            9,
+            9
+          ],
+          "last3f": 42.2,
+          "class": "パカっと楽し",
+          "opponent": "ペイシャツネ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        },
+        {
+          "date": "2025-07-30",
+          "race_key": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202507302700000006",
+          "title": "Ｃ２二　Ｃ２",
+          "track": "園田",
+          "surface": "ダ",
+          "distance": 1400,
+          "field_size": 10,
+          "finish": 6,
+          "time_seconds": 93.6,
+          "margin_seconds": 1.0,
+          "corners": [
+            3,
+            3,
+            5,
+            4
+          ],
+          "last3f": 40.9,
+          "class": "Ｃ２二　Ｃ２",
+          "opponent": "モンサンオブ",
+          "going": "良",
+          "source": {
+            "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+            "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+            "status": 200,
+            "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+            "bytes": 138787,
+            "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+            "content_type": "text/html; charset=UTF-8"
+          }
+        }
+      ],
+      "source": {
+        "url": "https://keiba.rakuten.co.jp/race_card/list/RACEID/202510222700000001",
+        "fetched_at": "2026-10-27T16:22:51.757193+00:00",
+        "status": 200,
+        "sha256": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225",
+        "bytes": 138787,
+        "file": "e31bcea97f75024d31010c916b807bffc3a3d44d93253bc90f78809143677225.html",
+        "content_type": "text/html; charset=UTF-8"
+      }
+    }
+  ],
+  "roster_check": {
+    "race_id": "nar-2025-10-22-園田-01",
+    "card_horses": 10,
+    "independent_horses": 10,
+    "exact_number_name_match": true,
+    "fields_read": [
+      "number",
+      "name"
+    ],
+    "results_not_passed_to_analysis": true,
+    "source": {
+      "url": "https://keiba.rakuten.co.jp/race_performance/list/RACEID/202510222700000001",
+      "fetched_at": "2026-10-27T16:31:51.945360+00:00",
+      "status": 200,
+      "sha256": "427a0bd2481eb3e7157bd7b70d99053bce5826068fa1f4aa9e90fc7ac303c4b2",
+      "bytes": 66899,
+      "file": "427a0bd2481eb3e7157bd7b70d99053bce5826068fa1f4aa9e90fc7ac303c4b2.html",
+      "content_type": "text/html; charset=UTF-8"
+    }
+  }
+}

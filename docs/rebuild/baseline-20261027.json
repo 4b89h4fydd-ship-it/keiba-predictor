@@ -1,0 +1,690 @@
+{
+  "version": 1,
+  "scope": "local-source-only",
+  "base_commit": "bfedf57e3c2887dd4aa8e7cc2106807fd55997fe",
+  "assets": {
+    "arvexq/ui/static/app.js": "c5854dfe0691050373ff3cb0dec4b2198cb50771b9378be2a067f12a5710c6b8",
+    "arvexq/ui/static/betting/bet_ui.css": "4e5cb9013ab1d387d2e1e8bfc8a75e46b77b384679eab1c4f3d98bb880903b12",
+    "arvexq/ui/static/betting/bet_view.js": "9e6d2b5090a210d59a9afbf8c68a3e5b774a2d60893c33df0fa40ac042b1d918",
+    "arvexq/ui/static/forecast/mark_frame.js": "9227de4657f692c59c811c0315667e157efc3f74215b19d72a6ca037045590ec",
+    "arvexq/ui/static/forecast/marks.js": "4970ce8b01bfbfaf5c73347442c17dec3d9e4a3083f1979896996b8c33dc938f",
+    "arvexq/ui/static/forecast/prediction.js": "009afd0c9e32b9c899e73ef68b083bc0fd1744783149872093ac64da93b097f9",
+    "arvexq/ui/static/forecast/prediction_frame.js": "4c94cd60f629c0af387a5e14d2e3de659fbd15fb4b3997b4e4b325056a9e7aaf",
+    "arvexq/ui/static/forecast/ticket_frame.js": "e8be9148457799c64825261c68ab32bc2d1083e9bf9c8fe516a3ad4aa62b0fa6",
+    "arvexq/ui/static/forecast/tickets.js": "8bc0850e74d07079b7665c3e9f3e5538e33950f10e76859af4ff224e797ea782",
+    "arvexq/ui/static/history/deduplicate.js": "f2c9c7cb81339cbd8c42d19a0d8dcf7ee264f2b25918afe4be9751c90b505fb6",
+    "arvexq/ui/static/history/temporal.js": "16835b3ca289215564eaf2800548a95cd53d37f62a9dbdecea409e82076ccf33",
+    "arvexq/ui/static/history/view.js": "9507b3e96b87c0450fcc68e055e767bca00bc0addb14544e68d2cfd640634a66",
+    "arvexq/ui/static/morning/frozen_ticket_evidence.js": "033a7cf6e1be84152bb7720992c2f9a12828d884a2a9446e8d5fccb380754c76",
+    "arvexq/ui/static/morning/saved_ticket_receipt.js": "f37f437d0e8094d68e7280c8b03f0c9c55c70373297102a36903c33051b608c2",
+    "arvexq/ui/static/morning/selected_race_pipeline.js": "4d28c355df53bf6b916052321d255ac784883c93054c9e469f072a0bcbffe2df",
+    "arvexq/ui/static/morning/selection_cut.js": "26f272913d28006570582e0fc23fb4f78ebc137dc2fc757bc9319c261b2ca82a",
+    "arvexq/ui/static/morning/special_selection.js": "913475aef64ed1fa868851477acb93a69c480690b17430f73455af3eb4a3cdba",
+    "arvexq/ui/static/morning/ticket_lane_classifier.js": "d7eee999e599e1668b2244276f2d735af38a00f740cdf821235614c3dc68a1af",
+    "arvexq/ui/static/previous_ai_results.js": "e7ad0716bb24143ce93678e4ae6261c4f0d56e3d78c15c27d9c8ffa34ce35317",
+    "arvexq/ui/static/research/diagnosis_view.js": "baa9c775e10128881fc98fe2c85268ab895f520e95e9bdfc4c7bdca68637461d",
+    "arvexq/ui/static/research/live_odds.js": "59a2785ef985fc3b0bf1319a1c9d231d170735ac9c15245433e1ded0b13f4d0e",
+    "arvexq/ui/static/research/local_evidence.js": "0103571c972044ce24f977aa0dbcd6315049f756cf47b71e07154efe77ca3b85",
+    "arvexq/ui/static/research/race_identity.js": "93e7e424205bca89136de29f823552917c39de2897a84a6c9ca4a0c479ae83ff",
+    "arvexq/ui/static/research/research_view.css": "2537b255bf74c62baadf7b69b6406aa6e0d642b975b7ec288c8dd40205864e5b",
+    "arvexq/ui/static/research/research_view.js": "11ad108d0b01f4c42526fb24b7dae3729a85d4a8700afd812c1e9d9faf55bb0a",
+    "arvexq/ui/static/research/saved_snapshot.js": "87c02a1879e7cad4dfdb0488ab2aef74ce4fd8d03b754c98b6aa5ea86773b056",
+    "arvexq/ui/static/research/static_racecard.js": "24d4b085fbc96dcd6d10b5f3968c7dc6d690675b3a157a8a8fdb8be0c0abc9fd",
+    "arvexq/ui/static/sports/all-races.css": "e738148be1d22e9335a247215248069fd0aad0ae93d893e6df4cb7962a6555f0",
+    "arvexq/ui/static/sports/horse-portal.js": "a1b5453a7f0d575e86339911506bc82ca5f76e8ad4fc8949b8755a56880b9230",
+    "arvexq/ui/static/sports/pull-refresh.css": "f9a060e73796e1c45b3464defdb6195fbd02c1c34ccbb39155e6842d57b280e3",
+    "arvexq/ui/static/sports/pull-refresh.js": "2875d878d77e9b24874355d6a6ea4ba7930381242c47cda686444dd32dfe39d9",
+    "arvexq/ui/static/sports/unified-home.css": "2ce3fef948d5ccba53ad740ab96fa20b63f0f17334fe2ac99db79b2cff3e7978",
+    "arvexq/ui/static/sports/unified-home.js": "853dccda00d446a9638ef22d92c72e0187b80006a171a1faadaa961303c91238",
+    "arvexq/ui/static/styles/legacy_v118_v221.css": "5691df14ae011c35f6adef40c65d81d41d20d14f2b75ca11fa56a624f481e172",
+    "arvexq/ui/static/styles/race_v222_plus.css": "561de2a35bdb484513f097a68fc52bbdb8bc321966bd0f81aa5b4a570817db2b",
+    "arvexq/ui/static/styles.css": "46c980fd877729cf5072b0c67d71f2e1e796e3f9a89d9d0aec70f3f0b0295181",
+    "dist/index.html": "a4284dafff6b3420b53c4aed8e57c5d6b3f104f3434507dc8a2c177d9d114c63",
+    "workers/api.mjs": "1a4dae4b851005c460010d75bca3e062838c2c67b40eb8c567a4ad054b77235e",
+    "workers/web.mjs": "53744927956b83f6f903d2d1ba1476ddf933042e63b0cc6656656741a82e43a6"
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "handler": "home"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/central-ingest",
+      "handler": "central_ingest"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/central-refresh-status",
+      "handler": "central_refresh_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/central-schema",
+      "handler": "central_schema"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/central-status",
+      "handler": "central_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/collector-status",
+      "handler": "collector_status"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/data-core/refresh-day",
+      "handler": "data_core_refresh_day"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/data-core/refresh/{race_id}",
+      "handler": "data_core_refresh"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/data-core/status",
+      "handler": "data_core_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/enrichment-schema",
+      "handler": "enrichment_schema"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/enrichment-status/{race_id}",
+      "handler": "enrichment_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/environment-pack",
+      "handler": "environment_pack"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/history-backfill-one",
+      "handler": "history_backfill_one"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/history-status",
+      "handler": "history_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/local-refresh-status",
+      "handler": "local_refresh_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/model-audit",
+      "handler": "model_audit"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/model-learning",
+      "handler": "model_learning"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/odds-auto-status",
+      "handler": "odds_auto_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/odds-refresh/{race_id}",
+      "handler": "odds_refresh"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/past-pack/{race_id}",
+      "handler": "past_pack"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/payouts/{race_id}",
+      "handler": "payout_refresh"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/prepare-race/{race_id}",
+      "handler": "prepare_race"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/prewarm-status",
+      "handler": "prewarm_status"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/prewarm-track",
+      "handler": "prewarm_track"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}",
+      "handler": "race_detail"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/collect",
+      "handler": "collect_race_info"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/race/{race_id}/diagnosis-refresh",
+      "handler": "diagnosis_refresh"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/horse/{horse_no}",
+      "handler": "horse_snapshot"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/race/{race_id}/version",
+      "handler": "snapshot_version"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/racedb-race/{race_id}",
+      "handler": "racedb_race"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/racedb-status",
+      "handler": "racedb_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/racedb/analysis/{race_id}",
+      "handler": "racedb_get_analysis"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/racedb/analysis/{race_id}",
+      "handler": "racedb_save_analysis"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/races",
+      "handler": "races"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/runtime-status",
+      "handler": "runtime_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/site-bootstrap",
+      "handler": "site_bootstrap"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/site-bootstrap-status",
+      "handler": "site_bootstrap_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/storage-status",
+      "handler": "storage_status"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/track-pack",
+      "handler": "track_pack"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/volatility-pack",
+      "handler": "volatility_pack"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v130.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v131.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v132.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v133.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v303.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v305.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v306.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v307.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v308.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v312.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v313.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v314.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v315.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v316.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v317.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v318.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v319.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v320.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v321.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v324.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v331.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v86-fix1.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v87.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v88.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/app-v91.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v303.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v305.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v306.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v307.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v308.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v312.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v313.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v314.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v315.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v316.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v317.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v318.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v319.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v320.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v321.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v324.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-app-v331.js",
+      "handler": "appjs"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-icon-v175-{size}.png",
+      "handler": "arvexq_icon"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-logo.webp",
+      "handler": "arvexq_logo"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-racing-detail.webp",
+      "handler": "cinematic_detail_photo"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-racing-hero.webp",
+      "handler": "cinematic_hero"
+    },
+    {
+      "method": "GET",
+      "path": "/arvexq-touch-v175.png",
+      "handler": "arvexq_touch_icon"
+    },
+    {
+      "method": "GET",
+      "path": "/build",
+      "handler": "build_info"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "handler": "health"
+    },
+    {
+      "method": "GET",
+      "path": "/hero-horse.webp",
+      "handler": "hero_horse"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-arvexq-v130.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-arvexq-v173.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-arvexq-v175.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-arvexq-v331.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-arvexq-v88.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/manifest-v86.webmanifest",
+      "handler": "manifest"
+    },
+    {
+      "method": "GET",
+      "path": "/pace-preview.webp",
+      "handler": "pace_preview"
+    },
+    {
+      "method": "GET",
+      "path": "/race",
+      "handler": "home"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v130.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v303.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v305.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v306.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v307.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v308.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v312.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v313.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v314.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v315.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v316.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v317.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v318.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v319.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v320.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v321.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v324.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v331.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v88.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-arvexq-v91.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/styles-v86.css",
+      "handler": "styles"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v318-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v319-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v320-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v321-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v324-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw-v331-reset.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/sw.js",
+      "handler": "service_worker"
+    },
+    {
+      "method": "GET",
+      "path": "/venue",
+      "handler": "home"
+    },
+    {
+      "method": "GET",
+      "path": "/version.json",
+      "handler": "version_json"
+    }
+  ],
+  "browser_verified": false,
+  "production_verified": false
+}

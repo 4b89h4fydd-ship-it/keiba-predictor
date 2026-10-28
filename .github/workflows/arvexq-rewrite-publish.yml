@@ -1,0 +1,38 @@
+name: arvexq-rewrite-publish
+
+# Sole forecast producer: publishes the rewrite engine's forecasts into
+# production race details (see scripts/arvexq_rewrite_publish.py).
+# Replaces the retired unified-preoff and prerace-freeze lanes.
+
+on:
+  schedule:
+    # JST 06:05 / 10:05 / 13:05 / 20:05
+    - cron: "05 21,1,4,11 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target date (YYYY-MM-DD); empty = today and tomorrow JST"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Publish rewrite forecasts
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          if [ -n "${{ inputs.date }}" ]; then
+            python3 scripts/arvexq_rewrite_publish.py --date "${{ inputs.date }}"
+          else
+            python3 scripts/arvexq_rewrite_publish.py
+          fi
