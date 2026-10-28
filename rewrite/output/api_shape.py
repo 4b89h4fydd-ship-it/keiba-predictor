@@ -14,8 +14,7 @@ The existing frontend (arvexq/ui/static) consumes two payload families:
 Honesty rules enforced here:
 
 - Flags are fixed truthful values: probabilities are NOT calibrated,
-  video identity is NOT validated, output is research-only, and no
-  human override exists.
+  output is research-only, and no human override exists.
 - Expected value is never emitted: the tickets layer suppresses EV
   while calibration is unvalidated, so every EV field is null and the
   suppression reason is carried in text the UI surfaces.
@@ -63,7 +62,6 @@ MODEL_VERSION = "arvexq-rewrite-v1-uncalibrated-prior"
 BETA_FIT_THROUGH = "2026-10-23"
 
 PROBABILITIES_CALIBRATED = False
-VIDEO_IDENTITY_VALIDATED = False
 RESEARCH_ONLY = True
 HUMAN_OVERRIDES = False
 
@@ -462,8 +460,6 @@ def race_payload(
         "analysisStages": {
             "ability": {"status": "prior-weights-unfitted",
                         "modelVersion": ABILITY_MODEL_VERSION},
-            "video": {"status": "not-validated",
-                      "identityValidated": VIDEO_IDENTITY_VALIDATED},
             "pace": {"status": "past-corner-evidence-uncalibrated"},
             "probability": {"status": forecast.probability_status,
                             "calibrated": PROBABILITIES_CALIBRATED},
@@ -472,7 +468,6 @@ def race_payload(
         },
         "researchOnly": RESEARCH_ONLY,
         "probabilitiesCalibrated": PROBABILITIES_CALIBRATED,
-        "videoIdentityValidated": VIDEO_IDENTITY_VALIDATED,
         "humanOverrides": HUMAN_OVERRIDES,
         "source": ADAPTER_VERSION,
         # Input provenance only: SHA-256 of the stored raw snapshot.

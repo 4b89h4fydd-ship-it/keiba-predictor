@@ -102,7 +102,6 @@ class RacePayloadTests(unittest.TestCase):
 
     def test_truthful_flags(self):
         self.assertIs(self.unified["probabilitiesCalibrated"], False)
-        self.assertIs(self.unified["videoIdentityValidated"], False)
         self.assertIs(self.unified["researchOnly"], True)
         self.assertIs(self.unified["humanOverrides"], False)
 
