@@ -164,6 +164,8 @@ def calibration_bins(graded: list[dict], key: str,
 
 
 def confidence_bands(graded: list[dict]) -> list[dict]:
+    if not graded:
+        return []
     ranked = sorted(graded, key=lambda g: -(g["p_win"] or 0.0))
     out = []
     for frac in BANDS:
