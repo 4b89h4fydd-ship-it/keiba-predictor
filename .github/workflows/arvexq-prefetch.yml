@@ -53,7 +53,7 @@ concurrency:
 jobs:
   prefetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
@@ -358,6 +358,26 @@ jobs:
             --source prefetch-facts.json --saved persisted-facts.json \
             --report persisted-evidence-check.json
           echo "D1_STORED_EVIDENCE_VERIFIED"
+
+      - name: Publish rewrite forecasts for the persisted day (piggyback)
+        continue-on-error: true
+        run: |
+          # Piggyback on the collection lane: this run has just persisted
+          # and verified the target day's facts in D1, so publish the
+          # rewrite forecasts for exactly that date now instead of waiting
+          # for the standalone publish workflow's schedule (whose GitHub
+          # cron runs were observed hours late or dropped outright). The
+          # standalone arvexq-rewrite-publish workflow remains in place as
+          # redundancy; publishing is idempotent (started/finished races
+          # are skipped, receipts are verified), and this step must never
+          # fail the collection job, hence continue-on-error.
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::warning::PIGGYBACK_PUBLISH_SKIPPED missing SYNC_TOKEN"
+            exit 0
+          fi
+          echo "PIGGYBACK_PUBLISH date=$TARGET_DATE"
+          ARVEXQ_API_BASE="$CLOUDFLARE_API_BASE" \
+            python3 scripts/arvexq_rewrite_publish.py --date "$TARGET_DATE"
 
       - name: Analyze only persisted D1 data and prepare original marks and bets
         if: env.ARVEXQ_DAY_AHEAD != '1'
@@ -1006,3 +1026,4 @@ jobs:
             runtime-prefetch.log
           if-no-files-found: ignore
           retention-days: 3
+
