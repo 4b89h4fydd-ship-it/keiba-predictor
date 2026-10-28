@@ -7,16 +7,29 @@ No after-off materialization and no Stage64 or subjective override.
 """
 from __future__ import annotations
 
-from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
 import json
 from math import isfinite
 
-from arvexq.forecast.engine import _has_result_evidence
-from arvexq.prediction.learned_scenarios import VERSION as MODEL_VERSION, race_family
-from arvexq.prediction.new_forecast import build_forecast
 from arvexq.prediction.prerace_archive import JST, post_at
+
+# The unified product's model identity is owned by the rewrite engine
+# (the rewrite/ package, published by scripts/arvexq_rewrite_publish.py).
+# The former learned-scenarios producer lane was removed; verification of
+# stored receipts now pins this identity instead.
+MODEL_VERSION = "arvexq-rewrite-v1-uncalibrated-prior"
+
+
+def race_family(detail):
+    if '帯広' in str(detail.get('track') or ''):
+        return 'banei'
+    if '障' in str(detail.get('surface') or '') or detail.get('analysisMode') == '障害' or '障害' in str(detail.get('title') or ''):
+        return 'jumps'
+    # Debut races must never inherit a model fitted on experienced flat runners.
+    if detail.get('analysisMode') == '新馬' or '新馬' in str(detail.get('title') or '') or 'メイクデビュー' in str(detail.get('title') or ''):
+        return 'debut'
+    return 'flat'
 from arvexq.core.runner_status import is_inactive_runner
 
 VERSION = "arvexq-unified-live-v1"
@@ -80,201 +93,3 @@ def verified(race):
     return candidate if candidate.get("receiptSha256") == digest else None
 
 
-def generate(race, model, *, now=None):
-    now = now or datetime.now(JST)
-    if now.tzinfo is None:
-        raise ValueError("timezone-aware time required")
-    now = now.astimezone(JST)
-    off = post_at(race)
-    # Official next-day entries are allowed: predict before the off, never
-    # after it and never from training observations on/after target race date.
-    if not off or now >= off or race.get("date", "") < now.date().isoformat() or _has_result_evidence(race.get("result")):
-        raise ValueError("only truly upcoming, date-matched races may be predicted")
-    if race.get("circuit") not in ("中央", "地方") or race_family(race) == "banei":
-        raise ValueError("central/local only, Obihiro banei disabled")
-    training = model.get("training") if isinstance(model, dict) else None
-    if (not isinstance(training, dict) or model.get("version") != MODEL_VERSION
-            or training.get("lastDate", "9999") >= race["date"]
-            or training.get("circuit") != race["circuit"]
-            or training.get("family") != race_family(race)):
-        raise ValueError("matching earlier-trained central/local/family model required")
-    # Reject nonempty results, but do not convert an empty pending placeholder
-    # into artificial retrospective evidence.
-    detail = deepcopy(race)
-    if not _has_result_evidence(detail.get("result")):
-        detail.pop("result", None)
-    prediction = build_forecast(detail, model, compare_research_tickets=False)
-    if (prediction.get("predictionStatus") != "candidate-analysis"
-            or prediction.get("analysisType") != "preoff-candidate"
-            or prediction.get("productionEligible") is not False):
-        raise ValueError("unified before-off model not available")
-    rows = prediction.get("scenarioAnalysis", {}).get("reports") or []
-    scenarios = prediction.get("scenarioAnalysis", {}).get("scenarios") or []
-    marks = []
-    for horse in prediction.get("horses") or []:
-        if not isinstance(horse, dict):
-            continue
-        evaluation = horse.get("integratedEvaluation") or {}
-        symbol = evaluation.get("mark")
-        if symbol not in SYMBOLS:
-            continue
-        no = int(horse["horseNumber"])
-        probs = evaluation.get("modelProbabilities") or {}
-        def pair(label):
-            p = probs.get(label)
-            return [round(float(x), 6) for x in p] if isinstance(p, list) and len(p) == 2 else None
-        marks.append({"horseNumber": no, "markSymbol": symbol,
-                      "winProbabilityRange": pair("win"), "top3ProbabilityRange": pair("top3"),
-                      "reason": str(evaluation.get("markReason") or "")})
-    if sum(row["markSymbol"] == "◎" for row in marks) != 1:
-        raise ValueError("unique unified ◎ must exist")
-    active = [h for h in race.get("horses") or [] if isinstance(h, dict)
-              and h.get("horseNumber") and not is_inactive_runner(h)]
-    roster = [{"horseNumber": int(h["horseNumber"]), "name": str(h.get("name") or "")}
-              for h in active]
-    if len(set(x["horseNumber"] for x in roster)) != len(roster) or any(not x["name"] for x in roster):
-        raise ValueError("observed complete horse roster required")
-    head = next(m["horseNumber"] for m in marks if m["markSymbol"] == "◎")
-    # A relative early position is not proof of start speed, tactical intent or
-    # the actual race outcome. This is only observed past corner position.
-    positioned = [r for r in rows if r.get("featureValues", {}).get("early_position") is not None]
-    leaders = sorted(positioned, key=lambda r: (-r["featureValues"]["early_position"],
-                                                 r["horseNumber"]))[:4]
-    scenario_ids = [s["id"] for s in scenarios]
-    pace = {
-        "status": "past-corner-evidence-scenario-sensitivity",
-        "likelyForwardNumbers": [r["horseNumber"] for r in leaders],
-        "observedPositionCoverage": len(positioned),
-        "activeRunners": len(roster),
-        "testedScenarios": scenario_ids,
-        "scenarioFrequencyMeasured": False,
-        "firstCornerMetersOfficial": race.get("firstCornerMetersOfficial"),
-        "text": ("過去走の初角位置から前に行く候補は"
-                 + "、".join(str(r["horseNumber"]) + "番" for r in leaders)
-                 + "。前争い・控える想定を比較。発生頻度は未検証。"
-                 if leaders else "過去走の初角順位が不足。隊列を断定せず、通常展開のみ評価。")
-    }
-    # Tickets are derived exclusively from the same model's finishing-order
-    # distribution and the same marks. Never fabricate odds, or recommend
-    # unknown expected returns to a user who may spend real money.
-    bets = {"status": "見送り", "items": [],
-            "reason": "未検証確率または発走前の券種別実オッズ不足。買い目を捏造しない",
-            "sameModelAndMarks": True, "maximumPoints": 5}
-    market = race.get("preOffMarket") or {}
-    if (market.get("provenanceVerified") is True
-            and isinstance(market.get("odds"), dict)
-            and isinstance(race.get("availableBetTypes"), list)
-            and scenarios):
-        from arvexq.betting.scenario_tickets import compare_tickets
-        source = deepcopy(prediction)
-        source["preOffMarket"] = deepcopy(market)
-        source["availableBetTypes"] = list(race["availableBetTypes"])
-        source["placePlaces"] = race.get("placePlaces")
-        try:
-            compared = compare_tickets(source, scenarios, model_version=MODEL_VERSION,
-                                       max_points=5)
-            choices = compared.get("comparisons") or compared.get("ticketComparisons") or []
-            candidates = []
-            for row in choices:
-                if (row.get("kind") not in BET_KINDS or
-                        not row.get("expectedReturnRange") or
-                        min(row["expectedReturnRange"]) < 1.05):
-                    continue
-                for combo in row.get("combos") or []:
-                    if len(candidates) == 5:
-                        break
-                    if head not in combo:
-                        continue
-                    candidates.append({"kind": row["kind"], "combo": list(combo),
-                                       "modelledReturnRange": row["expectedReturnRange"]})
-            if candidates:
-                bets = {"status": "研究候補・購入推奨ではない",
-                        "items": candidates, "maximumPoints": 5,
-                        "sameModelAndMarks": True,
-                        "reason": "同一モデルの条件付き順序分布と実オッズによる参考候補。実測校正・ROI保証なし"}
-        except (KeyError, ValueError, TypeError, OverflowError):
-            pass
-    # Keep the six-step contract explicit in the stored receipt.  Every stage
-    # is a projection of this same prediction; the UI must not recompute any
-    # rank, probability, mark, or ticket on the device.  Video remains a
-    # separately gated research channel until horse identity is independently
-    # reviewed, so an absent video source is represented as unavailable.
-    ability_stage = {
-        "status": "observed-history",
-        "modelVersion": MODEL_VERSION,
-        "horseCount": len(rows),
-        "completeHistoryCount": sum(1 for row in rows if row.get("careerComplete") is True),
-    }
-    video_stage = {
-        "status": "not-applied",
-        "researchOnly": True,
-        "identityValidated": False,
-        "reason": "外部レビュー済みの全馬識別映像が未登録のため、予想へ反映していません",
-    }
-    scenario_stage = {
-        "status": "positional-sensitivity",
-        "scenarios": scenario_ids,
-        "frequencyMeasured": False,
-        "modelVersion": MODEL_VERSION,
-    }
-    probability_stage = {
-        "status": "uncalibrated",
-        "scenarioCount": len(scenarios),
-        "calibrated": False,
-        "modelVersion": MODEL_VERSION,
-    }
-    marks_stage = {
-        "status": "mechanical-single-source",
-        "uniqueHonmei": True,
-        "modelVersion": MODEL_VERSION,
-    }
-    tickets_stage = {
-        "status": bets["status"],
-        "sameModelAndMarks": bets["sameModelAndMarks"],
-        "researchOnly": True,
-        "items": len(bets["items"]),
-    }
-    # The four-panel race-flow view consumes the same scenario order used by
-    # the forecast.  Keep this as transport data in the receipt so the client
-    # only renders it and never invents a second pace ranking.
-    scenario_by_id = {str(s.get("id")): s for s in scenarios if isinstance(s, dict)}
-    usual_order = (scenario_by_id.get("usual") or scenarios[0] if scenarios else {}).get("orders") or []
-    forward_order = (scenario_by_id.get("forward") or scenario_by_id.get("usual") or (scenarios[0] if scenarios else {})).get("orders") or usual_order
-    held_order = (scenario_by_id.get("held-up") or scenario_by_id.get("usual") or (scenarios[0] if scenarios else {})).get("orders") or usual_order
-    def stage_pack(events):
-        event = events[0] if events else {}
-        order = event.get("order") if isinstance(event, dict) else []
-        return [{"no": int(no), "lane": ((idx % 5) - 2)} for idx, no in enumerate(order or [])]
-    pace_stages = [
-        {"key": "start", "pack": stage_pack(forward_order)},
-        {"key": "turn3", "pack": stage_pack(usual_order)},
-        {"key": "turn4", "pack": stage_pack(held_order)},
-        {"key": "straight", "pack": stage_pack(usual_order)},
-    ]
-    product = {
-        "version": VERSION, "raceId": race["id"], "raceDate": race["date"],
-        "circuit": race["circuit"], "modelFamily": race_family(race),
-        "specialHandling": ("新馬・既走ゼロを欠損として分離" if "新馬" in str(race.get("title") or "")
-                            else "障害専用" if race_family(race) == "jumps" else "通常"),
-        "capturedAt": now.isoformat(), "trainedThrough": training["lastDate"],
-        "modelVersion": MODEL_VERSION, "modelHash": model["modelHash"],
-        "roster": roster, "marks": marks, "honmeiHorseNumber": head,
-        "pace": pace, "paceStages": pace_stages, "ticketPlan": bets,
-        "analysisStages": {
-            "ability": ability_stage,
-            "video": video_stage,
-            "pace": scenario_stage,
-            "probability": probability_stage,
-            "marks": marks_stage,
-            "tickets": tickets_stage,
-        },
-        "researchOnly": True, "probabilitiesCalibrated": False,
-        "videoIdentityValidated": False, "humanOverrides": False,
-        "source": "date-held-out-per-circuit-learned-whole-career-model",
-    }
-    product["receiptSha256"] = sha256(json.dumps(product, ensure_ascii=False,
-                                                sort_keys=True, separators=(",", ":"),
-                                                allow_nan=False).encode()).hexdigest()
-    if not _core_valid(race, product) or verified(dict(race, unifiedForecast=product)) is None:
-        raise ValueError("unified product source/marks/roster self-check failed")
-    return product
