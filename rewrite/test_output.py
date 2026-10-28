@@ -138,6 +138,26 @@ class RacePayloadTests(unittest.TestCase):
         for entry in self.detail["predictionMarks"]:
             self.assertIsNotNone(entry["winProbability"])
 
+    def test_diagnosis_covers_all_runners(self):
+        diagnosis = self.unified["diagnosis"]
+        roster = {h["horseNumber"] for h in self.detail["horses"]}
+        self.assertEqual({d["horseNumber"] for d in diagnosis}, roster)
+        marks = {m["horseNumber"]: m for m in self.unified["marks"]}
+        for entry in diagnosis:
+            # The ability layer's raw score, never the win probability.
+            self.assertIsNotNone(entry["abilityScore"])
+            self.assertGreaterEqual(entry["abilityScore"], 0.0)
+            self.assertLessEqual(entry["abilityScore"], 1.0)
+            self.assertIsNotNone(entry["winProbability"])
+            self.assertIsNotNone(entry["top3Probability"])
+            self.assertTrue(entry["reason"])
+            marked = marks.get(entry["horseNumber"])
+            if marked is not None:
+                self.assertEqual(entry["winProbability"],
+                                 marked["winProbability"])
+                self.assertEqual(entry["top3Probability"],
+                                 marked["top3Probability"])
+
     def test_four_pace_stages(self):
         keys = [s["key"] for s in self.unified["paceStages"]]
         self.assertEqual(keys, ["start", "turn3", "turn4", "straight"])

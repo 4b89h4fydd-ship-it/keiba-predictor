@@ -167,15 +167,28 @@
         if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
         seen[n]=true;markMap[n]=x;if(m==='◎')best++;
       });
+      var diagMap={};
+      if(Array.isArray(unified.diagnosis))unified.diagnosis.forEach(function(d){
+        var n=Number(d&&d.horseNumber);
+        if(Number.isInteger(n)&&roster[n]&&!diagMap[n])diagMap[n]=d;
+      });
       if(accepted&&best===1){
         var unifiedStages=Array.isArray(unified.paceStages)?unified.paceStages:[],
             unifiedPlan=unifiedStages.length?{stages:unifiedStages}:null;
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
           var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
+          // All-runner diagnosis: the engine's ability score (0-1) on
+          // the diagnosis panel's 0-100 scale, banded S/A/B/C. Runners
+          // the engine did not score keep nulls and stay 未取得.
+          var dg=diagMap[no]||{},
+              score100=dg.abilityScore!=null&&Number.isFinite(Number(dg.abilityScore))?Math.round(Number(dg.abilityScore)*1000)/10:null,
+              grade=score100===null?'':(score100>=75?'S':(score100>=60?'A':(score100>=45?'B':'C')));
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
-            p3Probability:null,overallGrade:'',coverage:0,
+            p3Probability:null,overallGrade:grade,coverage:0,
+            overallScoreExact:score100,
+            overallReasons:dg.reason?[String(dg.reason)]:[],
             forecastProbabilityRange:obj.winProbabilityRange||null,
             forecastTop3Range:obj.top3ProbabilityRange||null,forecastReason:obj.reason||''};
         });

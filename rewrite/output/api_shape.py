@@ -300,6 +300,37 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
     return prediction_marks, unified_marks, honmei
 
 
+def _diagnosis_reason(runner_forecast) -> str:
+    text = _mark_reason(runner_forecast)
+    if runner_forecast.ability_score is None:
+        note = "過去走の証拠不足のため能力スコアなし"
+        return f"{text}／{note}" if text else note
+    return text
+
+
+def _diagnosis(forecast: RaceForecast) -> list[dict]:
+    """All-runner diagnosis block for the 全頭診断 panel.
+
+    Marks carry probabilities for the five marked runners only; the
+    diagnosis panel renders EVERY runner, so it needs the engine's
+    per-runner ability score and probabilities for the whole field.
+    Values are the engine's own: the ability layer's raw score in
+    [0, 1] (never the win probability), the Plackett-Luce point
+    probabilities, and the same reason text the marks carry. A runner
+    the engine could not score keeps nulls, not invented values.
+    """
+    return [
+        {
+            "horseNumber": r.number,
+            "abilityScore": r.ability_score,
+            "winProbability": r.p_win,
+            "top3Probability": r.p_top3,
+            "reason": _diagnosis_reason(r),
+        }
+        for r in forecast.runners
+    ]
+
+
 # ------------------------------------------------------------- tickets
 
 
@@ -453,6 +484,7 @@ def race_payload(
             for r in race.runners
         ],
         "marks": unified_marks,
+        "diagnosis": _diagnosis(forecast),
         "honmeiHorseNumber": honmei,
         "pace": _pace_block(race, pace),
         "paceStages": _pace_stages(race, pace),
