@@ -146,7 +146,7 @@
        unified.circuit===race.circuit&&unified.researchOnly===true&&
        unified.probabilitiesCalibrated===false&&
        Array.isArray(unified.roster)&&Array.isArray(unified.marks)&&
-       unified.roster.length>=3&&unified.roster.length===race.horses.length&&
+       unified.roster.length>=3&&Array.isArray(race.horses)&&
        /^[a-f0-9]{64}$/i.test(unified.receiptSha256||'')&&
        /^[a-f0-9]{64}$/i.test(unified.modelHash||'')&&
        String(unified.trainedThrough||'')<String(race.date||'')&&
@@ -158,10 +158,29 @@
         if(!Number.isInteger(n)||n<=0||roster[n])accepted=false;
         roster[n]=String(x.name||'');
       });
+      // Reconcile by identity, not by count: a scratched/withdrawn runner
+      // stays in race.horses but is absent from the published roster, and
+      // a roster frozen before a late scratch may still list one. Every
+      // roster number must be a real runner with a matching name, and
+      // every still-active runner must appear on the roster; phantom or
+      // missing active runners still reject the whole forecast.
+      var inactive=function(h){return !!(h&&(h.scratched===true||h.withdrawn===true||
+        /欠場|出走取消|取消|競走除外|除外/.test(String(h.status||''))));};
+      var horseByNo={},activeCount=0;
       (race.horses||[]).forEach(function(h){
         var n=Number(h&&h.horseNumber);
-        if(roster[n]!==String(h&&h.name||''))accepted=false;
+        if(!Number.isInteger(n)||n<=0||horseByNo[n]){accepted=false;return;}
+        horseByNo[n]=h;
+        if(!inactive(h))activeCount++;
       });
+      Object.keys(roster).forEach(function(k){
+        var h=horseByNo[k];
+        if(!h||roster[k]!==String(h.name||''))accepted=false;
+      });
+      Object.keys(horseByNo).forEach(function(k){
+        if(!inactive(horseByNo[k])&&!(k in roster))accepted=false;
+      });
+      if(activeCount<3)accepted=false;
       unified.marks.forEach(function(x){
         var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
         if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
