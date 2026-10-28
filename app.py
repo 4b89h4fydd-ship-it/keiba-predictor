@@ -1334,16 +1334,23 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
 
 NETKEIBA_TRACK_CODES={"01":"札幌","02":"函館","03":"福島","04":"新潟","05":"東京","06":"中山","07":"中京","08":"京都","09":"阪神","10":"小倉"}
 _netkeiba_cache_lock=threading.Lock(); _netkeiba_cache={}
+_NETKEIBA_PC_UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 
-def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45)->str:
+def _netkeiba_get(url:str,timeout:float=4.0,cache_sec:int=45,desktop:bool=False)->str:
+    # desktop=True is an opt-in for the few fields the smartphone layout does
+    # not publish at all (trainer). The default UA/layout is unchanged, and
+    # PC responses are cached under a separate key so the two layouts of the
+    # same URL never collide.
+    key=f"pc:{url}" if desktop else url
     now=time.time()
     with _netkeiba_cache_lock:
-        hit=_netkeiba_cache.get(url)
+        hit=_netkeiba_cache.get(key)
         if hit and now-hit[0]<cache_sec:return hit[1]
-    req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1","Referer":"https://race.netkeiba.com/","Accept-Language":"ja-JP,ja;q=0.9"})
+    ua=_NETKEIBA_PC_UA if desktop else "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1"
+    req=urllib.request.Request(url,headers={"User-Agent":ua,"Referer":"https://race.netkeiba.com/","Accept-Language":"ja-JP,ja;q=0.9"})
     with urllib.request.urlopen(req,timeout=timeout) as res: txt=_decode_site(res.read())
     with _netkeiba_cache_lock:
-        _netkeiba_cache[url]=(now,txt)
+        _netkeiba_cache[key]=(now,txt)
         if len(_netkeiba_cache)>80:
             k=min(_netkeiba_cache.items(),key=lambda kv:kv[1][0])[0];_netkeiba_cache.pop(k,None)
     return txt
@@ -1450,7 +1457,9 @@ def _netkeiba_detail_rows(detail:dict)->list[dict]:
                 if z:rr.append(z)
                 if len(rr)>=5:break
             if rr:rows[key]["recentRaces"]=rr[:5]
-    return list(rows.values())
+    out=list(rows.values())
+    _fill_trainer_from_pc_layout(detail,out)
+    return out
 
 def central_race_summaries(iso_date: str, allow_network: bool = False, force: bool = False) -> list[dict]:
     db=[]
@@ -4477,6 +4486,68 @@ def _netkeiba_card_rows_fast(detail:dict)->list[dict]:
         if not horse:continue
         horse["source"]="netkeiba高速出走表"
         rows.append(horse)
+    _fill_trainer_from_pc_layout(detail,rows)
+    return rows
+
+
+def _merge_trainer_rows(rows:list[dict],pc_rows:list[dict])->list[dict]:
+    """Fill only trainer/affiliation into card rows from PC-layout rows.
+
+    The smartphone layout served to the fast paths has no trainer column at
+    all, so JRA cards built from it never carry a trainer. Only empty fields
+    are filled, keyed by horse number; every other field is left exactly as
+    the original path produced it.
+    """
+    by_no={}
+    for pc in pc_rows or []:
+        no=int(pc.get("horseNumber") or 0)
+        trainer=str(pc.get("trainer") or "").strip()
+        if no>0 and trainer:
+            by_no[no]={"trainer":trainer,
+                       "affiliation":str(pc.get("affiliation") or "").strip()}
+    if not by_no:return rows
+    for row in rows or []:
+        extra=by_no.get(int(row.get("horseNumber") or 0))
+        if not extra:continue
+        if not str(row.get("trainer") or "").strip():
+            row["trainer"]=extra["trainer"]
+        if extra["affiliation"] and not str(row.get("affiliation") or "").strip():
+            row["affiliation"]=extra["affiliation"]
+    return rows
+
+
+def _netkeiba_pc_trainer_rows(detail:dict)->list[dict]:
+    """One extra PC-layout shutuba fetch used only to recover trainer.
+
+    Any failure returns [] so card collection continues without trainer,
+    exactly as before this recovery existed.
+    """
+    rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
+        str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0)
+    )
+    if not rid:return []
+    try:
+        html=_netkeiba_get(
+            f"https://race.netkeiba.com/race/shutuba.html?race_id={rid}",
+            float(os.getenv("FAST_TRAINER_TIMEOUT_SEC","2.5")),120,desktop=True
+        )
+    except Exception as exc:
+        print("fast JRA PC trainer page failed",rid,exc);return []
+    soup=BeautifulSoup(html,"html.parser");rows=[]
+    for tr in soup.select("tr.HorseList"):
+        horse=_nk_row_horse(tr)
+        if horse and str(horse.get("trainer") or "").strip():rows.append(horse)
+    return rows
+
+
+def _fill_trainer_from_pc_layout(detail:dict,rows:list[dict])->list[dict]:
+    if not rows:return rows
+    if all(str(r.get("trainer") or "").strip() for r in rows):return rows
+    try:
+        pc_rows=_netkeiba_pc_trainer_rows(detail)
+    except Exception as exc:
+        print("JRA PC trainer recovery failed",detail.get("id"),exc);return rows
+    if pc_rows:_merge_trainer_rows(rows,pc_rows)
     return rows
 
 
@@ -4498,7 +4569,7 @@ def _merge_card_rows_preserve(base:dict, fresh_rows:list[dict])->dict:
         # preserve rich local data
         for k in ("recentRaces","allPastRuns","precomputedMetrics","integratedEvaluation",
                   "jockeyStats","trainerStats","jockeyProfile","trainerProfile","prizeMoneyAtRace",
-                  "pedigree","representativeRun"):
+                  "pedigree","representativeRun","trainer","affiliation"):
             if old.get(k) not in (None,"",[],{}):z[k]=old.get(k)
         z.setdefault("recentRaces",[])
         z.setdefault("jockeyStats",{})
