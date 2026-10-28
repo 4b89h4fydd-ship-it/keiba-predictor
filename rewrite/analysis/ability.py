@@ -186,11 +186,20 @@ def _minmax(values: dict[int, float], lower_is_better: bool) -> dict[int, float]
     return out
 
 
-def analyze_race(race: RaceRecord) -> list[AbilityResult]:
-    """Rank active runners of one race. Debut runners get no score."""
+def analyze_race(
+    race: RaceRecord,
+    weights: Optional[dict[str, float]] = None,
+) -> list[AbilityResult]:
+    """Rank active runners of one race. Debut runners get no score.
+
+    ``weights`` overrides the segment prior weights (used by offline
+    fitting); feature availability and within-race normalization do
+    not depend on the weights, only the combination does.
+    """
     active = [r for r in race.active_runners]
     features = {r.number: extract_features(race, r) for r in active}
-    weights = SEGMENT_WEIGHTS.get(race.segment, {})
+    if weights is None:
+        weights = SEGMENT_WEIGHTS.get(race.segment, {})
     normalized_by_feature: dict[str, dict[int, float]] = {}
     for feature in weights:
         present = {

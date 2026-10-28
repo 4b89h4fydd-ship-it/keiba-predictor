@@ -82,6 +82,17 @@ def main() -> int:
     train_dates = sys.argv[2].split(",")
     test_dates = sys.argv[3].split(",")
     all_dates = train_dates + test_dates
+    # Optional fitted-weights mode: argv[4] = fit report JSON. Weights
+    # and per-segment betas come from the training slice only; the
+    # global beta grid below is then bypassed.
+    weights_by_segment: dict[str, dict] = {}
+    beta_by_segment: dict[str, float] = {}
+    if len(sys.argv) > 4:
+        fit_report = json.loads(Path(sys.argv[4]).read_text())
+        for seg, s in (fit_report.get("segments") or {}).items():
+            if s.get("status") == "fitted-on-train-only":
+                weights_by_segment[seg] = s["weights"]
+                beta_by_segment[seg] = s["beta"]
 
     # Precompute per-race ability/pace factors and labels.
     prepared = {}  # race_id -> dict
@@ -97,7 +108,9 @@ def main() -> int:
             )
             if len(finishers) < 3:
                 continue
-            ability = analyze_race(race)
+            ability = analyze_race(
+                race, weights=weights_by_segment.get(race.segment.value)
+            )
             pace = forecast_pace(race)
             from rewrite.analysis.forecast import _pace_adjustments
             adjustments = _pace_adjustments(race, pace)
@@ -134,22 +147,30 @@ def main() -> int:
         outcomes = distribution(strengths)
         return {n: round(m[0], 6) for n, m in marginals(outcomes).items()}
 
+    def beta_for(entry: dict, fallback: float) -> float:
+        if beta_by_segment:
+            return beta_by_segment.get(entry["segment"], fallback)
+        return fallback
+
     def labelled(dates: list[str], beta: float) -> list[LabelledRace]:
         return [
-            LabelledRace(e["date"], p_win_at(beta, e), e["winner"], e["top3"])
+            LabelledRace(e["date"], p_win_at(beta_for(e, beta), e), e["winner"], e["top3"])
             for e in prepared.values() if e["date"] in dates
         ]
 
     # Fit beta on train only. The grid search uses the same split
     # discipline as calibration.fit_beta, enforced via _check_split:
-    # selection never touches test dates.
+    # selection never touches test dates. In fitted-weights mode the
+    # per-segment betas already come from the training slice, so the
+    # global grid is skipped (fallback beta 2.0 for unfitted segments).
     from rewrite.analysis.calibration import _check_split
     candidates = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0]
     scored_betas = []
-    for beta in candidates:
-        scored_betas.append((log_loss(labelled(train_dates, beta)), beta))
-    scored_betas.sort()
-    best_beta = scored_betas[0][1]
+    if not beta_by_segment:
+        for beta in candidates:
+            scored_betas.append((log_loss(labelled(train_dates, beta)), beta))
+        scored_betas.sort()
+    best_beta = scored_betas[0][1] if scored_betas else 2.0
     _check_split(labelled(train_dates, best_beta), labelled(test_dates, best_beta))
     test_labelled = labelled(test_dates, best_beta)
     train_at_best = labelled(train_dates, best_beta)
@@ -171,7 +192,11 @@ def main() -> int:
             market_picks["top3"] += 1 if favourite in entry["top3"] else 0
             market_picks["stake"] += 100
             market_picks["returned"] += payout_for(entry["payouts"], "win", (favourite,))
-        forecast = forecast_race(race, beta=best_beta)
+        forecast = forecast_race(
+            race,
+            beta=beta_for(entry, best_beta),
+            weights=weights_by_segment.get(entry["segment"]),
+        )
         by_number = {r.number: r for r in forecast.runners}
         honmei = max(
             (r for r in forecast.runners if r.p_win is not None),
@@ -197,7 +222,7 @@ def main() -> int:
     segments: dict[str, list[LabelledRace]] = {}
     for entry in (e for e in prepared.values() if e["date"] in test_dates):
         segments.setdefault(entry["segment"], []).append(
-            LabelledRace(entry["date"], p_win_at(best_beta, entry),
+            LabelledRace(entry["date"], p_win_at(beta_for(entry, best_beta), entry),
                          entry["winner"], entry["top3"])
         )
     segment_report = {
@@ -215,6 +240,9 @@ def main() -> int:
             {"beta": b, "log_loss": round(loss, 4)} for loss, b in sorted(scored_betas, key=lambda x: x[1])
         ],
         "beta_selected": best_beta,
+        "mode": "fitted-weights" if beta_by_segment else "prior-weights",
+        "beta_by_segment": beta_by_segment,
+        "weights_by_segment": weights_by_segment,
         "train_at_selected": {
             "log_loss": round(log_loss(train_at_best), 4),
             "honmei": honmei_record(train_at_best),

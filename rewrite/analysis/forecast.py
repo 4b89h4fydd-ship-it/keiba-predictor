@@ -96,8 +96,12 @@ def _assign_marks(ranked: list[int], probs: dict[int, tuple]) -> dict[int, str]:
     return marks
 
 
-def forecast_race(race: RaceRecord, beta: float = DEFAULT_BETA) -> RaceForecast:
-    ability = analyze_race(race)
+def forecast_race(
+    race: RaceRecord,
+    beta: float = DEFAULT_BETA,
+    weights: dict | None = None,
+) -> RaceForecast:
+    ability = analyze_race(race, weights=weights)
     pace = forecast_pace(race)
     adjustments = _pace_adjustments(race, pace)
     scored = [a for a in ability if a.score is not None]
