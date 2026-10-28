@@ -127,7 +127,7 @@ class Store:
                     "track", "distance", "surface", "finish", "field_size",
                     "margin_text", "time_seconds", "jockey", "condition",
                     "weather", "time_behind_winner", "margin_seconds",
-                    "carried_weight",
+                    "carried_weight", "race_title",
                 )
                 if isinstance(d.get(name), dict)
             }

@@ -67,6 +67,7 @@ class PastRun:
     margin_text: Obs
     time_seconds: Obs
     jockey: Obs
+    race_title: Obs = Obs(None, "normalize", "not_captured")
     condition: Obs = Obs(None, "normalize", "not_captured")
     weather: Obs = Obs(None, "normalize", "not_captured")
     time_behind_winner: Obs = Obs(None, "normalize", "not_captured")
@@ -154,6 +155,7 @@ def _past_run(row: dict, source: str) -> PastRun:
         time_behind_winner=obs(row.get("timeBehindWinner"), source),
         margin_seconds=obs(row.get("marginSeconds"), source),
         carried_weight=obs(row.get("carriedWeight"), source),
+        race_title=obs(row.get("title"), source),
     )
 
 

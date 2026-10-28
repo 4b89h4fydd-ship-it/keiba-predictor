@@ -9,6 +9,8 @@ are renormalized — nothing is imputed.
 """
 from __future__ import annotations
 
+import re
+import unicodedata
 from dataclasses import dataclass
 from datetime import date as date_type
 from math import sqrt
@@ -22,22 +24,25 @@ MODEL_VERSION = "ability-prior-v2-unfitted"
 # Prior weights (NOT fitted). Keys are raw feature names.
 SEGMENT_WEIGHTS: dict[Segment, dict[str, float]] = {
     Segment.JRA_FLAT: {
-        "form": 0.26, "speed": 0.20, "distance": 0.10, "track": 0.05,
+        "form": 0.22, "speed": 0.20, "distance": 0.10, "track": 0.05,
         "surface": 0.10, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.05,
         "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
+        "class_recent": 0.06, "class_drop": 0.06,
     },
     Segment.NAR: {
-        "form": 0.28, "speed": 0.20, "distance": 0.10, "track": 0.08,
+        "form": 0.24, "speed": 0.20, "distance": 0.10, "track": 0.08,
         "surface": 0.05, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.05,
         "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
+        "class_recent": 0.06, "class_drop": 0.06,
     },
     Segment.JUMPS: {
-        "form": 0.30, "speed": 0.10, "distance": 0.10, "track": 0.10,
+        "form": 0.26, "speed": 0.10, "distance": 0.10, "track": 0.10,
         "surface": 0.05, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.10,
         "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
+        "class_recent": 0.06, "class_drop": 0.06,
     },
     Segment.DEBUT: {},
 }
@@ -46,6 +51,47 @@ SEGMENT_WEIGHTS: dict[Segment, dict[str, float]] = {
 # as better for now; the fitted weights decide how much it matters).
 LOWER_IS_BETTER = {"speed", "rest"}
 REST_CAP_DAYS = 180
+
+
+def class_level(title: Optional[str]) -> Optional[float]:
+    """Map a race title to an ordinal class level (higher = stronger).
+
+    One approximate scale across circuits so that a horse dropping
+    from JRA company into a local class (or vice versa) still orders
+    sensibly inside one race. Titles that carry no class signal
+    (named races without class keywords, local novelty races) return
+    None and the feature stays missing for those runs — never guessed.
+
+    JRA: 新馬/メイクデビュー 0, 未勝利 1, 1勝 2, 2勝 3, 3勝 4,
+    オープン/特別/ステークス 5 (graded names without keywords are
+    caught by the S/ステークス/特別 patterns where present).
+    NAR letters: A1 5.0 down to C4 2.25 in 0.25 steps; 重賞 5.5.
+    Juvenile local classes (X組) sit just above 未勝利.
+    """
+    if not title or not isinstance(title, str):
+        return None
+    text = unicodedata.normalize("NFKC", title).replace(" ", "").replace("　", "")
+    if "新馬" in text or "メイクデビュー" in text:
+        return 0.0
+    if "準重賞" in text:
+        return 5.25
+    if "重賞" in text:
+        return 5.5
+    match = re.search(r"([123])勝クラス|([123])勝", text)
+    if match:
+        return 1.0 + int(match.group(1) or match.group(2))
+    if "未勝利" in text:
+        return 1.0
+    match = re.search(r"([ABC])[-ー]?([1-9])", text)
+    if match:
+        base = {"A": 5.0, "B": 4.0, "C": 3.0}[match.group(1)]
+        return base - (int(match.group(2)) - 1) * 0.25
+    if "オープン" in text or "特別" in text or "ステークス" in text or text.endswith("S"):
+        return 5.0
+    match = re.search(r"(\d+)組", text)
+    if match:
+        return max(0.6, 1.6 - 0.1 * int(match.group(1)))
+    return None
 RECENCY_DECAY = 0.85
 MAX_RUNS = 8
 
@@ -100,6 +146,19 @@ def extract_features(race: RaceRecord, runner: RunnerRecord) -> RunnerFeatures:
         if isinstance(finish, (int, float)) and finish >= 1:
             top3_pairs.append((1.0 if finish <= 3 else 0.0, RECENCY_DECAY ** index))
     top3_rate = _weighted_mean(top3_pairs)
+    class_pairs: list[tuple[float, float]] = []
+    for index, run in enumerate(runs):
+        level = class_level(run.race_title.value if run.race_title.present else None)
+        if level is not None:
+            class_pairs.append((level, RECENCY_DECAY ** index))
+    class_recent = _weighted_mean(class_pairs)
+    current_level = class_level(race.title.value if race.title.present else None)
+    # Positive when the horse drops to weaker company than it has been
+    # facing (recent level above today's), which is the favourable sign.
+    class_drop = (
+        class_recent - current_level
+        if current_level is not None and class_recent is not None else None
+    )
     speed_pairs: list[tuple[float, float]] = []
     closing_pairs: list[tuple[float, float]] = []
     for index, run in enumerate(runs):
@@ -159,6 +218,8 @@ def extract_features(race: RaceRecord, runner: RunnerRecord) -> RunnerFeatures:
         "surface": surface, "condition": condition, "jockey": jockey_f,
         "closing": closing, "consistency": consistency,
         "top3_rate": top3_rate,
+        "class_recent": class_recent,
+        "class_drop": class_drop,
         "rest": min(rest_days, REST_CAP_DAYS) if rest_days is not None else None,
         # Carrying less weight than last time is the favourable sign.
         "weight_shift": -weight_delta if weight_delta is not None else None,
@@ -169,6 +230,8 @@ def extract_features(race: RaceRecord, runner: RunnerRecord) -> RunnerFeatures:
         "jockey": jockey_n, "closing": len(closing_pairs),
         "consistency": len(pcts),
         "top3_rate": len(top3_pairs),
+        "class_recent": len(class_pairs),
+        "class_drop": len(class_pairs) if class_drop is not None else 0,
         "rest": 1 if rest_days is not None else 0,
         "weight_shift": 1 if weight_delta is not None else 0,
     }
