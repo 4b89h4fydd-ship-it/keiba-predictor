@@ -17,28 +17,35 @@ from typing import Optional
 from ..data.normalize import PastRun, RaceRecord, RunnerRecord
 from ..safety.contracts import Segment
 
-MODEL_VERSION = "ability-prior-v1-unfitted"
+MODEL_VERSION = "ability-prior-v2-unfitted"
 
 # Prior weights (NOT fitted). Keys are raw feature names.
 SEGMENT_WEIGHTS: dict[Segment, dict[str, float]] = {
     Segment.JRA_FLAT: {
-        "form": 0.30, "speed": 0.20, "distance": 0.10, "track": 0.05,
+        "form": 0.26, "speed": 0.20, "distance": 0.10, "track": 0.05,
         "surface": 0.10, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.05,
+        "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
     },
     Segment.NAR: {
-        "form": 0.32, "speed": 0.20, "distance": 0.10, "track": 0.08,
+        "form": 0.28, "speed": 0.20, "distance": 0.10, "track": 0.08,
         "surface": 0.05, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.05,
+        "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
     },
     Segment.JUMPS: {
-        "form": 0.35, "speed": 0.10, "distance": 0.10, "track": 0.10,
+        "form": 0.30, "speed": 0.10, "distance": 0.10, "track": 0.10,
         "surface": 0.05, "condition": 0.05, "jockey": 0.10,
         "closing": 0.05, "consistency": 0.10,
+        "top3_rate": 0.08, "rest": 0.04, "weight_shift": 0.03,
     },
     Segment.DEBUT: {},
 }
-LOWER_IS_BETTER = {"speed"}
+# speed: seconds behind the winner (smaller is better).
+# rest: days since the last run, capped (smaller = fresher is treated
+# as better for now; the fitted weights decide how much it matters).
+LOWER_IS_BETTER = {"speed", "rest"}
+REST_CAP_DAYS = 180
 RECENCY_DECAY = 0.85
 MAX_RUNS = 8
 
@@ -87,6 +94,12 @@ def extract_features(race: RaceRecord, runner: RunnerRecord) -> RunnerFeatures:
     jockey = runner.jockey.value if runner.jockey.present else None
 
     form, form_n = _subset_pct(runs, lambda r: True)
+    top3_pairs: list[tuple[float, float]] = []
+    for index, run in enumerate(runs):
+        finish = run.finish.value
+        if isinstance(finish, (int, float)) and finish >= 1:
+            top3_pairs.append((1.0 if finish <= 3 else 0.0, RECENCY_DECAY ** index))
+    top3_rate = _weighted_mean(top3_pairs)
     speed_pairs: list[tuple[float, float]] = []
     closing_pairs: list[tuple[float, float]] = []
     for index, run in enumerate(runs):
@@ -145,12 +158,19 @@ def extract_features(race: RaceRecord, runner: RunnerRecord) -> RunnerFeatures:
         "form": form, "speed": speed, "distance": distance, "track": track,
         "surface": surface, "condition": condition, "jockey": jockey_f,
         "closing": closing, "consistency": consistency,
+        "top3_rate": top3_rate,
+        "rest": min(rest_days, REST_CAP_DAYS) if rest_days is not None else None,
+        # Carrying less weight than last time is the favourable sign.
+        "weight_shift": -weight_delta if weight_delta is not None else None,
     }
     counts = {
         "form": form_n, "speed": len(speed_pairs), "distance": distance_n,
         "track": track_n, "surface": surface_n, "condition": condition_n,
         "jockey": jockey_n, "closing": len(closing_pairs),
         "consistency": len(pcts),
+        "top3_rate": len(top3_pairs),
+        "rest": 1 if rest_days is not None else 0,
+        "weight_shift": 1 if weight_delta is not None else 0,
     }
     return RunnerFeatures(
         number=runner.number,

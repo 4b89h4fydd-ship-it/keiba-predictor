@@ -29,8 +29,41 @@ from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
 from rewrite.output.sealing import SealCollisionError, SealStore  # noqa: E402
 
 BETA = 2.0  # matches the serve configuration in arvexq_rewrite_serve.py
-MODEL_KEY = f"{MODEL_VERSION}:beta{BETA}:prior-weights"
+# The 2026-10-28 seals (48 races) sit under the original key
+# "...:prior-weights" and were produced by the ability-prior-v1 code.
+# From 2026-10-29 the lane continues under this frozen key: identical
+# prediction content (verified field-by-field on 2026-10-28 — only the
+# version label and modelHash metadata fields differ, because the
+# ability module's version string moved to v2 when features were
+# added for research). Evaluators must treat both keys as the same
+# model configuration: prior-v1 weights, beta 2.0.
+MODEL_KEY = f"{MODEL_VERSION}:beta{BETA}:prior-weights:lane-frozen-v1"
 JST = ZoneInfo("Asia/Tokyo")
+
+# The forward-validation lane is FROZEN at the ability-prior-v1
+# configuration (the exact weights in force when the first seals were
+# made on 2026-10-28). Research may fit better weights, but the lane
+# only changes at an explicit version boundary: when a candidate has
+# beaten this configuration on unseen races, bump MODEL_KEY and the
+# frozen weights together. Never drift silently.
+FROZEN_V1_WEIGHTS = {
+    "jra_flat": {
+        "form": 0.30, "speed": 0.20, "distance": 0.10, "track": 0.05,
+        "surface": 0.10, "condition": 0.05, "jockey": 0.10,
+        "closing": 0.05, "consistency": 0.05,
+    },
+    "nar": {
+        "form": 0.32, "speed": 0.20, "distance": 0.10, "track": 0.08,
+        "surface": 0.05, "condition": 0.05, "jockey": 0.10,
+        "closing": 0.05, "consistency": 0.05,
+    },
+    "jumps": {
+        "form": 0.35, "speed": 0.10, "distance": 0.10, "track": 0.10,
+        "surface": 0.05, "condition": 0.05, "jockey": 0.10,
+        "closing": 0.05, "consistency": 0.10,
+    },
+    "debut": {},
+}
 
 
 def scheduled_start(detail: dict, date: str) -> datetime | None:
@@ -79,8 +112,11 @@ def main() -> int:
             if start is not None and now >= start:
                 summary["skipped"].append({"race": race.race_id, "reason": "after-scheduled-start"})
                 continue
-            # Build exactly what the serve path builds (same calls).
-            forecast = forecast_race(race, beta=BETA)
+            # Build the frozen lane configuration (see FROZEN_V1_WEIGHTS).
+            forecast = forecast_race(
+                race, beta=BETA,
+                weights=FROZEN_V1_WEIGHTS.get(race.segment.value, {}),
+            )
             pace = forecast_pace(race)
             win_odds = {
                 r.number: r.win_odds.value
