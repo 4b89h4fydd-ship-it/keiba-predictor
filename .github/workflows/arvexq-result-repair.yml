@@ -237,3 +237,220 @@ jobs:
             d1-bundle-report.json
           if-no-files-found: ignore
           retention-days: 3
+
+
+  repair-yesterday:
+    needs: repair
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_RESULT_WORKERS: "6"
+      ARVEXQ_RESULT_RETRY_SLEEP_SEC: "3"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install runtime dependencies
+        run: python -m pip install -q -r requirements.txt
+
+      - name: Result parser and non-destructive merge regression
+        run: |
+          python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
+
+      - name: Set sync date
+        run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date -d yesterday +%F)" >> "$GITHUB_ENV"
+
+      - name: Restore warm cache read-only
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-result-readonly-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-prefetch-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-
+
+      - name: Read current day from D1 race-by-race
+        run: |
+          python scripts/arvexq_fetch_d1_bundle.py \
+            --api-base "$CLOUDFLARE_API_BASE" \
+            --date "$SYNC_DATE" \
+            --out bundle.json \
+            --report d1-bundle-report.json \
+            --workers 8 \
+            --allow-missing-details --allow-empty-day
+          # D1 is not the source of truth for the official race schedule.
+          # Restore race IDs from the canonical prefetch archive if D1 is empty.
+          python scripts/arvexq_restore_result_day.py \
+            --bundle bundle.json --date "$SYNC_DATE" --report result-day-index.json
+          RACES=$(jq '.races // [] | length' bundle.json)
+          DETAILS=$(jq '.details // [] | length' bundle.json)
+          MISSING=$(jq '.missing_detail_count // 0' d1-bundle-report.json)
+          echo "D1 day races=$RACES details=$DETAILS missing_details=$MISSING"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::No verified official race IDs exist for $SYNC_DATE"
+            exit 1
+          fi
+
+      - name: Repair all started incomplete results
+        run: |
+          if ! PYTHONPATH=. python scripts/arvexq_result_repair.py \
+              --bundle bundle.json --payload result-repair-payload.json \
+              --report result-repair-report.json > result-repair.log 2>&1
+          then
+            echo "::error::Result repair failed"
+            tail -n 80 result-repair.log || true
+            exit 1
+          fi
+          jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
+          echo "--- unresolved result detail ---"
+          jq '.result_missing // []' result-repair-report.json
+          echo "--- payout-missing detail ---"
+          jq '.payout_missing // []' result-repair-report.json
+
+      - name: Push repaired snapshots to D1 in safe batches
+        run: |
+          STARTED=$(jq '.meta.started_race_count // 0' result-repair-payload.json)
+          if [ "$STARTED" -le 0 ]; then
+            echo "No started races; skip sync."
+            exit 0
+          fi
+          python scripts/arvexq_sync_batches.py \
+            --input result-repair-payload.json \
+            --out-dir result-sync-batches
+          COUNT=$(find result-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
+          echo "D1 result repair batches=$COUNT"
+          for file in result-sync-batches/batch-*.json; do
+            # Never bypass a missing/failed D1 read: retry the safety check
+            # on transient Worker 503s and fail closed if all reads fail.
+            safe=0
+            for attempt in 1 2 3; do
+              if PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"; then
+                safe=1; break
+              fi
+              sleep $((attempt * 5))
+            done
+            test "$safe" = 1
+            BYTES=$(wc -c < "$file" | tr -d ' ')
+            echo "POST $(basename "$file") bytes=$BYTES"
+            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+              --connect-timeout 10 --max-time 40 -X POST \
+              "$CLOUDFLARE_API_BASE/api/sync" \
+              -H "content-type: application/json" \
+              -H "x-sync-token: $SYNC_TOKEN" \
+              --data-binary @"$file" > /dev/null
+            verified=0
+            for attempt in 1 2 3; do
+              if PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"; then
+                verified=1; break
+              fi
+              echo "D1 sync verification unavailable; attempt=$attempt retrying"
+              sleep $((attempt * 5))
+            done
+            test "$verified" = 1
+          done
+          echo "D1 result repair batched push OK"
+
+      - name: Verify repaired results race-by-race from D1
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.parse, urllib.request
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          base=os.environ['CLOUDFLARE_API_BASE'].rstrip('/')
+          report=json.loads(Path('result-repair-report.json').read_text(encoding='utf-8'))
+          repaired=[str(x) for x in (report.get('repaired') or [])]
+          # Official results often arrive several minutes after the scheduled start.
+          # Preserve the missing-result audit; only fail the job when it is overdue.
+          jst=timezone(timedelta(hours=9))
+          now=datetime.now(jst)
+          grace_minutes=15
+          deferred=[]
+          def overdue_ids(entries,kind):
+              due=[]
+              for item in entries or []:
+                  item=item if isinstance(item,dict) else {}
+                  rid=str(item.get('race_id') or '')
+                  day=str(item.get('date') or report.get('date') or os.getenv('SYNC_DATE') or '')
+                  start=str(item.get('start_time') or '')
+                  age=None
+                  try:
+                      dt=datetime.strptime(day+' '+start,'%Y-%m-%d %H:%M').replace(tzinfo=jst)
+                      age=(now-dt).total_seconds()/60
+                  except (TypeError, ValueError):
+                      pass
+                  if age is not None and 0 <= age < grace_minutes:
+                      deferred.append((kind,rid,round(age,1)))
+                  else:
+                      due.append(rid)
+              return due
+          unresolved=overdue_ids(report.get('result_missing'),'result')
+          payout_missing=overdue_ids(report.get('payout_missing'),'payout')
+          missing=[]
+          for n,rid in enumerate(repaired,1):
+              url=base+'/api/race/'+urllib.parse.quote(rid,safe='')+'?t='+str(int(time.time()*1000)+n)
+              detail={}
+              err=''
+              for attempt in range(4):
+                  try:
+                      req=urllib.request.Request(url,headers={'accept':'application/json','user-agent':'ARVEXQ-Result-Verify/2'})
+                      with urllib.request.urlopen(req,timeout=25) as resp:
+                          value=json.loads(resp.read().decode('utf-8'))
+                      if isinstance(value,dict):
+                          detail=value if str(value.get('id') or '')==rid else (value.get('detail') or value.get('race') or {})
+                      break
+                  except Exception as exc:
+                      err=f'{type(exc).__name__}: {exc}'
+                      time.sleep(1+attempt)
+              result=detail.get('result') if isinstance(detail,dict) and isinstance(detail.get('result'),dict) else {}
+              finishes=[int(x.get('finish') or 0) for x in (result.get('finishers') or []) if isinstance(x,dict) and int(x.get('finish') or 0)>0]
+              podium_ok=1 in finishes and sum(1 for finish in finishes if finish<=3)>=3
+              if str(result.get('status') or '')!='確定' or not podium_ok or not (result.get('payouts') or []):
+                  missing.append((rid,err,str(result.get('status') or ''),finishes[:5],len(result.get('payouts') or [])))
+          print('D1_RESULT_VERIFY repaired=',len(repaired),'not_visible=',len(missing),'result_missing_due=',len(unresolved),'payout_missing_due=',len(payout_missing),'recently_started_pending=',len(deferred))
+          for item in missing[:20]:
+              print('D1_RESULT_NOT_VISIBLE',item)
+          for kind,rid,minutes_since_start in deferred[:30]:
+              print('D1_RESULT_DEFERRED',kind,rid,'minutes_since_start=',minutes_since_start,'grace=',grace_minutes)
+          if missing or unresolved or payout_missing:
+              raise SystemExit('result repair incomplete: unresolved='+','.join(unresolved)+' payout_missing='+','.join(payout_missing)+' not_visible='+','.join(x[0] for x in missing))
+          PY
+
+      - name: Show concise failure log
+        if: failure()
+        run: |
+          tail -n 100 result-repair.log 2>/dev/null || true
+          cat d1-bundle-report.json 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-result-repair-yesterday-failure-${{ github.run_number }}
+          path: |
+            result-repair.log
+            result-repair-report.json
+            d1-bundle-report.json
+          if-no-files-found: ignore
+          retention-days: 3
