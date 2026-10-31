@@ -82,14 +82,80 @@ def _core_valid(race, source):
     return True
 
 
+# --- Receipt canonicalization -------------------------------------------------
+# The receipt must bind the sealed CONTENT, never the last serializer's
+# spelling of it. Payloads cross a JS boundary (the sync worker re-serializes
+# with JSON.stringify / JSON.parse), which collapses integral floats to ints
+# (2.0 -> 2) and -0.0 to 0. Python's type-sensitive json.dumps then produces
+# a different canonical string for identical content, and every stored race
+# failed verification (root cause of predictionStatus='disabled' on delivery,
+# pinpointed 2026-10-31 on jra-2026-10-31-東京-11: only beta 2.0 -> 2 differed).
+# Canonicalization is therefore by VALUE: integral floats normalize to ints
+# before dumping, so the Python original and its JS round trip hash alike.
+# Any change to an actual value, string, key or list still changes the digest.
+
+# Keys the product generator (rewrite/output/api_shape.py) always emits as
+# JSON floats. A JS round trip can only have turned their integral values
+# into ints; restoring the float spelling at exactly these keys reproduces
+# the legacy (pre-normalization) canonical string for receipts sealed
+# before value canonicalization existed. The numeric value never changes.
+_FLOAT_KEYS = frozenset((
+    "beta", "winProbability", "top3Probability", "winProbabilityRange",
+    "top3ProbabilityRange", "abilityScore", "pacePressure", "probability",
+    "odds", "expectedValue",
+))
+
+
+def _value_canonical(value):
+    if isinstance(value, float):
+        if value == 0:
+            return 0
+        if value.is_integer() and abs(value) < 2 ** 53:
+            return int(value)
+        return value
+    if isinstance(value, dict):
+        return {k: _value_canonical(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_value_canonical(v) for v in value]
+    return value
+
+
+def _float_restored(value, key=None):
+    if isinstance(value, dict):
+        return {k: _float_restored(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_float_restored(v, key) for v in value]
+    if key in _FLOAT_KEYS and type(value) is int:
+        return float(value)
+    return value
+
+
+def _receipt_digest(canonical):
+    return sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True,
+                             separators=(",", ":"),
+                             allow_nan=False).encode()).hexdigest()
+
+
+def canonical_receipt(product):
+    """Receipt digest for new seals: value-canonical, serializer-proof."""
+    canonical = {k: v for k, v in product.items() if k != "receiptSha256"}
+    return _receipt_digest(_value_canonical(canonical))
+
+
 def verified(race):
     """Revalidate immutable receipt and its hash, not only claimed IDs."""
     candidate = (race or {}).get("unifiedForecast")
     if not _core_valid(race, candidate):
         return None
     canonical = {k: v for k, v in candidate.items() if k != "receiptSha256"}
-    digest = sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True,
-                               separators=(",", ":"), allow_nan=False).encode()).hexdigest()
-    return candidate if candidate.get("receiptSha256") == digest else None
+    accepted = {
+        # Current form: value-canonical (what canonical_receipt seals).
+        _receipt_digest(_value_canonical(canonical)),
+        # Legacy form, payload never re-serialized after sealing.
+        _receipt_digest(canonical),
+        # Legacy form, payload JS round-tripped (stored production rows).
+        _receipt_digest(_float_restored(canonical)),
+    }
+    return candidate if candidate.get("receiptSha256") in accepted else None
 
 

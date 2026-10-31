@@ -118,10 +118,12 @@ def _has_result(detail: dict) -> bool:
 
 
 def _canonical_receipt(product: dict) -> str:
-    canonical = {k: v for k, v in product.items() if k != "receiptSha256"}
-    return sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True,
-                             separators=(",", ":"),
-                             allow_nan=False).encode()).hexdigest()
+    # Value-canonical receipt (shared with the verifier): integral floats
+    # hash as ints, so the receipt survives the JS re-serialization the
+    # payload undergoes on its way to and from D1. See
+    # arvexq/prediction/unified_product.py canonical_receipt.
+    from arvexq.prediction.unified_product import canonical_receipt
+    return canonical_receipt(product)
 
 
 def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
