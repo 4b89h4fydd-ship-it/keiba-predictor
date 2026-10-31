@@ -94,6 +94,12 @@
   background:rgba(9,25,46,.70);color:#fff;
   font-size:17px;font-weight:900;white-space:nowrap;
 }
+.arv-three-bet .arv-three-box-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:36px;padding:5px 9px;border-radius:8px;
+  background:rgba(38,120,74,.88);color:#eafff3;
+  font-size:13px;font-weight:900;letter-spacing:.08em;white-space:nowrap;
+}
 .arv-three-bet .arv-three-ticket-reason{margin:8px 0 0!important;color:#b5c6d6;font-size:12px;line-height:1.55}
 .arv-three-bet .arv-three-skip{
   margin:0;padding:7px 2px 3px;color:#95a9bc;font-size:12px;line-height:1.55;

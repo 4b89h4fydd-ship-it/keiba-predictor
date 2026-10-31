@@ -61,8 +61,11 @@ function sealedFive(r,server){
    presented as a formation/box/axis bet it is not.
    - ordered kinds (3連単/馬単): per-position leg sets whose complete
      distinct permutations equal the combos -> "8.5.2-8.5.2.4.6-...".
-   - unordered kinds (馬連/3連複/ワイド): a full box -> "8.5.2.4.6";
-     a shared axis plus every partner combination -> "8-5.2.4". */
+   - unordered kinds (馬連/3連複/ワイド): a full box -> "8.5.2.4.6"
+     (rendered with a BOX badge so it is not mistaken for a single
+     combination); a shared axis plus every partner combination ->
+     "8-5.2.4". summarizeGroup returns {type, text} with type one of
+     'formation' | 'box' | 'axis' so the renderer can label boxes. */
 var ORDERED_KINDS={'3連単':1,'馬単':1};
 var UNORDERED_KINDS={'馬連':1,'3連複':1,'ワイド':1};
 function markOrderOf(r){
@@ -114,7 +117,7 @@ function summarizeGroup(item,r){
   norm.forEach(function(c){have[c.join(',')]=1;});
   if(Object.keys(have).length!==count)return null;
   for(var key in have)if(!want[key])return null;
-  return legs.map(function(leg){return sortByMark(leg,order).join('.');}).join('-');
+  return {type:'formation',text:legs.map(function(leg){return sortByMark(leg,order).join('.');}).join('-')};
  }
  if(UNORDERED_KINDS[kind]){
   if(len<2)return null;
@@ -129,7 +132,7 @@ function summarizeGroup(item,r){
    if(box.length===haveCount&&box.every(function(c){
     return have2[c.slice().sort(function(a,b){return a-b;}).join(',')];
    }))
-    return sortByMark(union,order).join('.');
+    return {type:'box',text:sortByMark(union,order).join('.')};
   }
   var sorted=norm.map(function(c){return c.slice().sort(function(a,b){return a-b;});});
   var axis=sorted[0].filter(function(n){
@@ -141,7 +144,7 @@ function summarizeGroup(item,r){
    var axisOk=rest.length===haveCount&&rest.every(function(c){
     return have2[axis.concat(c).sort(function(a,b){return a-b;}).join(',')];
    });
-   if(axisOk)return sortByMark(axis,order).join('.')+'-'+sortByMark(partners,order).join('.');
+   if(axisOk)return {type:'axis',text:sortByMark(axis,order).join('.')+'-'+sortByMark(partners,order).join('.')};
   }
   return null;
  }
@@ -149,7 +152,10 @@ function summarizeGroup(item,r){
 }
 function combosHtml(item,r){
  var summary=summarizeGroup(item,r);
- if(summary)return '<span class="arv-three-combo arv-three-summary">'+esc(summary)+'</span>';
+ if(summary){
+  var badge=summary.type==='box'?'<span class="arv-three-box-label">BOX</span>':'';
+  return badge+'<span class="arv-three-combo arv-three-summary">'+esc(summary.text)+'</span>';
+ }
  return (item.combos||[]).map(function(c){
   return '<span class="arv-three-combo">'+esc((c||[]).join(' - '))+'</span>';
  }).join('');
