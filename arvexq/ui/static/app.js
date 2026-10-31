@@ -2607,12 +2607,17 @@ function renderRace(){
   if(predictionError&&content.indexOf('AI解析はバックグラウンド')<0){
     content='<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析の一部を再取得中です。出走表の表示は継続します。</div>'+content
   }
+  // Bets live only in the bets tab (subPage betDetailPage). The trailing
+  // ticket frame appended here renders the reference-lane plan, which
+  // duplicated the bets tab under the pace view and confused readers
+  // (user decision 2026-10-31): skip it while the pace tab is open.
+  var ticketFrameHtml=state.openPanel==='pace'?'':window.ARVEXQTicketFrame.render();
   return '<div class="smart-shell">'+
     smartRaceTopBar(r)+
     '<main class="smart-main smart-race-page">'+
       smartRaceHead(r)+
       cinematicTabs(r)+
-      '<div class="smart-race-content">'+content+window.ARVEXQMarkFrame.render()+window.ARVEXQTicketFrame.render()+'</div>'+
+      '<div class="smart-race-content">'+content+window.ARVEXQMarkFrame.render()+ticketFrameHtml+'</div>'+
     '</main>'+ 
     cinematicFooter()+
   '</div>'
