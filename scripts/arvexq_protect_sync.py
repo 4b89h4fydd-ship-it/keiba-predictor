@@ -117,15 +117,29 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     # Forecast blocks are owned by the rewrite publish lane
     # (scripts/arvexq_rewrite_publish.py). Any other lane's write preserves
     # the stored forecast blocks verbatim and drops its own forecast fields;
-    # only an incoming detail carrying the lane's preparedMeta.rewritePublish
-    # marker may replace them. (This replaces the former first-receipt-wins
-    # rule that pinned forecasts to the retired learned-scenarios model.)
+    # only a genuine publish-lane write may replace them. (This replaces the
+    # former first-receipt-wins rule that pinned forecasts to the retired
+    # learned-scenarios model.)
+    #
+    # A genuine publish write is recognised by the lane's
+    # preparedMeta.rewritePublish marker AND the complete forecast block
+    # set: build_publish_detail always emits every block atomically. The
+    # marker alone is NOT sufficient — lanes seeded from a stored detail
+    # inherit preparedMeta (prefetch merges it by update), so a marker-only
+    # check let display-compacted details (which pass through
+    # arvexq.forecast.publication.public_race and lose the bet blocks)
+    # overwrite the published forecast, leaving the app with
+    # predictionStatus 'disabled' and no recommendedBets.
     from arvexq.prediction.unified_product import MODEL_VERSION as REWRITE_MODEL_VERSION
+    forecast_keys = ('unifiedForecast', 'prediction', 'predictionMarks',
+                     'recommendedBets', 'forecastText', 'predictionStatus',
+                     'predictionModelVersion', 'preRaceBet')
     marker = ((out.get('preparedMeta') or {}).get('rewritePublish') or {})
-    if marker.get('modelVersion') != REWRITE_MODEL_VERSION:
-        for key in ('unifiedForecast', 'prediction', 'predictionMarks',
-                    'recommendedBets', 'forecastText', 'predictionStatus',
-                    'predictionModelVersion', 'preRaceBet'):
+    is_publish_write = (
+        marker.get('modelVersion') == REWRITE_MODEL_VERSION
+        and all(key in out for key in forecast_keys))
+    if not is_publish_write:
+        for key in forecast_keys:
             if key in old:
                 out[key] = copy.deepcopy(old[key])
             else:

@@ -62,7 +62,28 @@ function contents(r,p){
    var methodology=isFusion?'発走前の実オッズと期待回収率で選定・全券種合計最大5点':
      kochiFinal?'高知ファイナル：全出走馬から3着候補を評価・3連複と3連単の合計最大5点（未校正）':
      '旧方式の保存済み発走前買い目・全券種合計最大5点';
-   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+'</div>';
+   // Keep the uncalibrated win-EV list visible alongside the full grouped
+   // bets: it is part of the same verified product (unifiedForecast
+   // ticketPlan) and was previously only rendered by the reference-plan
+   // branch below. Same markup and wording as that branch.
+   var model=r.unifiedForecast||{};
+   var rosterNames={};
+   (model.roster||[]).forEach(function(h){rosterNames[h.horseNumber]=h.name||'';});
+   var winEv=((model.ticketPlan||{}).winExpectedValues||[]).filter(function(x){return x&&
+     Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>0&&
+     Number.isFinite(Number(x.odds))&&Number(x.odds)>=1&&
+     Number.isFinite(Number(x.winProbability))&&
+     (model.roster||[]).some(function(h){return h.horseNumber===x.horseNumber;});});
+   var evRows=winEv.slice(0,5).map(function(x){
+     return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
+        esc(x.horseNumber)+'番'+(rosterNames[x.horseNumber]?' '+esc(rosterNames[x.horseNumber]):'')+'</b>'+
+        '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
+        '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
+        '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（未校正の推定値）</p></div>';
+   }).join('');
+   var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（未校正の推定値）</h3>'+evRows+
+     '<p class="arv-three-ticket-reason">確率は未校正で、勝率・回収率の実測検証は未完了です。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。</p></section>':'';
+   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.
