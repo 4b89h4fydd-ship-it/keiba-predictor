@@ -15,6 +15,22 @@ ONLY where real odds exist:
   real win odds) are exposed for display, always labelled as
   uncalibrated estimates; they never enter the EV ticket lane and
   carry no stake sizing.
+
+Trifecta formation is selected per caller via ``trifecta_formation``:
+
+- ``"legacy"`` (formation A): probability-ranked permutations of the
+  top four win-probability runners, with the TicketPolicy
+  min-probability cut and point cap. This is the frozen sealing
+  lane's formation and the forward scoreboard's control series; it
+  stays the default so every historical regeneration is reproduced
+  exactly.
+- ``"B"`` (formation B): 1st leg = model ranks 1-3, 2nd/3rd legs =
+  model ranks 1-5 in mark order (◎○▲△☆), all permutations, 36
+  points fixed with five marked runners, no probability cut and no
+  point cap. Pre-registered 2026-10-29, passed its primary paired
+  judgement against A at 142 races, and adopted for production
+  issuance on 2026-10-31 by user decision. Only the production
+  publish lane passes ``"B"``; seals and scoreboards never do.
 """
 from __future__ import annotations
 
@@ -27,6 +43,38 @@ from ..safety.probability import distribution, expected_return, ticket_probabili
 from .forecast import RaceForecast
 
 KINDS = ("win", "place", "wide", "quinella", "exacta", "trio", "trifecta")
+
+#: Trifecta formations accepted by generate_tickets (see module docstring).
+TRIFECTA_FORMATIONS = ("legacy", "B")
+
+#: Mark symbols in model-rank order (rank 1 .. rank 5).
+MARK_ORDER = ("◎", "○", "▲", "△", "☆")
+
+
+def mark_order(forecast: RaceForecast) -> list[int]:
+    """Marked runners in mark order ◎,○,▲,△,☆ (model ranks 1..5).
+
+    Mirrors scripts/arvexq_ticket_shadow.py's ordered_marks, which
+    reads the same order back from the sealed payloads, so production
+    formation B is built from exactly the ranks the shadow tally
+    graded. Note the fifth mark (☆) is the forecast's place-type
+    pick, not necessarily the fifth runner by win probability.
+    """
+    by_symbol = {r.mark: r.number for r in forecast.runners if r.mark}
+    return [by_symbol[s] for s in MARK_ORDER if s in by_symbol]
+
+
+def formation_b_selections(ranked_marks: list[int]) -> list[tuple]:
+    """Formation B trifecta combinations from mark-ordered runners.
+
+    Identical construction to the shadow tally's formation_b: every
+    permutation of the top five marked runners whose first leg is
+    one of the top three. Fewer marked runners shrink the formation
+    (4 marks -> 18 points, 3 marks -> 6 points, fewer -> none).
+    """
+    first = ranked_marks[:3]
+    legs = ranked_marks[:5]
+    return [c for c in permutations(legs, 3) if c[0] in first]
 
 
 @dataclass(frozen=True)
@@ -70,7 +118,8 @@ class TicketPlan:
     win_ev_estimates: tuple = ()
 
 
-def _candidates(forecast: RaceForecast, kind: str, ranked: list[int]) -> list[tuple]:
+def _candidates(forecast: RaceForecast, kind: str, ranked: list[int],
+                trifecta_formation: str = "legacy") -> list[tuple]:
     top = {k: ranked[:n] for k, n in
            (("w", 4), ("x", 3), ("t", 5))}
     if kind == "win":
@@ -88,6 +137,8 @@ def _candidates(forecast: RaceForecast, kind: str, ranked: list[int]) -> list[tu
     if kind == "trio":
         return list(combinations(top["t"], 3))
     if kind == "trifecta":
+        if trifecta_formation == "B":
+            return formation_b_selections(mark_order(forecast))
         return list(permutations(top["w"][:4], 3))
     return []
 
@@ -97,8 +148,12 @@ def generate_tickets(
     win_odds: dict[int, float],
     *,
     calibration_validated: bool,
+    trifecta_formation: str = "legacy",
     policy: Optional[TicketPolicy] = None,
 ) -> TicketPlan:
+    if trifecta_formation not in TRIFECTA_FORMATIONS:
+        raise ValueError(
+            f"unknown trifecta formation: {trifecta_formation!r}")
     policy = policy or TicketPolicy()
     if forecast.status != "ok":
         return TicketPlan(forecast.race_id, (), (), {
@@ -118,10 +173,16 @@ def generate_tickets(
     ev_tickets: list[Ticket] = []
     suppressed: dict[str, int] = {}
     for kind in KINDS:
+        # Formation B is a fixed formation: every combination is
+        # issued, so neither the min-probability cut nor the point
+        # cap applies to the trifecta. All other kinds, and the
+        # legacy trifecta, keep the policy gates unchanged.
+        fixed_formation = kind == "trifecta" and trifecta_formation == "B"
         scored: list[Ticket] = []
-        for selection in _candidates(forecast, kind, ranked):
+        for selection in _candidates(forecast, kind, ranked,
+                                     trifecta_formation=trifecta_formation):
             p = ticket_probability(outcomes, kind, selection)
-            if p < policy.min_probability[kind]:
+            if not fixed_formation and p < policy.min_probability[kind]:
                 continue
             odds = win_odds.get(selection[0]) if kind == "win" else None
             odds_status = "actual" if odds is not None else "unavailable"
@@ -131,7 +192,7 @@ def generate_tickets(
                 odds_status=odds_status, stake_units=None,
             ))
         scored.sort(key=lambda t: (-t.probability, t.selection))
-        kept = scored[: policy.max_points[kind]]
+        kept = scored if fixed_formation else scored[: policy.max_points[kind]]
         probability_tickets.extend(kept)
         if kind != "win":
             if kept:

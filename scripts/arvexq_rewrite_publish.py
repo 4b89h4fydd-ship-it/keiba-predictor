@@ -148,8 +148,13 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         if r.win_odds.present
         and isinstance(r.win_odds.value, (int, float))
     }
+    # Trifecta formation B (adopted 2026-10-31 after the
+    # pre-registered primary paired judgement against legacy A at
+    # 142 races). Probabilities, marks and every other ticket kind
+    # are unchanged; the sealing lane keeps the legacy formation.
     tickets = generate_tickets(forecast, win_odds,
-                               calibration_validated=False)
+                               calibration_validated=False,
+                               trifecta_formation="B")
     captured = now.isoformat(timespec="seconds")
     payload = race_payload(
         race, forecast, pace, tickets,

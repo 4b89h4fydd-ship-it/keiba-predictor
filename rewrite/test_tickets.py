@@ -1,10 +1,26 @@
 """Tests for ticket generation and the EV honesty gates."""
+import importlib.util
 import unittest
+from pathlib import Path
 
 from rewrite.analysis.forecast import forecast_race
-from rewrite.analysis.tickets import TicketPolicy, generate_tickets
+from rewrite.analysis.tickets import (
+    TicketPolicy, formation_b_selections, generate_tickets, mark_order,
+)
 from rewrite.data.normalize import normalize_race
 from rewrite.test_analysis import CLOSER_RUNS, FRONT_RUNS, MID_RUNS, SUMMARY, horse
+
+
+def _load_shadow_script():
+    """Load scripts/arvexq_ticket_shadow.py for construction cross-checks."""
+    path = (Path(__file__).resolve().parent.parent
+            / "scripts" / "arvexq_ticket_shadow.py")
+    if not path.exists():
+        raise unittest.SkipTest("shadow tally script not present in this tree")
+    spec = importlib.util.spec_from_file_location("arvexq_ticket_shadow", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def make_forecast():
@@ -81,6 +97,73 @@ class TicketTests(unittest.TestCase):
             self.assertEqual(t.kind, "win")
             self.assertGreater(t.expected_return, 1.0)
             self.assertIsNotNone(t.stake_units)
+
+    def test_formation_b_matches_shadow_construction(self):
+        shadow = _load_shadow_script()
+        marks = {r.number: r.mark for r in self.forecast.runners if r.mark}
+        self.assertEqual(mark_order(self.forecast),
+                         shadow.ordered_marks(marks))
+        plan = generate_tickets(self.forecast, self.odds,
+                                calibration_validated=False,
+                                trifecta_formation="B")
+        got = [t.selection for t in plan.probability_tickets
+               if t.kind == "trifecta"]
+        expected = shadow.formation_b(shadow.ordered_marks(marks))
+        self.assertEqual(set(got), expected)
+        # Five marked runners -> the fixed 36-point formation.
+        self.assertEqual(len(got), 36)
+        self.assertEqual(len(set(got)), 36)
+
+    def test_formation_b_leg_structure(self):
+        ranked = mark_order(self.forecast)
+        plan = generate_tickets(self.forecast, self.odds,
+                                calibration_validated=False,
+                                trifecta_formation="B")
+        for t in plan.probability_tickets:
+            if t.kind != "trifecta":
+                continue
+            self.assertIn(t.selection[0], ranked[:3])
+            self.assertLessEqual(set(t.selection), set(ranked[:5]))
+            # EV stays uncomputed for combinations under B as well.
+            self.assertIsNone(t.expected_return)
+            self.assertEqual(t.odds_status, "unavailable")
+        self.assertEqual(plan.ev_tickets, ())
+
+    def test_formation_b_shrinks_with_fewer_marks(self):
+        self.assertEqual(len(formation_b_selections([1, 2, 3, 4, 5])), 36)
+        self.assertEqual(len(formation_b_selections([1, 2, 3, 4])), 18)
+        self.assertEqual(len(formation_b_selections([1, 2, 3])), 6)
+        self.assertEqual(formation_b_selections([1, 2]), [])
+        shadow = _load_shadow_script()
+        for ranked in ([7, 3, 5, 1, 9], [2, 4, 6, 8], [1, 2, 3]):
+            self.assertEqual(set(formation_b_selections(ranked)),
+                             shadow.formation_b(list(ranked)))
+
+    def test_formation_b_leaves_other_kinds_and_legacy_untouched(self):
+        legacy = generate_tickets(self.forecast, self.odds,
+                                  calibration_validated=False)
+        explicit = generate_tickets(self.forecast, self.odds,
+                                     calibration_validated=False,
+                                     trifecta_formation="legacy")
+        self.assertEqual(legacy.probability_tickets,
+                         explicit.probability_tickets)
+        plan_b = generate_tickets(self.forecast, self.odds,
+                                  calibration_validated=False,
+                                  trifecta_formation="B")
+        for kind in ("win", "place", "wide", "quinella", "exacta", "trio"):
+            self.assertEqual(
+                [t for t in legacy.probability_tickets if t.kind == kind],
+                [t for t in plan_b.probability_tickets if t.kind == kind])
+        policy = TicketPolicy()
+        legacy_tri = [t for t in legacy.probability_tickets
+                      if t.kind == "trifecta"]
+        self.assertLessEqual(len(legacy_tri), policy.max_points["trifecta"])
+
+    def test_unknown_trifecta_formation_rejected(self):
+        with self.assertRaises(ValueError):
+            generate_tickets(self.forecast, self.odds,
+                             calibration_validated=False,
+                             trifecta_formation="C")
 
     def test_insufficient_forecast_yields_empty_plan(self):
         summary = dict(SUMMARY, title="2歳初出走")
