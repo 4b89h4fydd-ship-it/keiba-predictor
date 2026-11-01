@@ -6,6 +6,19 @@ displays is exactly what the sealed record later grades. The lane only
 changes at an explicit version boundary: when a candidate configuration
 has beaten this one on unseen races, bump the model key and the frozen
 weights together. Never drift silently.
+
+Version boundary (2026-11-01): the v8 candidate (margin-weighted Elo
++ speed index v2, rewrite/analysis/shadow_v8.py) was adopted for the
+PRODUCTION publish lane after the 2026-11-01 first forward verdict
+(same-137 logloss v1 2.1492 vs v8 2.0145, 95%CI for the difference
+[-0.1924, -0.0718]). From 2026-11-01 onward, races that have not yet
+started get the v8 ability layer for the jra_flat and nar segments
+whenever the shadow lane's exported extras are available (see
+V8_CUTOVER_DATE in scripts/arvexq_rewrite_publish.py). LANE_WEIGHTS
+below remain in force for the other segments and as the fallback
+whenever v8 extras are unavailable. The frozen v1 seal series is
+unchanged: the sealing lane keeps sealing with this configuration so
+the forward record stays a single consistent series.
 """
 from __future__ import annotations
 

@@ -54,7 +54,7 @@ from ..safety.contracts import Segment
 
 UNIFIED_VERSION = "arvexq-unified-live-v1"
 ADAPTER_VERSION = "arvexq-rewrite-output-v1"
-MODEL_VERSION = "arvexq-rewrite-v1-uncalibrated-prior"
+MODEL_VERSION = "arvexq-rewrite-v2-elo-speed2"
 # The serving beta was fitted on the 2026-10-21..2026-10-23 training
 # slice only (time-ordered backtest). Races on/before that window must
 # not be presented as pre-off forecasts of this model, so the same date

@@ -42,6 +42,8 @@ sys.path.insert(0, str(ROOT))
 from rewrite.analysis.forecast import forecast_race  # noqa: E402
 from rewrite.analysis.lane_config import LANE_BETA, LANE_WEIGHTS  # noqa: E402
 from rewrite.analysis.pace import forecast_pace  # noqa: E402
+from rewrite.analysis.shadow_v8 import WEIGHTS as V8_WEIGHTS  # noqa: E402
+from rewrite.analysis.shadow_v8 import forecast_race_v8  # noqa: E402
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
 from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
@@ -54,6 +56,20 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
 COMBO_KINDS = {"wide": "ワイド", "quinella": "馬連", "exacta": "馬単",
                "trio": "3連複", "trifecta": "3連単"}
 SCRATCH_STATUSES = {"出走取消", "競走除外", "欠場"}
+
+# v8 cutover (adopted 2026-11-01 after the first forward verdict:
+# same-137 logloss v1 2.1492 vs v8 2.0145, 95%CI for the difference
+# [-0.1924, -0.0718]). Races dated on/after V8_CUTOVER_DATE use the
+# v8 ability layer (margin-weighted Elo + speed index v2) when the
+# shadow lane's exported extras exist for the race; races in segments
+# without a v8 candidate, races without extras, and any v8 forecast
+# that does not come back "ok" fall back to the frozen v1 lane
+# configuration above. The pre-off sealing lane is unchanged and
+# keeps sealing the frozen v1 series.
+V8_CUTOVER_DATE = "2026-11-01"
+V8_EXTRAS_DIR = ROOT / "rewrite" / "data" / "v8_extras"
+V8_ABILITY_MODEL_VERSION = "arvexq-v8-elo-speed2-fitted"
+V8_ABILITY_STATUS = "rewrite-ability-elo-speed2-v8"
 
 
 def _get(path: str) -> dict:
@@ -89,6 +105,24 @@ def _load_protect():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.protect_detail
+
+
+def _load_v8_extras(date: str) -> dict:
+    """Per-race v8 extras exported by the shadow lane for one date.
+
+    File format (written by the rewrite tree's
+    scripts/arvexq_v8_extras_export.py): {"date": ..., "modelKey":
+    ..., "races": {race_id: {"segment": ..., "extras":
+    {str(number): {...}}}}}. A missing or unreadable file simply
+    means no v8 extras for that date; the caller falls back to v1.
+    """
+    try:
+        payload = json.loads(
+            (V8_EXTRAS_DIR / f"{date}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    races = payload.get("races") if isinstance(payload, dict) else None
+    return races if isinstance(races, dict) else {}
 
 
 def _is_inactive(horse: dict) -> bool:
@@ -138,9 +172,31 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     if post is None or now >= post:
         return None, "post time reached or unknown"
     race = normalize_race(summary, old, source="production-api-readback")
-    forecast = forecast_race(
-        race, beta=LANE_BETA,
-        weights=LANE_WEIGHTS.get(race.segment.value, {}))
+    race_date = str(old.get("date") or race.date or "")
+    segment = race.segment.value
+    forecast = None
+    used_v8 = False
+    v8_fallback_status = None
+    if race_date >= V8_CUTOVER_DATE and segment in V8_WEIGHTS:
+        entry = _load_v8_extras(race_date).get(race.race_id)
+        raw_extras = entry.get("extras") if isinstance(entry, dict) else None
+        if isinstance(raw_extras, dict) and raw_extras:
+            try:
+                extras = {int(n): v for n, v in raw_extras.items()
+                          if isinstance(v, dict)}
+            except (TypeError, ValueError):
+                extras = {}
+            if extras:
+                v8_forecast = forecast_race_v8(race, extras)
+                if v8_forecast.status == "ok":
+                    forecast = v8_forecast
+                    used_v8 = True
+                else:
+                    v8_fallback_status = v8_forecast.status
+    if forecast is None:
+        forecast = forecast_race(
+            race, beta=LANE_BETA,
+            weights=LANE_WEIGHTS.get(segment, {}))
     if forecast.status != "ok":
         return None, f"forecast not ok: {forecast.status}"
     pace = forecast_pace(race)
@@ -174,6 +230,12 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         if isinstance(h, dict) and h.get("horseNumber")
         and not _is_inactive(h)]
     unified.pop("receiptKind", None)
+    if used_v8:
+        # Per-race honest labeling: this forecast's ability layer is
+        # the adopted v8 candidate, not the v1 prior. Stamped before
+        # the receipt hash so the label is part of the verified
+        # product.
+        unified["abilityModelVersion"] = V8_ABILITY_MODEL_VERSION
     unified["receiptSha256"] = _canonical_receipt(unified)
 
     win = {r.number: round(r.p_win, 6) for r in forecast.runners}
@@ -198,7 +260,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         "modelVersion": MODEL_VERSION,
         "predictionStatus": "ready", "productionEligible": True,
         "stages": {
-            "ability": {"status": "rewrite-ability-prior-v1"},
+            "ability": {"status": V8_ABILITY_STATUS if used_v8
+                        else "rewrite-ability-prior-v1"},
             "pace": {"status": "past-corner-evidence-uncalibrated",
                      "text": built["forecastText"]},
             "probability": {"value": {"win": win, "top3": top3}},
@@ -247,7 +310,11 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     meta = dict(old.get("preparedMeta") or {})
     meta["rewritePublish"] = {
         "modelVersion": MODEL_VERSION, "publishedAt": captured,
-        "receiptSha256": unified["receiptSha256"]}
+        "receiptSha256": unified["receiptSha256"],
+        "abilityLane": "v8-elo-speed2" if used_v8 else "v1-prior"}
+    if v8_fallback_status is not None:
+        meta["rewritePublish"]["v8Fallback"] = (
+            f"v8 forecast not ok: {v8_fallback_status}; v1 lane used")
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
 
