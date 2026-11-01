@@ -16,6 +16,19 @@ engine configuration is the frozen lane configuration shared with the
 pre-off sealing lane (rewrite/analysis/lane_config.py), so what the app
 displays is exactly what the sealed forward record later grades.
 
+Forecast freeze (adopted 2026-11-01 after the intraday marks-drift
+incident, see goals/arvexq/hidden_files/
+marks-drift-investigation-20261101.md): once a race has been published
+ready by this lane, later cycles never recompute or overwrite its
+forecast — late-arriving input backfill must not move a forecast that
+is already on sale. The only exception is a roster change (a scratch
+or an added runner), which re-issues that race alone and stamps the
+revision into preparedMeta.rewritePublish.revision. Frozen state is
+recognised from the stored detail itself (the lane marker plus the
+receipt roster recorded in the unified forecast); if that state
+cannot be read consistently the cycle fails closed and does not
+overwrite.
+
 Usage:
   SYNC_TOKEN=... python3 scripts/arvexq_rewrite_publish.py [--date YYYY-MM-DD ...] [--dry-run]
 
@@ -143,6 +156,69 @@ def _post_at(detail: dict) -> datetime | None:
         return None
 
 
+def _active_roster(detail: dict) -> list[tuple[int, str]]:
+    """The detail's current active roster, built exactly as the
+    receipt roster is built at publish time."""
+    return sorted(
+        (int(h["horseNumber"]), str(h.get("name") or ""))
+        for h in detail.get("horses") or []
+        if isinstance(h, dict) and h.get("horseNumber")
+        and not _is_inactive(h))
+
+
+def _freeze_decision(old: dict):
+    """Classify a stored detail against this lane's frozen publication.
+
+    Returns None when the race was never published ready by this lane
+    (normal first publication), ("frozen", receipt) when the stored
+    ready forecast must be left byte-stable, or ("reissue", info)
+    when the active roster changed since the frozen publication.
+    A detail that carries this lane's ready markers but whose frozen
+    state cannot be read consistently raises ValueError; the caller
+    fails closed (skip, no overwrite) rather than guess.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("modelVersion") != MODEL_VERSION:
+        return None
+    if old.get("predictionStatus") != "ready":
+        return None
+    if old.get("predictionModelVersion") != MODEL_VERSION:
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        raise ValueError("lane-marked ready detail has no unifiedForecast")
+    receipt = unified.get("receiptSha256")
+    if not receipt or marker.get("receiptSha256") != receipt:
+        raise ValueError(
+            "lane marker receipt does not match the stored unified forecast")
+    roster = unified.get("roster")
+    if not isinstance(roster, list):
+        raise ValueError("stored unified forecast has no receipt roster")
+    frozen_roster = sorted(
+        (int(r["horseNumber"]), str(r.get("name") or ""))
+        for r in roster
+        if isinstance(r, dict) and r.get("horseNumber"))
+    if len(frozen_roster) != len(roster):
+        raise ValueError("stored receipt roster has unreadable entries")
+    current_roster = _active_roster(old)
+    if current_roster == frozen_roster:
+        return "frozen", receipt
+    frozen_by_no = dict(frozen_roster)
+    current_by_no = dict(current_roster)
+    info = {
+        "receipt": receipt,
+        "publishedAt": marker.get("publishedAt"),
+        "added": sorted(set(current_by_no) - set(frozen_by_no)),
+        "removed": sorted(set(frozen_by_no) - set(current_by_no)),
+        "renamed": sorted(
+            no for no in set(frozen_by_no) & set(current_by_no)
+            if frozen_by_no[no] != current_by_no[no]),
+    }
+    return "reissue", info
+
+
 def _has_result(detail: dict) -> bool:
     result = detail.get("result")
     if not isinstance(result, dict):
@@ -171,6 +247,21 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     post = _post_at(old)
     if post is None or now >= post:
         return None, "post time reached or unknown"
+    # Forecast freeze: a race this lane already published ready is
+    # never recomputed. Only a roster change re-issues it (stamped as
+    # a revision below); unreadable frozen state fails closed.
+    try:
+        freeze = _freeze_decision(old)
+    except Exception as exc:  # state unreadable: do not overwrite
+        return None, (f"frozen-state unreadable ({type(exc).__name__}: "
+                      f"{exc}); not overwriting")
+    reissue = None
+    if freeze is not None:
+        if freeze[0] == "frozen":
+            return None, (f"frozen: already published ready "
+                          f"(receipt {str(freeze[1])[:12]}…); "
+                          f"roster unchanged")
+        reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
     race_date = str(old.get("date") or race.date or "")
     segment = race.segment.value
@@ -315,6 +406,26 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     if v8_fallback_status is not None:
         meta["rewritePublish"]["v8Fallback"] = (
             f"v8 forecast not ok: {v8_fallback_status}; v1 lane used")
+    if reissue is not None:
+        # Roster-change re-issue of a frozen forecast: keep the chain
+        # auditable inside the lane marker (first publication time,
+        # previous receipt, exactly how the roster moved).
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            reissue.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "reason": "roster-change",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": reissue["receipt"],
+            "rosterAdded": reissue["added"],
+            "rosterRemoved": reissue["removed"],
+            "rosterRenamed": reissue["renamed"],
+        }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
 
@@ -327,7 +438,7 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     listing = _get(f"/api/races?date={date}")
     summaries = listing.get("races") or listing.get("summaries") or []
     counts = {"races": len(summaries), "published": 0, "skipped": 0,
-              "failed": 0}
+              "frozen": 0, "reissued": 0, "failed": 0}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or "帯広" in str(summary.get("track") or ""):
@@ -339,9 +450,17 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             now = datetime.now(JST)
             new, receipt = build_publish_detail(old_raw, summary, now)
             if new is None:
-                counts["skipped"] += 1
-                print(f"SKIP {race_id}: {receipt}")
+                if isinstance(receipt, str) and receipt.startswith("frozen:"):
+                    counts["frozen"] += 1
+                    print(f"FREEZE {race_id}: {receipt}")
+                else:
+                    counts["skipped"] += 1
+                    print(f"SKIP {race_id}: {receipt}")
                 continue
+            revision = ((new.get("preparedMeta") or {})
+                        .get("rewritePublish") or {}).get("revision")
+            if revision is not None:
+                counts["reissued"] += 1
             check = verified_unified(dict(unpack_detail(old_raw),
                                           unifiedForecast=new["unifiedForecast"]))
             if check is None:
@@ -350,7 +469,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 continue
             if dry_run:
                 counts["published"] += 1
-                print(f"DRY  {race_id}: receipt {receipt[:12]}… verified")
+                print(f"DRY  {race_id}: receipt {receipt[:12]}… verified"
+                      + (" (roster-change reissue)" if revision else ""))
                 continue
             final = protect_detail(old_raw, new)
             if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
@@ -367,7 +487,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 print(f"FAIL {race_id}: read-back receipt mismatch")
                 continue
             counts["published"] += 1
-            print(f"OK   {race_id}: receipt {receipt[:12]}… live")
+            print(f"OK   {race_id}: receipt {receipt[:12]}… live"
+                  + (" (roster-change reissue)" if revision else ""))
         except Exception as exc:  # per-race isolation; report and continue
             counts["failed"] += 1
             print(f"FAIL {race_id}: {type(exc).__name__}: {exc}")
