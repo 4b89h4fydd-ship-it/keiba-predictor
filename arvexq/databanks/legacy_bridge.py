@@ -142,6 +142,11 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
             corners = row.get("cornerPositions")
             if isinstance(corners, list) and corners:
                 observed["cornerPositions"] = corners
+            # The result page already fetched for margins also states the
+            # race-day weather; replace the profile placeholder with it.
+            weather = str(result.get("weather") or "").strip()
+            if weather and weather != "不明":
+                observed["weather"] = weather
             observed_runs.append(observed)
         output = {"recentRaces": observed_runs, "allPastRuns": observed_runs} if observed_runs else {}
         if fetch_errors:
@@ -264,6 +269,17 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             if seconds is not None and 15 <= float(seconds) <= 90:
                 observed["last3f"] = float(seconds)
                 observed["last3fSeconds"] = float(seconds)
+            # The RaceMarkTable row already fetched for this start carries
+            # the horse's published win odds (単勝 column); copy verbatim.
+            try:
+                win_odds = float(row.get("winOdds"))
+            except (TypeError, ValueError):
+                win_odds = 0.0
+            if win_odds >= 1.0:
+                observed["winOdds"] = win_odds
+            result_weather = str(found.get("weather") or "").strip()
+            if result_weather and result_weather != "不明":
+                observed["weather"] = result_weather
             if row.get("marginText") not in (None, ""):
                 observed["marginText"] = row["marginText"]
             winner = next((x.get("timeSeconds") for x in finishers

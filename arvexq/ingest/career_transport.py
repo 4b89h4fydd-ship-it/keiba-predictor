@@ -25,13 +25,14 @@ BROWSER_FIELDS = frozenset({
     "condition","going","weather","fieldSize","runners","finish",
     "finishPosition","rank","margin","marginSeconds","beatenLength",
     "timeBehindWinner","marginText","marginEvidenceSource","marginEvidence",
-    "timeSeconds","time","last3f","last600","last3FSeconds",
+    "timeSeconds","time","last3f","last3fSeconds","last600","last3FSeconds",
     "last3fRank","last3FRank","last600Rank","上がり順位",
     "last3fPercentile","last3FPercentile","last600Percentile",
     "cornerPositions","passing","speedIndex","horseFirst3FSeconds",
     "jockey","carriedWeight","weight","class","className","opponentLevel",
     "bodyWeight","frameNumber","horseNumber",
     "earlyTiming","raceLapTimes","runningStyle","course","racePrize1",
+    "winOdds",
 })
 
 
