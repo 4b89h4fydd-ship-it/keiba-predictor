@@ -160,11 +160,13 @@ def _needs_jra_margins(horse: dict[str, Any], cutoff: str) -> bool:
 
 
 def _needs_nar_margins(horse: dict[str, Any], cutoff: str) -> bool:
-    """Seek *existing official result evidence* when no prior time margin was observed.
+    """Seek *existing official result evidence* when any recent run lacks a margin.
 
-    One true measured margin suffices to make the NAR 60/40 score eligible for
-    that horse. Never substitute finishing place, popularity, or neutral scores.
-    A zero-second winner margin counts as valid evidence.
+    Repair is per-run, symmetric with the JRA gate: if any of the latest five
+    runs has no measured margin, later prefetch passes retry the official
+    sources for the still-missing runs. Never substitute finishing place,
+    popularity, or neutral scores. A zero-second winner margin counts as
+    valid evidence.
     """
     runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)[:5]
     if not runs:
@@ -183,7 +185,7 @@ def _needs_nar_margins(horse: dict[str, Any], cutoff: str) -> bool:
             except (TypeError, ValueError, OverflowError):
                 continue
         return False
-    return not any(measured(run) for run in runs)
+    return any(not measured(run) for run in runs)
 
 
 def _observed_sectional_rank_count(horse: dict[str, Any], cutoff: str = "", limit: int = 5) -> int:
@@ -409,9 +411,11 @@ async def enrich_race_missing(
                 domains.append(("horse_history", {"jra_official_prior_results"} | measured_feeds))
             elif circuit == "NAR" and _needs_nar_margins(horse, cutoff) and bank_registry.get("nar_official_past_results"):
                 # The original five runs can have positions yet no winner-time gap.
-                # Use the ALREADY REGISTERED official NAR result adapter only;
-                # never add a parallel scraper or fall back to legacy scores.
-                domains.append(("horse_history", {"nar_official_past_results"}))
+                # Use the ALREADY REGISTERED official NAR sources only: the result
+                # adapter plus the bulk official archive / NarStore merges, which
+                # also fill latest runs that carry no raceNumber. Never add a
+                # parallel scraper or fall back to legacy scores.
+                domains.append(("horse_history", {"nar_official_past_results", "nar_official_csv", "nar_official"}))
             elif measured_feeds and (
                 _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
                 or _horse_early_timing_count(horse, cutoff, history_limit) < 2
