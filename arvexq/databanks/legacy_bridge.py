@@ -142,6 +142,15 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
             corners = row.get("cornerPositions")
             if isinstance(corners, list) and corners:
                 observed["cornerPositions"] = corners
+            # The same fetched result row publishes the frame and post
+            # position this horse started from in that race; copy them
+            # verbatim (the parser leaves frame 0 when unpublished).
+            frame = row.get("frameNumber")
+            if isinstance(frame, int) and 1 <= frame <= 8:
+                observed["frameNumber"] = frame
+            post = row.get("horseNumber")
+            if isinstance(post, int) and post >= 1:
+                observed["horseNumber"] = post
             # The result page already fetched for margins also states the
             # race-day weather; replace the profile placeholder with it.
             weather = str(result.get("weather") or "").strip()
@@ -277,6 +286,14 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                 win_odds = 0.0
             if win_odds >= 1.0:
                 observed["winOdds"] = win_odds
+            # The RaceMarkTable row likewise publishes the frame and post
+            # position this horse started from in that race; copy verbatim.
+            frame = row.get("frameNumber")
+            if isinstance(frame, int) and 1 <= frame <= 8:
+                observed["frameNumber"] = frame
+            post = row.get("horseNumber")
+            if isinstance(post, int) and post >= 1:
+                observed["horseNumber"] = post
             result_weather = str(found.get("weather") or "").strip()
             if result_weather and result_weather != "不明":
                 observed["weather"] = result_weather

@@ -5,6 +5,12 @@ listing's 天気/オッズ columns, the NAR RaceMarkTable adapter's winOdds and
 weather, the JRA prior-result adapter's race weather, the career merge
 replacing the "不明" weather placeholder (and nothing else), and the
 transport whitelist letting last3fSeconds/winOdds reach the payload.
+
+Extended 2026-11-03 with the frame/post-position mapping of the same
+kind: the listing's 枠番/馬番 columns and both prior-result adapters'
+finisher rows already carried frameNumber/horseNumber; only the copies
+into the career run were missing (the transport whitelist had both keys
+all along).
 """
 from __future__ import annotations
 
@@ -142,6 +148,110 @@ class JraAdapterWeatherTest(unittest.TestCase):
         out = fetch({"name": "対象馬", "_jraHorseCname": "official-horse"},
                     {"date": "2026-10-13"}, 200)
         self.assertEqual(out["recentRaces"][0]["weather"], "晴")
+
+
+class NetkeibaListingFrameTest(unittest.TestCase):
+    def test_frame_and_post_copied_from_listing_row(self):
+        runs = parse_verified_runs(
+            _listing_html(), "2026-10-01",
+            ["2026-09-17", "2026-09-04", "2026-08-16"], 10)
+        by_date = {r["date"]: r for r in runs}
+        nagoya = by_date["2026-09-17"]
+        self.assertEqual(nagoya["frameNumber"], 6)
+        self.assertEqual(nagoya["horseNumber"], 8)
+        ohi = by_date["2026-09-04"]
+        self.assertEqual(ohi["frameNumber"], 4)
+        self.assertEqual(ohi["horseNumber"], 7)
+        blank = by_date["2026-08-16"]
+        self.assertEqual(blank["frameNumber"], 6)
+        self.assertEqual(blank["horseNumber"], 9)
+
+
+class MergeFrameTest(unittest.TestCase):
+    def test_frame_fills_from_incoming_but_is_never_overwritten(self):
+        merged = merge_career(
+            [{"date": "2026-09-01", "track": "東京", "timeSeconds": 95.0}],
+            [{"date": "2026-09-01", "track": "東京", "frameNumber": 3,
+              "horseNumber": 5}], "2026-10-01")
+        self.assertEqual(merged[0]["frameNumber"], 3)
+        self.assertEqual(merged[0]["horseNumber"], 5)
+        merged2 = merge_career(
+            [{"date": "2026-09-01", "frameNumber": 2}],
+            [{"date": "2026-09-01", "frameNumber": 7}], "2026-10-01")
+        self.assertEqual(merged2[0]["frameNumber"], 2)
+
+
+class TransportFrameTest(unittest.TestCase):
+    def test_frame_and_post_survive_packing(self):
+        runs = [{"date": "2026-09-01", "track": "大井", "raceNumber": 3,
+                 "distance": 1200, "surface": "ダート", "condition": "良",
+                 "fieldSize": 12, "finish": 2, "timeSeconds": 72.1,
+                 "frameNumber": 5, "horseNumber": 9}]
+        horse = {"horseNumber": 1, "name": "test", "recentRaces": runs,
+                 "allPastRuns": copy.deepcopy(runs)}
+        packed = pack_horse(horse, "2026-10-10")
+        visible = packed["recentRaces"][0]
+        self.assertEqual(visible["frameNumber"], 5)
+        self.assertEqual(visible["horseNumber"], 9)
+        self.assertEqual(packed["allPastRuns"][0]["frameNumber"], 5)
+
+
+class NarAdapterFrameTest(unittest.TestCase):
+    def test_frame_and_post_copied_from_result_row(self):
+        def official(previous):
+            return {"weather": "曇", "finishers": [
+                {"finish": 1, "name": "勝ち馬", "timeSeconds": 60.0},
+                {"finish": 2, "name": "地元の馬", "timeSeconds": 60.8,
+                 "last3FSeconds": 38.0, "winOdds": 12.4,
+                 "frameNumber": 5, "horseNumber": 9},
+            ]}
+        fetch = _nar_official_past_result_adapter(
+            {"_nar_official_result_fast": official})
+        horse = {"name": "地元の馬", "recentRaces": [
+            {"date": "2026-10-09", "track": "園田", "raceNumber": 1,
+             "distance": 1400, "finish": 2}]}
+        out = fetch(horse, {"date": "2026-10-15"}, 5)
+        observed = out["recentRaces"][0]
+        self.assertEqual(observed["frameNumber"], 5)
+        self.assertEqual(observed["horseNumber"], 9)
+
+
+class JraAdapterFrameTest(unittest.TestCase):
+    def _fetch(self, target_row):
+        import base64
+        rid = "jraresult-" + base64.urlsafe_b64encode(
+            b"linked-official-race").decode().rstrip("=")
+        profile = Mock(return_value=[{
+            "date": "2026-10-01", "track": "東京", "raceId": rid,
+            "fieldSize": 10, "finish": 2, "cornerPositions": [],
+            "weather": "不明"}])
+        results = Mock(return_value={
+            "date": "2026-10-01", "track": "東京", "weather": "晴",
+            "result": {"finishers": [
+                {"name": "勝馬", "finish": 1, "timeSeconds": 95.1},
+                target_row]}})
+        return _jra_official_prior_result_adapter(
+            {"_jra_profile_runs": profile, "_jra_parse_result": results})
+
+    def test_frame_and_post_copied_from_result_row(self):
+        fetch = self._fetch(
+            {"name": "対象馬", "finish": 2, "timeSeconds": 95.5,
+             "frameNumber": 3, "horseNumber": 5})
+        out = fetch({"name": "対象馬", "_jraHorseCname": "official-horse"},
+                    {"date": "2026-10-13"}, 200)
+        observed = out["recentRaces"][0]
+        self.assertEqual(observed["frameNumber"], 3)
+        self.assertEqual(observed["horseNumber"], 5)
+
+    def test_unpublished_frame_zero_is_not_copied(self):
+        fetch = self._fetch(
+            {"name": "対象馬", "finish": 2, "timeSeconds": 95.5,
+             "frameNumber": 0, "horseNumber": 5})
+        out = fetch({"name": "対象馬", "_jraHorseCname": "official-horse"},
+                    {"date": "2026-10-13"}, 200)
+        observed = out["recentRaces"][0]
+        self.assertNotIn("frameNumber", observed)
+        self.assertEqual(observed["horseNumber"], 5)
 
 
 if __name__ == "__main__":

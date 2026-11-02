@@ -204,6 +204,7 @@ def parse_verified_runs(html: str, cutoff: str, start_dates: list[str],
         i_body, i_cond = col("馬体重"), col("馬場")
         i_last3f, i_margin = col("上り", "上がり"), col("着差")
         i_weather, i_odds = col("天気"), col("オッズ", "単勝")
+        i_frame, i_post = col("枠番"), col("馬番")
         rows = []
         for tr in trs[1:]:
             vals = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
@@ -258,6 +259,14 @@ def parse_verified_runs(html: str, cutoff: str, start_dates: list[str],
                 win_odds = float(odds.group())
                 if win_odds >= 1.0:
                     run["winOdds"] = win_odds
+            # The same listing row also publishes the frame and post
+            # position this horse actually started from in that race.
+            frame = re.search(r"\d+", value(i_frame))
+            if frame and 1 <= int(frame.group()) <= 8:
+                run["frameNumber"] = int(frame.group())
+            post = re.search(r"\d+", value(i_post))
+            if post and int(post.group()) >= 1:
+                run["horseNumber"] = int(post.group())
             # Preserve published finishing 3F time; never invent a rank.
             last3f_text = value(i_last3f).replace("．", ".").strip()
             if re.fullmatch(r"\d{1,2}\.\d{1,2}", last3f_text):
