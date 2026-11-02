@@ -17,11 +17,13 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime
 from unittest import TestCase
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from rewrite.output.api_shape import MODEL_VERSION
 from scripts.arvexq_rewrite_publish import (
-    _freeze_decision, build_publish_detail)
+    _freeze_decision, _lane_upgrade_info, _v8_extras_deadline,
+    build_publish_detail)
 
 JST = ZoneInfo("Asia/Tokyo")
 RECEIPT = "a" * 64
@@ -148,3 +150,75 @@ class BuildFreezeGateTests(TestCase):
         build_publish_detail(detail, self.summary(),
                              datetime(2099, 1, 1, 9, 0, tzinfo=JST))
         self.assertEqual(detail, snapshot)
+
+
+def v1_frozen_detail() -> dict:
+    """A race frozen on the v1 lane by the 2026-11-02 ordering trap:
+    first-published before the v8 extras export landed."""
+    detail = frozen_detail()
+    detail["id"] = "nar-2026-11-02-船橋-12"
+    detail["date"] = "2026-11-02"
+    detail["preparedMeta"]["rewritePublish"]["abilityLane"] = "v1-prior"
+    detail["preparedMeta"]["rewritePublish"]["publishedAt"] = (
+        "2026-11-01T21:01:00+09:00")
+    return detail
+
+
+EXTRAS = {"nar-2026-11-02-船橋-12": {
+    "segment": "nar",
+    "extras": {"1": {"elo": 900.0}, "2": {"elo": 850.0}}}}
+
+
+class ExtrasDeadlineTests(TestCase):
+    def test_deadline_is_0600_jst_on_race_day(self):
+        self.assertEqual(
+            _v8_extras_deadline("2026-11-03"),
+            datetime(2026, 11, 3, 6, 0, tzinfo=JST))
+
+    def test_unparseable_date_disables_deferral(self):
+        self.assertIsNone(_v8_extras_deadline("not-a-date"))
+        self.assertIsNone(_v8_extras_deadline(""))
+
+
+class LaneUpgradeInfoTests(TestCase):
+    def test_v1_frozen_with_extras_now_available_upgrades(self):
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value=EXTRAS):
+            info = _lane_upgrade_info(v1_frozen_detail())
+        self.assertIsNotNone(info)
+        self.assertEqual(info["previousAbilityLane"], "v1-prior")
+        self.assertEqual(info["publishedAt"], "2026-11-01T21:01:00+09:00")
+
+    def test_v8_frozen_never_upgrades(self):
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value=EXTRAS):
+            self.assertIsNone(_lane_upgrade_info(frozen_detail()))
+
+    def test_v1_frozen_without_extras_stays_frozen(self):
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value={}):
+            self.assertIsNone(_lane_upgrade_info(v1_frozen_detail()))
+
+    def test_v1_frozen_with_empty_extras_stays_frozen(self):
+        empty = {"nar-2026-11-02-船橋-12": {"segment": "nar", "extras": {}}}
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value=empty):
+            self.assertIsNone(_lane_upgrade_info(v1_frozen_detail()))
+
+    def test_pre_cutover_v1_publication_never_upgrades(self):
+        detail = v1_frozen_detail()
+        detail["date"] = "2026-10-31"
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value=EXTRAS):
+            self.assertIsNone(_lane_upgrade_info(detail))
+
+    def test_frozen_v1_without_extras_is_skipped_by_the_build_gate(self):
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value={}):
+            new, reason = build_publish_detail(
+                v1_frozen_detail(),
+                {"race_id": "nar-2026-11-02-船橋-12",
+                 "id": "nar-2026-11-02-船橋-12"},
+                datetime(2026, 11, 2, 12, 0, tzinfo=JST))
+        self.assertIsNone(new)
+        self.assertTrue(reason.startswith("frozen:"), reason)

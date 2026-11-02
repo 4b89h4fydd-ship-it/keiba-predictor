@@ -21,13 +21,21 @@ incident, see goals/arvexq/hidden_files/
 marks-drift-investigation-20261101.md): once a race has been published
 ready by this lane, later cycles never recompute or overwrite its
 forecast — late-arriving input backfill must not move a forecast that
-is already on sale. The only exception is a roster change (a scratch
+is already on sale. The exceptions are a roster change (a scratch
 or an added runner), which re-issues that race alone and stamps the
-revision into preparedMeta.rewritePublish.revision. Frozen state is
-recognised from the stored detail itself (the lane marker plus the
-receipt roster recorded in the unified forecast); if that state
+revision into preparedMeta.rewritePublish.revision, and a lane
+upgrade (2026-11-02): a forecast frozen on the v1 fallback only
+because the v8 extras had not landed yet is re-issued on the v8
+lane once the extras exist, also stamped as a revision. Frozen state
+is recognised from the stored detail itself (the lane marker plus
+the receipt roster recorded in the unified forecast); if that state
 cannot be read consistently the cycle fails closed and does not
-overwrite.
+overwrite. Symmetrically, a first publication of a v8-eligible race
+is DEFERRED while its extras are still expected (they land with the
+nightly shadow seal at ~21:40, after the evening first publish), so
+the bad first publish cannot happen; the deferral has a hard
+deadline of 06:00 JST on race day, after which the race publishes
+on the v1 fallback as before — a v1 forecast is better than none.
 
 Usage:
   SYNC_TOKEN=... python3 scripts/arvexq_rewrite_publish.py [--date YYYY-MM-DD ...] [--dry-run]
@@ -79,6 +87,19 @@ SCRATCH_STATUSES = {"出走取消", "競走除外", "欠場"}
 # that does not come back "ok" fall back to the frozen v1 lane
 # configuration above. The pre-off sealing lane is unchanged and
 # keeps sealing the frozen v1 series.
+#
+# Ordering (2026-11-02 fix): next-day races are collected by the
+# evening prefetch and first-published around 21:00, but the extras
+# file is exported by the shadow-seal job at ~21:40. On 2026-11-02
+# all 36 races were therefore first-published on the v1 lane and the
+# freeze then locked them there under the v2 model version. Two
+# guards now close that trap: first publication of a v8-eligible
+# race defers while its extras are missing (hard deadline 06:00 JST
+# on race day, see _v8_extras_deadline), and a frozen v1-lane
+# forecast upgrades to the v8 lane once its extras exist (see
+# _lane_upgrade_info). The extras file is re-read for every race
+# (no per-run cache), so a file landing mid-run is picked up by the
+# races that follow it in the same run.
 V8_CUTOVER_DATE = "2026-11-01"
 V8_EXTRAS_DIR = ROOT / "rewrite" / "data" / "v8_extras"
 V8_ABILITY_MODEL_VERSION = "arvexq-v8-elo-speed2-fitted"
@@ -136,6 +157,57 @@ def _load_v8_extras(date: str) -> dict:
         return {}
     races = payload.get("races") if isinstance(payload, dict) else None
     return races if isinstance(races, dict) else {}
+
+
+def _v8_extras_deadline(race_date: str) -> datetime | None:
+    """Hard deadline for the v8-extras deferral: 06:00 JST on race day.
+
+    A v8-eligible race whose extras have not landed is not published
+    at all until then (the extras normally arrive with the nightly
+    shadow seal at ~21:40 the evening before). At/after the deadline
+    the race publishes on the v1 fallback exactly as before — a v1
+    forecast is better than none, and a permanently missing export
+    must not silence a whole day. An unparseable date disables the
+    deferral (publish as before).
+    """
+    try:
+        day = datetime.strptime(race_date, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+    return datetime(day.year, day.month, day.day, 6, 0, tzinfo=JST)
+
+
+def _lane_upgrade_info(old: dict) -> dict | None:
+    """Facts for healing a frozen v1-lane fallback onto the v8 lane.
+
+    Returns the stored marker facts when the stored forecast was
+    published ready on the v1 lane (abilityLane == "v1-prior"), the
+    race is dated on/after the v8 cutover, and exported v8 extras
+    for the race NOW exist; None otherwise. This is the exact trap
+    of 2026-11-02: the first publish (~21:00) preceded the extras
+    export (~21:40), so the v1 fallback was frozen in. Segment and
+    forecast eligibility are deliberately left to the normal build:
+    the caller re-issues only when the rebuilt forecast actually
+    used the v8 lane, so an unusable upgrade keeps the frozen v1
+    forecast byte-stable.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != "v1-prior":
+        return None
+    race_date = str(old.get("date") or "")
+    if race_date < V8_CUTOVER_DATE:
+        return None
+    race_id = str(old.get("id") or "")
+    if not race_id:
+        return None
+    entry = _load_v8_extras(race_date).get(race_id)
+    raw_extras = entry.get("extras") if isinstance(entry, dict) else None
+    if not (isinstance(raw_extras, dict) and raw_extras):
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "previousAbilityLane": "v1-prior"}
 
 
 def _is_inactive(horse: dict) -> bool:
@@ -248,20 +320,28 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     if post is None or now >= post:
         return None, "post time reached or unknown"
     # Forecast freeze: a race this lane already published ready is
-    # never recomputed. Only a roster change re-issues it (stamped as
-    # a revision below); unreadable frozen state fails closed.
+    # never recomputed. A roster change re-issues it (stamped as a
+    # revision below); so does a lane upgrade — a v1-lane fallback
+    # frozen only because the v8 extras had not landed yet is
+    # re-issued on the v8 lane once the extras exist. Unreadable
+    # frozen state fails closed.
     try:
         freeze = _freeze_decision(old)
     except Exception as exc:  # state unreadable: do not overwrite
         return None, (f"frozen-state unreadable ({type(exc).__name__}: "
                       f"{exc}); not overwriting")
     reissue = None
+    lane_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
-            return None, (f"frozen: already published ready "
-                          f"(receipt {str(freeze[1])[:12]}…); "
-                          f"roster unchanged")
-        reissue = freeze[1]
+            lane_upgrade = _lane_upgrade_info(old)
+            if lane_upgrade is None:
+                return None, (f"frozen: already published ready "
+                              f"(receipt {str(freeze[1])[:12]}…); "
+                              f"roster unchanged")
+            lane_upgrade["receipt"] = freeze[1]
+        else:
+            reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
     race_date = str(old.get("date") or race.date or "")
     segment = race.segment.value
@@ -284,12 +364,38 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     used_v8 = True
                 else:
                     v8_fallback_status = v8_forecast.status
+        elif reissue is None and lane_upgrade is None:
+            # Deferral: a v8-eligible race whose extras have not
+            # landed yet is not first-published on the v1 lane (the
+            # freeze would lock that fallback in for the whole day —
+            # the 2026-11-02 incident). Skip this cycle; a later one
+            # publishes it on the v8 lane. Hard deadline 06:00 JST on
+            # race day: past it, fall through to the v1 fallback.
+            # Re-issues (roster change / lane upgrade) never defer:
+            # they must proceed with whatever lane is usable now.
+            deadline = _v8_extras_deadline(race_date)
+            if (deadline is not None and now.tzinfo is not None
+                    and now < deadline):
+                return None, (f"deferred: v8 extras for {race_date} "
+                              f"not yet available; first publication "
+                              f"waits for the extras or the race-day "
+                              f"06:00 JST deadline")
     if forecast is None:
         forecast = forecast_race(
             race, beta=LANE_BETA,
             weights=LANE_WEIGHTS.get(segment, {}))
     if forecast.status != "ok":
         return None, f"forecast not ok: {forecast.status}"
+    if lane_upgrade is not None and not used_v8:
+        # The extras exist but this race still cannot take the v8
+        # lane (a segment without a candidate, or the v8 forecast
+        # did not come back ok): keep the frozen v1 forecast
+        # byte-stable instead of recomputing it on the v1 lane,
+        # where backfilled inputs could drift a forecast on sale.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(lane_upgrade['receipt'])[:12]}…); "
+                      f"v8 lane not usable for this race; "
+                      f"keeping the frozen v1 forecast")
     pace = forecast_pace(race)
     win_odds = {
         r.number: r.win_odds.value
@@ -426,6 +532,28 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "rosterRemoved": reissue["removed"],
             "rosterRenamed": reissue["renamed"],
         }
+    if lane_upgrade is not None:
+        # Lane-upgrade re-issue of a frozen forecast: the roster is
+        # unchanged, but the forecast moves from the v1 fallback
+        # (frozen in only because the extras had not landed at first
+        # publication) to the v8 lane. Same audit chain as a roster
+        # change: first publication time and previous receipt, plus
+        # the lane it upgrades from.
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            lane_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "reason": "lane-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": lane_upgrade["receipt"],
+            "previousAbilityLane": lane_upgrade["previousAbilityLane"],
+            "abilityLane": "v8-elo-speed2",
+        }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
 
@@ -438,7 +566,7 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     listing = _get(f"/api/races?date={date}")
     summaries = listing.get("races") or listing.get("summaries") or []
     counts = {"races": len(summaries), "published": 0, "skipped": 0,
-              "frozen": 0, "reissued": 0, "failed": 0}
+              "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or "帯広" in str(summary.get("track") or ""):
@@ -453,6 +581,10 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 if isinstance(receipt, str) and receipt.startswith("frozen:"):
                     counts["frozen"] += 1
                     print(f"FREEZE {race_id}: {receipt}")
+                elif (isinstance(receipt, str)
+                        and receipt.startswith("deferred:")):
+                    counts["deferred"] += 1
+                    print(f"DEFER {race_id}: {receipt}")
                 else:
                     counts["skipped"] += 1
                     print(f"SKIP {race_id}: {receipt}")
@@ -470,7 +602,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             if dry_run:
                 counts["published"] += 1
                 print(f"DRY  {race_id}: receipt {receipt[:12]}… verified"
-                      + (" (roster-change reissue)" if revision else ""))
+                      + (f" ({revision.get('reason')} reissue)"
+                         if revision else ""))
                 continue
             final = protect_detail(old_raw, new)
             if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
@@ -488,7 +621,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 continue
             counts["published"] += 1
             print(f"OK   {race_id}: receipt {receipt[:12]}… live"
-                  + (" (roster-change reissue)" if revision else ""))
+                  + (f" ({revision.get('reason')} reissue)"
+                     if revision else ""))
         except Exception as exc:  # per-race isolation; report and continue
             counts["failed"] += 1
             print(f"FAIL {race_id}: {type(exc).__name__}: {exc}")
