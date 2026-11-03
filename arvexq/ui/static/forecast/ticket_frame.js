@@ -180,17 +180,21 @@ function contents(r,p){
    var methodology=isFusion?'発走前の実オッズと期待回収率で選定・全券種合計最大5点':
      kochiFinal?'高知ファイナル：全出走馬から3着候補を評価・3連複と3連単の合計最大5点（未校正）':
      '旧方式の保存済み発走前買い目・全券種合計最大5点';
-   // Keep the uncalibrated win-EV list visible alongside the full grouped
-   // bets: it is part of the same verified product (unifiedForecast
-   // ticketPlan) and was previously only rendered by the reference-plan
-   // branch below. Same markup and wording as that branch.
+   // Keep the win-EV list visible alongside the full grouped bets: it
+   // is part of the same verified product (unifiedForecast ticketPlan)
+   // and was previously only rendered by the reference-plan branch
+   // below. Same markup and wording as that branch. Display filter
+   // (user decision 2026-11-04): only the frozen candidate rule —
+   // expected value >= 1.25 AND win probability >= 5%. The payload
+   // still carries every runner's EV; this is display only.
    var model=r.unifiedForecast||{};
    var rosterNames={};
    (model.roster||[]).forEach(function(h){rosterNames[h.horseNumber]=h.name||'';});
-   var winEv=((model.ticketPlan||{}).winExpectedValues||[]).filter(function(x){return x&&
-     Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>0&&
+   var winEvRaw=(model.ticketPlan||{}).winExpectedValues||[];
+   var winEv=winEvRaw.filter(function(x){return x&&
+     Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>=1.25&&
      Number.isFinite(Number(x.odds))&&Number(x.odds)>=1&&
-     Number.isFinite(Number(x.winProbability))&&
+     Number.isFinite(Number(x.winProbability))&&Number(x.winProbability)>=0.05&&
      (model.roster||[]).some(function(h){return h.horseNumber===x.horseNumber;});});
    var evRows=winEv.slice(0,5).map(function(x){
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
@@ -199,7 +203,9 @@ function contents(r,p){
         '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
         '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
    }).join('');
-   var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+evRows+
+   var evSection=winEvRaw.length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
+     '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
+     (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
      '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+evSection+'</div>';
  }
@@ -233,14 +239,21 @@ function contents(r,p){
       '<strong class="arv-three-combos">'+combos+'</strong>'+
       (item.reason?'<p class="arv-three-ticket-reason">'+esc(item.reason)+'</p>':'')+'</div>';
  }).join('');
- var evRows=(plan.winExpectedValues||[]).slice(0,5).map(function(x){
+ // Same display rule as the server-bets branch above (user decision
+ // 2026-11-04): only expected value >= 1.25 AND win probability >= 5%.
+ var evPicks=(plan.winExpectedValues||[]).filter(function(x){return x&&
+   Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>=1.25&&
+   Number.isFinite(Number(x.winProbability))&&Number(x.winProbability)>=0.05;});
+ var evRows=evPicks.slice(0,5).map(function(x){
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
       esc(x.horseNumber)+'番'+(x.name?' '+esc(x.name):'')+'</b>'+
       '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
       '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
       '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
  }).join('');
- var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+evRows+
+ var evSection=(plan.winExpectedValues||[]).length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
+   '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
+   (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  return '<div class="ai-bet-box arv-three-bet">'+
    '<div class="ai-bet-title">おすすめ買い目</div>'+
