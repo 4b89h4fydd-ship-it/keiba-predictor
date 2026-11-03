@@ -351,6 +351,32 @@ def _diagnosis_reason(runner_forecast, calibrated: bool = False) -> str:
     return text
 
 
+# Diagnosis grade bands on the FINAL win probability (user decision
+# 2026-11-04). The grade on the 全頭診断 card must agree with the
+# probability printed on the same card; it was previously banded on
+# the raw ability score, which let a runner whose final win
+# probability was 9.2% carry an S because its ability score was
+# high. Bands: S >= 20% / A >= 12% / B >= 7% / C >= 3.5% / D below
+# that. Lane-agnostic: whichever lane produced the forecast, the
+# probability it finally carries is the basis.
+DIAGNOSIS_GRADE_BANDS = ((0.20, "S"), (0.12, "A"), (0.07, "B"),
+                         (0.035, "C"))
+
+
+def _diagnosis_grade(p_win: Optional[float]) -> Optional[str]:
+    """Grade for one runner from its final win probability.
+
+    A runner without a probability (the forecast could not price
+    the field) keeps no grade — None, never an invented letter.
+    """
+    if p_win is None:
+        return None
+    for threshold, grade in DIAGNOSIS_GRADE_BANDS:
+        if p_win >= threshold:
+            return grade
+    return "D"
+
+
 def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
     """All-runner diagnosis block for the 全頭診断 panel.
 
@@ -361,6 +387,12 @@ def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
     [0, 1] (never the win probability), the Plackett-Luce point
     probabilities, and the same reason text the marks carry. A runner
     the engine could not score keeps nulls, not invented values.
+
+    The grade is banded on the FINAL win probability (see
+    _diagnosis_grade), never on the ability score, so the grade on
+    a diagnosis card cannot contradict the probability printed
+    beside it; the ability score itself is still carried unchanged
+    as the ability value.
     """
     return [
         {
@@ -368,6 +400,7 @@ def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
             "abilityScore": r.ability_score,
             "winProbability": r.p_win,
             "top3Probability": r.p_top3,
+            "grade": _diagnosis_grade(r.p_win),
             "reason": _diagnosis_reason(r, calibrated),
         }
         for r in forecast.runners

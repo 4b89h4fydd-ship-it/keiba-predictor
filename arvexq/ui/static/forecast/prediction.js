@@ -212,11 +212,18 @@
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
           var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
           // All-runner diagnosis: the engine's ability score (0-1) on
-          // the diagnosis panel's 0-100 scale, banded S/A/B/C. Runners
-          // the engine did not score keep nulls and stay 未取得.
+          // the diagnosis panel's 0-100 scale. The GRADE is assigned
+          // publish-side from the FINAL win probability (S>=20% /
+          // A>=12% / B>=7% / C>=3.5% / D below) and carried on the
+          // diagnosis entry; payloads stored before the field
+          // existed fall back to the same bands on the stored win
+          // probability — never to the ability score, whose banding
+          // contradicted the probability (a 9.2% runner graded S on
+          // ability points). Runners without a probability keep no
+          // grade and stay 未取得.
           var dg=diagMap[no]||{},
               score100=dg.abilityScore!=null&&Number.isFinite(Number(dg.abilityScore))?Math.round(Number(dg.abilityScore)*1000)/10:null,
-              grade=score100===null?'':(score100>=75?'S':(score100>=60?'A':(score100>=45?'B':'C')));
+              grade=dg.grade!=null&&String(dg.grade)?String(dg.grade):(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?(Number(dg.winProbability)>=0.2?'S':(Number(dg.winProbability)>=0.12?'A':(Number(dg.winProbability)>=0.07?'B':(Number(dg.winProbability)>=0.035?'C':'D')))):'');
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             attentionMark:!!attentionMap[no],
