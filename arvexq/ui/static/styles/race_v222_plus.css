@@ -2038,6 +2038,19 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-bottom{font-size:12px!important}
 }
 
+/* v343 — 注 (attention) overlay: combined win + place EV gate qualifier.
+   Stacked under the probability mark in the same cell (user layout
+   decision 2026-11-04); a qualifier without a probability mark shows
+   the 注 alone. */
+.racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-bottom.rc-mark-attention{
+  color:#e8a33d!important;
+}
+.racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-attention-only{
+  color:#e8a33d!important;
+  font-weight:950!important;
+  font-size:19px!important;
+}
+
 
 /* v342 — persisted explanations for AI ticket vs marks */
 .ai-bet-why{

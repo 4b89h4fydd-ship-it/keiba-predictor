@@ -186,6 +186,21 @@
         if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
         seen[n]=true;markMap[n]=x;if(m==='◎')best++;
       });
+      // 注 (attention) overlay: the combined win + place EV gate's
+      // qualifiers, carried on the mark entries themselves and on
+      // the ticket plan's combinedPicks (the single source, which
+      // also covers qualifiers holding no probability mark).
+      var attentionMap={};
+      unified.marks.forEach(function(x){
+        var n=Number(x&&x.horseNumber);
+        if(x&&x.attention===true&&Number.isInteger(n))attentionMap[n]=true;
+      });
+      if(unified.ticketPlan&&Array.isArray(unified.ticketPlan.combinedPicks)){
+        unified.ticketPlan.combinedPicks.forEach(function(v){
+          var n=Number(v);
+          if(Number.isInteger(n)&&n>0)attentionMap[n]=true;
+        });
+      }
       var diagMap={};
       if(Array.isArray(unified.diagnosis))unified.diagnosis.forEach(function(d){
         var n=Number(d&&d.horseNumber);
@@ -204,6 +219,7 @@
               grade=score100===null?'':(score100>=75?'S':(score100>=60?'A':(score100>=45?'B':'C')));
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
+            attentionMark:!!attentionMap[no],
             predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
             p3Probability:null,overallGrade:grade,coverage:0,
             overallScoreExact:score100,

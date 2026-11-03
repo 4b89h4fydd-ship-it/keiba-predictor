@@ -160,6 +160,45 @@ function combosHtml(item,r){
   return '<span class="arv-three-combo">'+esc((c||[]).join(' - '))+'</span>';
  }).join('');
 }
+/* Combined EV block (user decision 2026-11-04): when the payload
+   carries place （複勝） EV ranges, the EV section lists ONLY the
+   horses passing the combined gate — win EV >= 1.25 AND win
+   probability >= 5% AND place EV lower bound >= 1.0 — taken from
+   the payload's own combinedPicks, the same single source as the
+   注 attention overlay in the entries table. Each row shows both
+   EVs; the mark + 注 are stacked exactly like the mark cells. */
+function combinedEvSection(placeEv,picks,winByNo,names,marksByNo,evLabel,evNote){
+ var byNo={};
+ (placeEv||[]).forEach(function(x){if(x&&x.horseNumber!=null)byNo[x.horseNumber]=x;});
+ var rows=(picks||[]).map(function(no){
+   var pe=byNo[no],w=winByNo[no];
+   if(!pe||!w)return '';
+   var mk=marksByNo[no]||{};
+   var stack='<span style="display:inline-flex;flex-direction:column;align-items:center;line-height:1.05;vertical-align:middle;margin-right:5px">'+
+     (mk.mark?'<span>'+esc(mk.mark)+'</span>':'')+
+     '<span style="color:#e8a33d;font-weight:700">注</span></span>';
+   return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+stack+
+      esc(no)+'番'+(names[no]?' '+esc(names[no]):'')+'</b>'+
+      '<span class="arv-three-count">単勝期待値 '+esc(Number(w.expectedValue).toFixed(2))+'</span></div>'+
+      '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(w.winProbability)*100).toFixed(1))+
+      '% × 単勝オッズ '+esc(Number(w.odds).toFixed(1))+
+      ' ／ 3着内率 '+esc((Number(pe.top3Probability)*100).toFixed(1))+
+      '% × 複勝オッズ '+esc(Number(pe.placeOddsLow).toFixed(1))+'〜'+esc(Number(pe.placeOddsHigh).toFixed(1))+
+      ' → 3着内期待値 '+esc(Number(pe.expectedValueLow).toFixed(2))+'〜'+esc(Number(pe.expectedValueHigh).toFixed(2))+
+      '（'+evLabel+'）</p></div>';
+ }).join('');
+ return '<section class="arv-three-section"><h3>期待値候補（'+evLabel+'）</h3>'+
+   '<p class="arv-three-ticket-reason">表示条件：単勝期待値1.25以上・勝率5%以上 かつ 3着内期待値（下限）1.0以上の馬のみ表示（注印＝この条件を満たした馬）</p>'+
+   (rows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
+   '<p class="arv-three-ticket-reason">'+evNote+'</p></section>';
+}
+function marksByNoOf(r){
+ var out={};
+ (r&&Array.isArray(r.predictionMarks)?r.predictionMarks:[]).forEach(function(m){
+   if(m&&m.horseNumber!=null)out[m.horseNumber]={mark:String(m.mark||''),attention:m.attention===true};
+ });
+ return out;
+}
 function contents(r,p){
  // Win-EV label follows the payload's own calibration status: races
  // published on the v9b lane (temperature calibration + market
@@ -191,6 +230,13 @@ function contents(r,p){
    var rosterNames={};
    (model.roster||[]).forEach(function(h){rosterNames[h.horseNumber]=h.name||'';});
    var winEvRaw=(model.ticketPlan||{}).winExpectedValues||[];
+   var placeEvRaw=Array.isArray((model.ticketPlan||{}).placeExpectedValues)?model.ticketPlan.placeExpectedValues:null;
+   var evSection='';
+   if(placeEvRaw){
+     var winByNo={};
+     winEvRaw.forEach(function(x){if(x&&x.horseNumber!=null)winByNo[x.horseNumber]=x;});
+     evSection=combinedEvSection(placeEvRaw,model.ticketPlan.combinedPicks||[],winByNo,rosterNames,marksByNoOf(r),evLabel,evNote);
+   }else{
    var winEv=winEvRaw.filter(function(x){return x&&
      Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>=1.25&&
      Number.isFinite(Number(x.odds))&&Number(x.odds)>=1&&
@@ -203,10 +249,11 @@ function contents(r,p){
         '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
         '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
    }).join('');
-   var evSection=winEvRaw.length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
+   evSection=winEvRaw.length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
      '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
      (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
      '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
+   }
    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
@@ -239,6 +286,14 @@ function contents(r,p){
       '<strong class="arv-three-combos">'+combos+'</strong>'+
       (item.reason?'<p class="arv-three-ticket-reason">'+esc(item.reason)+'</p>':'')+'</div>';
  }).join('');
+ var evSection='';
+ if(Array.isArray(plan.placeExpectedValues)){
+   // Combined gate display, same rule as the server-bets branch.
+   var winByNoP={},namesP={};
+   (plan.winExpectedValues||[]).forEach(function(x){if(x&&x.horseNumber!=null){winByNoP[x.horseNumber]=x;if(x.name)namesP[x.horseNumber]=x.name;}});
+   plan.placeExpectedValues.forEach(function(x){if(x&&x.horseNumber!=null&&x.name)namesP[x.horseNumber]=x.name;});
+   evSection=combinedEvSection(plan.placeExpectedValues,plan.combinedPicks||[],winByNoP,namesP,marksByNoOf(r),evLabel,evNote);
+ }else{
  // Same display rule as the server-bets branch above (user decision
  // 2026-11-04): only expected value >= 1.25 AND win probability >= 5%.
  var evPicks=(plan.winExpectedValues||[]).filter(function(x){return x&&
@@ -251,10 +306,11 @@ function contents(r,p){
       '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
       '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
  }).join('');
- var evSection=(plan.winExpectedValues||[]).length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
+ evSection=(plan.winExpectedValues||[]).length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
    '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
    (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
+ }
  return '<div class="ai-bet-box arv-three-bet">'+
    '<div class="ai-bet-title">おすすめ買い目</div>'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+

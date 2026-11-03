@@ -1132,6 +1132,19 @@ function racecardMarkDisplay(mark){
   return esc(raw);
 }
 
+/* Mark cell content with the 注 (attention) overlay (user layout
+   decision 2026-11-04): the probability mark on line 1 and 注 on
+   line 2 of the SAME cell; a qualifier without a probability mark
+   shows 注 alone. The overlay never replaces the probability mark. */
+function racecardMarkCellHtml(x){
+  var mark=visiblePredictionMark(x),att=!!(x&&x.attentionMark===true);
+  if(mark&&att){
+    return '<span class="rc-mark-stack" aria-hidden="true"><span class="rc-mark-top">'+esc(mark)+'</span><span class="rc-mark-bottom rc-mark-attention">注</span></span>';
+  }
+  if(att)return '<span class="rc-mark-attention-only">注</span>';
+  return racecardMarkDisplay(mark);
+}
+
 function validatedHonmeiMetadata(source){
   var q=source||{},role=String(q.honmeiRole||q.role||''),
       grade=String(q.honmeiGrade||q.confidenceGrade||'');
@@ -1162,7 +1175,7 @@ function racecardEntryRow(r,h,x){
       openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
       detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkDisplay(visiblePredictionMark(x))+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+markRoleLabel(x).replace('◎ 本命','<span class="arv-role-win arv-role-axis">◎ 本命</span>').replace('保存印：◎（旧単勝）','<span class="arv-role-win">保存印：◎（旧単勝）</span>').replace('保存印：◎（旧軸）','<span class="arv-role-axis">保存印：◎（旧軸）</span>')+'</small>':'')+'</span>'

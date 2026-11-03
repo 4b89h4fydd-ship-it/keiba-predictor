@@ -60,12 +60,28 @@
           winProbability:Number(x.winProbability),odds:Number(x.odds),
           expectedValue:Number(x.expectedValue)};
       });
+      var placeEv=(model.ticketPlan.placeExpectedValues||[]).filter(function(x){return x&&
+        Number.isFinite(Number(x.top3Probability))&&
+        Number.isFinite(Number(x.placeOddsLow))&&Number(x.placeOddsLow)>=1&&
+        Number.isFinite(Number(x.placeOddsHigh))&&Number(x.placeOddsHigh)>=Number(x.placeOddsLow)&&
+        Number.isFinite(Number(x.expectedValueLow))&&Number.isFinite(Number(x.expectedValueHigh))&&
+        model.roster.some(function(h){return h.horseNumber===x.horseNumber})
+      }).map(function(x){
+        return {horseNumber:x.horseNumber,name:rosterNames[x.horseNumber]||'',
+          top3Probability:Number(x.top3Probability),placeOddsLow:Number(x.placeOddsLow),
+          placeOddsHigh:Number(x.placeOddsHigh),expectedValueLow:Number(x.expectedValueLow),
+          expectedValueHigh:Number(x.expectedValueHigh)};
+      });
+      var combinedPicks=(model.ticketPlan.combinedPicks||[]).map(Number).filter(function(no){
+        return Number.isInteger(no)&&placeEv.some(function(x){return x.horseNumber===no});
+      });
       var plan={decision:options.length?'参考候補・購入推奨なし':'見送り',
         researchOnly:true,referenceOnly:true,notForPurchase:true,
         raceId:race.id,raceDate:race.date,
         modelVersion:model.modelVersion,
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
         winExpectedValues:winEv,
+        placeExpectedValues:placeEv,combinedPicks:combinedPicks,
         referenceCapturedAt:model.capturedAt,items:options.map(function(x){
           return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1,
             reason:'未校正の同一モデル。勝率・回収率の実測検証は未完了'};
