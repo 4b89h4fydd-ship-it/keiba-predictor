@@ -272,8 +272,39 @@ def _mark_reason(runner_forecast, calibrated: bool = False) -> str:
     return "／".join(parts)
 
 
-def _marks(forecast: RaceForecast, calibrated: bool = False) -> tuple[list[dict], list[dict], Optional[int]]:
-    """(predictionMarks, unifiedForecast.marks, honmei number)."""
+def combined_gate_picks(plan: TicketPlan) -> list[int]:
+    """Runners passing the combined EV gate, in place-EV
+    lower-bound order (the place estimates' own order).
+
+    Gate (user decision 2026-11-04): win EV >= 1.25 AND win
+    probability >= 0.05 AND place EV lower bound >= 1.0. This list
+    is the single source the bets-tab combined block and the 注
+    attention overlay both read, so the two can never disagree.
+    """
+    win = {t.selection[0]: t for t in plan.win_ev_estimates}
+    picks: list[int] = []
+    for est in plan.place_ev_estimates:
+        w = win.get(est.number)
+        if w is None:
+            continue
+        if ((w.expected_return or 0) >= 1.25
+                and (w.probability or 0) >= 0.05
+                and est.expected_value_low >= 1.0):
+            picks.append(est.number)
+    return picks
+
+
+def _marks(forecast: RaceForecast, calibrated: bool = False,
+           attention: Optional[set] = None) -> tuple[list[dict], list[dict], Optional[int]]:
+    """(predictionMarks, unifiedForecast.marks, honmei number).
+
+    ``attention`` is the combined-gate qualifier set: those runners
+    carry ``attention: true`` as an overlay (the 注 mark). The
+    probability marks themselves are mechanically unchanged; a
+    qualifier without a probability mark gets a predictionMarks
+    entry with an empty mark so the overlay still has a carrier.
+    """
+    attention = attention or set()
     marked = [r for r in forecast.runners if r.mark]
     marked.sort(key=lambda r: MARK_ORDER.index(r.mark))
     prediction_marks = [
@@ -281,9 +312,19 @@ def _marks(forecast: RaceForecast, calibrated: bool = False) -> tuple[list[dict]
             "horseNumber": r.number,
             "mark": r.mark,
             "winProbability": r.p_win,
+            **({"attention": True} if r.number in attention else {}),
         }
         for r in marked
     ]
+    marked_numbers = {r.number for r in marked}
+    for r in forecast.runners:
+        if r.number in attention and r.number not in marked_numbers:
+            prediction_marks.append({
+                "horseNumber": r.number,
+                "mark": "",
+                "winProbability": r.p_win,
+                "attention": True,
+            })
     unified_marks = [
         {
             "horseNumber": r.number,
@@ -294,6 +335,7 @@ def _marks(forecast: RaceForecast, calibrated: bool = False) -> tuple[list[dict]
             "winProbability": r.p_win,
             "top3Probability": r.p_top3,
             "reason": _mark_reason(r, calibrated),
+            **({"attention": True} if r.number in attention else {}),
         }
         for r in marked
     ]
@@ -401,7 +443,21 @@ def _ticket_plan_block(plan: TicketPlan, calibrated: bool = False) -> dict:
         }
         for ticket in plan.win_ev_estimates
     ]
-    return {
+    # Place EV ranges (display only): present only when the payload
+    # carried observed place odds. combinedPicks is the combined
+    # gate's qualifier list (see combined_gate_picks).
+    place_ev = [
+        {
+            "horseNumber": est.number,
+            "top3Probability": est.probability,
+            "placeOddsLow": est.place_odds_low,
+            "placeOddsHigh": est.place_odds_high,
+            "expectedValueLow": est.expected_value_low,
+            "expectedValueHigh": est.expected_value_high,
+        }
+        for est in plan.place_ev_estimates
+    ]
+    block = {
         "status": "参考候補" if items else "見送り",
         "items": items,
         "reason": _ticket_reason(plan, calibrated),
@@ -416,6 +472,10 @@ def _ticket_plan_block(plan: TicketPlan, calibrated: bool = False) -> dict:
         "winExpectedValues": win_ev,
         "suppressed": {k: str(v) for k, v in (plan.suppressed or {}).items()},
     }
+    if place_ev:
+        block["placeExpectedValues"] = place_ev
+        block["combinedPicks"] = combined_gate_picks(plan)
+    return block
 
 
 def _recommended_bets(plan: TicketPlan, calibrated: bool = False) -> list[dict]:
@@ -498,7 +558,8 @@ def race_payload(
     """
     provenance = provenance or {}
     prediction_marks, unified_marks, honmei = _marks(
-        forecast, calibrated_probabilities)
+        forecast, calibrated_probabilities,
+        attention=set(combined_gate_picks(tickets)))
     circuit = _value(race.circuit, "")
     start_time = _value(race.start_time, "")
     unified = {

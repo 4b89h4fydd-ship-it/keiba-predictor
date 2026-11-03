@@ -39,7 +39,12 @@ from itertools import combinations, permutations
 from math import isfinite
 from typing import Optional
 
-from ..safety.probability import distribution, expected_return, ticket_probability
+from ..safety.probability import (
+    distribution,
+    expected_return,
+    marginals,
+    ticket_probability,
+)
 from .forecast import RaceForecast
 
 KINDS = ("win", "place", "wide", "quinella", "exacta", "trio", "trifecta")
@@ -108,6 +113,26 @@ class Ticket:
 
 
 @dataclass(frozen=True)
+class PlaceEvEstimate:
+    """Display-only place （複勝） EV range for one runner.
+
+    ``probability`` is the payout probability from the same
+    Plackett-Luce marginals as the win estimates: top-3, or top-2
+    in fields of seven or fewer (the place payout rule). The EV is
+    a range because the place payout is a range — it depends on
+    which other runners finish in the money — so no point estimate
+    is ever produced. Sorting and gating use the lower bound.
+    """
+
+    number: int
+    probability: float
+    place_odds_low: float
+    place_odds_high: float
+    expected_value_low: float
+    expected_value_high: float
+
+
+@dataclass(frozen=True)
 class TicketPlan:
     race_id: str
     ev_tickets: tuple
@@ -116,6 +141,9 @@ class TicketPlan:
     # Display-only win EV estimates (lane="ev-estimate"), one per
     # runner with real win odds. Never purchase candidates.
     win_ev_estimates: tuple = ()
+    # Display-only place EV ranges, one per runner with an observed
+    # place odds range. Empty when the payload carries no place odds.
+    place_ev_estimates: tuple = ()
 
 
 def _candidates(forecast: RaceForecast, kind: str, ranked: list[int],
@@ -150,6 +178,7 @@ def generate_tickets(
     calibration_validated: bool,
     trifecta_formation: str = "legacy",
     policy: Optional[TicketPolicy] = None,
+    place_odds: Optional[dict] = None,
 ) -> TicketPlan:
     if trifecta_formation not in TRIFECTA_FORMATIONS:
         raise ValueError(
@@ -246,10 +275,54 @@ def generate_tickets(
             lane="ev-estimate", odds_status="actual", stake_units=None,
         ))
     estimates.sort(key=lambda t: (-(t.expected_return or 0.0), t.selection))
+    # Display-only place EV ranges: payout probability (top-3, or
+    # top-2 in fields of seven or fewer; no place market at four or
+    # fewer) x the observed place odds range, for every runner whose
+    # place range actually exists. Nothing is derived from win odds.
+    place_estimates: list[PlaceEvEstimate] = []
+    if place_odds:
+        field = len(strengths)
+        place_count = 3 if field >= 8 else 2 if field >= 5 else 0
+        if place_count:
+            payout_probability = {
+                n: probs[place_count - 1]
+                for n, probs in marginals(outcomes).items()
+            }
+            for runner in forecast.runners:
+                raw = place_odds.get(runner.number)
+                if raw is None:
+                    continue
+                try:
+                    low_value, high_value = float(raw[0]), float(raw[1])
+                except (TypeError, ValueError, IndexError):
+                    continue
+                if not (isfinite(low_value) and isfinite(high_value)):
+                    continue
+                if low_value < 1 or high_value < low_value:
+                    continue
+                probability = payout_probability.get(runner.number)
+                if probability is None:
+                    continue
+                place_estimates.append(PlaceEvEstimate(
+                    number=runner.number,
+                    probability=round(probability, 4),
+                    place_odds_low=low_value,
+                    place_odds_high=high_value,
+                    expected_value_low=round(probability * low_value, 4),
+                    expected_value_high=round(probability * high_value, 4),
+                ))
+            place_estimates.sort(
+                key=lambda e: (-e.expected_value_low, e.number))
+    if place_estimates:
+        # The place EV material exists for this race; the generic
+        # "odds-unavailable" suppression for the place kind no longer
+        # describes it.
+        suppressed.pop("ev_place", None)
     return TicketPlan(
         race_id=forecast.race_id,
         ev_tickets=tuple(ev_tickets),
         probability_tickets=tuple(probability_tickets),
         suppressed=suppressed,
         win_ev_estimates=tuple(estimates),
+        place_ev_estimates=tuple(place_estimates),
     )

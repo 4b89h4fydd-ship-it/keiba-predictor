@@ -33,7 +33,16 @@ because win odds were incomplete at first publication, is
 re-issued once — stamped kind "blend-upgrade" — when the current
 payload carries win odds for every active runner and the post is
 still at least 60 minutes away; once blended it is final, and
-later odds movement never re-triggers it. The v9b
+later odds movement never re-triggers it. A fourth exception of
+the same kind is the place-EV upgrade (2026-11-04): a forecast
+frozen on the v9b lane WITHOUT placeExpectedValues, only because
+the upstream sync did not yet carry place （複勝） odds, is
+re-issued once — stamped kind "place-ev-upgrade" — when the
+current payload carries an observed place range for every active
+runner and the post is still at least 60 minutes away; the
+re-issue is surgical (stored probabilities, marks and tickets are
+kept; only the place side and the combined-gate 注 overlay are
+added), and a race already carrying placeExpectedValues is final. The v9b
 adoption (2026-11-03) adds one dated branch of the same kind: a
 forecast frozen on the v8 lane for a race dated 2026-11-04 is
 re-issued on the v9b lane (revision reason
@@ -164,6 +173,22 @@ V9B_ADOPTION_DATE = "2026-11-04"
 # upgrade the forecast is blended and final, and later odds
 # movement never re-triggers anything.
 BLEND_UPGRADE_MIN_LEAD = timedelta(minutes=60)
+
+# Place-EV upgrade (2026-11-04, user instruction: the combined
+# win + top-3 EV display and its 注 attention mark go live on
+# TODAY's races, not from tomorrow): forecasts published before
+# the upstream sync carried place （複勝） odds have no
+# placeExpectedValues in their ticket plan. A frozen v9b forecast
+# is therefore re-issued ONCE — stamped kind "place-ev-upgrade" —
+# when the current payload carries an observed place range for
+# every active runner and the post is still at least 60 minutes
+# away. The re-issue is surgical: the stored probabilities, marks
+# and tickets are kept byte-for-byte and only the place side is
+# priced in (see _apply_place_ev_upgrade), so it can never drift a
+# forecast on sale or undo a blend upgrade — it applies on top of
+# the freshest stored forecast, after the blend upgrade in the
+# same pass. A race already carrying placeExpectedValues is final.
+PLACE_EV_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 
 
 def _get(path: str) -> dict:
@@ -347,6 +372,205 @@ def _blend_upgrade_info(old: dict, now: datetime) -> dict | None:
             "reason": "blend-upgrade"}
 
 
+def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time place-EV upgrade of a frozen v9b race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it was published on the v9b lane (abilityLane v9b-cal-market)
+      — the calibrated series the combined gate is defined on;
+    - its ticket plan does not already carry placeExpectedValues
+      (a race that has them is final) and it does not already carry
+      a place-ev-upgrade revision (the upgrade is exactly-once);
+    - the post is still at least PLACE_EV_UPGRADE_MIN_LEAD away;
+    - the CURRENT payload carries an observed place range
+      (placeOddsLow >= 1.0, placeOddsHigh >= placeOddsLow) for
+      every horse on the active roster;
+    - the active field is at least 8 strong: at seven or fewer the
+      place payout covers the top two only, and the stored product
+      carries no top-2 probability to price that with (the build
+      path prices small fields from the full marginals at first
+      publication instead).
+
+    Anything unreadable simply does not qualify; the caller keeps
+    the frozen forecast (fail-closed).
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    revision = marker.get("revision")
+    if isinstance(revision, dict) and (
+            revision.get("kind") == "place-ev-upgrade"
+            or revision.get("reason") == "place-ev-upgrade"):
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    plan = unified.get("ticketPlan")
+    if not isinstance(plan, dict) or "placeExpectedValues" in plan:
+        return None
+    post = _post_at(old)
+    if post is None or post - now < PLACE_EV_UPGRADE_MIN_LEAD:
+        return None
+    roster = _active_roster(old)
+    if len(roster) < 8:
+        return None
+    by_number: dict[int, dict] = {}
+    for horse in old.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        try:
+            by_number[int(horse["horseNumber"])] = horse
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    def _num(value) -> float | None:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        return float(value)
+
+    place_odds: dict[int, tuple[float, float]] = {}
+    for number, _name in roster:
+        horse = by_number.get(number)
+        low = _num(horse.get("placeOddsLow")) if isinstance(horse, dict) else None
+        high = _num(horse.get("placeOddsHigh")) if isinstance(horse, dict) else None
+        if low is None or high is None or low < 1.0 or high < low:
+            return None
+        place_odds[number] = (low, high)
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "place-ev-upgrade",
+            "placeOdds": place_odds}
+
+
+def _apply_place_ev_upgrade(old: dict, info: dict, captured: str):
+    """Build the place-EV upgrade re-issue of a frozen forecast.
+
+    Surgical by construction: the stored probabilities, marks and
+    tickets are kept exactly as published; the place side is priced
+    from the STORED top-3 probabilities (the unified diagnosis
+    carries every runner's) and the current payload's observed
+    place ranges. Adds ticketPlan.placeExpectedValues +
+    combinedPicks, flags the combined-gate qualifiers with the 注
+    attention overlay, and re-seals the receipt. The combined gate
+    is the frozen candidate rule of 2026-11-04 (win EV >= 1.25 AND
+    win probability >= 0.05 AND place EV lower bound >= 1.0),
+    evaluated on the stored win EV entries. Returns (new_detail,
+    receipt), or None when the stored product cannot support the
+    computation (fail-closed: the caller keeps the frozen
+    forecast).
+    """
+    import copy
+
+    unified = copy.deepcopy(old.get("unifiedForecast") or {})
+    plan = unified.get("ticketPlan")
+    if not isinstance(plan, dict):
+        return None
+    win = {
+        e.get("horseNumber"): e
+        for e in plan.get("winExpectedValues") or []
+        if isinstance(e, dict) and isinstance(e.get("horseNumber"), int)
+    }
+    top3: dict[int, float] = {}
+    for d in unified.get("diagnosis") or []:
+        if not isinstance(d, dict):
+            continue
+        value = d.get("top3Probability")
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            top3[d.get("horseNumber")] = float(value)
+    entries = []
+    for number, (low, high) in info["placeOdds"].items():
+        probability = top3.get(number)
+        if probability is None:
+            return None
+        entries.append({
+            "horseNumber": number,
+            "top3Probability": round(probability, 4),
+            "placeOddsLow": low,
+            "placeOddsHigh": high,
+            "expectedValueLow": round(probability * low, 4),
+            "expectedValueHigh": round(probability * high, 4),
+        })
+    entries.sort(key=lambda e: (-e["expectedValueLow"], e["horseNumber"]))
+    picks = []
+    for e in entries:
+        w = win.get(e["horseNumber"]) or {}
+        win_ev = w.get("expectedValue")
+        win_p = w.get("winProbability")
+        if (isinstance(win_ev, (int, float)) and win_ev >= 1.25
+                and isinstance(win_p, (int, float)) and win_p >= 0.05
+                and e["expectedValueLow"] >= 1.0):
+            picks.append(e["horseNumber"])
+    plan["placeExpectedValues"] = entries
+    plan["combinedPicks"] = picks
+    suppressed = plan.get("suppressed")
+    if isinstance(suppressed, dict):
+        suppressed.pop("ev_place", None)
+    pick_set = set(picks)
+    for m in unified.get("marks") or []:
+        if isinstance(m, dict) and m.get("horseNumber") in pick_set:
+            m["attention"] = True
+    unified["receiptSha256"] = _canonical_receipt(unified)
+
+    new = copy.deepcopy(old)
+    new["unifiedForecast"] = unified
+    marks = copy.deepcopy(old.get("predictionMarks") or [])
+    by_no = {
+        m.get("horseNumber"): m
+        for m in marks
+        if isinstance(m, dict) and isinstance(m.get("horseNumber"), int)
+    }
+    for number in picks:
+        entry = by_no.get(number)
+        if entry is not None:
+            entry["attention"] = True
+        else:
+            w = win.get(number) or {}
+            marks.append({
+                "horseNumber": number,
+                "mark": "",
+                "winProbability": w.get("winProbability"),
+                "attention": True,
+            })
+    new["predictionMarks"] = marks
+    if isinstance(new.get("prediction"), dict):
+        new["prediction"]["predictionMarks"] = marks
+    previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+    prev_revision = previous.get("revision")
+    prev_count = (prev_revision.get("revisionCount")
+                  if isinstance(prev_revision, dict) else None)
+    meta = dict(old.get("preparedMeta") or {})
+    marker = dict(previous)
+    marker["publishedAt"] = captured
+    marker["receiptSha256"] = unified["receiptSha256"]
+    marker["firstPublishedAt"] = (
+        info.get("firstPublishedAt") or info.get("publishedAt") or captured)
+    marker["revision"] = {
+        "kind": "place-ev-upgrade",
+        "reason": "place-ev-upgrade",
+        "revisedAt": captured,
+        "revisionCount": (prev_count if isinstance(prev_count, int)
+                          else 0) + 1,
+        "previousReceiptSha256": info.get("receipt")
+        or previous.get("receiptSha256"),
+        "previousAbilityLane": V9B_LANE,
+        "abilityLane": V9B_LANE,
+        "note": ("one-time place-EV upgrade (user instruction "
+                 "2026-11-04): the upstream sync did not carry "
+                 "place odds at first publication, so the ticket "
+                 "plan had no placeExpectedValues; probabilities, "
+                 "marks and tickets are the stored ones, only the "
+                 "place side and the combined-gate attention "
+                 "overlay were added"),
+    }
+    meta["rewritePublish"] = marker
+    new["preparedMeta"] = meta
+    return new, unified["receiptSha256"]
+
+
 def _is_inactive(horse: dict) -> bool:
     if horse.get("scratched") or horse.get("withdrawn"):
         return True
@@ -485,16 +709,37 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             if lane_upgrade is not None:
                 lane_upgrade["receipt"] = freeze[1]
             else:
-                # The last freeze exception: a v9b forecast frozen
+                # The last freeze exceptions: a v9b forecast frozen
                 # WITHOUT its market blend only because win odds
                 # were incomplete at first publication is re-issued
                 # once when the odds complete (see
-                # _blend_upgrade_info). Anything else stays frozen.
+                # _blend_upgrade_info); a v9b forecast frozen
+                # WITHOUT placeExpectedValues only because the
+                # upstream sync did not carry place odds yet is
+                # re-issued once when they complete (see
+                # _place_ev_upgrade_info — surgical, it applies on
+                # top of the freshest stored forecast and never
+                # undoes a blend upgrade). Anything else stays
+                # frozen.
                 blend_upgrade = _blend_upgrade_info(old, now)
                 if blend_upgrade is None:
-                    return None, (f"frozen: already published ready "
-                                  f"(receipt {str(freeze[1])[:12]}…); "
-                                  f"roster unchanged")
+                    place_ev_upgrade = _place_ev_upgrade_info(old, now)
+                    if place_ev_upgrade is None:
+                        return None, (f"frozen: already published ready "
+                                      f"(receipt {str(freeze[1])[:12]}…); "
+                                      f"roster unchanged")
+                    place_ev_upgrade["receipt"] = freeze[1]
+                    upgraded = _apply_place_ev_upgrade(
+                        old, place_ev_upgrade,
+                        now.isoformat(timespec="seconds"))
+                    if upgraded is None:
+                        return None, (
+                            f"frozen: already published ready "
+                            f"(receipt {str(freeze[1])[:12]}…); "
+                            f"place-EV upgrade could not be computed "
+                            f"from the stored product; keeping the "
+                            f"frozen forecast")
+                    return upgraded
                 blend_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
@@ -598,9 +843,23 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     # pre-registered primary paired judgement against legacy A at
     # 142 races). Probabilities, marks and every other ticket kind
     # are unchanged; the sealing lane keeps the legacy formation.
+    # Place （複勝） odds ranges from the same payload rows as the
+    # win odds: carried into the ticket plan as display-only place
+    # EV ranges. Runners without an observed range simply have no
+    # place estimate; nothing is derived from their win odds.
+    place_odds = {}
+    for r in race.runners:
+        if r.place_odds_low.present and r.place_odds_high.present:
+            low = r.place_odds_low.value
+            high = r.place_odds_high.value
+            if (isinstance(low, (int, float)) and not isinstance(low, bool)
+                    and isinstance(high, (int, float))
+                    and not isinstance(high, bool)):
+                place_odds[r.number] = (float(low), float(high))
     tickets = generate_tickets(forecast, win_odds,
                                calibration_validated=False,
-                               trifecta_formation="B")
+                               trifecta_formation="B",
+                               place_odds=place_odds)
     captured = now.isoformat(timespec="seconds")
     payload = race_payload(
         race, forecast, pace, tickets,
