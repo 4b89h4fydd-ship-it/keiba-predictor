@@ -199,7 +199,16 @@ function contents(r,p){
     r.prediction.modelVersion==='arvexq-stage64-product-v1')
    return '<div class="ai-bet-box"><p class="muted">保存済み旧方式の買い目データが未取得です。</p></div>';
  var service=root.ARVEXQProductionTickets;
- var plan=r&&service?service.build(r,p):(service&&service.current?service.current():null);
+ var plan=null;
+ if(r&&service&&service.build)plan=service.build(r,p);
+ else if(r&&service&&service.current){
+   // Fallback only when build is unavailable: the shared current() slot
+   // is overwritten by background prebuilds for OTHER races, so a plan
+   // may be used only when its identity matches the page race exactly.
+   // With no race argument the slot is never consulted (unacquired).
+   var shared=service.current();
+   if(shared&&shared.raceId===r.id&&shared.raceDate===r.date)plan=shared;
+ }
  // The unified reference plan carries its pre-off capture time as
  // referenceCapturedAt instead of fixedAt; both mean the combinations
  // were fixed before the off (the unified gate enforces capturedAt<post).

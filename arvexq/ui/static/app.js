@@ -2611,7 +2611,7 @@ function renderRace(){
   // ticket frame appended here renders the reference-lane plan, which
   // duplicated the bets tab under the pace view and confused readers
   // (user decision 2026-10-31): skip it while the pace tab is open.
-  var ticketFrameHtml=state.openPanel==='pace'?'':window.ARVEXQTicketFrame.render();
+  var ticketFrameHtml=state.openPanel==='pace'?'':window.ARVEXQTicketFrame.render(r,p);
   return '<div class="smart-shell">'+
     smartRaceTopBar(r)+
     '<main class="smart-main smart-race-page">'+

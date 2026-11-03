@@ -62,6 +62,7 @@
       });
       var plan={decision:options.length?'参考候補・購入推奨なし':'見送り',
         researchOnly:true,referenceOnly:true,notForPurchase:true,
+        raceId:race.id,raceDate:race.date,
         modelVersion:model.modelVersion,
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
         winExpectedValues:winEv,
