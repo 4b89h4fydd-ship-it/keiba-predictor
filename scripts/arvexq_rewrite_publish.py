@@ -25,8 +25,14 @@ is already on sale. The exceptions are a roster change (a scratch
 or an added runner), which re-issues that race alone and stamps the
 revision into preparedMeta.rewritePublish.revision, and a lane
 upgrade (2026-11-02): a forecast frozen on the v1 fallback only
-because the v8 extras had not landed yet is re-issued on the v8
-lane once the extras exist, also stamped as a revision. Frozen state
+because the v8 extras had not landed yet is re-issued on the top
+lane once the extras exist, also stamped as a revision. The v9b
+adoption (2026-11-03) adds one dated branch of the same kind: a
+forecast frozen on the v8 lane for a race dated 2026-11-04 is
+re-issued on the v9b lane (revision reason
+lane-upgrade-v9b-adoption; user instruction: no v8 left standing
+on 2026-11-04). Publications stamped under the previous model
+version stay frozen across the version bump. Frozen state
 is recognised from the stored detail itself (the lane marker plus
 the receipt roster recorded in the unified forecast); if that state
 cannot be read consistently the cycle fails closed and does not
@@ -65,6 +71,9 @@ from rewrite.analysis.lane_config import LANE_BETA, LANE_WEIGHTS  # noqa: E402
 from rewrite.analysis.pace import forecast_pace  # noqa: E402
 from rewrite.analysis.shadow_v8 import WEIGHTS as V8_WEIGHTS  # noqa: E402
 from rewrite.analysis.shadow_v8 import forecast_race_v8  # noqa: E402
+from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa: E402
+from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
+from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
 from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
@@ -104,6 +113,36 @@ V8_CUTOVER_DATE = "2026-11-01"
 V8_EXTRAS_DIR = ROOT / "rewrite" / "data" / "v8_extras"
 V8_ABILITY_MODEL_VERSION = "arvexq-v8-elo-speed2-fitted"
 V8_ABILITY_STATUS = "rewrite-ability-elo-speed2-v8"
+
+# v9b adoption (2026-11-03, user decision after the full blind
+# evaluation on the graded v8 forward seals: paired logloss
+# differences -0.2109 / -0.2187 at two date-split cutoffs, both
+# significant; see goals/arvexq/hidden_files/
+# v9-blind-eval-20261103.md and the frozen preregistration
+# shadow-v9-preregistration-20261102.md). On the v8 lane the v8
+# probability vector is now post-processed with EXACTLY the shadow
+# lane's v9b definition (rewrite/analysis/shadow_v9.py, ported
+# verbatim): temperature scaling at the frozen T = 0.6692, then a
+# geometric market blend at the frozen weight w = 0.5 applied only
+# when win odds exist for every runner in the probability vector;
+# races without full odds get the temperature only. Marks, tickets
+# and the win-EV display all derive from the post-processed
+# probabilities; the EV ticket lane stays gated off
+# (calibration_validated=False), only the display label changes.
+# The v1 fallback path is untouched. The model version moves to
+# arvexq-rewrite-v3-v9b (api_shape and unified_product together);
+# the freeze keeps recognising the previous v2 stamp so v2-era
+# publications stay frozen, and the lane-upgrade mechanism gains
+# one adoption-day branch: a race dated V9B_ADOPTION_DATE that is
+# frozen on the v8 lane is re-issued onto the v9b lane with the
+# revision reason stamped below (user instruction 2026-11-03:
+# no v8 left standing on 2026-11-04).
+PREVIOUS_MODEL_VERSION = "arvexq-rewrite-v2-elo-speed2"
+V9B_LANE = "v9b-cal-market"
+V9B_ABILITY_MODEL_VERSION = "arvexq-v9b-elo-speed2-temp0.6692-blend50"
+V9B_ABILITY_STATUS = "rewrite-ability-elo-speed2-v9b"
+V9B_PROBABILITY_STATUS = "calibrated-market-blend-v9b"
+V9B_ADOPTION_DATE = "2026-11-04"
 
 
 def _get(path: str) -> dict:
@@ -178,26 +217,39 @@ def _v8_extras_deadline(race_date: str) -> datetime | None:
 
 
 def _lane_upgrade_info(old: dict) -> dict | None:
-    """Facts for healing a frozen v1-lane fallback onto the v8 lane.
+    """Facts for healing a frozen forecast onto the current top lane.
 
-    Returns the stored marker facts when the stored forecast was
-    published ready on the v1 lane (abilityLane == "v1-prior"), the
-    race is dated on/after the v8 cutover, and exported v8 extras
-    for the race NOW exist; None otherwise. This is the exact trap
-    of 2026-11-02: the first publish (~21:00) preceded the extras
-    export (~21:40), so the v1 fallback was frozen in. Segment and
-    forecast eligibility are deliberately left to the normal build:
-    the caller re-issues only when the rebuilt forecast actually
-    used the v8 lane, so an unusable upgrade keeps the frozen v1
-    forecast byte-stable.
+    Two sources, both re-issued through the normal build and stamped
+    as revisions (the caller re-issues only when the rebuilt
+    forecast actually used the v9b lane, so an unusable upgrade
+    keeps the frozen forecast byte-stable):
+
+    - v1-prior (the 2026-11-02 trap): the stored forecast was
+      published ready on the v1 fallback only because the v8 extras
+      had not landed at first publication; the race is dated
+      on/after the v8 cutover and exported extras for it NOW exist.
+    - v8-elo-speed2 on the v9b adoption date only (2026-11-04):
+      the stored forecast was published on the v8 lane before the
+      v9b production adoption completed; the user instructed that
+      no race dated 2026-11-04 stays on the v8 lane, so it is
+      re-issued onto the v9b lane with the adoption reason stamped
+      into the revision. Any other date's v8 publication is NOT an
+      upgrade source: it stays frozen.
     """
     marker = (old.get("preparedMeta") or {}).get("rewritePublish")
     if not isinstance(marker, dict):
         return None
-    if marker.get("abilityLane") != "v1-prior":
+    lane = marker.get("abilityLane")
+    if lane == "v1-prior":
+        reason = "lane-upgrade"
+    elif lane == "v8-elo-speed2":
+        reason = "lane-upgrade-v9b-adoption"
+    else:
         return None
     race_date = str(old.get("date") or "")
     if race_date < V8_CUTOVER_DATE:
+        return None
+    if reason == "lane-upgrade-v9b-adoption" and race_date != V9B_ADOPTION_DATE:
         return None
     race_id = str(old.get("id") or "")
     if not race_id:
@@ -207,7 +259,8 @@ def _lane_upgrade_info(old: dict) -> dict | None:
     if not (isinstance(raw_extras, dict) and raw_extras):
         return None
     return {"publishedAt": marker.get("publishedAt"),
-            "previousAbilityLane": "v1-prior"}
+            "previousAbilityLane": lane,
+            "reason": reason}
 
 
 def _is_inactive(horse: dict) -> bool:
@@ -252,11 +305,18 @@ def _freeze_decision(old: dict):
     marker = (old.get("preparedMeta") or {}).get("rewritePublish")
     if not isinstance(marker, dict):
         return None
-    if marker.get("modelVersion") != MODEL_VERSION:
+    # Publications stamped by this lane under the current OR the
+    # previous model version are this lane's frozen state: a model
+    # version bump must not silently unfreeze (and recompute) a
+    # forecast that is already on sale. Movement between lanes
+    # happens only through the explicit lane-upgrade re-issue.
+    if marker.get("modelVersion") not in (MODEL_VERSION,
+                                          PREVIOUS_MODEL_VERSION):
         return None
     if old.get("predictionStatus") != "ready":
         return None
-    if old.get("predictionModelVersion") != MODEL_VERSION:
+    if old.get("predictionModelVersion") not in (MODEL_VERSION,
+                                                 PREVIOUS_MODEL_VERSION):
         return None
     unified = old.get("unifiedForecast")
     if not isinstance(unified, dict):
@@ -386,16 +446,6 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             weights=LANE_WEIGHTS.get(segment, {}))
     if forecast.status != "ok":
         return None, f"forecast not ok: {forecast.status}"
-    if lane_upgrade is not None and not used_v8:
-        # The extras exist but this race still cannot take the v8
-        # lane (a segment without a candidate, or the v8 forecast
-        # did not come back ok): keep the frozen v1 forecast
-        # byte-stable instead of recomputing it on the v1 lane,
-        # where backfilled inputs could drift a forecast on sale.
-        return None, (f"frozen: already published ready "
-                      f"(receipt {str(lane_upgrade['receipt'])[:12]}…); "
-                      f"v8 lane not usable for this race; "
-                      f"keeping the frozen v1 forecast")
     pace = forecast_pace(race)
     win_odds = {
         r.number: r.win_odds.value
@@ -403,6 +453,36 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         if r.win_odds.present
         and isinstance(r.win_odds.value, (int, float))
     }
+    # v9b post-processing (adopted 2026-11-03): on the v8 lane the
+    # probability vector is calibrated and market-blended with the
+    # shadow lane's exact transform before marks, tickets and the
+    # EV display derive from it. The win odds are the publisher's
+    # own payload odds at compute time; the blend applies only
+    # when every runner in the vector carries one (> 1.0), never
+    # imputed. A degenerate vector the transform passes through
+    # unchanged keeps the plain v8 lane label for that race.
+    used_v9b = False
+    blend_applied = False
+    v9b_passthrough = None
+    if used_v8:
+        forecast, pp_info = postprocess_forecast(
+            forecast, arm="v9b", win_odds=win_odds)
+        if "passthrough" in pp_info:
+            v9b_passthrough = pp_info["passthrough"]
+        else:
+            used_v9b = True
+            blend_applied = bool(pp_info["blendApplied"])
+    if lane_upgrade is not None and not used_v9b:
+        # The extras exist but this race still cannot take the top
+        # lane (a segment without a candidate, or the v8 forecast
+        # did not come back ok): keep the frozen forecast
+        # byte-stable instead of recomputing it on the v1 lane,
+        # where backfilled inputs could drift a forecast on sale.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(lane_upgrade['receipt'])[:12]}…); "
+                      f"v9b lane not usable for this race; "
+                      f"keeping the frozen "
+                      f"{lane_upgrade['previousAbilityLane']} forecast")
     # Trifecta formation B (adopted 2026-10-31 after the
     # pre-registered primary paired judgement against legacy A at
     # 142 races). Probabilities, marks and every other ticket kind
@@ -413,7 +493,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     captured = now.isoformat(timespec="seconds")
     payload = race_payload(
         race, forecast, pace, tickets,
-        provenance={"captured_at": captured, "snapshot_sha256": None})
+        provenance={"captured_at": captured, "snapshot_sha256": None},
+        calibrated_probabilities=used_v9b)
     built = payload["detail"]
     unified = built["unifiedForecast"]
     # Production receipt semantics: roster is the detail's ACTIVE roster
@@ -427,7 +508,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         if isinstance(h, dict) and h.get("horseNumber")
         and not _is_inactive(h)]
     unified.pop("receiptKind", None)
-    if used_v8:
+    if used_v9b:
+        # Per-race honest labeling: ability is the v8 layer, the
+        # probabilities are its v9b post-processing (temperature
+        # calibration + market blend). Stamped before the receipt
+        # hash so the label is part of the verified product.
+        unified["abilityModelVersion"] = V9B_ABILITY_MODEL_VERSION
+        unified["probabilityStatus"] = V9B_PROBABILITY_STATUS
+    elif used_v8:
         # Per-race honest labeling: this forecast's ability layer is
         # the adopted v8 candidate, not the v1 prior. Stamped before
         # the receipt hash so the label is part of the verified
@@ -451,13 +539,20 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         "raceId": old["id"], "date": old["date"],
         "circuit": old.get("circuit"),
         "capturedAt": captured,
-        "methodologyStatus": "rewrite-engine-probability-uncalibrated",
+        "methodologyStatus": (
+            "rewrite-engine-probability-calibrated-market-blend"
+            if used_v9b else
+            "rewrite-engine-probability-uncalibrated"),
         "actualForecasterPublishedPicks": True,
-        "calibrationMethod": "none-probabilities-uncalibrated",
+        "calibrationMethod": (
+            "temperature-0.6692+geometric-market-blend-0.5"
+            if used_v9b else
+            "none-probabilities-uncalibrated"),
         "modelVersion": MODEL_VERSION,
         "predictionStatus": "ready", "productionEligible": True,
         "stages": {
-            "ability": {"status": V8_ABILITY_STATUS if used_v8
+            "ability": {"status": V9B_ABILITY_STATUS if used_v9b
+                        else V8_ABILITY_STATUS if used_v8
                         else "rewrite-ability-prior-v1"},
             "pace": {"status": "past-corner-evidence-uncalibrated",
                      "text": built["forecastText"]},
@@ -508,7 +603,20 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     meta["rewritePublish"] = {
         "modelVersion": MODEL_VERSION, "publishedAt": captured,
         "receiptSha256": unified["receiptSha256"],
-        "abilityLane": "v8-elo-speed2" if used_v8 else "v1-prior"}
+        "abilityLane": V9B_LANE if used_v9b
+        else "v8-elo-speed2" if used_v8 else "v1-prior"}
+    if used_v9b:
+        meta["rewritePublish"]["temperature"] = V9B_TEMPERATURE
+        meta["rewritePublish"]["blendApplied"] = blend_applied
+        meta["rewritePublish"]["postProcessing"] = {
+            "type": "temperature+market-blend",
+            "temperature": V9B_TEMPERATURE,
+            "blendWeight": V9B_BLEND_WEIGHT,
+            "blendApplied": blend_applied}
+    if v9b_passthrough is not None:
+        meta["rewritePublish"]["v9bPassthrough"] = (
+            f"v9b post-processing passed through: {v9b_passthrough}; "
+            f"v8 probabilities kept for this race")
     if v8_fallback_status is not None:
         meta["rewritePublish"]["v8Fallback"] = (
             f"v8 forecast not ok: {v8_fallback_status}; v1 lane used")
@@ -534,26 +642,34 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         }
     if lane_upgrade is not None:
         # Lane-upgrade re-issue of a frozen forecast: the roster is
-        # unchanged, but the forecast moves from the v1 fallback
-        # (frozen in only because the extras had not landed at first
-        # publication) to the v8 lane. Same audit chain as a roster
-        # change: first publication time and previous receipt, plus
-        # the lane it upgrades from.
+        # unchanged, but the forecast moves from the lane it was
+        # frozen on (the v1 fallback, frozen in only because the
+        # extras had not landed at first publication — or, on the
+        # v9b adoption date only, the v8 lane) to the v9b lane. Same
+        # audit chain as a roster change: first publication time and
+        # previous receipt, plus the lane it upgrades from and the
+        # reason, so the two upgrade kinds stay distinguishable.
         previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
         prev_revision = previous.get("revision")
         prev_count = (prev_revision.get("revisionCount")
                       if isinstance(prev_revision, dict) else None)
         meta["rewritePublish"]["firstPublishedAt"] = (
             lane_upgrade.get("publishedAt") or captured)
-        meta["rewritePublish"]["revision"] = {
-            "reason": "lane-upgrade",
+        revision = {
+            "reason": lane_upgrade["reason"],
             "revisedAt": captured,
             "revisionCount": (prev_count if isinstance(prev_count, int)
                               else 0) + 1,
             "previousReceiptSha256": lane_upgrade["receipt"],
             "previousAbilityLane": lane_upgrade["previousAbilityLane"],
-            "abilityLane": "v8-elo-speed2",
+            "abilityLane": V9B_LANE,
         }
+        if lane_upgrade["reason"] == "lane-upgrade-v9b-adoption":
+            revision["note"] = (
+                "v9b production adoption-day measure (user "
+                "instruction 2026-11-03): no race dated "
+                "2026-11-04 stays on the v8 lane")
+        meta["rewritePublish"]["revision"] = revision
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
 

@@ -161,6 +161,16 @@ function combosHtml(item,r){
  }).join('');
 }
 function contents(r,p){
+ // Win-EV label follows the payload's own calibration status: races
+ // published on the v9b lane (temperature calibration + market
+ // blend) carry expectedValueStatus 'calibrated-estimate' and are
+ // labelled as calibrated estimates; everything else keeps the
+ // uncalibrated wording.
+ var evCalibrated=!!(r&&r.unifiedForecast&&r.unifiedForecast.ticketPlan&&
+   r.unifiedForecast.ticketPlan.expectedValueStatus==='calibrated-estimate');
+ var evLabel=evCalibrated?'校正済みの推定値':'未校正の推定値';
+ var evNote=evCalibrated?'確率は校正済み（温度校正＋市場ブレンド）の推定値です。期待値による購入推奨は行っていません。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。':
+   '確率は未校正で、勝率・回収率の実測検証は未完了です。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。';
  var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)?sealedFive(r,r.recommendedBets):null;
  if(server){
    if(!server.length)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
@@ -187,10 +197,10 @@ function contents(r,p){
         esc(x.horseNumber)+'番'+(rosterNames[x.horseNumber]?' '+esc(rosterNames[x.horseNumber]):'')+'</b>'+
         '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
         '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
-        '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（未校正の推定値）</p></div>';
+        '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
    }).join('');
-   var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（未校正の推定値）</h3>'+evRows+
-     '<p class="arv-three-ticket-reason">確率は未校正で、勝率・回収率の実測検証は未完了です。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。</p></section>':'';
+   var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+evRows+
+     '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
    return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
@@ -228,10 +238,10 @@ function contents(r,p){
       esc(x.horseNumber)+'番'+(x.name?' '+esc(x.name):'')+'</b>'+
       '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
       '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
-      '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（未校正の推定値）</p></div>';
+      '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
  }).join('');
- var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（未校正の推定値）</h3>'+evRows+
-   '<p class="arv-three-ticket-reason">確率は未校正で、勝率・回収率の実測検証は未完了です。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。</p></section>':'';
+ var evSection=evRows?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+evRows+
+   '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  return '<div class="ai-bet-box arv-three-bet">'+
    '<div class="ai-bet-title">おすすめ買い目</div>'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+

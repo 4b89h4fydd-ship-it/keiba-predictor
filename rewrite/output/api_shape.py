@@ -54,7 +54,7 @@ from ..safety.contracts import Segment
 
 UNIFIED_VERSION = "arvexq-unified-live-v1"
 ADAPTER_VERSION = "arvexq-rewrite-output-v1"
-MODEL_VERSION = "arvexq-rewrite-v2-elo-speed2"
+MODEL_VERSION = "arvexq-rewrite-v3-v9b"
 # The serving beta was fitted on the 2026-10-21..2026-10-23 training
 # slice only (time-ordered backtest). Races on/before that window must
 # not be presented as pre-off forecasts of this model, so the same date
@@ -257,12 +257,13 @@ def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
 # --------------------------------------------------------------- marks
 
 
-def _mark_reason(runner_forecast) -> str:
+def _mark_reason(runner_forecast, calibrated: bool = False) -> str:
     parts = []
     if runner_forecast.p_win is not None:
         parts.append(
             f"勝率推定{runner_forecast.p_win * 100:.1f}%"
-            f"・3着内推定{runner_forecast.p_top3 * 100:.1f}%（未校正）"
+            f"・3着内推定{runner_forecast.p_top3 * 100:.1f}%"
+            f"（{'校正済み' if calibrated else '未校正'}）"
         )
     for reason in runner_forecast.pace_reasons:
         parts.append(f"展開補正:{reason}")
@@ -271,7 +272,7 @@ def _mark_reason(runner_forecast) -> str:
     return "／".join(parts)
 
 
-def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int]]:
+def _marks(forecast: RaceForecast, calibrated: bool = False) -> tuple[list[dict], list[dict], Optional[int]]:
     """(predictionMarks, unifiedForecast.marks, honmei number)."""
     marked = [r for r in forecast.runners if r.mark]
     marked.sort(key=lambda r: MARK_ORDER.index(r.mark))
@@ -292,7 +293,7 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
             "top3ProbabilityRange": None,
             "winProbability": r.p_win,
             "top3Probability": r.p_top3,
-            "reason": _mark_reason(r),
+            "reason": _mark_reason(r, calibrated),
         }
         for r in marked
     ]
@@ -300,15 +301,15 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
     return prediction_marks, unified_marks, honmei
 
 
-def _diagnosis_reason(runner_forecast) -> str:
-    text = _mark_reason(runner_forecast)
+def _diagnosis_reason(runner_forecast, calibrated: bool = False) -> str:
+    text = _mark_reason(runner_forecast, calibrated)
     if runner_forecast.ability_score is None:
         note = "過去走の証拠不足のため能力スコアなし"
         return f"{text}／{note}" if text else note
     return text
 
 
-def _diagnosis(forecast: RaceForecast) -> list[dict]:
+def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
     """All-runner diagnosis block for the 全頭診断 panel.
 
     Marks carry probabilities for the five marked runners only; the
@@ -325,7 +326,7 @@ def _diagnosis(forecast: RaceForecast) -> list[dict]:
             "abilityScore": r.ability_score,
             "winProbability": r.p_win,
             "top3Probability": r.p_top3,
-            "reason": _diagnosis_reason(r),
+            "reason": _diagnosis_reason(r, calibrated),
         }
         for r in forecast.runners
     ]
@@ -334,12 +335,19 @@ def _diagnosis(forecast: RaceForecast) -> list[dict]:
 # ------------------------------------------------------------- tickets
 
 
-def _ticket_reason(plan: TicketPlan) -> str:
+def _ticket_reason(plan: TicketPlan, calibrated: bool = False) -> str:
     if plan.probability_tickets:
         if plan.win_ev_estimates:
-            base = "未校正の確率による参考候補。購入推奨ではありません"
+            base = (
+                "校正済みの確率による参考候補。購入推奨ではありません"
+                if calibrated else
+                "未校正の確率による参考候補。購入推奨ではありません"
+            )
         else:
             base = (
+                "校正済みの確率による参考候補。期待値による購入推奨は"
+                "行わず、購入推奨ではありません"
+                if calibrated else
                 "未校正の確率による参考候補。確率校正が未検証のため期待値は"
                 "算出せず、購入推奨ではありません"
             )
@@ -350,11 +358,17 @@ def _ticket_reason(plan: TicketPlan) -> str:
     if suppressed.get("ev_win") == "calibration-not-validated":
         if plan.win_ev_estimates:
             notes.append(
+                "単勝の期待値は校正済みの推定値として表示"
+                "（期待値レーンの購入推奨は引き続き抑制）"
+                if calibrated else
                 "単勝の期待値は未校正の推定値として表示"
                 "（確率校正・実測検証は未完了）"
             )
         else:
-            notes.append("単勝の期待値は確率未校正のため抑制")
+            notes.append(
+                "単勝の期待値は表示対象のオッズがないため抑制"
+                if calibrated else
+                "単勝の期待値は確率未校正のため抑制")
     if any(str(k).startswith("ev_") and v == "odds-unavailable"
            for k, v in suppressed.items()):
         notes.append("複合券種は発走前の実オッズ不足のため期待値を算出しない")
@@ -363,7 +377,7 @@ def _ticket_reason(plan: TicketPlan) -> str:
     return "。".join([base, *notes])
 
 
-def _ticket_plan_block(plan: TicketPlan) -> dict:
+def _ticket_plan_block(plan: TicketPlan, calibrated: bool = False) -> dict:
     items = [
         {
             "kind": KIND_LABELS[ticket.kind],
@@ -390,12 +404,13 @@ def _ticket_plan_block(plan: TicketPlan) -> dict:
     return {
         "status": "参考候補" if items else "見送り",
         "items": items,
-        "reason": _ticket_reason(plan),
+        "reason": _ticket_reason(plan, calibrated),
         "sameModelAndMarks": True,
         "maximumPoints": MAX_UI_TICKET_ITEMS,
         "expectedValue": None,
         "expectedValueStatus": (
-            "uncalibrated-estimate" if win_ev
+            ("calibrated-estimate" if calibrated
+             else "uncalibrated-estimate") if win_ev
             else "suppressed-calibration-not-validated"
         ),
         "winExpectedValues": win_ev,
@@ -403,9 +418,9 @@ def _ticket_plan_block(plan: TicketPlan) -> dict:
     }
 
 
-def _recommended_bets(plan: TicketPlan) -> list[dict]:
+def _recommended_bets(plan: TicketPlan, calibrated: bool = False) -> list[dict]:
     """Full probability-ticket list in the bet_view plan-item shape."""
-    reason = _ticket_reason(plan)
+    reason = _ticket_reason(plan, calibrated)
     bets = []
     for ticket in plan.probability_tickets:
         bets.append({
@@ -471,6 +486,7 @@ def race_payload(
     tickets: TicketPlan,
     *,
     provenance: Optional[dict] = None,
+    calibrated_probabilities: bool = False,
 ) -> dict:
     """Production /api/race/<id> envelope for one rewrite forecast.
 
@@ -481,7 +497,8 @@ def race_payload(
     frontend's unified gate fails closed.
     """
     provenance = provenance or {}
-    prediction_marks, unified_marks, honmei = _marks(forecast)
+    prediction_marks, unified_marks, honmei = _marks(
+        forecast, calibrated_probabilities)
     circuit = _value(race.circuit, "")
     start_time = _value(race.start_time, "")
     unified = {
@@ -509,11 +526,11 @@ def race_payload(
             for r in race.runners
         ],
         "marks": unified_marks,
-        "diagnosis": _diagnosis(forecast),
+        "diagnosis": _diagnosis(forecast, calibrated_probabilities),
         "honmeiHorseNumber": honmei,
         "pace": _pace_block(race, pace),
         "paceStages": _pace_stages(race, pace),
-        "ticketPlan": _ticket_plan_block(tickets),
+        "ticketPlan": _ticket_plan_block(tickets, calibrated_probabilities),
         "analysisStages": {
             "ability": {"status": "prior-weights-unfitted",
                         "modelVersion": ABILITY_MODEL_VERSION},
@@ -522,7 +539,9 @@ def race_payload(
                             "calibrated": PROBABILITIES_CALIBRATED},
             "marks": {"status": "mechanical-from-probability"},
             "tickets": {"status": (
-                "win-ev-uncalibrated-estimate" if tickets.win_ev_estimates
+                ("win-ev-calibrated-estimate" if calibrated_probabilities
+                 else "win-ev-uncalibrated-estimate")
+                if tickets.win_ev_estimates
                 else "probability-only-ev-suppressed"
             )},
         },
@@ -556,7 +575,8 @@ def race_payload(
         "predictionModelVersion": MODEL_VERSION,
         "prediction": None,
         "predictionMarks": prediction_marks,
-        "recommendedBets": _recommended_bets(tickets),
+        "recommendedBets": _recommended_bets(
+            tickets, calibrated_probabilities),
         "forecastText": _pace_block(race, pace)["text"],
         "unifiedForecast": unified,
     }

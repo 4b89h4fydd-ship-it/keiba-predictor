@@ -41,7 +41,7 @@ var RETIRED_KEYS = /* @__PURE__ */ new Set([
 ]);
 function authorizedStage64(race) {
   const p = race.prediction;
-  if (race.predictionStatus !== "ready" || !p || p.predictionStatus !== "ready" || p.productionEligible !== true || !["arvexq-stage64-product-v1", "arvexq-rewrite-v1-uncalibrated-prior", "arvexq-rewrite-v2-elo-speed2"].includes(p.modelVersion) || p.raceId !== race.id || p.date !== race.date || !Array.isArray(race.horses) || !Array.isArray(race.predictionMarks) || race.predictionMarks.length !== 5) return null;
+  if (race.predictionStatus !== "ready" || !p || p.predictionStatus !== "ready" || p.productionEligible !== true || !["arvexq-stage64-product-v1", "arvexq-rewrite-v1-uncalibrated-prior", "arvexq-rewrite-v2-elo-speed2", "arvexq-rewrite-v3-v9b"].includes(p.modelVersion) || p.raceId !== race.id || p.date !== race.date || !Array.isArray(race.horses) || !Array.isArray(race.predictionMarks) || race.predictionMarks.length !== 5) return null;
   const known = new Set(race.horses.map((h) => h?.horseNumber));
   const labels = ["\u25CE", "\u25CB", "\u25B2", "\u25B3", "\u2606"];
   const used = /* @__PURE__ */ new Set();

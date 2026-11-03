@@ -18,7 +18,7 @@ from arvexq.prediction.prerace_archive import JST, post_at
 # (the rewrite/ package, published by scripts/arvexq_rewrite_publish.py).
 # The former learned-scenarios producer lane was removed; verification of
 # stored receipts now pins this identity instead.
-MODEL_VERSION = "arvexq-rewrite-v2-elo-speed2"
+MODEL_VERSION = "arvexq-rewrite-v3-v9b"
 
 
 def race_family(detail):

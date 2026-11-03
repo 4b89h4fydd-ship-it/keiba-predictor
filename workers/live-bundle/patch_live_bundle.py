@@ -22,6 +22,17 @@ first forward verdict, and the publish model version moved to
 three versions: the retired Stage64 (historical payloads), the v1
 rewrite engine (payloads published through 2026-11-01), and v2.
 Nothing else about the gate changes.
+
+Update (2026-11-03): the v9b post-processing (temperature
+calibration T=0.6692 + geometric market blend w=0.5 on the v8
+probabilities) was adopted into the production publish lane after
+the full blind evaluation on the graded v8 forward seals, and the
+publish model version moved to "arvexq-rewrite-v3-v9b". The
+allowlist therefore accepts all four versions: the retired
+Stage64, the v1 rewrite engine, v2, and v3. The anchor below is
+the three-version includes expression the live bundle carries
+since the 2026-11-01 patch; the replacement adds v3 only.
+Nothing else about the gate changes.
 predictionStatus 'ready' at both levels, productionEligible === true,
 raceId/date match, and predictionMarks must be exactly the five marks
 ◎○▲△☆ in order with valid, unique horse numbers.
@@ -39,13 +50,18 @@ import hashlib
 import sys
 from pathlib import Path
 
-ANCHOR = 'p.modelVersion !== "arvexq-stage64-product-v1"'
-REPLACEMENT = (
-    '!["arvexq-stage64-product-v1", '
+ANCHOR = (
+    '["arvexq-stage64-product-v1", '
     '"arvexq-rewrite-v1-uncalibrated-prior", '
     '"arvexq-rewrite-v2-elo-speed2"].includes(p.modelVersion)'
 )
-PATCH_MARKER = '"arvexq-rewrite-v2-elo-speed2"].includes(p.modelVersion)'
+REPLACEMENT = (
+    '["arvexq-stage64-product-v1", '
+    '"arvexq-rewrite-v1-uncalibrated-prior", '
+    '"arvexq-rewrite-v2-elo-speed2", '
+    '"arvexq-rewrite-v3-v9b"].includes(p.modelVersion)'
+)
+PATCH_MARKER = '"arvexq-rewrite-v3-v9b"].includes(p.modelVersion)'
 
 
 def main() -> int:
