@@ -54,7 +54,7 @@
         if(!stageRow.calibrated)notes.push('確率は未校正');
       }
       if(!saved&&!stageRow&&!started&&row.overallReasons)notes=row.overallReasons.slice();
-      return '<article class="horse-card diagnosis-merged-row"><div class="diagnosis-merged-head">'
+      return '<article class="horse-card diagnosis-merged-row"><div class="diagnosis-merged-head diagnosis-view-head">'
         +'<button class="diagnosis-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="diagnosis-horse-name"><b>'+esc(h.horseNumber+' '+h.name)+'</b></span></button>'
         +'<span class="diagnosis-eval"><strong class="overall-grade">'+esc(grade||'未取得')+'</strong><b>'+esc(score!=null&&Number.isFinite(Number(score))?Number(score).toFixed(1):'未取得')+'</b>'
         +'<i class="diagnosis-ai-mark">'+esc(deps.scratch(h)?'取消':mark||'—')+'</i></span></div>'

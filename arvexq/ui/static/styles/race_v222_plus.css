@@ -9,6 +9,14 @@
 .diagnosis-horse-name{display:flex!important;flex-direction:column!important;min-width:0!important}
 .diagnosis-horse-name b{font-size:16px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 .diagnosis-horse-name small{margin-top:2px!important;font-size:10px!important;color:#98a8ae!important;white-space:nowrap!important}
+/* ARVEXQDiagnosisView cards emit no check cell and no frame badge: the
+   head has two children (horse-main + eval) and the button a single
+   name span ("number + name"). Under the shared grids above the name
+   span lands in the 36px badge column (inside a button itself squeezed
+   into the 34px check column) and clips to "7 …". Give this head a
+   two-column layout and let the name span take the full button width. */
+.diagnosis-merged-head.diagnosis-view-head{grid-template-columns:minmax(0,1fr) auto!important}
+.diagnosis-view-head .diagnosis-horse-main{display:block!important}
 .diagnosis-eval{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:5px!important;white-space:nowrap!important}
 .diagnosis-eval>.overall-grade{min-width:28px!important;text-align:center!important}
 .diagnosis-eval>b{font-size:17px!important;line-height:1!important;color:#f3f4f4!important}
