@@ -41,6 +41,7 @@ D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers
 LIVE_HORSE_FIELDS = (
     "winOdds", "popularity", "bodyWeight", "bodyWeightChange",
     "status", "scratched", "oddsSource", "oddsForecast",
+    "placeOddsLow", "placeOddsHigh",
 )
 ANALYSIS_FIELDS = (
     "preparedMeta", "preRacePrediction", "predictionAudit", "aiEvaluation",

@@ -1566,7 +1566,11 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
     # single-win odds so the full-day expected-value scan is not stuck at 0/N.
     field_count=max(field_count if 'field_count' in locals() else 0,len(out))
     have_odds=sum(1 for z in out.values() if (z or {}).get('winOdds'))
-    if force or have_odds<max(3,int(max(1,field_count)*.65)):
+    have_place=sum(1 for z in out.values() if (z or {}).get('placeOddsLow'))
+    # The shutuba card carries win odds only; the dedicated b1 (単複) page is
+    # also the place-odds source, so fetch it whenever the place range is
+    # missing for most of the field, not only when win coverage is low.
+    if force or have_odds<max(3,int(max(1,field_count)*.65)) or have_place<max(3,int(max(1,field_count)*.65)):
         odds_url=f"https://nar.netkeiba.com/odds/index.html?race_id={rid}&type=b1"
         if force:odds_url+=f"&t={int(time.time()*1000)}"
         try:
@@ -1579,7 +1583,7 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
                     for j,hv in enumerate(headers):
                         if any(p in hv for p in parts):return j
                     return -1
-                ino=hi('馬番');iodd=hi('単勝オッズ','オッズ');ipop=hi('人気')
+                ino=hi('馬番');iodd=hi('単勝オッズ','オッズ');ipop=hi('人気');iplace=hi('複勝')
                 if ino<0 or iodd<0:continue
                 # Some tables include grouped/multi-row headers; use rows with enough td cells only.
                 for tr in table.find_all('tr'):
@@ -1604,6 +1608,11 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
                     z=out.setdefault(no,{})
                     z['winOdds']=odd;z['oddsSource']='netkeiba実オッズ';z['oddsForecast']=False
                     if pop:z['popularity']=pop
+                    # Same fetched b1 page, its 複勝 column: an observed range
+                    # such as "1.2 - 2.4". Never derived from the win odds.
+                    if 0<=iplace<len(vals):
+                        po=place_odds(vals[iplace])
+                        if po:z.update(po)
         except Exception as exc:
             print('NAR netkeiba odds-page fallback failed',rid,exc)
     return out
@@ -1611,7 +1620,7 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
 _nar_odds_cache_lock=threading.Lock()
 _nar_odds_cache:dict[str,tuple[float,dict]]={}
 
-from arvexq.ingest.place_odds import place_odds_pair
+from arvexq.ingest.place_odds import place_odds, place_odds_pair
 from arvexq.ingest.odds_fields.jra_official import parse_win_odds as jra_observed_win_odds
 from arvexq.ingest.jra_fields.body_weight import extract as jra_observed_body_weight
 from arvexq.ingest.jra_fields.body_weight_change import extract as jra_observed_body_weight_change
@@ -2046,7 +2055,7 @@ def _start_central_history_search(race_id: str, iso_date: str, force: bool = Fal
 
 
 
-from arvexq.ingest.netkeiba_odds_parser import _parse_netkeiba_win_odds_payload
+from arvexq.ingest.netkeiba_odds_parser import _parse_netkeiba_place_odds_payload, _parse_netkeiba_win_odds_payload
 
 def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(
@@ -2062,7 +2071,14 @@ def _netkeiba_live_win_odds(detail:dict,force:bool=False)->dict:
             raw=_netkeiba_get(url,float(os.getenv("NETKEIBA_ODDS_TIMEOUT_SEC","3.0")),
                               0 if force else int(os.getenv("NETKEIBA_ODDS_CACHE_SEC","8")))
             out=_parse_netkeiba_win_odds_payload(raw)
-            if out:return out
+            if out:
+                # Same payload, bet type "2": attach the observed place
+                # ranges so the JRA merge carries them like the NAR ones.
+                try:
+                    for no,z in _parse_netkeiba_place_odds_payload(raw).items():
+                        if no in out:out[no].update(z)
+                except Exception:pass
+                return out
         except Exception as exc:
             print("netkeiba odds api failed",rid,exc)
     return {}
@@ -3818,7 +3834,8 @@ def _restore_saved_odds(detail:dict)->dict:
             if previous:
                 rows=[{
                     "horseNumber":h.get("horseNumber"),"winOdds":h.get("winOdds"),
-                    "popularity":h.get("popularity"),"oddsSource":h.get("oddsSource") or previous.get("oddsSource")
+                    "popularity":h.get("popularity"),"oddsSource":h.get("oddsSource") or previous.get("oddsSource"),
+                    "placeOddsLow":h.get("placeOddsLow"),"placeOddsHigh":h.get("placeOddsHigh")
                 } for h in (previous.get("horses") or []) if not odds_missing(h)]
                 if rows:
                     detail["oddsUpdatedAt"]=previous.get("oddsUpdatedAt") or detail.get("oddsUpdatedAt")
@@ -3830,7 +3847,7 @@ def _restore_saved_odds(detail:dict)->dict:
     for z in rows:
         no=int(z.get("horseNumber") or 0);h=by.get(no)
         if not h:continue
-        for k in ("winOdds","popularity"):
+        for k in ("winOdds","popularity","placeOddsLow","placeOddsHigh"):
             if z.get(k) not in (None,""):h[k]=z.get(k)
         if z.get("oddsSource"):
             h["oddsSource"]=z.get("oddsSource");source=z.get("oddsSource")
@@ -4142,6 +4159,8 @@ def _fast_local_race_detail(race_id:str)->dict|None:
             if z:
                 if z.get("winOdds") is not None:h["winOdds"]=z["winOdds"]
                 if z.get("popularity") is not None:h["popularity"]=z["popularity"]
+                if z.get("placeOddsLow") is not None:h["placeOddsLow"]=z["placeOddsLow"]
+                if z.get("placeOddsHigh") is not None:h["placeOddsHigh"]=z["placeOddsHigh"]
     except Exception:pass
     title=str(detail.get("title") or "");surface=str(detail.get("surface") or "")
     detail["analysisMode"]="障害" if (surface=="障害" or "障害" in title or "ジャンプ" in title) else ("新馬" if re.search(r"(?:新馬|メイクデビュー)",title) else "平地")
@@ -5777,6 +5796,7 @@ def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=
         if not no:continue
         z={"horseNumber":no}
         for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast",
+                  "placeOddsLow","placeOddsHigh",
                   "referenceBodyWeight","referenceBodyWeightDate","status","scratched","oddsSource"):
             if h.get(k) not in (None,""):z[k]=h.get(k)
         by_no[no]=z
@@ -5785,7 +5805,7 @@ def _merge_live_market_rows(race_id:str, fresh_rows:list[dict], saved:dict|None=
             no=int(h.get("horseNumber") or 0)
             if not no:continue
             z=by_no.setdefault(no,{"horseNumber":no})
-            for k in ("winOdds","popularity","oddsSource"):
+            for k in ("winOdds","popularity","oddsSource","placeOddsLow","placeOddsHigh"):
                 if z.get(k) in (None,"") and h.get(k) not in (None,""):z[k]=h.get(k)
     except Exception as exc:
         print("odds preserve read failed",race_id,exc)
@@ -5850,7 +5870,7 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                     official_live=bool(z.get("winOdds") and not z.get("oddsForecast"))
                     if not official_live and z0.get("winOdds"):
                         z["winOdds"]=z0.get("winOdds");z["popularity"]=z0.get("popularity");z["oddsSource"]=z0.get("oddsSource");z["oddsForecast"]=bool(z0.get("oddsForecast"))
-                    for k in ("bodyWeight","bodyWeightChange"):
+                    for k in ("bodyWeight","bodyWeightChange","placeOddsLow","placeOddsHigh"):
                         if z.get(k) in (None,"") and z0.get(k) not in (None,""):z[k]=z0.get(k)
                 if nk and not odds:source="netkeiba予想オッズ"
             except Exception as exc:print("NAR netkeiba preview fallback failed",race_id,exc)
@@ -5899,7 +5919,7 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                 nk=_netkeiba_live_win_odds(detail,bool(force)) or {}
                 for no,z0 in nk.items():
                     z=merged.setdefault(int(no),{})
-                    for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched"):
+                    for k in ("winOdds","popularity","bodyWeight","bodyWeightChange","status","scratched","placeOddsLow","placeOddsHigh"):
                         if z.get(k) in (None,"") and (z0 or {}).get(k) not in (None,""):
                             z[k]=(z0 or {}).get(k)
             except Exception as exc: print("fast odds secondary fallback failed",race_id,exc)
@@ -5948,7 +5968,7 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                 by_no={int(h.get("horseNumber") or 0):h for h in horses}
                 for h in snapshot.get("horses",[]):
                     update=by_no.get(int(h.get("horseNumber") or 0),{})
-                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast","referenceBodyWeight","referenceBodyWeightDate","status","scratched"):
+                    for key in ("winOdds","popularity","bodyWeight","bodyWeightChange","oddsForecast","placeOddsLow","placeOddsHigh","referenceBodyWeight","referenceBodyWeightDate","status","scratched"):
                         if update.get(key) is not None:h[key]=update[key]
                     if update.get("oddsSource"):h["oddsSource"]=update.get("oddsSource")
                 snapshot["oddsSource"]=source
