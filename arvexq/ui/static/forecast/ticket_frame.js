@@ -180,12 +180,12 @@ function combinedEvSection(placeEv,picks,winByNo,names,marksByNo,evLabel,evNote)
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+stack+
       esc(no)+'番'+(names[no]?' '+esc(names[no]):'')+'</b>'+
       '<span class="arv-three-count">単勝期待値 '+esc(Number(w.expectedValue).toFixed(2))+'</span></div>'+
-      '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(w.winProbability)*100).toFixed(1))+
-      '% × 単勝オッズ '+esc(Number(w.odds).toFixed(1))+
-      ' ／ 3着内率 '+esc((Number(pe.top3Probability)*100).toFixed(1))+
-      '% × 複勝オッズ '+esc(Number(pe.placeOddsLow).toFixed(1))+'〜'+esc(Number(pe.placeOddsHigh).toFixed(1))+
+      '<p class="arv-three-ticket-reason">勝率 '+esc((Number(w.winProbability)*100).toFixed(1))+
+      '% × 単勝 '+esc(Number(w.odds).toFixed(1))+
+      ' ／ 3着内 '+esc((Number(pe.top3Probability)*100).toFixed(1))+
+      '% × 複勝 '+esc(Number(pe.placeOddsLow).toFixed(1))+'〜'+esc(Number(pe.placeOddsHigh).toFixed(1))+
       ' → 3着内期待値 '+esc(Number(pe.expectedValueLow).toFixed(2))+'〜'+esc(Number(pe.expectedValueHigh).toFixed(2))+
-      '（'+evLabel+'）</p></div>';
+      '</p></div>';
  }).join('');
  return '<section class="arv-three-section"><h3>期待値候補（'+evLabel+'）</h3>'+
    '<p class="arv-three-ticket-reason">表示条件：単勝期待値1.25以上・勝率5%以上 かつ 3着内期待値（下限）1.0以上の馬のみ表示（注印＝この条件を満たした馬）</p>'+
@@ -208,17 +208,26 @@ function contents(r,p){
  var evCalibrated=!!(r&&r.unifiedForecast&&r.unifiedForecast.ticketPlan&&
    r.unifiedForecast.ticketPlan.expectedValueStatus==='calibrated-estimate');
  var evLabel=evCalibrated?'校正済みの推定値':'未校正の推定値';
- var evNote=evCalibrated?'確率は校正済み（温度校正＋市場ブレンド）の推定値です。期待値による購入推奨は行っていません。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。':
-   '確率は未校正で、勝率・回収率の実測検証は未完了です。組み合わせ券種は発走前の実オッズ不足のため期待値を算出していません。';
+ var evNote=evCalibrated?'確率は校正済み（温度校正＋市場ブレンド）の推定値です。期待値による購入推奨は行っていません。':
+   '確率は未校正で、勝率・回収率の実測検証は未完了です。';
  var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)?sealedFive(r,r.recommendedBets):null;
  if(server){
    if(!server.length)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
-   var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong><p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p></div>';}).join('');
-   var kochiFinal=r&&r.track==='高知'&&/ファイナル/.test(String(r.title||''));
-   var isFusion=r.prediction&&r.prediction.modelVersion==='arvexq-empirical-fusion-v1';
-   var methodology=isFusion?'発走前の実オッズと期待回収率で選定・全券種合計最大5点':
-     kochiFinal?'高知ファイナル：全出走馬から3着候補を評価・3連複と3連単の合計最大5点（未校正）':
-     '旧方式の保存済み発走前買い目・全券種合計最大5点';
+   // The kinds are ONE same-model group (user decision 2026-11-04):
+   // the reason text the payload repeats verbatim on every item is
+   // printed once under the group instead of under every block, and
+   // the blocks sit in a single group container. An item whose reason
+   // differs from the rest keeps its own line. The old methodology
+   // line is gone: its wording was stale (it claimed the old method
+   // and a 5-point cap while all 64 points of the v9b payload show),
+   // and the group reason plus the EV section carry the honest text.
+   var sharedReason=null;
+   if(server.length){
+     var firstReason=String(server[0].reason||'');
+     if(firstReason&&server.every(function(item){return String(item.reason||'')===firstReason;}))sharedReason=firstReason;
+   }
+   var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong>'+(sharedReason?'':'<p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p>')+'</div>';}).join('');
+   var ticketGroup='<div class="arv-three-group">'+rows+(sharedReason?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReason)+'</p>':'')+'</div>';
    // Keep the win-EV list visible alongside the full grouped bets: it
    // is part of the same verified product (unifiedForecast ticketPlan)
    // and was previously only rendered by the reference-plan branch
@@ -246,15 +255,15 @@ function contents(r,p){
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
         esc(x.horseNumber)+'番'+(rosterNames[x.horseNumber]?' '+esc(rosterNames[x.horseNumber]):'')+'</b>'+
         '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
-        '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
-        '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
+        '<p class="arv-three-ticket-reason">勝率 '+esc((Number(x.winProbability)*100).toFixed(1))+
+        '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'</p></div>';
    }).join('');
    evSection=winEvRaw.length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
      '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
      (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
      '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
    }
-   return '<div class="ai-bet-box arv-three-bet"><div class="ai-bet-title">おすすめ買い目</div><p class="arv-three-fixed">'+esc(methodology)+'</p>'+rows+evSection+'</div>';
+   return '<div class="ai-bet-box arv-three-bet">'+ticketGroup+evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.
@@ -279,12 +288,21 @@ function contents(r,p){
  if(!plan||!fixedAt||!Array.isArray(plan.items)||!plan.items.length){
    return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p>'+revisionStatus(r)+'</div>';
  }
+ // Same grouping as the server-bets branch: one group container, and
+ // a reason shared by every item (or the plan-level group reason from
+ // tickets.js) is printed once under the group, not under each block.
+ var sharedReasonP=null;
+ if(plan.items.length){
+   var firstReasonP=String(plan.items[0].reason||'');
+   if(firstReasonP&&plan.items.every(function(item){return String(item.reason||'')===firstReasonP;}))sharedReasonP=firstReasonP;
+   else if(!plan.items.some(function(item){return item.reason;})&&plan.itemGroupReason)sharedReasonP=String(plan.itemGroupReason);
+ }
  var list=plan.items.map(function(item){
    var combos=combosHtml(item,r);
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+
       esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div>'+
       '<strong class="arv-three-combos">'+combos+'</strong>'+
-      (item.reason?'<p class="arv-three-ticket-reason">'+esc(item.reason)+'</p>':'')+'</div>';
+      (!sharedReasonP&&item.reason?'<p class="arv-three-ticket-reason">'+esc(item.reason)+'</p>':'')+'</div>';
  }).join('');
  var evSection='';
  if(Array.isArray(plan.placeExpectedValues)){
@@ -303,8 +321,8 @@ function contents(r,p){
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
       esc(x.horseNumber)+'番'+(x.name?' '+esc(x.name):'')+'</b>'+
       '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
-      '<p class="arv-three-ticket-reason">勝率推定 '+esc((Number(x.winProbability)*100).toFixed(1))+
-      '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'（'+evLabel+'）</p></div>';
+      '<p class="arv-three-ticket-reason">勝率 '+esc((Number(x.winProbability)*100).toFixed(1))+
+      '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'</p></div>';
  }).join('');
  evSection=(plan.winExpectedValues||[]).length?'<section class="arv-three-section"><h3>単勝期待値（'+evLabel+'）</h3>'+
    '<p class="arv-three-ticket-reason">表示条件：期待値1.25以上・勝率5%以上</p>'+
@@ -312,11 +330,9 @@ function contents(r,p){
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  }
  return '<div class="ai-bet-box arv-three-bet">'+
-   '<div class="ai-bet-title">おすすめ買い目</div>'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+
-   '<section class="arv-three-section"><h3>おすすめ買い目</h3>'+list+'</section>'+
+   '<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+'</div>'+
    evSection+
-   '<p class="arv-three-provisional">保存された組み合わせをそのまま表示。発走後の再計算はしていません。</p>'+
    '</div>';
 }
 function render(r,p){

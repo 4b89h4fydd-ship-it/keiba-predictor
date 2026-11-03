@@ -1301,7 +1301,7 @@ function fetchSelectedRaceOdds(id,seq,force){
     if(seq===state.detailSeq&&state.race&&String(state.race.id)===String(id)){
       if(!raceHasOdds(state.race))detailState(id).odds='error';
       var status=document.getElementById('odds-status');
-      if(status)status.textContent='更新失敗｜'+window.ARVEXQLiveOdds.status(state.race)
+      if(status){status.hidden=false;status.textContent='更新失敗｜'+window.ARVEXQLiveOdds.status(state.race)}
     }
     return false
   })
@@ -1442,7 +1442,6 @@ function refreshOddsOnly(force){
   if(!state.race||state.oddsBusy)return Promise.resolve(false);
   var id=String(state.race.id||''),seq=state.detailSeq;if(!id)return Promise.resolve(false);
   state.oddsBusy=true;
-  var status=document.getElementById('odds-status');if(status)status.textContent=' 最新データ確認中…';
   return fetchSelectedRaceOdds(id,seq,force).finally(function(){
     state.oddsBusy=false;
     if(seq===state.detailSeq&&state.race&&String(state.race.id)===id)ensureAutoOdds(state.race)
@@ -2657,10 +2656,13 @@ function styleCell(label,val,active,cls){var unk=val==null||!isFinite(Number(val
 function positionBucket(x){if(x.expected==="逃げ候補")return"逃げ候補";if(x.expected==="先行")return"先行";if(x.expected==="好位")return"好位";if(x.expected==="後方")return"後方";if(x.expected==="不明")return"不明";return"中団"}
 function stylePositionMap(r,p){var rows=(p.rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)}),labels=['逃げ候補','先行','好位','中団','後方','不明'],field=Math.max(1,(r.horses||[]).length),html='<div class="style-position-map"><div class="style-map-axis"><span>内枠</span><b>脚質マップ＋枠順</b><span>外枠</span></div>';for(var j=0;j<labels.length;j++){var lab=labels[j];html+='<div class="style-lane"><div class="style-lane-label">'+lab+'</div><div class="style-lane-track">';for(var i=0;i<rows.length;i++){var x=rows[i],h=x.horse;if(positionBucket(x)!==lab)continue;var left=field<=1?50:6+(n(h.horseNumber)-1)/Math.max(1,field-1)*88,shift=x.pastStyle!==x.expected&&!(x.pastStyle==='先行'&&x.expected==='好位');html+='<span class="style-map-horse'+(shift?' shifted':'')+'" style="left:'+left+'%" title="'+esc(h.name)+'｜過去 '+esc(x.pastStyle)+' → 今回 '+esc(x.expected)+'｜'+esc(x.frontLineRole||'')+'">'+badge(h)+'</span>'}html+='</div></div>'}html+='<div class="style-map-note"><b>水色縁</b>＝過去脚質から今回条件で位置想定が動いた馬。馬番順で内→外を維持。</div>';html+='<div class="style-map-rate-list">'+rows.map(function(x){var h=x.horse,ps=styleDisplayPcts(x),fade=x.styleSamples?Math.round(x.fade*100):null;function cell(l,v,cls){return'<span class="style-map-rate-cell '+(cls||'')+'">'+l+'<strong class="'+(cls==='fade'&&v!=null&&v>=55?'high':'')+'">'+(v==null?'—':v+'%')+'</strong></span>'}return'<div class="style-map-rate-row"><span class="style-map-rate-horse">'+badge(h)+'<b>'+esc(h.name||'')+'</b></span>'+cell('逃',ps[0])+cell('先',ps[1])+cell('差',ps[2])+cell('追',ps[3])+cell('下',fade,'fade')+'</div>'}).join('')+'</div>';var arr=p.arrangement||{};html+='<div class="style-map-summary"><b>先行列：</b>'+esc(arr.pattern||'—')+'　<b>配置：</b>'+esc(arr.concentrationText||'—')+'　<b>初角まで：</b>'+Math.round(firstTurnDistance(r))+'m'+((r.firstTurnDistance||r.startToFirstTurn||r.firstCornerDistance||r.firstCornerMeters)?'':'（コース推定）')+'</div></div>';return html}
 function runnerStyleSection(r,p){
-  var diagnosisReady=diagnosisCurrent(r),
-      cadenceText=window.ARVEXQLiveOdds.status(r);
+  var diagnosisReady=diagnosisCurrent(r);
   // Only current three-factor marks are displayed; no V313 correction badge.
-  return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status"> '+cadenceText+'</span>'
+  // The odds-status span carries no standing text (user decision
+  // 2026-11-04: the 「オッズ取得 …（保存値）」 line under the update
+  // button was clutter); it exists, hidden and empty, so an odds
+  // update FAILURE can still be surfaced next to the button.
+  return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status" hidden></span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){

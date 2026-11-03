@@ -149,3 +149,40 @@
     min-height:38px!important;
   }
 }
+
+/* 2026-11-04: same-model ticket group + one-screen compaction.
+   Presentation only — every combination stays fully listed; the
+   five kinds render as rows of ONE group card with hairline
+   dividers, the shared reason prints once under the group, and
+   spacing/typography tightens so the bets view fits one phone
+   screen for a typical race. */
+.arv-three-bet .arv-three-group{
+  border:1px solid rgba(83,133,173,.17);border-radius:10px;
+  background:rgba(27,52,82,.78);overflow:hidden;
+}
+.arv-three-bet .arv-three-group .arv-three-ticket{
+  background:transparent;border:0;border-radius:0;
+  margin:0;padding:7px 10px;
+}
+.arv-three-bet .arv-three-group .arv-three-ticket + .arv-three-ticket{
+  border-top:1px solid rgba(83,133,173,.16);
+}
+.arv-three-bet .arv-three-group-reason{
+  margin:0!important;padding:6px 10px 8px;
+  border-top:1px solid rgba(83,133,173,.16);
+}
+.bet-detail-page-shell .arv-three-bet{padding:10px!important}
+.arv-three-bet .arv-three-ticket{padding:8px 10px;margin:5px 0 0}
+.arv-three-bet .arv-three-ticket-head{margin-bottom:4px}
+.arv-three-bet .arv-three-combo{min-height:30px;padding:3px 10px}
+.arv-three-bet .arv-three-box-label{min-height:30px;padding:3px 8px}
+.arv-three-bet .arv-three-section{margin:8px 0;padding:9px 10px}
+.arv-three-bet .arv-three-section>h3{margin:0 0 6px;font-size:15px}
+.arv-three-bet .arv-three-ticket-reason{margin:5px 0 0!important;line-height:1.45}
+.arv-three-bet .arv-three-fixed{margin:2px 2px 6px}
+@media(max-width:430px){
+  .bet-detail-page-shell .arv-three-bet{padding:8px!important}
+  .arv-three-bet .arv-three-ticket{padding:7px 9px}
+  .arv-three-bet .arv-three-group .arv-three-ticket{padding:6px 9px}
+  .arv-three-bet .arv-three-section{padding:8px}
+}

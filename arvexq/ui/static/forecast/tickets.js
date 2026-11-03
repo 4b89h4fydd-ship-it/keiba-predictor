@@ -82,9 +82,12 @@
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
         winExpectedValues:winEv,
         placeExpectedValues:placeEv,combinedPicks:combinedPicks,
+        // One shared note for the whole same-model group; the ticket
+        // frame prints it once under the group instead of stamping it
+        // on every item (user decision 2026-11-04).
+        itemGroupReason:'未校正の同一モデル。勝率・回収率の実測検証は未完了',
         referenceCapturedAt:model.capturedAt,items:options.map(function(x){
-          return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1,
-            reason:'未校正の同一モデル。勝率・回収率の実測検証は未完了'};
+          return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1};
         }),referenceBudget:{points:options.length,totalYen:options.length*100}};
       latestPlan=plan;return plan;
     }
