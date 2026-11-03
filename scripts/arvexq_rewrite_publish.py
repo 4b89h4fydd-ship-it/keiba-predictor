@@ -26,7 +26,14 @@ or an added runner), which re-issues that race alone and stamps the
 revision into preparedMeta.rewritePublish.revision, and a lane
 upgrade (2026-11-02): a forecast frozen on the v1 fallback only
 because the v8 extras had not landed yet is re-issued on the top
-lane once the extras exist, also stamped as a revision. The v9b
+lane once the extras exist, also stamped as a revision. A third
+exception of the same kind is the blend upgrade (2026-11-04): a
+forecast frozen on the v9b lane WITHOUT its market blend, only
+because win odds were incomplete at first publication, is
+re-issued once — stamped kind "blend-upgrade" — when the current
+payload carries win odds for every active runner and the post is
+still at least 60 minutes away; once blended it is final, and
+later odds movement never re-triggers it. The v9b
 adoption (2026-11-03) adds one dated branch of the same kind: a
 forecast frozen on the v8 lane for a race dated 2026-11-04 is
 re-issued on the v9b lane (revision reason
@@ -143,6 +150,20 @@ V9B_ABILITY_MODEL_VERSION = "arvexq-v9b-elo-speed2-temp0.6692-blend50"
 V9B_ABILITY_STATUS = "rewrite-ability-elo-speed2-v9b"
 V9B_PROBABILITY_STATUS = "calibrated-market-blend-v9b"
 V9B_ADOPTION_DATE = "2026-11-04"
+
+# Blend upgrade (2026-11-04, user instruction after the adoption
+# night left 24 of 59 races calibration-only): some venues post
+# their win odds only on race-day morning (coverage is normally
+# complete by ~09:40 JST), hours after the evening first publish
+# froze those races with the temperature-only probabilities. A
+# frozen v9b forecast whose blend did not apply is therefore
+# re-issued ONCE when the odds have completed — see
+# _blend_upgrade_info. The guard below keeps the upgrade out of
+# the final hour before post, where a moving forecast would be
+# unfair to anyone already holding the published one; after the
+# upgrade the forecast is blended and final, and later odds
+# movement never re-triggers anything.
+BLEND_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 
 
 def _get(path: str) -> dict:
@@ -261,6 +282,69 @@ def _lane_upgrade_info(old: dict) -> dict | None:
     return {"publishedAt": marker.get("publishedAt"),
             "previousAbilityLane": lane,
             "reason": reason}
+
+
+def _blend_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time blend upgrade of a frozen v9b race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it was published on the v9b lane (abilityLane v9b-cal-market)
+      with the market blend NOT applied (blendApplied false in the
+      lane marker) — the blend was skipped at first publication
+      solely because win odds were incomplete then;
+    - it does not already carry a blend-upgrade revision (the
+      upgrade is exactly-once; a blended forecast is final and
+      later odds movement never re-triggers it);
+    - the post is still at least BLEND_UPGRADE_MIN_LEAD away;
+    - the CURRENT payload carries a win odd (> 1.0) for every
+      horse on the active roster — the same coverage rule the
+      blend itself applies to the probability vector, checked on
+      the roster so an incomplete card never starts a rebuild.
+
+    Anything unreadable (no marker, no recorded blend flag) simply
+    does not qualify; the caller keeps the frozen forecast. The
+    caller still re-verifies after the rebuild that the blend
+    actually landed before stamping anything.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    blend_applied = marker.get("blendApplied")
+    if not isinstance(blend_applied, bool):
+        post_processing = marker.get("postProcessing")
+        if isinstance(post_processing, dict):
+            blend_applied = post_processing.get("blendApplied")
+    if blend_applied is not False:
+        return None
+    revision = marker.get("revision")
+    if isinstance(revision, dict) and (
+            revision.get("kind") == "blend-upgrade"
+            or revision.get("reason") == "blend-upgrade"):
+        return None
+    post = _post_at(old)
+    if post is None or post - now < BLEND_UPGRADE_MIN_LEAD:
+        return None
+    by_number: dict[int, dict] = {}
+    for horse in old.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        try:
+            by_number[int(horse["horseNumber"])] = horse
+        except (KeyError, TypeError, ValueError):
+            continue
+    for number, _name in _active_roster(old):
+        horse = by_number.get(number)
+        value = horse.get("winOdds") if isinstance(horse, dict) else None
+        if not (isinstance(value, (int, float))
+                and not isinstance(value, bool) and value > 1.0):
+            return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "blend-upgrade"}
 
 
 def _is_inactive(horse: dict) -> bool:
@@ -383,7 +467,9 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     # never recomputed. A roster change re-issues it (stamped as a
     # revision below); so does a lane upgrade — a v1-lane fallback
     # frozen only because the v8 extras had not landed yet is
-    # re-issued on the v8 lane once the extras exist. Unreadable
+    # re-issued on the v8 lane once the extras exist; and so does
+    # the one-time blend upgrade of a v9b forecast frozen without
+    # its market blend (see _blend_upgrade_info). Unreadable
     # frozen state fails closed.
     try:
         freeze = _freeze_decision(old)
@@ -392,14 +478,24 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"{exc}); not overwriting")
     reissue = None
     lane_upgrade = None
+    blend_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
-            if lane_upgrade is None:
-                return None, (f"frozen: already published ready "
-                              f"(receipt {str(freeze[1])[:12]}…); "
-                              f"roster unchanged")
-            lane_upgrade["receipt"] = freeze[1]
+            if lane_upgrade is not None:
+                lane_upgrade["receipt"] = freeze[1]
+            else:
+                # The last freeze exception: a v9b forecast frozen
+                # WITHOUT its market blend only because win odds
+                # were incomplete at first publication is re-issued
+                # once when the odds complete (see
+                # _blend_upgrade_info). Anything else stays frozen.
+                blend_upgrade = _blend_upgrade_info(old, now)
+                if blend_upgrade is None:
+                    return None, (f"frozen: already published ready "
+                                  f"(receipt {str(freeze[1])[:12]}…); "
+                                  f"roster unchanged")
+                blend_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -424,15 +520,17 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     used_v8 = True
                 else:
                     v8_fallback_status = v8_forecast.status
-        elif reissue is None and lane_upgrade is None:
+        elif reissue is None and lane_upgrade is None \
+                and blend_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
             # the 2026-11-02 incident). Skip this cycle; a later one
             # publishes it on the v8 lane. Hard deadline 06:00 JST on
             # race day: past it, fall through to the v1 fallback.
-            # Re-issues (roster change / lane upgrade) never defer:
-            # they must proceed with whatever lane is usable now.
+            # Re-issues (roster change / lane upgrade / blend
+            # upgrade) never defer: they must proceed with whatever
+            # lane is usable now.
             deadline = _v8_extras_deadline(race_date)
             if (deadline is not None and now.tzinfo is not None
                     and now < deadline):
@@ -483,6 +581,19 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"v9b lane not usable for this race; "
                       f"keeping the frozen "
                       f"{lane_upgrade['previousAbilityLane']} forecast")
+    if blend_upgrade is not None and not (used_v9b and blend_applied):
+        # The upgrade was attempted but the blend did not land —
+        # the odds in the rebuilt payload still do not cover the
+        # probability vector, or the v9b transform passed through:
+        # re-issuing now would rewrite a forecast on sale WITHOUT
+        # the one change that justifies it, on inputs that may
+        # have backfilled since first publication. Keep the frozen
+        # calibration-only forecast byte-stable; a later cycle can
+        # retry while the qualification still holds.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(blend_upgrade['receipt'])[:12]}…); "
+                      f"blend upgrade did not land; keeping the "
+                      f"frozen calibration-only forecast")
     # Trifecta formation B (adopted 2026-10-31 after the
     # pre-registered primary paired judgement against legacy A at
     # 142 races). Probabilities, marks and every other ticket kind
@@ -670,6 +781,39 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 "instruction 2026-11-03): no race dated "
                 "2026-11-04 stays on the v8 lane")
         meta["rewritePublish"]["revision"] = revision
+    if blend_upgrade is not None:
+        # Blend-upgrade re-issue of a frozen forecast: the roster
+        # and the lane are unchanged — the only change is that the
+        # market blend, skipped at first publication because win
+        # odds were incomplete, now applies. Same audit chain as
+        # the other re-issues: the first publication time is
+        # preserved and the previous receipt is recorded. The
+        # marker's blendApplied (stamped above from the rebuild) is
+        # true from here on, which is what makes the upgrade
+        # exactly-once: this qualification can never hold again
+        # for this race.
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            blend_upgrade.get("firstPublishedAt")
+            or blend_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "blend-upgrade",
+            "reason": "blend-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": blend_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "note": ("one-time blend upgrade (user instruction "
+                     "2026-11-04): win odds were incomplete at "
+                     "first publication, so the race was frozen "
+                     "with temperature calibration only; the "
+                     "market blend applies from this revision"),
+        }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
 
