@@ -60,7 +60,7 @@
         +'<i class="diagnosis-ai-mark">'+esc(deps.scratch(h)?'取消':mark||'—')+'</i></span></div>'
         +'<p class="diag-explain">'+esc(notes.join(' / ')||(started?'発走前の診断根拠は未保存':'診断データ不足'))+'</p></article>';
     }).join('');
-    return '<details class="card"><summary>全頭診断（'+esc((r.horses||[]).length)+'頭）</summary>'
+    return '<details class="card" data-diagnosis-fold="1"'+(deps.open?' open':'')+'><summary>全頭診断（'+esc((r.horses||[]).length)+'頭）</summary>'
       +'<p class="muted">'+esc(original?'発走前に保存された評価を表示しています。':(stage?'公開Stage64の能力・確率・印を表示。発走前の固定原本の確認とは別です。':(started?'発走前評価が未保存の馬は未取得と表示します。':'取得済み情報による暫定評価です。')))+'</p>'
       +'<div class="diagnosis-merged-list">'+body+'</div></details>';
   }
