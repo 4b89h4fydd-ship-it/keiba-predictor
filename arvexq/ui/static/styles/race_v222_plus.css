@@ -29,6 +29,34 @@
 .diagnosis-ai-mark[data-ai-mark="注"]{color:#ffad66!important;border-color:#d77c31!important}
 .diagnosis-merged-row .diag-confidence{padding:7px 10px 2px 51px!important;font-size:11px!important;color:#aebbc0!important}
 .diagnosis-merged-row .diag-explain{padding:0 10px 9px 51px!important;margin:4px 0 0!important;font-size:12px!important;line-height:1.45!important;color:#d0d7da!important}
+/* Grade-band colour coding for the diagnosis cards (user request
+   2026-11-04: 「全頭診断わかりにくいから色つけて」). diagnosis_view.js
+   adds diagnosis-grade-s/a/b/c/d to the card and to its grade chip
+   for the S/A/B/C/D letter grades only; other grades stay unbanded.
+   The filled hues are the app's own grade palette promoted from text
+   colour to badge fill: S uses the alert red #d92d20 (styles.css
+   .time-changed), A the warning orange #b54708 (.flash-badge), B the
+   grade blue #175cd3 (.overall-grade.grade-a text), C the grade
+   green #067647 (.overall-grade.grade-b text), D the grade gray
+   #667085 (.overall-grade.grade-c text). White bold letters keep
+   contrast on the dark card, and the letter is always printed, so
+   colour is never the only signal. A matching left stripe and a
+   faint head tint carry the band across the whole card. */
+.diagnosis-merged-row.diagnosis-grade-s{border-left:4px solid #d92d20!important}
+.diagnosis-merged-row.diagnosis-grade-a{border-left:4px solid #b54708!important}
+.diagnosis-merged-row.diagnosis-grade-b{border-left:4px solid #175cd3!important}
+.diagnosis-merged-row.diagnosis-grade-c{border-left:4px solid #067647!important}
+.diagnosis-merged-row.diagnosis-grade-d{border-left:4px solid #667085!important}
+.diagnosis-grade-s .diagnosis-merged-head{background:rgba(217,45,32,.14)!important}
+.diagnosis-grade-a .diagnosis-merged-head{background:rgba(181,71,8,.18)!important}
+.diagnosis-grade-b .diagnosis-merged-head{background:rgba(23,92,211,.18)!important}
+.diagnosis-grade-c .diagnosis-merged-head{background:rgba(6,118,71,.18)!important}
+.diagnosis-grade-d .diagnosis-merged-head{background:rgba(102,112,133,.16)!important}
+.diagnosis-grade-s .diagnosis-eval>.overall-grade{background:#d92d20!important;color:#fff!important;border-color:#d92d20!important}
+.diagnosis-grade-a .diagnosis-eval>.overall-grade{background:#b54708!important;color:#fff!important;border-color:#b54708!important}
+.diagnosis-grade-b .diagnosis-eval>.overall-grade{background:#175cd3!important;color:#fff!important;border-color:#175cd3!important}
+.diagnosis-grade-c .diagnosis-eval>.overall-grade{background:#067647!important;color:#fff!important;border-color:#067647!important}
+.diagnosis-grade-d .diagnosis-eval>.overall-grade{background:#667085!important;color:#fff!important;border-color:#667085!important}
 .smart-race-head-v222 .smart-race-head-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 148px!important;gap:8px!important;align-items:stretch!important}
 .smart-race-head-v222 .smart-race-left-stack{min-width:0!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:7px!important}
 .smart-race-head-v222 .smart-race-head-left{min-width:0!important;display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:nowrap!important}

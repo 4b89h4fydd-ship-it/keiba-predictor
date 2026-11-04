@@ -31,6 +31,13 @@
     });
     return rows;
   }
+  function gradeBand(grade){
+    // Colour band for the S/A/B/C/D letter grades only. Any other
+    // grade text (能力指数, 未取得, retired labels) stays unbanded so
+    // colour never invents a strength the grade does not claim.
+    var g=String(grade==null?'':grade).trim();
+    return (g==='S'||g==='A'||g==='B'||g==='C'||g==='D')?' diagnosis-grade-'+g.toLowerCase():'';
+  }
   function render(r,p,deps){
     var original=deps.original(r),stage=stage64Rows(r),esc=deps.esc,by={};
     if(original&&Array.isArray(original.horses))original.horses.forEach(function(h){by[h.horseNumber]=h});
@@ -54,9 +61,10 @@
         if(!stageRow.calibrated)notes.push('確率は未校正');
       }
       if(!saved&&!stageRow&&!started&&row.overallReasons)notes=row.overallReasons.slice();
-      return '<article class="horse-card diagnosis-merged-row"><div class="diagnosis-merged-head diagnosis-view-head">'
+      var band=gradeBand(grade);
+      return '<article class="horse-card diagnosis-merged-row'+band+'"><div class="diagnosis-merged-head diagnosis-view-head">'
         +'<button class="diagnosis-horse-main" data-horse-open="'+esc(h.horseNumber)+'"><span class="diagnosis-horse-name"><b>'+esc(h.horseNumber+' '+h.name)+'</b></span></button>'
-        +'<span class="diagnosis-eval"><strong class="overall-grade">'+esc(grade||'未取得')+'</strong><b>'+esc(score!=null&&Number.isFinite(Number(score))?Number(score).toFixed(1):'未取得')+'</b>'
+        +'<span class="diagnosis-eval"><strong class="overall-grade'+band+'">'+esc(grade||'未取得')+'</strong><b>'+esc(score!=null&&Number.isFinite(Number(score))?Number(score).toFixed(1):'未取得')+'</b>'
         +'<i class="diagnosis-ai-mark">'+esc(deps.scratch(h)?'取消':mark||'—')+'</i></span></div>'
         +'<p class="diag-explain">'+esc(notes.join(' / ')||(started?'発走前の診断根拠は未保存':'診断データ不足'))+'</p></article>';
     }).join('');
