@@ -1,0 +1,76 @@
+name: ARVEXQ Day-Ahead Prefetch Dispatch
+
+# Tomorrow's card collection used to depend solely on the prefetch
+# workflow's scheduled 14:05 / 17:05 / 20:05 JST slots resolving
+# "tomorrow" inside arvexq-prefetch.yml. On 2026-11-04 the GitHub
+# scheduler dropped the 14:05 slot entirely and tomorrow's listing was
+# still empty in the afternoon, while push-triggered runs fired
+# reliably all day. This dispatcher rides those pushes: whenever a
+# prefetch-relevant push lands on main and tomorrow's listing is still
+# empty, it dispatches the SAME prefetch pipeline with an explicit
+# date input (the input is what resolves the day-ahead target and the
+# collection-only lane inside arvexq-prefetch.yml). Once the listing
+# exists the check below exits in seconds, so steady-state cost is one
+# short job per relevant push. The scheduled slots stay as redundancy;
+# nothing about the collection, protect or freeze semantics changes.
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - scripts/arvexq_prefetch.py
+      - scripts/arvexq_morning_picks.js
+      - scripts/arvexq_merge_morning_output.py
+      - scripts/arvexq_sync_batches.py
+      - scripts/arvexq_fetch_d1_bundle.py
+      - scripts/arvexq_protect_sync.py
+      - scripts/arvexq_select_prefetch_repairs.py
+      - scripts/arvexq_verify_persisted_inputs.py
+      - scripts/arvexq_sqlite_health.py
+      - arvexq/pipeline/fingerprints.py
+      - arvexq/pipeline/persisted_inputs.py
+      - arvexq/prediction/**
+      - arvexq/forecast/**
+      - arvexq/ingest/**
+      - arvexq/databanks/**
+      - .github/workflows/arvexq-prefetch.yml
+      - .github/workflows/arvexq-prefetch-day-ahead.yml
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: arvexq-day-ahead-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
+      GH_REPO: ${{ github.repository }}
+
+    steps:
+      - name: Dispatch tomorrow's prefetch when its listing is still empty
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TOMORROW=$(TZ=Asia/Tokyo date -d tomorrow +%F)
+          COUNT=0
+          if curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+              --connect-timeout 10 --max-time 35 \
+              "$CLOUDFLARE_API_BASE/api/day?date=$TOMORROW&details=0" \
+              -o day-ahead-day.json; then
+            COUNT=$(jq '.races // [] | length' day-ahead-day.json 2>/dev/null || echo 0)
+          fi
+          echo "DAY_AHEAD_DISPATCH_CHECK date=$TOMORROW existing=$COUNT"
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "Tomorrow's listing is already collected; nothing to dispatch."
+            exit 0
+          fi
+          gh workflow run arvexq-prefetch.yml --ref main -f date="$TOMORROW"
+          echo "DAY_AHEAD_DISPATCHED date=$TOMORROW"
