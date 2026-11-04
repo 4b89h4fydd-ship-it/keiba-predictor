@@ -1601,9 +1601,13 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
                     if odd<=1:continue
                     pop=None
                     if 0<=ipop<len(vals):
-                        mp=re.search(r'\d+',vals[ipop])
+                        # The b1 table's header cell can combine odds and
+                        # popularity ("オッズ 人気"), making ipop == iodd
+                        # and the row cell "23.4 6人気": the rank is the
+                        # number attached to 人気, not the odds integer.
+                        mp=re.search(r'(\d+)\s*人気',vals[ipop]) or re.search(r'(\d+)',vals[ipop])
                         if mp:
-                            try:pop=int(mp.group())
+                            try:pop=int(mp.group(1))
                             except Exception:pop=None
                     z=out.setdefault(no,{})
                     z['winOdds']=odd;z['oddsSource']='netkeiba実オッズ';z['oddsForecast']=False
