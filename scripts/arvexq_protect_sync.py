@@ -102,6 +102,85 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
     raise RuntimeError("D1 returned a mismatched race")
 
 
+def _marker_timestamp(value: Any) -> Any:
+    from datetime import datetime
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def _rewrite_marker_fresh(stored: Any, incoming: Any) -> bool:
+    """Whether an incoming rewritePublish marker may replace the stored one.
+
+    The publish lane (scripts/arvexq_rewrite_publish.py) is the marker's
+    only writer, and the marker is the ONLY canonical record of the
+    published forecast's post-processing (blendApplied lives nowhere
+    else; the lane's upgrade guards and freeze decision key on it).
+    A marker-carrying write is a genuine advance of the publication
+    only when one of these holds:
+
+    - there is no stored marker yet (first publication);
+    - the incoming marker belongs to a different model version than
+      the stored one (version succession across lanes; the caller's
+      own current-version check still gates acceptance);
+    - it IS the stored marker (idempotent re-send of the same
+      publication, e.g. a seeded detail round-tripping unchanged);
+    - it advances the chain: publishedAt does not move backwards
+      and, for a revision-stamped write, the revision links to the
+      stored marker — previousReceiptSha256 equals the stored
+      marker's receipt, revisionCount is exactly one higher, and
+      firstPublishedAt still points at a timestamp of the stored
+      publication (the lane stamps either the stored firstPublishedAt
+      or, on roster/lane re-issues, the stored publishedAt);
+    - over an UNREVISED stored marker, a revision-less write with a
+      strictly later publishedAt (fresh re-publication the freeze
+      lane does not recognise, e.g. over a retired version's marker
+      of the same version string).
+
+    Anything else — a prepared payload seeded before an upgrade being
+    re-applied (Depth A rollback), a fast-diagnosis snapshot's
+    lightweight preparedMeta (Depth B loss) — is stale and must not
+    replace the stored publication.
+    """
+    if not isinstance(stored, dict):
+        return True
+    if not isinstance(incoming, dict):
+        return False
+    if incoming == stored:
+        return True
+    if (incoming.get("modelVersion")
+            and incoming.get("modelVersion") != stored.get("modelVersion")):
+        return True
+    incoming_at = _marker_timestamp(incoming.get("publishedAt"))
+    stored_at = _marker_timestamp(stored.get("publishedAt"))
+    if incoming_at is None or stored_at is None or incoming_at < stored_at:
+        return False
+    revision = incoming.get("revision")
+    stored_revision = stored.get("revision")
+    if isinstance(revision, dict):
+        stored_count = (stored_revision.get("revisionCount")
+                        if isinstance(stored_revision, dict) else 0)
+        if not isinstance(stored_count, int) or isinstance(stored_count, bool):
+            stored_count = 0
+        stored_firsts = {stored.get("publishedAt")}
+        if stored.get("firstPublishedAt"):
+            stored_firsts.add(stored.get("firstPublishedAt"))
+        return (
+            revision.get("previousReceiptSha256") is not None
+            and revision.get("previousReceiptSha256")
+            == stored.get("receiptSha256")
+            and revision.get("revisionCount") == stored_count + 1
+            and incoming.get("firstPublishedAt") in stored_firsts)
+    if isinstance(stored_revision, dict):
+        # A revision-less marker never succeeds a revised publication.
+        return False
+    return incoming_at > stored_at
+
+
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
     if FULL_PAYLOAD_KEY in incoming:
         # Archive protection must edit the real original, then recompress it.
@@ -135,15 +214,37 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
                      'recommendedBets', 'forecastText', 'predictionStatus',
                      'predictionModelVersion', 'preRaceBet')
     marker = ((out.get('preparedMeta') or {}).get('rewritePublish') or {})
+    stored_marker = (old.get('preparedMeta') or {}).get('rewritePublish')
+    # The marker check above is necessary but not sufficient: a detail
+    # seeded from a stored publication inherits the marker verbatim, so
+    # a stale seed re-applied after a revision (blend upgrade) carries
+    # a complete, current-version marker over an OLD forecast and used
+    # to roll the publication back to its first-published state. The
+    # write must also ADVANCE the marker chain (see
+    # _rewrite_marker_fresh). (2026-11-04: 13 races rolled back this
+    # way; 4 more lost the marker entirely to a lightweight
+    # preparedMeta overwrite — closed by the field merge below.)
     is_publish_write = (
         marker.get('modelVersion') == REWRITE_MODEL_VERSION
-        and all(key in out for key in forecast_keys))
+        and all(key in out for key in forecast_keys)
+        and _rewrite_marker_fresh(stored_marker, marker))
     if not is_publish_write:
         for key in forecast_keys:
             if key in old:
                 out[key] = copy.deepcopy(old[key])
             else:
                 out.pop(key, None)
+        # preparedMeta is field-merged, never replaced wholesale: the
+        # incoming write stays the base (its own lane bookkeeping —
+        # live updates, prefetch epochs — still lands), but the
+        # rewritePublish marker is publish-lane property and is
+        # carried over from the stored detail. blendApplied and the
+        # revision chain exist only inside the marker, so losing it
+        # unfreezes the race and blocks every marker-keyed guard.
+        if isinstance(stored_marker, dict):
+            merged_meta = dict(out.get('preparedMeta') or {})
+            merged_meta['rewritePublish'] = copy.deepcopy(stored_marker)
+            out['preparedMeta'] = merged_meta
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.
