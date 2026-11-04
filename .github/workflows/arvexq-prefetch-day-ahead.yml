@@ -7,10 +7,12 @@ name: ARVEXQ Day-Ahead Prefetch Dispatch
 # retry at 15:18 still found zero officially published entries for
 # tomorrow — the day-ahead entries stand up progressively through
 # the afternoon, so a single retry is not enough either. This
-# dispatcher therefore retries on two reliable cadences — relevant
-# pushes to main, and completions of the Realtime Sync workflow
-# (which runs every few minutes all day) — until tomorrow's listing
-# exists. Each attempt first checks the production listing and exits
+# dispatcher therefore retries on three independent cadences —
+# relevant pushes to main, completions of the Realtime Sync
+# workflow, and its own 20-minute afternoon schedule — until
+# tomorrow's listing exists. (The sync cadence alone proved
+# insufficient on day one: sync's own scheduled slots were starved
+# for hours, so each layer here backs up a different failure.) Each attempt first checks the production listing and exits
 # in seconds once it is non-empty, and a 25-minute throttle keeps at
 # most one dispatched collection in flight per window. The dispatch
 # uses the existing Full Prefetch workflow's date input, which is
@@ -43,6 +45,12 @@ name: ARVEXQ Day-Ahead Prefetch Dispatch
   workflow_run:
     workflows: ["ARVEXQ Realtime Sync"]
     types: [completed]
+  schedule:
+    # JST 12:00-23:59 every 20 minutes. GitHub's scheduler drops
+    # individual slots; at this density even a poor fire rate lands
+    # several attempts per afternoon, and each attempt is a cheap
+    # listing check once tomorrow is collected.
+    - cron: "*/20 3-14 * * *"
 
 permissions:
   actions: write
@@ -56,7 +64,7 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     env:
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
