@@ -19,7 +19,13 @@ on:
     # so follow every one of its completions instead of relying on
     # the schedule alone. Runs with no date input (today + tomorrow
     # JST), same as a schedule run.
-    workflows: ["ARVEXQ Full Prefetch"]
+    # Realtime Sync completions are followed for the same reason:
+    # the place-EV upgrade can only fire after a sync lands full
+    # place coverage, official place odds stand only ~60-100 min
+    # before post, and the upgrade guard closes at post-60min — an
+    # hourly schedule alone structurally loses that race (2026-11-04
+    # morning: several mid-card races missed exactly this way).
+    workflows: ["ARVEXQ Full Prefetch", "ARVEXQ Realtime Sync"]
     types: [completed]
     branches: [main]
   workflow_dispatch:

@@ -26,7 +26,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 10
 
     env:
       SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}

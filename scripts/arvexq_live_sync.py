@@ -286,6 +286,20 @@ def merge_summary(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[st
     return z
 
 
+# Coverage-earliness window: official NAR place odds only stand
+# ~60-100 min before post, while the publish lane's place-EV upgrade
+# guard closes at post-60min, and the scheduled sync cadence can drop
+# slots for hours at a time (2026-11-04: scheduled runs starved all
+# morning; mid-card races reached full coverage only as their guard
+# closed and several missed). Target every race posting within the
+# next four hours so that any single landed run inside the stand-up
+# window covers the race with time to spare; nearest posts are
+# served first and the set is capped so one run stays well inside
+# its job timeout.
+SWEEP_AHEAD_MIN = 240
+MAX_LIVE_TARGETS = 30
+
+
 def choose_targets(rows: list[dict[str, Any]], now_min: int) -> list[str]:
     groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for r in rows:
@@ -301,10 +315,15 @@ def choose_targets(rows: list[dict[str, Any]], now_min: int) -> list[str]:
             if rid and rid not in ids:
                 ids.append(rid)
 
-    for r in sorted(rows, key=lambda x: abs(start_min(x) - now_min)):
-        sm = start_min(r)
+    upcoming = sorted(
+        (r for r in rows if -15 <= start_min(r) - now_min <= SWEEP_AHEAD_MIN),
+        key=start_min,
+    )
+    for r in upcoming:
+        if len(ids) >= MAX_LIVE_TARGETS:
+            break
         rid = str(r.get("id") or "")
-        if rid and -15 <= sm - now_min <= 60 and rid not in ids:
+        if rid and rid not in ids:
             ids.append(rid)
     return ids
 
