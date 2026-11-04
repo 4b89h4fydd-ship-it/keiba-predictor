@@ -21,7 +21,13 @@ name: ARVEXQ Realtime Sync
 
 concurrency:
   group: arvexq-realtime-sync
-  cancel-in-progress: true
+  # Queue instead of cancelling: on a degraded-scheduler day the one
+  # slot that fires must not be cancelled by the next slot's arrival
+  # (a cancelled run was observed on 2026-11-04 while scheduled slots
+  # were being dropped for hours, leaving no sync completions at all
+  # after 14:04 JST and starving every downstream lane). Each run
+  # fetches live data when it starts, so a queued run is never stale.
+  cancel-in-progress: false
 
 jobs:
   sync:

@@ -5,6 +5,21 @@ name: arvexq-rewrite-publish
 # Replaces the retired unified-preoff and prerace-freeze lanes.
 
 on:
+  push:
+    # Push is the trigger that demonstrably fires even while GitHub's
+    # scheduler is degraded (2026-11-04: no scheduled publish or sync
+    # completions after ~14:10 JST, while every push-triggered run
+    # fired). The place-EV upgrade lane dies quietly when this
+    # workflow starves, so any change to the publish script or the
+    # engine packages it runs also serves as a publish attempt for
+    # today + tomorrow. Publishing is idempotent and serialized by
+    # the concurrency group below.
+    branches: [main]
+    paths:
+      - scripts/arvexq_rewrite_publish.py
+      - arvexq/prediction/**
+      - arvexq/forecast/**
+      - .github/workflows/arvexq-rewrite-publish.yml
   schedule:
     # Hourly :05, JST 06:05-20:05 (UTC 21:05 prev day - 11:05)
     - cron: "05 0-11,21-23 * * *"
