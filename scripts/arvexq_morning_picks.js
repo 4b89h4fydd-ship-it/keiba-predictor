@@ -68,6 +68,7 @@ const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifie
 const calibrationFile='arvexq/ui/static/morning/hit_rate_calibration.json';
 const calibration=fs.existsSync(calibrationFile)?JSON.parse(fs.readFileSync(calibrationFile,'utf8')):null;
 const evidenceModule=fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8');
+const laneAdapterModule=fs.readFileSync('arvexq/ui/static/morning/production_lane.js','utf8');
 // Unified predictor in app.js owns all marks and tickets.
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
@@ -84,6 +85,7 @@ vm.createContext(ctx);
 window.ARVEXQTicketHitCalibration=calibration&&calibration.asOfDate===day?calibration:null;
 vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(evidenceModule,ctx,{timeout:12000,filename:'frozen_ticket_evidence.js'});
+vm.runInContext(laneAdapterModule,ctx,{timeout:12000,filename:'production_lane.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
 vm.runInContext(selectedPipeline,ctx,{timeout:12000,filename:'selected_race_pipeline.js'});
 vm.runInContext(specialModule,ctx,{timeout:12000,filename:'special_selection.js'});

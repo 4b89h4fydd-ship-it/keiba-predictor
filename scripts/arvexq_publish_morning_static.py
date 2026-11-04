@@ -71,7 +71,12 @@ def morning_manifest(payload: dict) -> dict | None:
             combos = item.get("combos")
             if not isinstance(combos, list) or not combos:
                 return None
-            if item["kind"] == "3連単" and not 6 <= len(combos) <= 12:
+            # Lane receipts (origin morning-lane-v9b) record the stored
+            # production plan's issued point counts faithfully — a
+            # 36-point Formation B trifecta is valid there. The legacy
+            # 6-12 sanity range still applies to every other receipt.
+            if item["kind"] == "3連単" and e.get("origin") != "morning-lane-v9b" \
+                    and not 6 <= len(combos) <= 12:
                 return None
             for combo in combos:
                 if (not isinstance(combo, list) or len(combo) != size_by_kind[item["kind"]]

@@ -9,10 +9,20 @@ const LEVELS=['本線','保険','3連単チャレンジ'];
 const MARKS=['','◎','○','▲','☆+','☆','△','注'];
 function num(v){return Number.isInteger(Number(v))&&Number(v)>0?Number(v):0}
 function capture(r,p,plan,selection){
+ // Lane-scoped contract: a plan built by the production lane adapter
+ // from the stored v9b ticket plan carries no purchase decision and
+ // no bet input gate — everywhere outside the lane the product keeps
+ // 購入推奨なし. Inside the lane the plan is recognised by its source
+ // tag plus the v9b model pin, and its receipt is stamped with the
+ // lane origin so verify/publish apply the lane's faithful point
+ // counts (a 36-point Formation B item is recorded as 36 points).
+ const lanePlan=!!(plan&&plan.source==='arvexq-morning-production-lane-v1');
  if(!r||!r.id||!r.date||!p||!Array.isArray(p.rows)||
-    !plan||!plan.betInputGate||plan.betInputGate.ready!==true||
-    !['購入候補','通常買い','強く買う'].includes(plan.decision)||
     !selection||selection.selected!==true)return null;
+ if(lanePlan){
+   if(String(plan.modelVersion||'')!=='arvexq-rewrite-v3-v9b')return null;
+ }else if(!plan||!plan.betInputGate||plan.betInputGate.ready!==true||
+    !['購入候補','通常買い','強く買う'].includes(plan.decision))return null;
  const original=p.rows.filter(x=>x&&x.horse&&num(x.horse.horseNumber));
  const known=new Set(),marks=[];
  for(const x of original){
@@ -34,7 +44,7 @@ function capture(r,p,plan,selection){
      if(values.some(n=>!n||!known.has(n))||new Set(values).size!==values.length)return null;
      combos.push(values);
    }
-   if(z.kind==='3連単'&&(combos.length<6||combos.length>12))return null;
+   if(z.kind==='3連単'&&!lanePlan&&(combos.length<6||combos.length>12))return null;
    items.push({level:z.level,kind:z.kind,combos:combos,points:combos.length,
                reason:String(z.reason||'').slice(0,300)});
  }
@@ -47,9 +57,11 @@ function capture(r,p,plan,selection){
       items.some(x=>!['ワイド','馬連','3連複'].includes(x.kind)))return null;
  }else if(axis.length!==1)return null;
  if(String(selection.primaryType)==='勝ち馬明確型'&&!axis.length)return null;
- return {version:VERSION,raceId:String(r.id),raceDate:String(r.date),fixedAt:'',
+ const receipt={version:VERSION,raceId:String(r.id),raceDate:String(r.date),fixedAt:'',
     axisStatus:axis.length?'honmei':'no-axis',axisHorseNumber:axis.length?axis[0].horseNumber:0,
     marks:marks,items:items,ticketKinds:kinds,modelVersion:String(plan.engineVersion||plan.betStrategy||'')};
+ if(lanePlan)receipt.origin='morning-lane-v9b';
+ return receipt;
 }
 function verify(r,e){
  if(!r||!e||e.version!==VERSION||String(e.raceId)!==String(r.id)||
@@ -73,7 +85,10 @@ function verify(r,e){
       !Array.isArray(x.combos)||!x.combos.length)return false;
    if(x.level==='本線')main=true;
    if(!kinds.includes(x.kind))kinds.push(x.kind);
-   if(x.kind==='3連単'&&(x.combos.length<6||x.combos.length>12))return false;
+   // Lane receipts record issued point counts faithfully (Formation B
+   // is 36 points); the legacy 6-12 sanity range still applies to
+   // every non-lane receipt.
+   if(x.kind==='3連単'&&e.origin!=='morning-lane-v9b'&&(x.combos.length<6||x.combos.length>12))return false;
    for(const combo of x.combos){
      if(!Array.isArray(combo)||combo.length!==TYPES[x.kind])return false;
      const values=combo.map(num);
