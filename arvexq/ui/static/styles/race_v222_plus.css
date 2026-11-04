@@ -2366,3 +2366,9 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
  .arv-favorite-home-open{gap:5px!important;padding:7px!important}
  .arv-favorite-home-open time{font-size:11px!important}
 }
+
+/* Integrated osusume (2026-11-04): collapsed mechanical reference fold
+   under the integrated recommendation, and the axes/partners line. */
+.arv-three-reference{margin:10px 0 2px}
+.arv-three-reference>summary{cursor:pointer;font-weight:700;font-size:13px;padding:6px 2px;color:#6b6252}
+.arv-osusume-pools{font-weight:600;color:#3d382e}

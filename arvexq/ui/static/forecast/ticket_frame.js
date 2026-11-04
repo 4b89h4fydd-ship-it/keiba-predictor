@@ -200,6 +200,23 @@ function marksByNoOf(r){
  return out;
 }
 function contents(r,p){
+ // Integrated おすすめ買い目 (user order 2026-11-04): when the stored
+ // unified payload carries the full frozen material, the bets tab's
+ // primary content is the ONE integrated recommendation built from
+ // it (ARVEXQIntegratedOsusume). The mechanical ticket group drops
+ // into a collapsed reference below it; the EV sections keep their
+ // exact current behaviour. Payloads without the unified material
+ // render exactly as before.
+ var integratedHtml='';
+ var osusume=root.ARVEXQIntegratedOsusume;
+ if(osusume&&typeof osusume.renderSection==='function'){
+   try{integratedHtml=osusume.renderSection(r,function(item){return combosHtml(item,r);});}
+   catch(e){integratedHtml='';}
+ }
+ function referenceFold(inner){
+   return '<details class="arv-three-reference"><summary>参考：従来の全券種セット（機械的構成）</summary>'
+     +inner+'</details>';
+ }
  // Win-EV label follows the payload's own calibration status: races
  // published on the v9b lane (temperature calibration + market
  // blend) carry expectedValueStatus 'calibrated-estimate' and are
@@ -210,7 +227,8 @@ function contents(r,p){
  var evLabel=evCalibrated?'校正済みの推定値':'未校正の推定値';
  var evNote=evCalibrated?'確率は校正済み（温度校正＋市場ブレンド）の推定値です。期待値による購入推奨は行っていません。':
    '確率は未校正で、勝率・回収率の実測検証は未完了です。';
- var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)?sealedFive(r,r.recommendedBets):null;
+ var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)
+   ?(integratedHtml?r.recommendedBets:sealedFive(r,r.recommendedBets)):null;
  if(server){
    if(!server.length)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
    // The kinds are ONE same-model group (user decision 2026-11-04):
@@ -263,7 +281,9 @@ function contents(r,p){
      (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
      '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
    }
-   return '<div class="ai-bet-box arv-three-bet">'+ticketGroup+evSection+'</div>';
+   return '<div class="ai-bet-box arv-three-bet">'
+     +(integratedHtml?integratedHtml+referenceFold(ticketGroup):ticketGroup)
+     +evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.
@@ -286,6 +306,11 @@ function contents(r,p){
  // were fixed before the off (the unified gate enforces capturedAt<post).
  var fixedAt=plan&&(plan.fixedAt||plan.referenceCapturedAt);
  if(!plan||!fixedAt||!Array.isArray(plan.items)||!plan.items.length){
+   // The integrated recommendation is a pure function of the stored
+   // payload itself, so it can stand alone when the legacy plan path
+   // has nothing for this race (previously this state showed only
+   // the unavailable note).
+   if(integratedHtml)return '<div class="ai-bet-box arv-three-bet">'+integratedHtml+'</div>';
    return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p>'+revisionStatus(r)+'</div>';
  }
  // Same grouping as the server-bets branch: one group container, and
@@ -329,9 +354,24 @@ function contents(r,p){
    (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  }
+ var planGroup='<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+'</div>';
+ // With the integrated recommendation primary, the reference fold
+ // shows the payload's full mechanical set (recommendedBets) when
+ // the payload carries one — the projected plan items above are a
+ // one-combo-per-kind subset of it. Without an integrated block the
+ // plan group renders exactly as before.
+ var refInner=planGroup;
+ if(integratedHtml&&Array.isArray(r.recommendedBets)&&r.recommendedBets.length){
+   var sharedR=null,firstR=String(r.recommendedBets[0].reason||'');
+   if(firstR&&r.recommendedBets.every(function(item){return String(item.reason||'')===firstR;}))sharedR=firstR;
+   var refRows=r.recommendedBets.map(function(item){
+     return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong>'+(sharedR?'':'<p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p>')+'</div>';
+   }).join('');
+   refInner='<div class="arv-three-group">'+refRows+(sharedR?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedR)+'</p>':'')+'</div>';
+ }
  return '<div class="ai-bet-box arv-three-bet">'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+
-   '<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+'</div>'+
+   (integratedHtml?integratedHtml+referenceFold(refInner):planGroup)+
    evSection+
    '</div>';
 }
