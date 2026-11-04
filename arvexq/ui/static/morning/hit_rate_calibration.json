@@ -1,12 +1,31 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
-  "modelVersion": "arvexq-true-run-pure-sectional-v2",
-  "asOfDate": "2026-11-04",
+  "modelVersion": "arvexq-rewrite-v3-v9b",
+  "asOfDate": "2026-11-05",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
   "minimumObservedHitRate": 0.8,
   "minimumWilsonLower95": 0.65,
-  "totalVerifiedRaces": 0,
-  "buckets": {},
+  "totalVerifiedRaces": 260,
+  "buckets": {
+    "ワイド|6": {
+      "kind": "ワイド",
+      "points": 6,
+      "sample": 237,
+      "wins": 181,
+      "hitRate": 0.763713,
+      "wilsonLower95": 0.705691,
+      "qualified": false
+    },
+    "ワイド|5": {
+      "kind": "ワイド",
+      "points": 5,
+      "sample": 23,
+      "wins": 15,
+      "hitRate": 0.652174,
+      "wilsonLower95": 0.4489,
+      "qualified": false
+    }
+  },
   "status": "insufficient-evidence"
 }
