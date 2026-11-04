@@ -3,16 +3,20 @@ name: ARVEXQ Day-Ahead Prefetch Dispatch
 # Tomorrow's card collection used to depend solely on the prefetch
 # workflow's scheduled 14:05 / 17:05 / 20:05 JST slots resolving
 # "tomorrow" inside arvexq-prefetch.yml. On 2026-11-04 the GitHub
-# scheduler dropped the 14:05 slot entirely and tomorrow's listing was
-# still empty in the afternoon, while push-triggered runs fired
-# reliably all day. This dispatcher rides those pushes: whenever a
-# prefetch-relevant push lands on main and tomorrow's listing is still
-# empty, it dispatches the SAME prefetch pipeline with an explicit
-# date input (the input is what resolves the day-ahead target and the
-# collection-only lane inside arvexq-prefetch.yml). Once the listing
-# exists the check below exits in seconds, so steady-state cost is one
-# short job per relevant push. The scheduled slots stay as redundancy;
-# nothing about the collection, protect or freeze semantics changes.
+# scheduler dropped the 14:05 slot entirely, and a push-dispatched
+# retry at 15:18 still found zero officially published entries for
+# tomorrow — the day-ahead entries stand up progressively through
+# the afternoon, so a single retry is not enough either. This
+# dispatcher therefore retries on two reliable cadences — relevant
+# pushes to main, and completions of the Realtime Sync workflow
+# (which runs every few minutes all day) — until tomorrow's listing
+# exists. Each attempt first checks the production listing and exits
+# in seconds once it is non-empty, and a 25-minute throttle keeps at
+# most one dispatched collection in flight per window. The dispatch
+# uses the existing Full Prefetch workflow's date input, which is
+# what resolves the day-ahead (collection-only) target inside
+# arvexq-prefetch.yml. The scheduled slots stay as redundancy;
+# nothing about collection, protect or freeze semantics changes.
 
 "on":
   push:
@@ -36,6 +40,9 @@ name: ARVEXQ Day-Ahead Prefetch Dispatch
       - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
       - .github/workflows/arvexq-prefetch-day-ahead.yml
+  workflow_run:
+    workflows: ["ARVEXQ Realtime Sync"]
+    types: [completed]
 
 permissions:
   actions: write
@@ -49,16 +56,24 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
 
     env:
       CLOUDFLARE_API_BASE: https://kraiz-api.4b89h4fydd.workers.dev
       GH_REPO: ${{ github.repository }}
 
     steps:
-      - name: Dispatch tomorrow's prefetch when its listing is still empty
+      - name: Dispatch tomorrow's prefetch until its listing exists
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Day-ahead entries stand up in the afternoon; stay quiet
+          # before noon JST (the morning lanes own that window).
+          HOUR=$(TZ=Asia/Tokyo date +%H)
+          if [ "$HOUR" -lt 12 ]; then
+            echo "DAY_AHEAD_DISPATCH_SKIP before-noon-jst hour=$HOUR"
+            exit 0
+          fi
           TOMORROW=$(TZ=Asia/Tokyo date -d tomorrow +%F)
           COUNT=0
           if curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
@@ -71,6 +86,20 @@ jobs:
           if [ "${COUNT:-0}" -gt 0 ]; then
             echo "Tomorrow's listing is already collected; nothing to dispatch."
             exit 0
+          fi
+          # Throttle: at most one dispatched prefetch per 25 minutes,
+          # regardless of which cadence asked.
+          LAST=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?event=workflow_dispatch&per_page=1" \
+            --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || echo "")
+          if [ -n "$LAST" ]; then
+            LAST_EPOCH=$(date -d "$LAST" +%s)
+            NOW_EPOCH=$(date +%s)
+            AGE=$((NOW_EPOCH - LAST_EPOCH))
+            echo "DAY_AHEAD_LAST_DISPATCH age_sec=$AGE"
+            if [ "$AGE" -lt 1500 ]; then
+              echo "A dispatched prefetch ran recently; throttled."
+              exit 0
+            fi
           fi
           gh workflow run arvexq-prefetch.yml --ref main -f date="$TOMORROW"
           echo "DAY_AHEAD_DISPATCHED date=$TOMORROW"
