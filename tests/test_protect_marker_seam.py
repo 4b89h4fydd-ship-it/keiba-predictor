@@ -141,6 +141,56 @@ class MarkerSeamTests(TestCase):
             out["preparedMeta"]["rewritePublish"]["revision"]["kind"],
             "place-ev-upgrade")
 
+    def test_place_ev_upgrade_accepted_when_stored_lacks_prerace_bet(self):
+        # Production shape (2026-11-04): preRaceBet is stripped before
+        # storage, so the stored detail carries no preRaceBet and the
+        # surgical place-EV re-issue — a copy of the stored detail —
+        # cannot carry it either. Completeness is judged against the
+        # blocks the stored detail has; the chain-linked upgrade must
+        # replace. (The absolute-list check reverted both upgrades
+        # attempted on 2026-11-04, 金沢-01 and 園田-06.)
+        old = _detail(_marker_first(), RECEIPT0, "v9b")
+        del old["preRaceBet"]
+        marker = _marker_first()
+        marker.update({"publishedAt": PLACE_AT, "receiptSha256": RECEIPT2,
+                       "firstPublishedAt": FIRST_AT,
+                       "revision": {
+                           "kind": "place-ev-upgrade",
+                           "reason": "place-ev-upgrade",
+                           "revisedAt": PLACE_AT, "revisionCount": 1,
+                           "previousReceiptSha256": RECEIPT0,
+                           "previousAbilityLane": "v9b-cal-market",
+                           "abilityLane": "v9b-cal-market"}})
+        incoming = _detail(marker, RECEIPT2, "v9b+place")
+        del incoming["preRaceBet"]
+        out = protect_detail(deepcopy(old), deepcopy(incoming))
+        self.assertEqual(out["unifiedForecast"]["flavour"], "v9b+place")
+        self.assertEqual(
+            out["preparedMeta"]["rewritePublish"]["revision"]["kind"],
+            "place-ev-upgrade")
+
+    def test_dropped_stored_block_still_rejected(self):
+        # The other direction stays closed: when the stored detail
+        # DOES carry a block, a write that drops it is not a publish
+        # write even with a chain-linked marker.
+        old = _detail(_marker_first(), RECEIPT0, "v9b")
+        marker = _marker_first()
+        marker.update({"publishedAt": PLACE_AT, "receiptSha256": RECEIPT2,
+                       "firstPublishedAt": FIRST_AT,
+                       "revision": {
+                           "kind": "place-ev-upgrade",
+                           "reason": "place-ev-upgrade",
+                           "revisedAt": PLACE_AT, "revisionCount": 1,
+                           "previousReceiptSha256": RECEIPT0,
+                           "previousAbilityLane": "v9b-cal-market",
+                           "abilityLane": "v9b-cal-market"}})
+        incoming = _detail(marker, RECEIPT2, "v9b+place")
+        del incoming["preRaceBet"]
+        out = protect_detail(deepcopy(old), deepcopy(incoming))
+        self.assertEqual(out["unifiedForecast"]["flavour"], "v9b")
+        self.assertEqual(
+            out["preparedMeta"]["rewritePublish"], _marker_first())
+
     def test_second_roster_reissue_chain_accepted(self):
         # The lane stamps a roster re-issue's firstPublishedAt from
         # the CURRENT marker's publishedAt; a second roster change

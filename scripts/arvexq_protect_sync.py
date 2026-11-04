@@ -224,9 +224,18 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     # _rewrite_marker_fresh). (2026-11-04: 13 races rolled back this
     # way; 4 more lost the marker entirely to a lightweight
     # preparedMeta overwrite — closed by the field merge below.)
+    # Completeness is judged against the blocks the STORED detail
+    # actually carries, not an absolute list: the stored product may
+    # itself lack a block (preRaceBet is stripped before storage on
+    # the current chain, so no stored detail carries it), and the
+    # lane's surgical re-issues (place-EV upgrade) are built from the
+    # stored detail and inherit that absence — reverting them for it
+    # made every place-EV upgrade fail its read-back on 2026-11-04.
+    # A write that DROPS a block the stored detail carries (the
+    # display-compaction case above) is still not a publish write.
     is_publish_write = (
         marker.get('modelVersion') == REWRITE_MODEL_VERSION
-        and all(key in out for key in forecast_keys)
+        and all(key in out for key in forecast_keys if key in old)
         and _rewrite_marker_fresh(stored_marker, marker))
     if not is_publish_write:
         for key in forecast_keys:
