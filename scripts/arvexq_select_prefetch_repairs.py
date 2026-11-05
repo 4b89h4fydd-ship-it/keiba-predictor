@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from arvexq.pipeline.persisted_inputs import _career_rows, _history_observations_retained
+from arvexq.pipeline.persisted_inputs import _canonical_career_rows, _career_rows, _history_observations_retained
 
 
 def read(path: str) -> dict[str, Any]:
@@ -95,8 +95,8 @@ def repair_reason(prepared: Any, existing: Any, *, facts_only: bool = False) -> 
             no = int(h.get("horseNumber") or 0)
             old_h = next((v for v in old_rows if int(v.get("horseNumber") or 0) == no), {})
             try:
-                actual_runs = _career_rows(old_h, str(existing.get("date") or ""))
-                observed_runs = _career_rows(h, str(prepared.get("date") or ""))
+                actual_runs = _canonical_career_rows(old_h, str(existing.get("date") or ""))
+                observed_runs = _canonical_career_rows(h, str(prepared.get("date") or ""))
             except (ValueError, TypeError, KeyError, RuntimeError):
                 return "career_archive_invalid"
             if (len(observed_runs) > len(actual_runs)

@@ -70,6 +70,27 @@ class CanonicalCareerVerifyTests(unittest.TestCase):
         errors = verify_persisted_facts(src, saved)
         self.assertTrue(any('allPastRuns-truncated' in e for e in errors), errors)
 
+    def test_blank_finish_placeholder_is_not_a_fact(self):
+        # The 2026-11-05 Kasamatsu case: the assembled source carried
+        # finish=0 (the CSV adapter's blank-placing sentinel) for a start
+        # whose stored career holds the real placing. 0 asserts nothing,
+        # so the stored career must verify.
+        from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+        stored = [{'date': '2026-10-04', 'track': '高知', 'raceNumber': 2, 'finish': 4}]
+        source = [{'date': '2026-10-04', 'track': '高知', 'raceNumber': 2, 'finish': 0}]
+        src, saved = self._bundles(source, stored)
+        self.assertEqual(verify_persisted_facts(src, saved), [])
+
+    def test_real_finish_lost_in_storage_still_fails(self):
+        # The reverse direction keeps its teeth: a real placing present in
+        # the source but reduced to the placeholder in storage is a loss.
+        from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+        stored = [{'date': '2026-10-04', 'track': '高知', 'raceNumber': 2, 'finish': 0}]
+        source = [{'date': '2026-10-04', 'track': '高知', 'raceNumber': 2, 'finish': 4}]
+        src, saved = self._bundles(source, stored)
+        errors = verify_persisted_facts(src, saved)
+        self.assertTrue(any('allPastRuns-truncated' in e for e in errors), errors)
+
 
 if __name__ == '__main__':
     unittest.main()

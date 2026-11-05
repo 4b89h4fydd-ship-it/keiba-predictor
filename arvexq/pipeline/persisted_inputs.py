@@ -58,9 +58,17 @@ def _history_observations_retained(original: list[dict[str, Any]],
     # every storage merge keys the career by date. Requiring the alias to
     # survive made complete careers fail verification whenever a second
     # representation of an already-stored start appeared in the source.
+    # finish=0 is likewise not a fact: the official-CSV adapter emits 0 for
+    # a blank placing field (a start cannot finish 0th, and the margin code
+    # requires finish > 0), so a source representation merged from an
+    # entries-side record carries 0 where the stored career holds the real
+    # placing. On 2026-11-05 that placeholder made five complete careers
+    # read as truncated and aborted the whole morning chain.
     keys = ("date", "track", "raceNumber", "finish")
     for prior in original:
-        known = [(k, str(prior[k])) for k in keys if prior.get(k) not in (None, "")]
+        known = [(k, str(prior[k])) for k in keys
+                 if prior.get(k) not in (None, "")
+                 and not (k == "finish" and str(prior[k]) == "0")]
         if known and not any(all(str(next_run.get(k, "")) == value for k, value in known)
                              for next_run in saved):
             return False
