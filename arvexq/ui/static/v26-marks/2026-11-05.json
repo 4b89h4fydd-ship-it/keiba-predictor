@@ -28,6 +28,13 @@
    "v25": {
     "addedPartners": [],
     "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     7
+    ],
+    "band": 3
    }
   },
   "nar-2026-11-05-園田-02": {
@@ -52,6 +59,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     10
+    ],
     "band": 2
    }
   },
@@ -79,6 +93,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     3
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-園田-04": {
@@ -103,6 +124,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     7,
+     10
+    ],
     "band": 3
    }
   },
@@ -152,6 +180,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     3,
+     7
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-園田-07": {
@@ -175,6 +210,10 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [],
+    "band": 1
+   },
+   "v28": {
     "addedPartners": [],
     "band": 1
    }
@@ -202,6 +241,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     6,
+     10
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-園田-09": {
@@ -226,6 +272,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     8
+    ],
     "band": 3
    }
   },
@@ -257,6 +310,13 @@
      11
     ],
     "band": 4
+   },
+   "v28": {
+    "addedPartners": [
+     8,
+     11
+    ],
+    "band": 4
    }
   },
   "nar-2026-11-05-園田-11": {
@@ -282,6 +342,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     3,
+     7
+    ],
     "band": 3
    }
   },
@@ -309,6 +376,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     7
+    ],
     "band": 2
    }
   },
@@ -355,6 +429,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     3,
+     8
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-笠松-03": {
@@ -379,6 +460,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     5,
+     7
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-笠松-04": {
@@ -401,6 +489,10 @@
     "9": "複勝圏"
    },
    "v25": {
+    "addedPartners": [],
+    "band": 1
+   },
+   "v28": {
     "addedPartners": [],
     "band": 1
    }
@@ -452,6 +544,13 @@
      8
     ],
     "band": 5
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     8
+    ],
+    "band": 5
    }
   },
   "nar-2026-11-05-笠松-07": {
@@ -475,6 +574,13 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [
+     2,
+     10
+    ],
+    "band": 4
+   },
+   "v28": {
     "addedPartners": [
      2,
      10
@@ -505,6 +611,13 @@
    "v25": {
     "addedPartners": [],
     "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     3,
+     4
+    ],
+    "band": 3
    }
   },
   "nar-2026-11-05-笠松-09": {
@@ -526,6 +639,10 @@
     "8": "様子見"
    },
    "v25": {
+    "addedPartners": [],
+    "band": 1
+   },
+   "v28": {
     "addedPartners": [],
     "band": 1
    }
@@ -553,6 +670,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     10
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-笠松-11": {
@@ -576,6 +700,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     7
+    ],
     "band": 2
    }
   },
@@ -602,6 +733,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     6
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-船橋-01": {
@@ -627,6 +765,13 @@
     "9": "軸"
    },
    "v25": {
+    "addedPartners": [
+     3,
+     6
+    ],
+    "band": 4
+   },
+   "v28": {
     "addedPartners": [
      3,
      6
@@ -682,6 +827,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     10,
+     12
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-船橋-05": {
@@ -702,6 +854,10 @@
     "7": "様子見"
    },
    "v25": {
+    "addedPartners": [],
+    "band": 1
+   },
+   "v28": {
     "addedPartners": [],
     "band": 1
    }
@@ -730,6 +886,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     4,
+     9
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-船橋-07": {
@@ -756,6 +919,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     5,
+     7
+    ],
     "band": 2
    }
   },
@@ -787,6 +957,13 @@
      10
     ],
     "band": 4
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     10
+    ],
+    "band": 4
    }
   },
   "nar-2026-11-05-船橋-09": {
@@ -811,6 +988,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     3,
+     4
+    ],
     "band": 3
    }
   },
@@ -839,6 +1023,13 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [
+     5,
+     9
+    ],
+    "band": 5
+   },
+   "v28": {
     "addedPartners": [
      5,
      9
@@ -876,6 +1067,13 @@
      13
     ],
     "band": 5
+   },
+   "v28": {
+    "addedPartners": [
+     6,
+     13
+    ],
+    "band": 5
    }
   },
   "nar-2026-11-05-船橋-12": {
@@ -903,6 +1101,13 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [
+     2,
+     5
+    ],
+    "band": 5
+   },
+   "v28": {
     "addedPartners": [
      2,
      5
@@ -960,6 +1165,13 @@
      6
     ],
     "band": 4
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     6
+    ],
+    "band": 4
    }
   },
   "nar-2026-11-05-門別-03": {
@@ -1004,6 +1216,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     6,
+     7
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-門別-05": {
@@ -1028,6 +1247,13 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [
+     5,
+     8
+    ],
+    "band": 4
+   },
+   "v28": {
     "addedPartners": [
      5,
      8
@@ -1058,6 +1284,13 @@
     "9": "様子見"
    },
    "v25": {
+    "addedPartners": [
+     1,
+     5
+    ],
+    "band": 5
+   },
+   "v28": {
     "addedPartners": [
      1,
      5
@@ -1110,6 +1343,13 @@
    "v25": {
     "addedPartners": [],
     "band": 3
+   },
+   "v28": {
+    "addedPartners": [
+     2,
+     4
+    ],
+    "band": 3
    }
   },
   "nar-2026-11-05-門別-09": {
@@ -1132,6 +1372,13 @@
    },
    "v25": {
     "addedPartners": [],
+    "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     5,
+     7
+    ],
     "band": 2
    }
   },
@@ -1158,6 +1405,13 @@
    "v25": {
     "addedPartners": [],
     "band": 2
+   },
+   "v28": {
+    "addedPartners": [
+     1,
+     2
+    ],
+    "band": 2
    }
   },
   "nar-2026-11-05-門別-11": {
@@ -1179,6 +1433,10 @@
     "8": "様子見"
    },
    "v25": {
+    "addedPartners": [],
+    "band": 1
+   },
+   "v28": {
     "addedPartners": [],
     "band": 1
    }
@@ -1207,9 +1465,14 @@
    "v25": {
     "addedPartners": [],
     "band": 1
+   },
+   "v28": {
+    "addedPartners": [],
+    "band": 1
    }
   }
  },
  "v25ModelKey": "arvexq-shadow-v25-chaoswiden1-w90b45",
+ "v28ModelKey": "arvexq-shadow-v28-bandwiden1-w90b25",
  "version": "v1"
 }
