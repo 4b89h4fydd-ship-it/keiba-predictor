@@ -92,7 +92,8 @@ def _canonical_career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str,
         return rows
 
 
-def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> list[str]:
+def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any],
+                           diagnostics: list | None = None) -> list[str]:
     """Return precise missing/mismatched records; never replace failed writes with RAM.
 
     Compare the same race IDs, horse identities, and complete-history cardinality.
@@ -137,6 +138,13 @@ def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> lis
             # Original older starts must remain, even after compression.
             if not _history_observations_retained(original, retained):
                 errors.append(f"{rid}:horse-{number}:allPastRuns-truncated")
+                if diagnostics is not None:
+                    facts = ("date", "track", "raceNumber", "finish")
+                    diagnostics.append({
+                        "race": rid, "horse": number,
+                        "source": [{k: row.get(k) for k in facts} for row in original],
+                        "saved": [{k: row.get(k) for k in facts} for row in retained],
+                    })
             elif len(original) > len(retained):
                 # Handle historical rows lacking any usable race identity.
                 errors.append(f"{rid}:horse-{number}:history-count-truncated")
