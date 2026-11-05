@@ -222,3 +222,74 @@ class LaneUpgradeInfoTests(TestCase):
                 datetime(2026, 11, 2, 12, 0, tzinfo=JST))
         self.assertIsNone(new)
         self.assertTrue(reason.startswith("frozen:"), reason)
+
+
+def tombstoned_detail() -> dict:
+    """A frozen v9b publication as the kraiz-api GET projection serves
+    it when the stored top-level status is not exactly "ready" (e.g.
+    "unified-reference-ready"): status fields rewritten to the
+    tombstone values, prediction/predictionMarks stripped, the lane
+    marker and the unified forecast untouched."""
+    detail = frozen_detail()
+    detail["predictionStatus"] = "disabled"
+    detail["predictionModelVersion"] = "arvexq-prediction-removed"
+    marker = detail["preparedMeta"]["rewritePublish"]
+    marker["abilityLane"] = "v9b-cal-market"
+    marker["blendApplied"] = True
+    return detail
+
+
+class ProjectionTombstoneTests(TestCase):
+    def test_tombstoned_frozen_publication_is_frozen(self):
+        decision = _freeze_decision(tombstoned_detail())
+        self.assertEqual(decision, ("frozen", RECEIPT))
+
+    def test_tombstoned_roster_change_is_reissue(self):
+        detail = tombstoned_detail()
+        detail["horses"][1]["status"] = "出走取消"
+        kind, info = _freeze_decision(detail)
+        self.assertEqual(kind, "reissue")
+        self.assertEqual(info["removed"], [2])
+        self.assertEqual(info["receipt"], RECEIPT)
+
+    def test_tombstoned_receipt_mismatch_fails_closed(self):
+        detail = tombstoned_detail()
+        detail["unifiedForecast"]["receiptSha256"] = "b" * 64
+        with self.assertRaises(ValueError):
+            _freeze_decision(detail)
+
+    def test_tombstone_shape_without_marker_is_not_frozen(self):
+        detail = tombstoned_detail()
+        del detail["preparedMeta"]
+        self.assertIsNone(_freeze_decision(detail))
+
+    def test_disabled_with_lane_model_version_is_not_tombstone(self):
+        # A plain not-ready detail (no projection involved) keeps the
+        # old behaviour: not this lane's frozen publication.
+        detail = frozen_detail()
+        detail["predictionStatus"] = "disabled"
+        self.assertIsNone(_freeze_decision(detail))
+
+    def test_tombstoned_place_ev_upgrade_is_deferred(self):
+        # The surgical place-EV upgrade rebuilds marks/prediction from
+        # the stored detail; through the projection those blocks are
+        # stripped, so the build must keep the frozen forecast instead
+        # of applying the upgrade from the stripped read.
+        detail = tombstoned_detail()
+        horses = []
+        roster = []
+        for n in range(1, 10):
+            name = f"馬{n}"
+            roster.append({"horseNumber": n, "name": name})
+            horses.append({"horseNumber": n, "name": name,
+                           "placeOddsLow": 1.5, "placeOddsHigh": 2.5})
+        detail["unifiedForecast"]["roster"] = roster
+        detail["unifiedForecast"]["ticketPlan"] = {"items": []}
+        detail["horses"] = horses
+        new, reason = build_publish_detail(
+            detail,
+            {"race_id": detail["id"], "id": detail["id"]},
+            NOW)
+        self.assertIsNone(new)
+        self.assertTrue(reason.startswith("frozen:"), reason)
+        self.assertIn("place-EV upgrade deferred", reason)

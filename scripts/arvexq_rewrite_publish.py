@@ -599,6 +599,29 @@ def _active_roster(detail: dict) -> list[tuple[int, str]]:
         and not _is_inactive(h))
 
 
+def _projection_tombstone(old: dict) -> bool:
+    """Whether this read carries the API worker's projection tombstone.
+
+    The kraiz-api GET projection (publicRace / authorizedStage64)
+    honours only a stored detail whose top-level predictionStatus is
+    exactly "ready". Anything else — including a complete, valid
+    publication of this lane whose stored status reads
+    "unified-reference-ready" (the Python delivery projection's
+    vocabulary, carried into stored details by prepared-detail
+    writes) — is served as predictionStatus "disabled" /
+    predictionModelVersion "arvexq-prediction-removed" with the
+    prediction and predictionMarks blocks stripped. The lane marker
+    (preparedMeta.rewritePublish) and the unified forecast pass
+    through that projection untouched, so a tombstoned read can
+    still be verified against them; the two top-level status fields
+    cannot — they are the projection's values, not the stored
+    detail's.
+    """
+    return (old.get("predictionStatus") == "disabled"
+            and old.get("predictionModelVersion")
+            == "arvexq-prediction-removed")
+
+
 def _freeze_decision(old: dict):
     """Classify a stored detail against this lane's frozen publication.
 
@@ -609,6 +632,14 @@ def _freeze_decision(old: dict):
     A detail that carries this lane's ready markers but whose frozen
     state cannot be read consistently raises ValueError; the caller
     fails closed (skip, no overwrite) rather than guess.
+
+    A read carrying the API projection's tombstone (see
+    _projection_tombstone) is classified on the lane marker and the
+    unified forecast alone: the projection rewrites the top-level
+    status fields and strips blocks, but the marker receipt must
+    still equal the unified forecast's receipt and the receipt
+    roster must still match the active roster before the race may
+    be treated as this lane's frozen publication.
     """
     marker = (old.get("preparedMeta") or {}).get("rewritePublish")
     if not isinstance(marker, dict):
@@ -621,11 +652,12 @@ def _freeze_decision(old: dict):
     if marker.get("modelVersion") not in (MODEL_VERSION,
                                           PREVIOUS_MODEL_VERSION):
         return None
-    if old.get("predictionStatus") != "ready":
-        return None
-    if old.get("predictionModelVersion") not in (MODEL_VERSION,
-                                                 PREVIOUS_MODEL_VERSION):
-        return None
+    if not _projection_tombstone(old):
+        if old.get("predictionStatus") != "ready":
+            return None
+        if old.get("predictionModelVersion") not in (MODEL_VERSION,
+                                                     PREVIOUS_MODEL_VERSION):
+            return None
     unified = old.get("unifiedForecast")
     if not isinstance(unified, dict):
         raise ValueError("lane-marked ready detail has no unifiedForecast")
@@ -728,6 +760,21 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                         return None, (f"frozen: already published ready "
                                       f"(receipt {str(freeze[1])[:12]}…); "
                                       f"roster unchanged")
+                    if _projection_tombstone(old):
+                        # The surgical place-EV upgrade rebuilds the
+                        # marks and prediction blocks from the stored
+                        # detail; through the API projection those
+                        # blocks are stripped, so applying it from
+                        # this read would damage the publication.
+                        # Keep the frozen forecast and leave the
+                        # upgrade pending for a read that carries
+                        # the stored blocks.
+                        return None, (
+                            f"frozen: already published ready "
+                            f"(receipt {str(freeze[1])[:12]}…); "
+                            f"place-EV upgrade deferred: the API "
+                            f"projection does not carry the stored "
+                            f"prediction blocks for this race")
                     place_ev_upgrade["receipt"] = freeze[1]
                     upgraded = _apply_place_ev_upgrade(
                         old, place_ev_upgrade,
