@@ -1186,23 +1186,40 @@ function v26CellHtml(r,h,x){
     +(tag?'<small class="rc-v26-signal">'+esc(tag)+'</small>':'')
     +'</span></div>';
 }
-/* v25 shadow lane (display-only): the same dated archive may carry
-   a per-race "v25" section {band, addedPartners} derived from the
-   v25 lane's seals. addedPartners are the unmarked horses that
-   enter the production ticket only through the chaos-band
-   widening (bands 4-5); each is flagged with a small ▽ inside the
-   v9b (production) mark cell. The production forecast itself is
-   never changed by this display. */
+/* Widening shadow lanes (display-only): the same dated archive may
+   carry a per-race section {band, addedPartners} derived from a
+   widening lane's seals. addedPartners are the unmarked horses that
+   enter the production ticket only through the chaos-band widening;
+   each is flagged with a small ▽ inside the v9b (production) mark
+   cell. The "v28" section (bands 2-5) is preferred; archives
+   published before the switch carry only the legacy "v25" section
+   (bands 4-5), which remains the fallback. The production forecast
+   itself is never changed by this display. */
 function v25RaceEntry(r){
   var e=v26RaceEntry(r);
   return e&&e.v25&&typeof e.v25==='object'?e.v25:null;
 }
+function v28RaceEntry(r){
+  var e=v26RaceEntry(r);
+  return e&&e.v28&&typeof e.v28==='object'?e.v28:null;
+}
+function widenSection(r){
+  var s28=v28RaceEntry(r);
+  if(s28)return {lane:'v28',section:s28};
+  var s25=v25RaceEntry(r);
+  if(s25)return {lane:'v25',section:s25};
+  return null;
+}
+function widenLaneLabel(r){
+  var w=widenSection(r);
+  return w?w.lane:'';
+}
 function v25AddedHtml(r,h){
-  var s=v25RaceEntry(r);
-  if(!s||!Array.isArray(s.addedPartners))return '';
+  var w=widenSection(r);
+  if(!w||!Array.isArray(w.section.addedPartners))return '';
   var no=n(h&&h.horseNumber);
-  for(var i=0;i<s.addedPartners.length;i++){
-    if(n(s.addedPartners[i])===no)return '<small class="rc-v25-added" title="v25（試験中）：荒れたレースで買い目の相手に入る馬">▽</small>';
+  for(var i=0;i<w.section.addedPartners.length;i++){
+    if(n(w.section.addedPartners[i])===no)return '<small class="rc-v25-added" title="'+(w.lane==='v28'?'v28（試験中）：順当なレース以外で買い目の相手に入る馬':'v25（試験中）：荒れたレースで買い目の相手に入る馬')+'">▽</small>';
   }
   return '';
 }
@@ -1214,12 +1231,12 @@ function racecardHeadHtml(r){
   return '<div class="racecard-head-row" aria-hidden="true"><span class="rch rch-v26">v26</span><span class="rch rch-v9b">v9b</span><span></span><span></span><span></span><span></span></div>';
 }
 function racecardMarkLegend(r){
-  var has26=!!v26RaceEntry(r),s25=v25RaceEntry(r),
-    has25=!!(s25&&Array.isArray(s25.addedPartners)&&s25.addedPartners.length);
-  if(!has26&&!has25)return '<div class="rc-mark-legend"></div>';
+  var has26=!!v26RaceEntry(r),w=widenSection(r),
+    hasW=!!(w&&Array.isArray(w.section.addedPartners)&&w.section.addedPartners.length);
+  if(!has26&&!hasW)return '<div class="rc-mark-legend"></div>';
   var text='';
   if(has26)text+='左の「v26」列は試験中の別系統（多眼）の印、右の「v9b」列は本番予想の印です。両系統で同じ印が付いた馬は、v26側を色付きで強調しています。';
-  if(has25)text+=(text?' ':'')+'▽は荒れたレースで買い目の相手に入る馬です（v25・試験中）。本番予想の印は変わりません。';
+  if(hasW)text+=(text?' ':'')+(w.lane==='v28'?'▽は順当なレース以外で買い目の相手に入る馬です（v28・試験中）。本番予想の印は変わりません。':'▽は荒れたレースで買い目の相手に入る馬です（v25・試験中）。本番予想の印は変わりません。');
   return '<div class="rc-mark-legend rc-v26-legend">'+text+'</div>';
 }
 function racecardEntryRow(r,h,x){
@@ -1235,7 +1252,7 @@ function racecardEntryRow(r,h,x){
       v25add=v25AddedHtml(r,h);
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
     +v26CellHtml(r,h,x)
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':'')+(v25add?'、v25（試験中）で買い目の相手に追加':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+v25add+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':'')+(v25add?'、'+widenLaneLabel(r)+'（試験中）で買い目の相手に追加':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+v25add+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+markRoleLabel(x).replace('◎ 本命','<span class="arv-role-win arv-role-axis">◎ 本命</span>').replace('保存印：◎（旧単勝）','<span class="arv-role-win">保存印：◎（旧単勝）</span>').replace('保存印：◎（旧軸）','<span class="arv-role-axis">保存印：◎（旧軸）</span>')+'</small>':'')+'</span>'
