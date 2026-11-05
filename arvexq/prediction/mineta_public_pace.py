@@ -116,7 +116,58 @@ def public_pace_factors(race):
         # Distance extension is only a forward-intent research *candidate*,
         # never evidence that a horse will actually lead the field.
         candidate = last_early is True or change == "extension"
+        # The four display phases are explicitly historical observations, NOT
+        # a fabricated prediction of today's positions. Corner labels are used
+        # only when the source has an unambiguous four-corner sequence.
+        phase_evidence = {
+            "start": {"status": "unavailable", "observedPosition": None},
+            "thirdCorner": {
+                "status": "historical-observation" if last_positions and len(last_positions) == 4 else "unavailable",
+                "observedPosition": last_positions[2] if last_positions and len(last_positions) == 4 else None,
+            },
+            "fourthCorner": {
+                "status": "historical-observation" if last_positions and len(last_positions) == 4 else "unavailable",
+                "observedPosition": last_positions[3] if last_positions and len(last_positions) == 4 else None,
+            },
+            "straight": {
+                "status": "historical-finish" if type(previous.get("finish")) is int and previous["finish"] > 0 else "unavailable",
+                "observedFinish": previous.get("finish") if type(previous.get("finish")) is int and previous["finish"] > 0 else None,
+            },
+        }
+        # A cautious baseline from prior races only. This is a descriptive
+        # projected relative rank, NOT an empirically calibrated race simulation.
+        phase_projection = {"start": {"status": "unavailable", "projectedRank": None}}
+        for key, index in (("thirdCorner", 2), ("fourthCorner", 3)):
+            samples = [
+                (row[index] - 1) / (run["fieldSize"] - 1)
+                for run in runs for row in [_positions(run)]
+                if row is not None and len(row) == 4 and run["fieldSize"] > 1
+            ]
+            phase_projection[key] = {
+                "status": "historical-baseline-unvalidated" if samples else "unavailable",
+                "observedStarts": len(samples),
+                "meanRelativePosition": round(sum(samples) / len(samples), 6) if samples else None,
+                "projectedRank": (
+                    round(1 + (len(active) - 1) * sum(samples) / len(samples), 2)
+                    if samples else None
+                ),
+            }
+        finish_samples = [
+            (run["finish"] - 1) / (run["fieldSize"] - 1)
+            for run in runs if run["fieldSize"] > 1
+        ]
+        phase_projection["straight"] = {
+            "status": "historical-baseline-unvalidated" if finish_samples else "unavailable",
+            "observedStarts": len(finish_samples),
+            "meanRelativePosition": round(sum(finish_samples) / len(finish_samples), 6) if finish_samples else None,
+            "projectedRank": (
+                round(1 + (len(active) - 1) * sum(finish_samples) / len(finish_samples), 2)
+                if finish_samples else None
+            ),
+        }
         entries.append({
+            "phaseProjection": phase_projection,
+            "phaseEvidence": phase_evidence,
             "horseNumber": horse["horseNumber"],
             "lastRunDate": previous.get("_raceDate") or previous.get("date"),
             "lastFirstCornerTop3": last_early,
@@ -142,6 +193,9 @@ def public_pace_factors(race):
         "adjacentForwardCandidates": adjacent,
         "forwardCandidateShare": len(candidates) / len(active),
         "horses": entries,
+        "phaseOrder": ["start", "thirdCorner", "fourthCorner", "straight"],
+        "phaseEvidenceKind": "past-race-observations-only",
+        "phaseProjectionKind": "historical-relative-rank-baseline-not-calibrated",
         "predictedActualLead": False,
         "predictedPaceProbabilities": None,
         "winProbability": None,

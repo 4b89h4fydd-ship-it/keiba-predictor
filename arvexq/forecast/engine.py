@@ -59,6 +59,8 @@ def build_prediction(facts, now=None):
     # prediction package imports forecast.engine for its compatibility adapter.
     from arvexq.prediction.empirical_fusion import blend
     from arvexq.prediction.mineta_public_pace import public_pace_factors
+    from arvexq.prediction.past_performance import analyze_past_performance
+    from arvexq.prediction.career_profile import profile_career
     if not _preoff(facts, now):
         return None
     if facts.get("track") in ("帯広", "帯広ば") or facts.get("surface") in ("ばんえい", "障害"):
@@ -122,6 +124,14 @@ def build_prediction(facts, now=None):
     ]
     pace["verifiedHistoricalVideoRuns"] = len(verified_video)
     pace["videoAppliedToFusion"] = bool(verified_video)
+    # The existing pace stage carries the four-phase historical baseline.
+    # It is descriptive only; never silently feed uncalibrated ranks into
+    # the fused win probabilities, marks, or ticket decisions.
+    pace["fourPhaseHistoricalBaseline"] = {
+        str(entry["horseNumber"]): entry["phaseProjection"]
+        for entry in mineta["horses"]
+    }
+    pace["fourPhaseBaselineValidated"] = False
     pace["markOrder"] = order
     pace["markLabels"] = {str(m["horseNumber"]): m["mark"] for m in marks}
     pace["ticketHorses"] = sorted({no for ticket in blended["recommendedBets"]
@@ -143,9 +153,92 @@ def build_prediction(facts, now=None):
         ("実オッズと3着までの各着順確率が揃った買い目のみ掲載。"
          if grouped else "実オッズまたは3着までの着順確率・期待値の条件未達により買い目見送り。"),
     ]
+    # Ability stage 1: reuse the existing race-dated five-run and full-career
+    # evidence. Keep these factual observations separate from calibrated
+    # probabilities, marks and all future-stage predictions.
+    ability_observations = {}
+    for horse in race["horses"]:
+        if not isinstance(horse, dict) or type(horse.get("horseNumber")) is not int:
+            continue
+        no = horse["horseNumber"]
+        if no not in win:
+            continue
+        recent = analyze_past_performance(horse, race)
+        career = profile_career(horse, race)
+        # Reuse the existing mass-feature schema for bloodline inputs;
+        # never infer pedigree or workout quality from missing entries.
+        pedigree = horse.get("pedigree")
+        pedigree = pedigree if isinstance(pedigree, dict) else {}
+        sire = pedigree.get("sire")
+        damsire = pedigree.get("damsire")
+        dam = pedigree.get("dam") or horse.get("dam")
+        sire = sire.strip() if isinstance(sire, str) and sire.strip() else None
+        damsire = damsire.strip() if isinstance(damsire, str) and damsire.strip() else None
+        dam = dam.strip() if isinstance(dam, str) and dam.strip() else None
+        ability_observations[str(no)] = {
+            "pedigree": {"sire": sire, "dam": dam, "damsire": damsire,
+                         "observedFields": sum(v is not None for v in (sire, dam, damsire)),
+                         "status": "observed" if sire or dam or damsire else "unavailable"},
+            "training": {"status": "unverified-no-numeric-inference"},
+            "staticPreoff": {
+                "age": horse.get("age") if type(horse.get("age")) is int and 0 < horse["age"] < 40 else None,
+                "carriedWeight": horse.get("carriedWeight") if type(horse.get("carriedWeight")) in (int, float) else None,
+                "bodyWeight": horse.get("bodyWeight") if type(horse.get("bodyWeight")) in (int, float) else None,
+                "bodyWeightChange": horse.get("bodyWeightChange") if type(horse.get("bodyWeightChange")) in (int, float) else None,
+                "jockey": horse.get("jockey") if isinstance(horse.get("jockey"), str) else None,
+                "trainer": horse.get("trainer") if isinstance(horse.get("trainer"), str) else None,
+            },
+            "recentRuns": recent["datedRuns"],
+            "recentTop3Rate": recent["top3Rate"],
+            "recentFormQuality": recent["recentFormQuality"],
+            "opponentLevelMean": recent["opponentLevelMean"],
+            "opponentEvidenceRuns": recent["opponentLevelObservedRuns"],
+            "marginMean": recent["marginMean"],
+            "marginEvidenceRuns": recent["marginObservedRuns"],
+            "comparableRuns": career["comparableRuns"],
+            "comparableQuality": career["comparableQuality"],
+            "sameTrackQuality": career["sameTrackQuality"],
+            "sameDistanceQuality": career["sameDistanceQuality"],
+            "sameSurfaceQuality": career["sameSurfaceQuality"],
+            "sameGoingQuality": career["sameGoingQuality"],
+            "fullCareerRuns": career["datedRuns"],
+            "careerTop3Rate": career["top3Rate"],
+            "careerPeakFinishQuality": career["peakFinishQuality"],
+            "careerConsistency": career["stability"],
+            "classEvidenceRuns": career["classObserved"],
+            "sectionalEvidenceRuns": career["sectionalObserved"],
+            "representativeComparable": career["representativeComparable"],
+            "historyCoverage": career["coverageStatus"],
+            "status": "observed-only" if career["datedRuns"] else "missing-dated-career-history",
+            # The ability head has no validated runtime artifact in this
+            # deployed path. Evidence coverage alone is never a scored model.
+            "evaluationReady": False,
+            "abilityScore": None,
+            "abilityScoreStatus": "missing-validated-model-artifact",
+            "evaluationBlockers": (
+                (["missing-past-runs"] if not career["datedRuns"] else [])
+                + (["career-coverage-unverified"] if career["coverageStatus"] != "complete" else [])
+                + ["missing-validated-model-artifact"]
+                + (["training-unverified"])
+                + (["bloodline-unvalidated"])
+            ),
+        }
+    # Only measure evidence coverage from active starters; missing observations
+    # remain missing and cannot turn into guessed ability scores.
+    ability_coverage = {
+        "activeRunners": len(ability_observations),
+        "withPastRuns": sum(v["fullCareerRuns"] > 0 for v in ability_observations.values()),
+        "withOpponentEvidence": sum(v["opponentEvidenceRuns"] > 0 for v in ability_observations.values()),
+        "withMarginEvidence": sum(v["marginEvidenceRuns"] > 0 for v in ability_observations.values()),
+        "withPedigree": sum(v["pedigree"]["observedFields"] > 0 for v in ability_observations.values()),
+        "withVerifiedTraining": 0,
+    }
     stages = {
-        "ability": {"status": "independently-evaluated-opinions",
-                    "value": {k: v.get("modelVersion") for k, v in methods.items()}},
+        "ability": {"status": "observed-ability-inputs-not-calibrated",
+                    "value": ability_observations,
+                    "coverage": ability_coverage,
+                    "modelVersions": {k: v.get("modelVersion") for k, v in methods.items()},
+                    "probabilityCalibrationVerified": False},
         "runningStyle": {"status": "observed-preoff-positions",
                          "value": {str(e["horseNumber"]): e["pastEarlyTop3Share"]
                                    for e in mineta["horses"]}},
