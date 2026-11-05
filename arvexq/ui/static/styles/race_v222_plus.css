@@ -2372,3 +2372,25 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
 .arv-three-reference{margin:10px 0 2px}
 .arv-three-reference>summary{cursor:pointer;font-weight:700;font-size:13px;padding:6px 2px;color:#6b6252}
 .arv-osusume-pools{font-weight:600;color:#3d382e}
+
+/* v26 shadow-lane mark column (display-only, 2026-11-05). The column
+   exists only when the race has a v26 archive entry: the table then
+   gains a sixth column directly right of the production mark column.
+   The v26 cell is tinted violet so its source is unmistakable, and a
+   horse whose v26 mark equals the production mark is highlighted. */
+.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:34px 36px 46px minmax(0,1fr) 58px 46px!important}
+@media(max-width:430px){.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:32px 33px 44px minmax(0,1fr) 54px 44px!important}}
+@media(max-width:360px){.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:30px 31px 42px minmax(0,1fr) 50px 42px!important}}
+.rc-racecard-v339 .rc-v26-cell{background:#241b3a!important;border-right:1px solid #50616b!important}
+.rc-v26-head{display:block!important;font-size:9px!important;font-weight:800!important;letter-spacing:.08em!important;color:#b7a6e8!important;line-height:1!important;text-align:center!important}
+.rc-racecard-v339 .rc-v26-cell .rc-v26-box{height:auto!important;min-height:0!important;flex:0 1 auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:1px!important}
+.rc-v26-box .rc-mark-main{font-style:normal!important;font-weight:1000!important;line-height:1!important;color:#d6dde0!important}
+.rc-v26-box[data-v26-mark="◎"] .rc-mark-main{color:#ff6675!important}
+.rc-v26-box[data-v26-mark="○"] .rc-mark-main{color:#5fe3ff!important}
+.rc-v26-box[data-v26-mark="▲"] .rc-mark-main{color:#ffd75a!important}
+.rc-v26-box[data-v26-mark="△"] .rc-mark-main{color:#a9c4e9!important}
+.rc-v26-box[data-v26-mark="☆"] .rc-mark-main{color:#d49cff!important}
+.rc-v26-signal{display:block!important;font-size:9px!important;font-weight:800!important;color:#cdbffa!important;text-align:center!important;line-height:1.15!important;white-space:nowrap!important}
+.rc-v26-cell.rc-v26-same{background:#3d2b6e!important;box-shadow:inset 0 0 0 2px #ffd75a!important}
+.rc-v26-cell.rc-v26-same .rc-v26-head{color:#ffd75a!important}
+.rc-v26-legend{padding:6px 2px 8px!important;font-size:11px!important;line-height:1.55!important;color:#8f83c9!important}

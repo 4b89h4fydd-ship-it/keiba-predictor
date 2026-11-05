@@ -383,6 +383,15 @@ if morning_dir.is_dir():
     for archive in morning_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
 
+# v26 shadow-lane sealed marks are display-only read copies, published
+# as dated archives with the same treatment as morning-picks.
+v26_marks_dir = STATIC / "v26-marks"
+if v26_marks_dir.is_dir():
+    target_dir = DIST / "v26-marks"
+    target_dir.mkdir(exist_ok=True)
+    for archive in v26_marks_dir.glob("????-??-??.json"):
+        shutil.copy2(archive, target_dir / archive.name)
+
 # Lightweight, immutable factual racecard backup survives an unavailable D1.
 racecard_dir = STATIC / "racecards"
 if racecard_dir.is_dir():

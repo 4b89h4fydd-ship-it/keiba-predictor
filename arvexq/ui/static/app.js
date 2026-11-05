@@ -1163,7 +1163,34 @@ function visiblePredictionMark(x){return window.ARVEXQProductionMarks.visible(x)
 function honmeiA11yText(x){return x&&x.revisionCandidateMark?
   '菊花賞の発走前参考印。未校正で購入推奨ではありません':
   x&&markRoleLabel(x)?markRoleLabel(x)+'・勝ち切りと3着内安定性を合わせた本命（的中保証ではありません）':'';}
-function racecardMarkLegend(r){return '<div class="rc-mark-legend"></div>';}
+/* v26 shadow-lane marks (display-only): read from the dated static
+   archive /v26-marks/<date>.json loaded by requestV26Marks(). Never
+   derived from, and never written back into, the production forecast.
+   Races and dates without an archive entry render no v26 column. */
+function v26RaceEntry(r){
+  var a=state.v26Marks;
+  if(!a||!r||a.date!==r.date||!a.races)return null;
+  var e=a.races[r.id];
+  return e&&e.marks?e:null;
+}
+function v26CellHtml(r,h,x){
+  var e=v26RaceEntry(r);
+  if(!e)return '';
+  var no=String(n(h.horseNumber)),mark=String(e.marks[no]||''),
+    sig=String((e.signals||{})[no]||''),
+    prod=String(visiblePredictionMark(x)||''),
+    same=!!mark&&mark===prod,
+    tag=['軸','複勝圏','紐','見送り'].indexOf(sig)>=0?sig:'';
+  return '<div class="rc-v336-mark rc-v26-cell'+(same?' rc-v26-same':'')+'" aria-label="v26（試験中の別系統）の印：'+esc(mark||'無印')+(tag?'、シグナル：'+esc(tag):'')+(same?'、本番の印と一致':'')+'">'
+    +'<span class="rc-v26-head">v26</span>'
+    +'<span class="rc-mark-box rc-v26-box" data-v26-mark="'+esc(mark)+'"><span class="rc-mark-main">'+esc(mark||'—')+'</span>'
+    +(tag?'<small class="rc-v26-signal">'+esc(tag)+'</small>':'')
+    +'</span></div>';
+}
+function racecardMarkLegend(r){
+  if(!v26RaceEntry(r))return '<div class="rc-mark-legend"></div>';
+  return '<div class="rc-mark-legend rc-v26-legend">「v26」列は試験中の別系統（多眼）の印です。本番予想は「印」列を見てください。両系統で同じ印が付いた馬は、v26側を色付きで強調しています。</div>';
+}
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
       fr=clamp(n(h.frameNumber,no),1,8),curBw=currentBodyWeight(h),
@@ -1176,6 +1203,7 @@ function racecardEntryRow(r,h,x){
       detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
     +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
+    +v26CellHtml(r,h,x)
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+markRoleLabel(x).replace('◎ 本命','<span class="arv-role-win arv-role-axis">◎ 本命</span>').replace('保存印：◎（旧単勝）','<span class="arv-role-win">保存印：◎（旧単勝）</span>').replace('保存印：◎（旧軸）','<span class="arv-role-axis">保存印：◎（旧軸）</span>')+'</small>':'')+'</span>'
@@ -1203,7 +1231,7 @@ function morningSavedMarkRows(r){
 }
 function minimalRacecardPanel(r){
   var receiptRows=morningSavedMarkRows(r);
-  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table">'
+  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table'+(v26RaceEntry(r)?' rc-has-v26':'')+'">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){var z=receiptRows.find(function(x){return n(x.horse&&x.horse.horseNumber)===n(h.horseNumber)});return racecardEntryRow(r,h,z)}).join('')
     +'</div></section></div>';
 }
@@ -2670,7 +2698,7 @@ function runnerStyleSection(r,p){
   // update FAILURE can still be surfaced next to the button.
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status" hidden></span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
-    +'<div class="racecard-table">'
+    +'<div class="racecard-table'+(v26RaceEntry(r)?' rc-has-v26':'')+'">'
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var x=(p.rows||[]).find(function(z){return z&&z.horse&&n(z.horse.horseNumber)===n(h.horseNumber)});
       return racecardEntryRow(r,h,x);
@@ -3508,6 +3536,22 @@ function load(force){
   }
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
+  // v26 shadow-lane marks: a dated static archive holding a read-only
+  // copy of the v26 multi-eye lane's sealed marks, display-only and
+  // independent of the production forecast. A missing file (no v26
+  // seals for this date) simply leaves the v26 column hidden.
+  function requestV26Marks(){
+    fetch('/v26-marks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d),{cache:'no-store'})
+      .then(function(response){return response.ok?response.json():null})
+      .then(function(payload){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        if(!payload||payload.date!==d||!payload.races||typeof payload.races!=='object'||Array.isArray(payload.races))return;
+        state.v26Marks=payload;
+        render()
+      }).catch(function(){/* No v26 archive for this date. */})
+  }
+  if(state.v26Marks&&state.v26Marks.date!==d)state.v26Marks=null;
+  requestV26Marks();
   // No retrospective forecast fetching: user withdrew the generated model.
   function startDetails(){if(detailsStarted)return;detailsStarted=true;setTimeout(function(){requestDetails(0)},80)}
   // If summaries were already painted from cache, allow selection preload after first paint.
