@@ -27,5 +27,49 @@ class CareerIdentityRepairTests(unittest.TestCase):
         self.assertEqual(repair_reason(fresh, stored), 'career_archive_invalid')
 
 
+class CanonicalCareerVerifyTests(unittest.TestCase):
+    """The 2026-11-05 Kasamatsu failure: the assembled source carried a
+    second representation of an already-stored start (YYYYMMDD date and an
+    adapter-specific raceId). Storage canonicalises careers by race date,
+    so verification must compare in that canonical form — while a genuinely
+    missing start or a different finish must still fail."""
+
+    def _bundles(self, source_runs, saved_runs):
+        def detail(runs):
+            return {'id': 'jra-test', 'date': '2026-10-17',
+                    'horses': [{'horseNumber': 1, 'name': 'A', 'allPastRuns': runs,
+                                'recentRaces': runs[:5]},
+                               {'horseNumber': 2, 'name': 'B', 'allPastRuns': [],
+                                'recentRaces': []}]}
+        source = {'summaries': [{'id': 'jra-test'}], 'details': [detail(source_runs)]}
+        saved = {'races': [{'id': 'jra-test'}], 'details': [detail(saved_runs)]}
+        return source, saved
+
+    def test_variant_representation_of_same_start_passes(self):
+        from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+        stored = [{'date': '2026-09-01', 'track': '東京', 'raceNumber': 5,
+                   'raceId': 'store-id', 'finish': 3}]
+        source = stored + [{'date': '20260901', 'track': '東京', 'raceNumber': 5,
+                            'raceId': 'official-id', 'finish': 3}]
+        src, saved = self._bundles(source, stored)
+        self.assertEqual(verify_persisted_facts(src, saved), [])
+
+    def test_missing_start_still_fails(self):
+        from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+        stored = [{'date': '2026-09-01', 'track': '東京', 'raceNumber': 5, 'finish': 3}]
+        source = stored + [{'date': '2026-08-15', 'track': '東京', 'raceNumber': 3, 'finish': 2}]
+        src, saved = self._bundles(source, stored)
+        errors = verify_persisted_facts(src, saved)
+        self.assertTrue(any('allPastRuns-truncated' in e for e in errors), errors)
+
+    def test_finish_disagreement_still_fails(self):
+        from arvexq.pipeline.persisted_inputs import verify_persisted_facts
+        stored = [{'date': '2026-09-01', 'track': '東京', 'raceNumber': 5, 'finish': 3}]
+        source = [{'date': '2026-09-01', 'track': '東京', 'raceNumber': 5, 'finish': 1}]
+        src, saved = self._bundles(source, stored)
+        errors = verify_persisted_facts(src, saved)
+        self.assertTrue(any('allPastRuns-truncated' in e for e in errors), errors)
+
+
 if __name__ == '__main__':
     unittest.main()

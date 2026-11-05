@@ -52,13 +52,44 @@ def _career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
 def _history_observations_retained(original: list[dict[str, Any]],
                                    saved: list[dict[str, Any]]) -> bool:
     """Older results can gain fields; their known date/venue/race must survive."""
-    keys = ("date", "track", "raceNumber", "raceId", "finish")
+    # A start is identified by its facts (date, track, race number, finish).
+    # raceId is deliberately excluded: the same start reaches the pipeline
+    # through several adapters, each stamping its own id alias for it, while
+    # every storage merge keys the career by date. Requiring the alias to
+    # survive made complete careers fail verification whenever a second
+    # representation of an already-stored start appeared in the source.
+    keys = ("date", "track", "raceNumber", "finish")
     for prior in original:
         known = [(k, str(prior[k])) for k in keys if prior.get(k) not in (None, "")]
         if known and not any(all(str(next_run.get(k, "")) == value for k, value in known)
                              for next_run in saved):
             return False
     return True
+
+
+def _canonical_career_rows(horse: dict[str, Any], cutoff: str) -> list[dict[str, Any]]:
+    """Career rows in the canonical form every storage writer produces.
+
+    Storage canonicalises a career by merging all representations of a
+    start into one row per race date (``merge_career``). Verification must
+    compare in that same form: the assembled source can carry two
+    representations of one start (different date spellings such as
+    ``20261004`` vs ``2026-10-04``, or an adapter-specific raceId) which
+    storage legitimately collapses into a single canonical row. Comparing
+    raw source rows against canonical saved rows reported those starts as
+    truncated even though every start was retained (2026-11-05 prefetch:
+    Kasamatsu 09/12 blocked the whole day's chain although the stored
+    careers matched the collected 104 starts exactly).
+    """
+    rows = _career_rows(horse, cutoff)
+    try:
+        from arvexq.ingest.full_career import date_key, merge_career
+
+        if date_key(cutoff) is None:
+            return rows
+        return merge_career(rows, [], cutoff)
+    except Exception:
+        return rows
 
 
 def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> list[str]:
@@ -98,8 +129,8 @@ def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any]) -> lis
             # Recover the same canonical full-career transport used by the
             # existing prefetch. Five visible runs are not a complete career.
             try:
-                original = _career_rows(a[number], str(old.get("date") or ""))
-                retained = _career_rows(b[number], str(new.get("date") or ""))
+                original = _canonical_career_rows(a[number], str(old.get("date") or ""))
+                retained = _canonical_career_rows(b[number], str(new.get("date") or ""))
             except (ValueError, KeyError, TypeError, RuntimeError) as exc:
                 errors.append(f"{rid}:horse-{number}:career-archive-invalid:{type(exc).__name__}")
                 continue
