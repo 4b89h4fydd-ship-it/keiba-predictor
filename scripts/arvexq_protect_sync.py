@@ -93,6 +93,16 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
         raise RuntimeError("invalid D1 response")
     for item in (data.get("detail"), data.get("race"), data):
         if isinstance(item, dict) and str(item.get("id") or "") == rid:
+            if _projection_tombstone(item):
+                # The projection stripped this race's forecast blocks
+                # because its stored status is not exactly "ready".
+                # The dedicated display view restores the blocks from
+                # the sealed pre-off archive server-side; read the
+                # stored state through it instead. Fail closed when
+                # even the display view cannot produce the forecast:
+                # protecting against a tombstone would write the
+                # tombstone into storage.
+                return _fetch_display_restored(base, rid)
             return item
     if data.get("ok") is False:
         raise RuntimeError("D1 returned failure")
@@ -100,6 +110,41 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
     if not data.get("detail") and not data.get("race") and not data.get("id"):
         return None
     raise RuntimeError("D1 returned a mismatched race")
+
+
+def _fetch_display_restored(base: str, rid: str) -> dict[str, Any]:
+    """Read a tombstoned race's stored detail through the display view.
+
+    The worker's ?view=display route restores the forecast blocks
+    from the sealed pre-off archive before serving, so its detail is
+    the stored publication, not the projection tombstone. Any
+    failure — transport, shape, identity, or a detail that is still
+    tombstoned — fails closed: the caller must not protect a sync
+    write against state it cannot actually read.
+    """
+    url = (base.rstrip("/") + "/api/race/" + urllib.parse.quote(rid, safe="")
+           + "?view=display&sealguard=" + str(time.time_ns()))
+    req = urllib.request.Request(
+        url, headers={"accept": "application/json",
+                      "user-agent": "ARVEXQ-SealGuard/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            display = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError(
+            "D1 seal-guard display restore failed closed: " + str(exc)) from exc
+    if not isinstance(display, dict):
+        raise RuntimeError("D1 display response must be object")
+    candidate = display.get("detail")
+    if not isinstance(candidate, dict):
+        raise RuntimeError("D1 display returned no verifiable detail")
+    if str(candidate.get("id") or "") != rid:
+        raise RuntimeError("D1 display returned mismatched race")
+    if _projection_tombstone(candidate):
+        raise RuntimeError(
+            "D1 display view could not restore the tombstoned forecast: "
+            + rid)
+    return candidate
 
 
 def _marker_timestamp(value: Any) -> Any:
@@ -181,6 +226,97 @@ def _rewrite_marker_fresh(stored: Any, incoming: Any) -> bool:
     return incoming_at > stored_at
 
 
+_FORECAST_BLOCK_KEYS = ("predictionStatus", "predictionModelVersion",
+                        "prediction", "predictionMarks", "recommendedBets")
+_AUTHORIZED_MODEL_VERSIONS = frozenset((
+    "arvexq-stage64-product-v1", "arvexq-rewrite-v1-uncalibrated-prior",
+    "arvexq-rewrite-v2-elo-speed2", "arvexq-rewrite-v3-v9b"))
+_MARK_LABELS = ("◎", "○", "▲", "△", "☆")
+
+
+def _projection_tombstone(detail: dict[str, Any]) -> bool:
+    """Whether this read carries the API worker's projection tombstone.
+
+    The kraiz-api GET projection (publicRace / authorizedStage64)
+    honours only a stored detail whose top-level predictionStatus is
+    exactly "ready". Anything else is served as predictionStatus
+    "disabled" / predictionModelVersion "arvexq-prediction-removed"
+    with the prediction and predictionMarks blocks stripped. Those
+    two fields are the projection's values, not the stored detail's.
+    """
+    return (detail.get("predictionStatus") == "disabled"
+            and detail.get("predictionModelVersion")
+            == "arvexq-prediction-removed")
+
+
+def _authorized_forecast(detail: dict[str, Any]) -> bool:
+    """Python mirror of the worker's authorizedStage64 gate."""
+    prediction = detail.get("prediction")
+    if detail.get("predictionStatus") != "ready":
+        return False
+    if not isinstance(prediction, dict):
+        return False
+    if prediction.get("predictionStatus") != "ready":
+        return False
+    if prediction.get("productionEligible") is not True:
+        return False
+    if prediction.get("modelVersion") not in _AUTHORIZED_MODEL_VERSIONS:
+        return False
+    if prediction.get("raceId") != detail.get("id"):
+        return False
+    if prediction.get("date") != detail.get("date"):
+        return False
+    horses = detail.get("horses")
+    marks = detail.get("predictionMarks")
+    if not isinstance(horses, list) or not isinstance(marks, list):
+        return False
+    if len(marks) != 5:
+        return False
+    known = {h.get("horseNumber") for h in horses if isinstance(h, dict)}
+    used: set[Any] = set()
+    for index, row in enumerate(marks):
+        if not isinstance(row, dict) or row.get("mark") != _MARK_LABELS[index]:
+            return False
+        number = row.get("horseNumber")
+        if not isinstance(number, int) or isinstance(number, bool):
+            return False
+        if number not in known or number in used:
+            return False
+        used.add(number)
+    return True
+
+
+def _archive_restored_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Rebuild the stored view of a tombstoned read from its archive.
+
+    The sealed pre-off archive (preoffStage64Archive) inside the read
+    carries the publication's forecast blocks verbatim. It is trusted
+    only after the worker-equivalent verification: identity match
+    against the race, the full authorization gate over the archived
+    blocks with the race's current roster, and a bet list present.
+    """
+    archive = detail.get("preoffStage64Archive")
+    if not isinstance(archive, dict):
+        return None
+    if archive.get("raceId") != detail.get("id"):
+        return None
+    if archive.get("raceDate") != detail.get("date"):
+        return None
+    if not isinstance(archive.get("recommendedBets"), list):
+        return None
+    candidate = dict(archive)
+    candidate["id"] = detail.get("id")
+    candidate["date"] = detail.get("date")
+    candidate["horses"] = detail.get("horses")
+    if not _authorized_forecast(candidate):
+        return None
+    restored = copy.deepcopy(detail)
+    for key in _FORECAST_BLOCK_KEYS:
+        if key in archive:
+            restored[key] = copy.deepcopy(archive[key])
+    return restored
+
+
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
     if FULL_PAYLOAD_KEY in incoming:
         # Archive protection must edit the real original, then recompress it.
@@ -188,6 +324,23 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         return pack_full(protect_detail(unpack_full(old) if isinstance(old, dict) else old, unpack_full(incoming)))
     if isinstance(old, dict) and FULL_PAYLOAD_KEY in old:
         old = unpack_full(old)
+    if isinstance(old, dict) and _projection_tombstone(old):
+        # Restoring forecast blocks FROM a tombstoned read would write
+        # the tombstone itself into storage: the projection's status
+        # values would replace the stored ones and the stripped blocks
+        # would be deleted from the incoming write. That is exactly
+        # how nine races lost their stored prediction blocks on
+        # 2026-11-05 after a projection-shaped write flipped their
+        # stored status. Restore the stored view from the sealed
+        # pre-off archive instead, or fail closed.
+        restored = _archive_restored_detail(old)
+        if restored is None:
+            raise RuntimeError(
+                "stored forecast is tombstoned in the API projection "
+                "and carries no verified pre-off archive; failing "
+                "closed rather than restoring from the tombstone: "
+                + str(old.get("id") or ""))
+        old = restored
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
@@ -233,8 +386,19 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     # made every place-EV upgrade fail its read-back on 2026-11-04.
     # A write that DROPS a block the stored detail carries (the
     # display-compaction case above) is still not a publish write.
+    # A genuine publish write also always carries the lane's own
+    # top-level status: build_publish_detail stamps predictionStatus
+    # "ready", and the surgical upgrades derive from a ready read.
+    # A write whose status reads "unified-reference-ready" passed
+    # through the Python delivery projection (public_race) on its way
+    # here — a display-compacted seed, not a publication. Letting it
+    # through as a publish write stores the projection's vocabulary
+    # in D1, where the worker projection then tombstones the race
+    # (2026-11-05 flip). Such writes go through the restore branch
+    # below, which keeps the stored status and blocks.
     is_publish_write = (
         marker.get('modelVersion') == REWRITE_MODEL_VERSION
+        and out.get('predictionStatus') == 'ready'
         and all(key in out for key in forecast_keys if key in old)
         and _rewrite_marker_fresh(stored_marker, marker))
     if not is_publish_write:
