@@ -2414,3 +2414,37 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
    is suppressed here only — the single-column layout is untouched. */
 .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small{display:none!important}
 .rc-v26-legend{padding:6px 2px 8px!important;font-size:11px!important;line-height:1.55!important;color:#8f83c9!important}
+
+/* Two-column mark layout — cascade repair (2026-11-05 follow-up).
+   Root cause of the crushed horse-name column on real devices: the
+   smart race page's compact-row block in sports/unified-home.css
+   (html body .smart-race-page .racecard-row.rc-racecard-v336
+   .rc-racecard-v339, specificity 0-4-2, loaded later) outranked the
+   0-3-0 two-column rule above and forced its FIVE-column template
+   (26px 32px minmax(0,1fr) 42px 51px) onto the SIX-cell v26 rows:
+   the number button swallowed the 1fr track, the horse name was
+   crushed into the 42px track and the odds cell wrapped onto a
+   second row. The rules below restore the six-column order
+   (v26 | v9b incl. the v25 widening flag | number | name | weight |
+   odds) at the compact design's width steps, outranking that block
+   by specificity (rows 0-6-2, head row 0-4-2). The compact block's
+   54px row height and child sizing still apply; non-v26 rows are
+   untouched. */
+html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:30px 30px 36px minmax(0,1fr) 46px 52px!important}
+@media(max-width:430px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:25px 25px 31px minmax(0,1fr) 41px 47px!important}}
+@media(max-width:365px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:23px 23px 29px minmax(0,1fr) 39px 45px!important}}
+html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:30px 30px 36px minmax(0,1fr) 46px 52px!important}
+@media(max-width:430px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:25px 25px 31px minmax(0,1fr) 41px 47px!important}}
+@media(max-width:365px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:23px 23px 29px minmax(0,1fr) 39px 45px!important}}
+
+/* The ◎ role label ("◎ 発走前参考印" etc.) used to sit on the name
+   line, where its ~72px silently truncated even an 8-character name
+   (ノリウッドテール needed 122px, got 99px). In the two-column
+   layout the label moves back into the v9b mark box — the position
+   the row markup already emits it in — stacked under the glyph as a
+   small wrapped caption, and the duplicate on the name line is
+   hidden (it stays in the cell's aria-label). */
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-mark-box.rc-ai-mark{flex-direction:column!important;gap:1px!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small:not(.rc-v25-added){display:block!important;font-size:7.5px!important;line-height:1.05!important;text-align:center!important;white-space:normal!important;max-width:100%!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark .rc-mark-main{line-height:1.1!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-info .rc-honmei-role{display:none!important}
