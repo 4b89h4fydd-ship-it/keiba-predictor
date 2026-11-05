@@ -2567,7 +2567,7 @@ function venueRaceRows(){
 }
 function venueTopBar(hi){
   return '<header class="smart-venue-topbar">'+
-    '<span class="smart-pull-space" aria-hidden="true"></span>'+ 
+    '<button type="button" class="smart-venue-reload" data-action="reload" aria-label="表示を更新" title="更新">↻</button>'+ 
     '<div class="smart-venue-topcopy"><strong>'+esc((state.track||'開催場')+' 全レース')+'</strong><small>'+esc((hi&&hi.status)||'')+'</small></div>'+ 
     '<button class="smart-venue-close" data-action="back" aria-label="トップへ戻る">×</button>'+ 
   '</header>'
@@ -2605,7 +2605,7 @@ function officialRaceActions(r){
 function smartRaceHead(r){
   var count=raceHeadCountText(r),markState='';
   return '<section class="smart-race-head smart-race-head-compact smart-race-head-v222">'+
-    '<div class="smart-race-title-stack smart-race-full-title"><div class="arv-favorite-title-row"><h1>'+esc(r.title||'レース詳細')+'</h1>'+favoriteStarHtml(r,'arv-detail-favorite-star')+'</div>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
+    '<div class="smart-race-title-stack smart-race-full-title"><div class="arv-favorite-title-row"><h1>'+esc(r.title||'レース詳細')+'</h1>'+favoriteStarHtml(r,'arv-detail-favorite-star')+'<button type="button" class="arv-reload-button arv-detail-reload" data-action="reload" aria-label="表示を更新" title="更新">↻</button></div>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
     '<div class="smart-race-head-layout">'+
       '<div class="smart-race-left-stack">'+
         '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><div class="smart-race-title-stack"><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'</div></div>'+cinematicGrade(r)+'</div>'+
@@ -3233,8 +3233,10 @@ function openRace(id,keepStack,skipHistory,preservePanel){
 
 function openPastRace(id){if(!id)return;if(state.race)state.raceStack.push(state.race);openRace(id,true,true)}
 function installPullRefresh(){
-  // The shared sport module owns the touch listeners and indicator.
-  window.ARVEXQPullRefresh.mount({refresh:reloadCurrent});
+  // Retired 2026-11-06 by user request: pull-to-refresh is gone. The
+  // shared sport module is intentionally never mounted, so it installs
+  // no touch listeners and no indicator. Refresh lives on the on-screen
+  // reload buttons (data-action="reload" -> reloadCurrent).
 }
 function reloadCurrent(){
   if(state.race&&state.race.id){

@@ -2448,3 +2448,25 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-mark-box
 html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small:not(.rc-v25-added){display:block!important;font-size:7.5px!important;line-height:1.05!important;text-align:center!important;white-space:normal!important;max-width:100%!important}
 html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark .rc-mark-main{line-height:1.1!important}
 html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-info .rc-honmei-role{display:none!important}
+
+/* Reload button beside the race-detail favorite star, and the
+   app-wide overscroll guard (2026-11-06, user request). The custom
+   pull-to-refresh module is no longer mounted from app.js; refresh
+   is the on-screen reload buttons only (detail title row beside the
+   star, venue header left cell). The button mirrors the favorite
+   star's box and cream/bronze theme so the title row keeps its
+   existing rhythm; overscroll-behavior also suppresses the
+   browser-native pull-to-refresh where the platform offers one. */
+.arv-reload-button{
+  appearance:none!important;-webkit-appearance:none!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px!important;
+  padding:0!important;margin:0!important;border:1px solid #c39245!important;
+  border-radius:10px!important;background:#fff1cc!important;color:#a66512!important;
+  font-size:21px!important;line-height:1!important;font-weight:700!important;
+  touch-action:manipulation;cursor:pointer;box-sizing:border-box!important
+}
+@media(max-width:380px){
+  .arv-reload-button{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important}
+}
+html,body{overscroll-behavior-y:none!important}
