@@ -4363,6 +4363,28 @@ def _nar_result_should_be_available(detail:dict, grace_min:int=1)->bool:
     return nowm>=int(m.group(1))*60+int(m.group(2))+int(grace_min)
 
 
+def _nar_race_lap_times(soup)->list:
+    """Furlong lap times from the official result page's sectional table.
+
+    Only some venues publish a lap table at all (Sonoda, Kawasaki, Urawa
+    and Oi do; Morioka, Kanazawa and Monbetsu publish none). Absence is a
+    property of the source page, so a missing table returns [] and no
+    value is ever invented or borrowed from another race.
+    """
+    for tr in soup.find_all("tr"):
+        cells=[_clean(c.get_text(" ",strip=True)) for c in tr.find_all(["th","td"])]
+        if not cells or "ハロンタイム" not in cells[0]:continue
+        laps=[]
+        for cell in cells[1:]:
+            token=unicodedata.normalize("NFKC",cell).strip()
+            if re.fullmatch(r"\d+(?:\.\d+)?",token):
+                try:value=float(token)
+                except (TypeError,ValueError):continue
+                if 0<value<60:laps.append(value)
+        if laps:return laps
+    return []
+
+
 def _nar_official_result_fast(detail:dict)->dict|None:
     """Fetch NAR official RaceMarkTable directly; includes result, body weight and corner order."""
     code=NAR_BABA_CODES.get(str(detail.get("track") or "").strip())
@@ -4484,6 +4506,8 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         payouts=_parse_payouts(soup)
         explicit_final=official_confirmed(full)
         out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
+        laps=_nar_race_lap_times(soup)
+        if laps:out["raceLapTimes"]=laps
         if wm:out["weather"]=_env_clean_weather(wm.group(1))
         if cm:out["condition"]=_env_clean_condition(cm.group(1))
         out["sourceUrl"]=url

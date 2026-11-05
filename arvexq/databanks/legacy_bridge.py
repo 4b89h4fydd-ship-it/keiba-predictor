@@ -225,6 +225,24 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
     if getter is None:
         return None
 
+    # Pages probed while resolving a missing race number are shared by every
+    # horse and run of the same card; never fetch one twice through this
+    # adapter, including pages that turned out to hold no usable result.
+    scan_cache: dict[tuple[str, str, int], Any] = {}
+
+    def scan_page(at: str, track: str, no: int, run: dict[str, Any],
+                  known_name: str):
+        key = (at, track, no)
+        if key not in scan_cache:
+            previous = {"date": at, "track": track, "raceNumber": no,
+                        "horses": [{"name": known_name,
+                                    "horseNumber": run.get("horseNumber") or 0}]}
+            try:
+                scan_cache[key] = getter(previous)
+            except Exception:
+                scan_cache[key] = None
+        return scan_cache[key]
+
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         from arvexq.ingest.full_career import date_key, merge_career
         target = date_key(race.get("date"))
@@ -232,6 +250,52 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             return {}
         known_name = str(horse.get("name") or "").strip()
         known_runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), target)
+
+        def verified_candidate(found: Any, run: dict[str, Any]):
+            """The finisher row of a candidate page, only when the page
+            provably is this start.
+
+            A primary career row that never recorded its race number may be
+            repaired only by a page whose own row for this horse agrees with
+            the facts the row already carries: a real finishing place (0 is
+            the unknown sentinel, never a placing) and/or the recorded time
+            (0.11s tolerance, the bound the JRA prior-result adapter uses).
+            A name match alone never authorises a fill.
+            """
+            if not isinstance(found, dict):
+                return None
+            matched = [f for f in (found.get("finishers") or [])
+                       if str(f.get("name") or "").strip() == known_name]
+            if len(matched) != 1:
+                return None
+            row = matched[0]
+            evidence = False
+            run_finish = run.get("finish")
+            if run_finish not in (None, "", 0, "0"):
+                try:
+                    if int(run_finish) != int(row.get("finish") or 0):
+                        return None
+                except (TypeError, ValueError):
+                    return None
+                evidence = True
+            run_time = run.get("timeSeconds")
+            if run_time not in (None, "", 0, "0"):
+                try:
+                    own = float(row.get("timeSeconds") or 0)
+                    if not own or abs(float(run_time) - own) > 0.11:
+                        return None
+                except (TypeError, ValueError):
+                    return None
+                evidence = True
+            run_post = run.get("horseNumber")
+            if run_post not in (None, "", 0) and row.get("horseNumber") not in (None, "", 0):
+                try:
+                    if int(run_post) != int(row.get("horseNumber")):
+                        return None
+                except (TypeError, ValueError):
+                    return None
+            return row if evidence else None
+
         fallback_sectional = None
         # The newest official race can have no times/row yet. Try the next
         # recorded starts within the same verified five-run window, not only
@@ -241,17 +305,34 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                 continue
             at = date_key(run.get("date") or run.get("raceDate"))
             track = str(run.get("track") or "").strip()
-            no = int(run.get("raceNumber") or run.get("raceNo") or 0)
-            if not at or at >= target or not track or not 1 <= no <= 12:
+            try:
+                no = int(run.get("raceNumber") or run.get("raceNo") or 0)
+            except (TypeError, ValueError):
+                no = 0
+            if not at or at >= target or not track:
                 continue
             if (run.get("last3fSeconds") not in (None, "", 0)
                     and any(run.get(k) not in (None, "")
                             for k in ("marginSeconds", "timeBehindWinner"))):
                 continue
-            previous = {"date": at, "track": track, "raceNumber": no,
-                        "horses": [{"name": known_name,
-                                    "horseNumber": run.get("horseNumber") or 0}]}
-            found = getter(previous)
+            found = None
+            if 1 <= no <= 12:
+                previous = {"date": at, "track": track, "raceNumber": no,
+                            "horses": [{"name": known_name,
+                                        "horseNumber": run.get("horseNumber") or 0}]}
+                found = getter(previous)
+            else:
+                # The primary row never recorded which race of the day this
+                # start was (the live-era card parsers omit raceNumber), so
+                # this fallback could never fire for it. Resolve the number
+                # by a verified scan of that day's official pages: a
+                # candidate counts only when its own finisher row for this
+                # horse agrees with the facts already on the row.
+                for candidate in range(1, 13):
+                    page = scan_page(at, track, candidate, run, known_name)
+                    if verified_candidate(page, run) is not None:
+                        found, no = page, candidate
+                        break
             if not isinstance(found, dict):
                 continue
             finishers = found.get("finishers") or []
