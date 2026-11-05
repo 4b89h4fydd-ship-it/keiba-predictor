@@ -1182,14 +1182,45 @@ function v26CellHtml(r,h,x){
     same=!!mark&&mark===prod,
     tag=['軸','複勝圏','紐','見送り'].indexOf(sig)>=0?sig:'';
   return '<div class="rc-v336-mark rc-v26-cell'+(same?' rc-v26-same':'')+'" aria-label="v26（試験中の別系統）の印：'+esc(mark||'無印')+(tag?'、シグナル：'+esc(tag):'')+(same?'、本番の印と一致':'')+'">'
-    +'<span class="rc-v26-head">v26</span>'
     +'<span class="rc-mark-box rc-v26-box" data-v26-mark="'+esc(mark)+'"><span class="rc-mark-main">'+esc(mark||'—')+'</span>'
     +(tag?'<small class="rc-v26-signal">'+esc(tag)+'</small>':'')
     +'</span></div>';
 }
+/* v25 shadow lane (display-only): the same dated archive may carry
+   a per-race "v25" section {band, addedPartners} derived from the
+   v25 lane's seals. addedPartners are the unmarked horses that
+   enter the production ticket only through the chaos-band
+   widening (bands 4-5); each is flagged with a small ▽ inside the
+   v9b (production) mark cell. The production forecast itself is
+   never changed by this display. */
+function v25RaceEntry(r){
+  var e=v26RaceEntry(r);
+  return e&&e.v25&&typeof e.v25==='object'?e.v25:null;
+}
+function v25AddedHtml(r,h){
+  var s=v25RaceEntry(r);
+  if(!s||!Array.isArray(s.addedPartners))return '';
+  var no=n(h&&h.horseNumber);
+  for(var i=0;i<s.addedPartners.length;i++){
+    if(n(s.addedPartners[i])===no)return '<small class="rc-v25-added" title="v25（試験中）：荒れたレースで買い目の相手に入る馬">▽</small>';
+  }
+  return '';
+}
+/* Column header row for the two mark columns (v26 left, v9b
+   right). Rendered only when the race has a v26 archive entry;
+   the labels live here, never stacked inside the cells. */
+function racecardHeadHtml(r){
+  if(!v26RaceEntry(r))return '';
+  return '<div class="racecard-head-row" aria-hidden="true"><span class="rch rch-v26">v26</span><span class="rch rch-v9b">v9b</span><span></span><span></span><span></span><span></span></div>';
+}
 function racecardMarkLegend(r){
-  if(!v26RaceEntry(r))return '<div class="rc-mark-legend"></div>';
-  return '<div class="rc-mark-legend rc-v26-legend">「v26」列は試験中の別系統（多眼）の印です。本番予想は「印」列を見てください。両系統で同じ印が付いた馬は、v26側を色付きで強調しています。</div>';
+  var has26=!!v26RaceEntry(r),s25=v25RaceEntry(r),
+    has25=!!(s25&&Array.isArray(s25.addedPartners)&&s25.addedPartners.length);
+  if(!has26&&!has25)return '<div class="rc-mark-legend"></div>';
+  var text='';
+  if(has26)text+='左の「v26」列は試験中の別系統（多眼）の印、右の「v9b」列は本番予想の印です。両系統で同じ印が付いた馬は、v26側を色付きで強調しています。';
+  if(has25)text+=(text?' ':'')+'▽は荒れたレースで買い目の相手に入る馬です（v25・試験中）。本番予想の印は変わりません。';
+  return '<div class="rc-mark-legend rc-v26-legend">'+text+'</div>';
 }
 function racecardEntryRow(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
@@ -1200,10 +1231,11 @@ function racecardEntryRow(r,h,x){
       weightHint=curBw?'馬体重':(pastBw?'前走馬体重':'馬体重未計量'),
       disabled=scratch?' disabled aria-disabled="true"':'',
       openAttr=scratch?'':(' data-horse-open="'+esc(no)+'"'),
-      detailLabel=' aria-label="'+esc(name)+'の詳細を開く"';
+      detailLabel=' aria-label="'+esc(name)+'の詳細を開く"',
+      v25add=v25AddedHtml(r,h);
   return '<div class="racecard-row rc-racecard-v336 rc-racecard-v339'+(scratch?' scratched':'')+'" '+(scratch?'aria-disabled="true"':'')+'>'
-    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +v26CellHtml(r,h,x)
+    +'<div class="rc-v336-mark"><span class="rc-mark-box rc-ai-mark" data-ai-mark="'+esc(visiblePredictionMark(x))+'" aria-label="'+esc(String(visiblePredictionMark(x)||'—').replace(/\+/g,'＋')+(markRoleLabel(x)?'、'+honmeiA11yText(x):'')+(x&&x.attentionMark?'、注目（単勝・3着内両方の期待値基準を満たす）':'')+(x&&x.singleWinSuitable&&!scratch?'、単勝向き':'')+(v25add?'、v25（試験中）で買い目の相手に追加':''))+'"><span class="rc-mark-main">'+racecardMarkCellHtml(x)+'</span>'+v25add+(markRoleLabel(x)?'<small style="display:block;font-size:9px">'+esc(markRoleLabel(x))+'</small>':'')+(x&&x.singleWinSuitable&&!scratch&&x.predMark!=='◎'?'<span class="rc-single-tip" title="単勝向き（1着狙い）" aria-hidden="true">単</span>':'')+'</span></div>'
     +'<button type="button" class="rc-v336-number"'+openAttr+detailLabel+disabled+'><span class="rc-number frame'+fr+'">'+esc(no)+'</span></button>'
     +'<div class="rc-v336-info"><button type="button" class="rc-horse-main"'+openAttr+detailLabel+disabled+'>'
       +'<span class="rc-horse-name">'+'<span class="rc-horse-title">'+esc(name)+'</span>'+(markRoleLabel(x)&&!scratch?' <small class="rc-honmei-role">'+markRoleLabel(x).replace('◎ 本命','<span class="arv-role-win arv-role-axis">◎ 本命</span>').replace('保存印：◎（旧単勝）','<span class="arv-role-win">保存印：◎（旧単勝）</span>').replace('保存印：◎（旧軸）','<span class="arv-role-axis">保存印：◎（旧軸）</span>')+'</small>':'')+'</span>'
@@ -1231,7 +1263,7 @@ function morningSavedMarkRows(r){
 }
 function minimalRacecardPanel(r){
   var receiptRows=morningSavedMarkRows(r);
-  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table'+(v26RaceEntry(r)?' rc-has-v26':'')+'">'
+  return '<div id="section-entry" class="accordion-panel"><section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<div class="diagnosis-refresh-note busy" style="margin:7px 0">AI解析はバックグラウンドで再取得します。出走表は先に表示しています。</div><div class="racecard-table'+(v26RaceEntry(r)?' rc-has-v26':'')+'">'+racecardHeadHtml(r)
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){var z=receiptRows.find(function(x){return n(x.horse&&x.horse.horseNumber)===n(h.horseNumber)});return racecardEntryRow(r,h,z)}).join('')
     +'</div></section></div>';
 }
@@ -2699,6 +2731,7 @@ function runnerStyleSection(r,p){
   return '<section class="card"><h2>出走表</h2>'+racecardMarkLegend(r)+'<button data-action="odds-update">オッズ・馬体重更新</button><span id="odds-status" role="status" hidden></span>'
     +(!diagnosisReady?'<div class="diagnosis-refresh-note busy" style="margin:7px 0">'+(r._entryOnly?'出走表を先に表示しています。履歴・能力評価を取得中です。':'取得済みデータでAI評価を先に計算中。更新後は馬名タップの詳細と展開予想へ反映します。')+'</div>':'')
     +'<div class="racecard-table'+(v26RaceEntry(r)?' rc-has-v26':'')+'">'
+    +racecardHeadHtml(r)
     +(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)}).map(function(h){
       var x=(p.rows||[]).find(function(z){return z&&z.horse&&n(z.horse.horseNumber)===n(h.horseNumber)});
       return racecardEntryRow(r,h,x);
