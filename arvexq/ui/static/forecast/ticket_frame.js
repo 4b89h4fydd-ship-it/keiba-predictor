@@ -9,6 +9,10 @@ function revisionStatus(r){
  var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();
  var rev=r&&r._forecastRevisionView,plan=rev&&rev.betPlan;
  if(!live||!/^learned-revision-/.test(live.source||'')||!rev||rev.raceId!==r.id||rev.raceDate!==r.date||!plan)return '';
+ // The slot's source only words this note; if the slot is owned by a
+ // different race (background prebuilds move it), stay silent rather
+ // than borrowing another race's revision wording.
+ if(live.raceId&&String(live.raceId)!==String(r.id||''))return '';
  var note=live.source==='learned-revision-retrospective'?'事後再分析の買い目比較':'発走前の仮予想の買い目比較';
  var rows=Array.isArray(plan.comparisons)?plan.comparisons:[];
  return '<div class="revision-bet-status"><p>'+esc(note)+'：'+esc(plan.decision||'見送り')+'</p><p class="muted">'+esc(plan.reason||'')+'</p>'+rows.map(function(row){

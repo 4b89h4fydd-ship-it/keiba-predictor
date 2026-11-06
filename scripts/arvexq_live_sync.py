@@ -87,7 +87,12 @@ def fetch_d1_detail(rid: str) -> dict[str, Any] | None:
         with urllib.request.urlopen(req, timeout=8) as res:
             body = json.loads(res.read().decode("utf-8"))
         detail = body.get("detail") if isinstance(body, dict) else None
-        return detail if isinstance(detail, dict) and detail.get("id") else None
+        # Race binding: the detail is fetched BY rid, but the caller
+        # stores it under rid and merges it as that race's base. Accept
+        # it only when the payload's own id is the requested race —
+        # anything else falls into the audited missing-base path
+        # instead of blending another race's content into this one.
+        return detail if isinstance(detail, dict) and str(detail.get("id") or "") == rid else None
     except Exception as exc:
         print("D1_BASE_FETCH_ERROR", rid, type(exc).__name__, exc)
         return None

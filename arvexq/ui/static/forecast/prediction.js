@@ -4,6 +4,12 @@
   // Original sealed marks take priority. An existing model revision is clearly labelled provisional/retrospective.
   // All assistant-introduced probabilistic/provisional and post-off models are retired.
   var last={active:false,source:'',marks:[]};
+  // Race binding: the shared slot above holds the LAST built race's
+  // receipt. Record its owner here so every consumer of current() can
+  // refuse a receipt that belongs to a different race (the sibling of
+  // the 2026-11-03 ticket-frame mixup, where another race's plan
+  // rendered under the page race's heading).
+  var lastRaceId='',lastRaceDate='';
 
   function originalMarks(race){
     var tickets=root.ARVEXQProductionTickets;
@@ -116,6 +122,8 @@
     // Do not let the previous race's six-stage receipt leak into a race that
     // has no verified unified forecast.
     last={active:false,source:'',marks:[],scenarios:[],stages:[],pace:[],forecastText:'',modelVersion:'',uncalibrated:false,unavailable:true};
+    lastRaceId=race&&race.id!=null?String(race.id):'';
+    lastRaceDate=race&&race.date!=null?String(race.date):'';
     if(race&&race.id==='jra-2026-10-25-京都-11'){
       var verified=kikkaCandidateMarks(race),marks=verified&&verified.marks||{};
       var rows=(race.horses||[]).filter(function(h){return h&&Number(h.horseNumber)>0;}).map(function(h){
@@ -297,6 +305,7 @@
   }
   function current(){
     return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,
+      raceId:lastRaceId,raceDate:lastRaceDate,
       scenarios:(last.scenarios||[]).slice(),pace:(last.pace||[]).slice(),forecastText:last.forecastText||'',modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
       marks:last.marks.map(function(x){return Object.assign({},x)})};
   }

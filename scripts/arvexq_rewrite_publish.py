@@ -714,6 +714,16 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     from arvexq.prediction.unified_product import race_family
 
     old = unpack_detail(old_detail)
+    # Race binding: the summary supplies the race identity (normalize
+    # prefers it) while the runners come from the detail. The caller
+    # fetched both by the same race id, but assert the merge point
+    # itself: a summary/detail pair that names different races must
+    # never be published as one race's forecast.
+    summary_id = str(summary.get("race_id") or summary.get("id") or "")
+    detail_id = str(old.get("id") or "")
+    if summary_id and detail_id and summary_id != detail_id:
+        return None, (f"identity mismatch: summary {summary_id} vs "
+                      f"detail {detail_id}; not publishing")
     if _has_result(old):
         return None, "already has a result"
     post = _post_at(old)
