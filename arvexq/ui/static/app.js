@@ -2279,7 +2279,9 @@ function homeCircuitChooser(title,kind){
         status=loading?'取得中':(pending?'朝の判定待ち':'朝の確定選定');
     buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(status?'<small class="arv-pick-count-pending">'+status+'</small>':'')+'</span><strong>›</strong></button>'
   });
-  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+
+  var emptyNote=(kind==='selected'&&!loading&&!pending&&(counts.central+counts.local)===0)?
+    '<div class="fixed-pick-empty"><b>本日の厳選はありません</b><small>朝の固定判定で、合格条件（券種別・点数別の実測的中率80%以上）を通過したレースがありませんでした。条件を下げて出すことはしません。</small></div>':'';
+  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+emptyNote+
     '</section>'
 }
 function selectedCircuitPage(circuit){
