@@ -2476,3 +2476,10 @@ html,body{overscroll-behavior-y:none!important}
    buttons only now, so show it again — its box and glyph styling
    remain the legacy .smart-venue-reload rules. */
 .smart-venue-reload{display:flex!important}
+/* The v28 added-partner triangle in the v9b mark box is caught by two
+   generic small-hiding rules (.rc-racecard-v339 ... > small and
+   .racecard-table.rc-has-v26 ... .rc-ai-mark small, both
+   display:none!important at higher specificity than the plain
+   .rc-v25-added rule above). Restore it with a selector at least as
+   specific, scoped to exactly that element. */
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small.rc-v25-added{display:block!important;color:#7ee2a8!important;font-size:10px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important}
