@@ -1,20 +1,20 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
   "modelVersion": "arvexq-rewrite-v3-v9b",
-  "asOfDate": "2026-11-06",
+  "asOfDate": "2026-11-07",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
   "minimumObservedHitRate": 0.8,
   "minimumWilsonLower95": 0.65,
-  "totalVerifiedRaces": 316,
+  "totalVerifiedRaces": 365,
   "buckets": {
     "ワイド|6": {
       "kind": "ワイド",
       "points": 6,
-      "sample": 291,
-      "wins": 227,
-      "hitRate": 0.780069,
-      "wilsonLower95": 0.729,
+      "sample": 338,
+      "wins": 266,
+      "hitRate": 0.786982,
+      "wilsonLower95": 0.740233,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
@@ -23,19 +23,19 @@
           "hitRate": 0.689655
         },
         "nar": {
-          "sample": 262,
-          "wins": 207,
-          "hitRate": 0.790076
+          "sample": 309,
+          "wins": 246,
+          "hitRate": 0.796117
         }
       }
     },
     "ワイド|5": {
       "kind": "ワイド",
       "points": 5,
-      "sample": 25,
-      "wins": 16,
-      "hitRate": 0.64,
-      "wilsonLower95": 0.445182,
+      "sample": 27,
+      "wins": 18,
+      "hitRate": 0.666667,
+      "wilsonLower95": 0.478244,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
@@ -44,9 +44,9 @@
           "hitRate": 0.285714
         },
         "nar": {
-          "sample": 18,
-          "wins": 14,
-          "hitRate": 0.777778
+          "sample": 20,
+          "wins": 16,
+          "hitRate": 0.8
         }
       }
     }
