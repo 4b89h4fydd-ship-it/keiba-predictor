@@ -2284,3 +2284,14 @@ html body .smart-shell .smart-race-page .smart-race-result-side{
 html body .smart-shell .smart-race-page :is(.smart-inline-result,.smart-race-result-side .smart-inline-result){
  border:0!important;outline:0!important;box-shadow:none!important;
 }
+
+/* Home reload-all button (2026-11-06, user request): the fourth card
+   in the home actions row, immediately right of the favorites
+   shortcut. It reuses the action-card styling; only the lone reload
+   glyph is enlarged and a press feedback is added. The handler
+   (app.js reloadAllData) purges every client-held dataset before
+   re-fetching, so this is a full refresh, not a repaint. */
+html body .smart-home .arv-unified-reload .arv-unified-action-icon{
+ font-size:22px!important;width:28px!important;height:24px!important;
+}
+html body .smart-home .arv-unified-reload:active{filter:brightness(.92)}
