@@ -2470,3 +2470,9 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-info .rc-honmei-r
   .arv-reload-button{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important}
 }
 html,body{overscroll-behavior-y:none!important}
+/* The venue header reload button (app.js venueTopBar) sits in the
+   topbar's reserved left cell; the pull-to-refresh-era rule earlier
+   in this file hides it with display:none. Refresh is on-screen
+   buttons only now, so show it again — its box and glyph styling
+   remain the legacy .smart-venue-reload rules. */
+.smart-venue-reload{display:flex!important}
