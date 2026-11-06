@@ -230,6 +230,34 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
     # adapter, including pages that turned out to hold no usable result.
     scan_cache: dict[tuple[str, str, int], Any] = {}
 
+    # Fetch failures (the getter raises when no result page could be
+    # fetched at all) seen by get_page, across every fetch() call on this
+    # adapter. fetch() compares the length before/after its own call.
+    fetch_errors: list[int] = []
+
+    def get_page(previous: dict[str, Any]):
+        """One official result page, with a single retry on fetch failure.
+
+        The result getter raises when no page could be fetched at all
+        (timeout, reset) and returns None for a fetched page without a
+        usable result. The scan below caches whatever it gets for the
+        rest of the run, so one transient failure used to poison every
+        horse sharing that day/venue page; retry a failed fetch once
+        after a short pause. A page that merely holds no usable result
+        is not retried.
+        """
+        import time
+        try:
+            return getter(previous)
+        except Exception:
+            fetch_errors.append(1)
+            time.sleep(0.5)
+        try:
+            return getter(previous)
+        except Exception:
+            fetch_errors.append(1)
+            return None
+
     def scan_page(at: str, track: str, no: int, run: dict[str, Any],
                   known_name: str):
         key = (at, track, no)
@@ -237,14 +265,12 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             previous = {"date": at, "track": track, "raceNumber": no,
                         "horses": [{"name": known_name,
                                     "horseNumber": run.get("horseNumber") or 0}]}
-            try:
-                scan_cache[key] = getter(previous)
-            except Exception:
-                scan_cache[key] = None
+            scan_cache[key] = get_page(previous)
         return scan_cache[key]
 
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         from arvexq.ingest.full_career import date_key, merge_career
+        errors_before = len(fetch_errors)
         target = date_key(race.get("date"))
         if not target:
             return {}
@@ -320,7 +346,7 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                 previous = {"date": at, "track": track, "raceNumber": no,
                             "horses": [{"name": known_name,
                                         "horseNumber": run.get("horseNumber") or 0}]}
-                found = getter(previous)
+                found = get_page(previous)
             else:
                 # The primary row never recorded which race of the day this
                 # start was (the live-era card parsers omit raceNumber), so
@@ -385,6 +411,10 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             own = row.get("timeSeconds")
             if winner and own and 0 <= float(own) - float(winner) <= 30:
                 observed["timeBehindWinner"] = round(float(own) - float(winner), 2)
+                # The same measured gap in seconds is what the CSV-era
+                # career rows carry as marginSeconds; fill both spellings
+                # so margin consumers see the completion.
+                observed["marginSeconds"] = observed["timeBehindWinner"]
             print("NAR_OFFICIAL_PRIOR_MATCH", at, track, no,
                   "winnerTime=", winner, "horseTime=", own,
                   "gap=", observed.get("timeBehindWinner"),
@@ -402,6 +432,13 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
         if fallback_sectional is not None:
             fallback_sectional["source"] = "NAR official historical results"
             return {"recentRaces": [fallback_sectional], "allPastRuns": [fallback_sectional]}
+        if len(fetch_errors) > errors_before:
+            # Nothing could be filled AND at least one result page was
+            # unreachable: surface the failure so the enrichment audit
+            # records this provider as failed instead of silently
+            # reporting an empty success.
+            raise RuntimeError(
+                "NAR official result pages unreachable during prior-result scan")
         return {}
 
     return fetch

@@ -127,6 +127,115 @@ class MissingRaceNumberResolutionTests(unittest.TestCase):
         self.assertEqual(out["recentRaces"][0]["raceNumber"], 3)
 
 
+class ScanCompletionFieldTests(unittest.TestCase):
+    def test_scan_fills_margin_seconds_and_margin_text(self):
+        pages = {
+            6: {"finishers": [
+                {"finish": 1, "name": "勝馬", "horseNumber": 7,
+                 "timeSeconds": 51.4, "last3FSeconds": 37.0},
+                {"finish": 2, "name": "対象馬", "horseNumber": 4,
+                 "timeSeconds": 52.0, "last3FSeconds": 37.1,
+                 "marginText": "1/2"},
+            ]},
+        }
+        calls = []
+        fetch = _adapter(pages, calls)
+        horse = {"name": "対象馬", "recentRaces": [{
+            "date": "2026-10-15", "track": "園田", "finish": 2,
+            "timeSeconds": 52.0, "horseNumber": 4,
+        }]}
+        observed = fetch(horse, {"date": "2026-11-04"}, 5)["recentRaces"][0]
+        self.assertEqual(observed["timeBehindWinner"], 0.6)
+        # The measured winner gap is carried under both spellings, the
+        # same convention the CSV-era career rows use.
+        self.assertEqual(observed["marginSeconds"], 0.6)
+        self.assertEqual(observed["marginText"], "1/2")
+
+
+class ScanFetchFailureTests(unittest.TestCase):
+    def test_transient_failure_is_retried_once(self):
+        pages = {
+            6: {"finishers": [
+                {"finish": 1, "name": "対象馬", "horseNumber": 4,
+                 "timeSeconds": 51.4, "last3FSeconds": 37.1},
+                {"finish": 2, "name": "他馬", "horseNumber": 7,
+                 "timeSeconds": 52.0},
+            ]},
+        }
+        calls = []
+        failed_once = set()
+
+        def official(detail):
+            no = detail["raceNumber"]
+            calls.append(no)
+            if no == 3 and no not in failed_once:
+                failed_once.add(no)
+                raise ConnectionError("timed out")
+            return pages.get(no)
+
+        fetch = _nar_official_past_result_adapter(
+            {"_nar_official_result_fast": official})
+        horse = {"name": "対象馬", "recentRaces": [{
+            "date": "2026-10-15", "track": "園田", "finish": 1,
+            "timeSeconds": 51.4, "horseNumber": 4,
+        }]}
+        out = fetch(horse, {"date": "2026-11-04"}, 5)
+        self.assertEqual(calls, [1, 2, 3, 3, 4, 5, 6])
+        self.assertEqual(out["recentRaces"][0]["raceNumber"], 6)
+
+    def test_unreachable_pages_raise_instead_of_silent_empty(self):
+        calls = []
+
+        def official(detail):
+            calls.append(detail["raceNumber"])
+            raise ConnectionError("timed out")
+
+        fetch = _nar_official_past_result_adapter(
+            {"_nar_official_result_fast": official})
+        horse = {"name": "対象馬", "recentRaces": [{
+            "date": "2026-10-15", "track": "園田", "finish": 1,
+            "timeSeconds": 51.4, "horseNumber": 4,
+        }]}
+        with self.assertRaises(RuntimeError):
+            fetch(horse, {"date": "2026-11-04"}, 5)
+        # Every candidate was retried exactly once before giving up.
+        self.assertEqual(len(calls), 24)
+
+
+class GetterFailureContractTests(unittest.TestCase):
+    def test_getter_raises_when_no_page_can_be_fetched(self):
+        import urllib.error
+        from unittest import mock
+        import app
+        detail = {"date": "2026-10-21", "track": "園田", "raceNumber": 10,
+                  "horses": []}
+        with mock.patch.object(
+                app.urllib.request, "urlopen",
+                side_effect=urllib.error.URLError("timed out")):
+            with self.assertRaises(RuntimeError):
+                app._nar_official_result_fast(detail)
+
+    def test_getter_returns_none_for_fetched_page_without_result(self):
+        from unittest import mock
+        import app
+
+        class _Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+            def read(self):
+                return "<html><body>準備中</body></html>".encode("utf-8")
+
+        detail = {"date": "2026-10-21", "track": "園田", "raceNumber": 10,
+                  "horses": []}
+        with mock.patch.object(app.urllib.request, "urlopen",
+                               return_value=_Response()):
+            self.assertIsNone(app._nar_official_result_fast(detail))
+
+
 class ResultWriteBackTests(unittest.TestCase):
     def test_finisher_performance_written_back_to_horse(self):
         detail = {"date": "2026-11-04", "track": "園田", "raceNumber": 1,

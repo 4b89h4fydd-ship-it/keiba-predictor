@@ -4398,6 +4398,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
     ]
     known={_clean(h.get("name")):int(h.get("horseNumber") or 0) for h in detail.get("horses",[]) or [] if h.get("name")}
     last_err=""
+    saw_page=False
     for url in urls:
         try:
             req=urllib.request.Request(url,headers={
@@ -4405,11 +4406,12 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 "Accept-Language":"ja-JP,ja;q=0.9",
                 "Referer":"https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/TodayRaceInfoTop",
             })
-            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","4.0"))) as res:
+            with urllib.request.urlopen(req,timeout=float(os.getenv("NAR_RESULT_TIMEOUT_SEC","10.0"))) as res:
                 html=_jra_decode(res.read())
         except Exception as exc:
             last_err=str(exc);continue
         if not html:continue
+        saw_page=True
         soup=BeautifulSoup(html,"html.parser")
         full=_clean(soup.get_text(" ",strip=True))
         if "競走成績" not in full and "着順" not in full:continue
@@ -4496,7 +4498,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                     "finish":fin,"finishLabel":f"{fin}着","horseNumber":no,
                     "frameNumber":fr or int((no+1)//2),"name":name or next((nm for nm,hno in known.items() if hno==no),""),
                     "timeSeconds":tm,"last3FSeconds":last3f,"cornerPositions":corners,"bodyWeight":bw,"bodyWeightChange":chg,
-                    "popularity":pop,"winOdds":odd,
+                    "popularity":pop,"winOdds":odd,"marginText":margin_text,
                 })
             if finishers:break
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
@@ -4512,6 +4514,12 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         if cm:out["condition"]=_env_clean_condition(cm.group(1))
         out["sourceUrl"]=url
         return out
+    if not saw_page and last_err:
+        # No result page could be fetched at all (timeout, reset): that
+        # is a fetch failure, not "no result". Raise so callers can tell
+        # the two apart; a fetched page without a usable result still
+        # returns None below.
+        raise RuntimeError(f"NAR official result fetch failed: {last_err}")
     if last_err:print("NAR official result unavailable",detail.get("id"),last_err)
     return None
 
