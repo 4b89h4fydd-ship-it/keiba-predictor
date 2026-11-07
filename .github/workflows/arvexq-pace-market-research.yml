@@ -1,0 +1,32 @@
+name: ARVEXQ Pace Market Research
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - rewrite/analysis/pace_market_candidate.py
+      - scripts/arvexq_pace_market_ablation.py
+      - tests/test_pace_market_candidate.py
+      - tests/test_pace_market_replay.py
+      - .github/workflows/arvexq-pace-market-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pace-market-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile isolated research modules and replay
+        run: |
+          python -m py_compile rewrite/analysis/pace_market_candidate.py \
+            scripts/arvexq_pace_market_ablation.py \
+            tests/test_pace_market_candidate.py \
+            tests/test_pace_market_replay.py
+      - name: Test original v9b parity, pace evidence and 36-point B replay
+        run: PYTHONPATH=.:tests python -m unittest discover -s tests -p 'test_pace_market_*.py' -v
