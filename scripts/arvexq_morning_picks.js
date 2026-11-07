@@ -37,6 +37,9 @@ if(/^20\d{2}-\d{2}-\d{2}$/.test(day)&&fs.existsSync(existingArchive)){
       assessed:m.assessed!==false,primaryType:String(m.primaryType||''),
       types:Array.isArray(m.types)?m.types.slice():[],selectionReason:String(m.selectionReason||''),
       selectionModelVersion:String(m.selectionModelVersion||''),
+      systems:Array.isArray(m.selectionSystems)?m.selectionSystems.slice():[],
+      prodPick:m.selectionProdPick||null,v26Pick:m.selectionV26Pick||null,
+      favourite:m.selectionFavourite||null,
       ticketKinds:Array.isArray(m.ticketKinds)?m.ticketKinds.slice():[],
       ticketEvidence:m.ticketEvidence||null};
     Object.assign(r,{morningPickVersion:'v1',morningPickFixedAt:archive.fixedAt,
@@ -65,14 +68,23 @@ const selectionModule=fs.readFileSync('arvexq/ui/static/morning/selection_cut.js
 const selectedPipeline=fs.readFileSync('arvexq/ui/static/morning/selected_race_pipeline.js','utf8');
 const specialModule=fs.readFileSync('arvexq/ui/static/morning/special_selection.js','utf8');
 const laneModule=fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8');
-const calibrationFile='arvexq/ui/static/morning/hit_rate_calibration.json';
-const calibration=fs.existsSync(calibrationFile)?JSON.parse(fs.readFileSync(calibrationFile,'utf8')):null;
+// 厳選 selection rule (2026-11-07): popularity-rank rule only. The
+// ticket-hit calibration table is NOT loaded into the freeze any more;
+// it is still published separately as data by the scoreboard.
 const evidenceModule=fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8');
 const laneAdapterModule=fs.readFileSync('arvexq/ui/static/morning/production_lane.js','utf8');
+const rankModule=fs.readFileSync('arvexq/ui/static/morning/rank_selection.js','utf8');
+const v26File='arvexq/ui/static/v26-marks/'+day+'.json';
+let v26Archive=null;
+if(fs.existsSync(v26File)){
+  try{const parsed=JSON.parse(fs.readFileSync(v26File,'utf8'));
+    if(parsed&&parsed.date===day&&parsed.races&&typeof parsed.races==='object')v26Archive=parsed;
+  }catch(e){console.error('MORNING_V26_MARKS_UNREADABLE',String(e&&e.message||e))}
+}
 // Unified predictor in app.js owns all marks and tickets.
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
 if(!root.includes(boot))throw Error('morning picker boot entry missing');
-const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
+const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,rankSelectedRaceCandidates:computeMorningRankCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
 const items=new Map(),store={getItem:k=>items.get(k)||null,setItem:(k,v)=>items.set(k,String(v)),removeItem:k=>items.delete(k)};
 const document={getElementById:()=>({innerHTML:''}),addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'hidden'};
 const window={addEventListener:()=>{},innerWidth:390,location:{href:'https://morning.invalid/'},navigator:{standalone:false},localStorage:store,document};
@@ -82,10 +94,11 @@ const ctx={window,document,localStorage:store,sessionStorage:store,console,
  navigator:window.navigator,location:window.location,setTimeout:()=>0,
  clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{}};
 vm.createContext(ctx);
-window.ARVEXQTicketHitCalibration=calibration&&calibration.asOfDate===day?calibration:null;
+window.__v26MarksArchive=v26Archive;
 vm.runInContext(laneModule,ctx,{timeout:12000,filename:'ticket_lane_classifier.js'});
 vm.runInContext(evidenceModule,ctx,{timeout:12000,filename:'frozen_ticket_evidence.js'});
 vm.runInContext(laneAdapterModule,ctx,{timeout:12000,filename:'production_lane.js'});
+vm.runInContext(rankModule,ctx,{timeout:12000,filename:'rank_selection.js'});
 vm.runInContext(selectionModule,ctx,{timeout:12000,filename:'selection_cut.js'});
 vm.runInContext(selectedPipeline,ctx,{timeout:12000,filename:'selected_race_pipeline.js'});
 vm.runInContext(specialModule,ctx,{timeout:12000,filename:'special_selection.js'});
@@ -95,7 +108,7 @@ model.state.date=day;model.state.races=rows;model.state.circuit='地方';
 for(const [id,d] of details)model.add(id,d);
 let selected=[],special=[];
 try{
-  selected=[...model.selectedRaceCandidates('中央'),...model.selectedRaceCandidates('地方')];
+  selected=[...model.rankSelectedRaceCandidates('中央'),...model.rankSelectedRaceCandidates('地方')];
   special=model.specialForecastRaceCandidates();
 }catch(e){
   console.error('MORNING_SELECTION_ERROR',String(e&&e.stack||e));
@@ -123,6 +136,11 @@ for(const r of rows){
     types:Array.isArray(selectionById.get(String(r.id))?.types)?selectionById.get(String(r.id)).types.slice():[],
     selectionReason:String(selectionById.get(String(r.id))?.reason||''),
     selectionModelVersion:String(selectionById.get(String(r.id))?.modelVersion||''),
+    systems:Array.isArray(selectionById.get(String(r.id))?.systems)?
+      selectionById.get(String(r.id)).systems.slice():[],
+    prodPick:selectionById.get(String(r.id))?.prodPick||null,
+    v26Pick:selectionById.get(String(r.id))?.v26Pick||null,
+    favourite:selectionById.get(String(r.id))?.favourite||null,
     selectionHitRate:selectionById.get(String(r.id))?.hitRate??null,
     selectionHitRateSamples:Number(selectionById.get(String(r.id))?.hitRateSamples)||0,
     ticketKinds:Array.isArray(selectionById.get(String(r.id))?.ticketKinds)?

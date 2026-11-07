@@ -84,21 +84,30 @@ def morning_manifest(payload: dict) -> dict | None:
                     return None
         if not main_found or set(kinds) != set(e.get("ticketKinds") or []) or set(kinds) != set(r.get("morningTicketKinds") or []):
             return None
+    def race_entry(r: dict) -> dict:
+        picks = (r.get("volatility") or {}).get("morningPicks") or {}
+        selected = r["morningSelected"] is True
+        return {"id": str(r["id"]),
+                "selected": r["morningSelected"],
+                "selectedScore": r.get("morningSelectedScore") or 0,
+                "special": r["morningSpecial"], "assessed": r.get("morningAssessed") is not False,
+                "primaryType": r.get("morningPrimaryType") or "",
+                "types": r.get("morningSelectedTypes") or [],
+                "selectionReason": r.get("morningSelectionReason") or "",
+                "ticketKinds": r.get("morningTicketKinds") or [],
+                "selectionModelVersion": picks.get("selectionModelVersion") or "",
+                # Rank-rule record (2026-11-07): which system's ◎ picked
+                # the race, that ◎'s number/name/popularity rank/win
+                # odds, and the race favourite for comparison.
+                "selectionSystems": list(picks.get("systems") or []) if selected else [],
+                "selectionProdPick": picks.get("prodPick") if selected else None,
+                "selectionV26Pick": picks.get("v26Pick") if selected else None,
+                "selectionFavourite": picks.get("favourite") if selected else None,
+                "ticketEvidence": r.get("morningTicketEvidence") if selected else None}
+
     return {"version": "v1", "date": next(iter(dates)),
             "fixedAt": next(iter(captured)), "scope": len(rows),
-            "races": [
-                {"id": str(r["id"]),
-                 "selected": r["morningSelected"],
-                 "selectedScore": r.get("morningSelectedScore") or 0,
-                 "special": r["morningSpecial"],"assessed":r.get("morningAssessed") is not False,
-                 "primaryType": r.get("morningPrimaryType") or "",
-                 "types": r.get("morningSelectedTypes") or [],
-                 "selectionReason": r.get("morningSelectionReason") or "",
-                 "ticketKinds": r.get("morningTicketKinds") or [],
-                 "selectionModelVersion": ((r.get("volatility") or {}).get("morningPicks") or {}).get("selectionModelVersion") or "",
-                 "ticketEvidence": r.get("morningTicketEvidence") if r["morningSelected"] else None}
-                for r in rows
-            ]}
+            "races": [race_entry(r) for r in rows]}
 
 
 def main() -> int:
