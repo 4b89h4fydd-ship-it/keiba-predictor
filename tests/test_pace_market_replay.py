@@ -23,7 +23,7 @@ def fixture():
                   "finish": run.finish.value,
                   "cornerPositions": list(run.corner_positions)}
                  for run in h.past_runs]}
-            for h in race.runners,
+            for h in race.runners
         ],
     }
     return {
