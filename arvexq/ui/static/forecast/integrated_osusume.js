@@ -120,11 +120,12 @@ function build(detail){
        trios.push(c);
      }
  })();
- /* 3連単: Formation B skeleton (1st = mark ranks 1-3) with the one
-    documented deviation — the 2nd/3rd legs are the top-4 by top-3
-    probability plus every 注 qualifier, not mark ranks 1-5. */
- var firstLeg=markOrder.slice(0,3);
- if(firstLeg.length<3)firstLeg=W3.slice();
+ /* 3連単: R24 skeleton (1st = mark ranks 1-2; the production
+    recommendation since the user order of 2026-11-08) with the
+    one documented deviation — the 2nd/3rd legs are the top-4 by
+    top-3 probability plus every 注 qualifier, not mark ranks 1-5. */
+ var firstLeg=markOrder.slice(0,2);
+ if(firstLeg.length<2)firstLeg=W.slice(0,2);
  var placePool=pool(T.slice(0,Math.min(4,rows.length)),Q);
  var trifecta=[];
  if(rows.length>=3)firstLeg.forEach(function(f){
@@ -159,7 +160,7 @@ function build(detail){
        return (axes===1&&!hasQ?0:100)+(t3(c[0])+t3(c[1])+t3(c[2]));
      },
      '3連単':function(c){
-       if(c[0]!==W3[2])return null;
+       if(c[0]!==W[1])return null;
        return t3(c[1])+t3(c[2]);
      }
    }[kind];
@@ -204,7 +205,7 @@ function build(detail){
  (detail.recommendedBets||[]).forEach(function(x){
    if(x&&x.kind==='3連単')mechTri=Number(x.points)||null;
  });
- if(trifecta.length)reason+='3連単は印順フォーメーションBを骨格に、2・3着の脚を3着内率上位4頭と注に絞りました'+
+ if(trifecta.length)reason+='3連単は印順位1・2位を1着脚（R24）に、2・3着の脚を3着内率上位4頭と注に絞りました'+
    (mechTri&&mechTri!==trifecta.length?'（従来セットの'+mechTri+'点から'+trifecta.length+'点）':'')+'。';
  var hasPlace=Array.isArray(tp.placeExpectedValues);
  var hasWinEv=Array.isArray(tp.winExpectedValues)&&tp.winExpectedValues.length>0;

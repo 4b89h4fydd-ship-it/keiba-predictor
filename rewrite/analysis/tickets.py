@@ -30,7 +30,17 @@ Trifecta formation is selected per caller via ``trifecta_formation``:
   point cap. Pre-registered 2026-10-29, passed its primary paired
   judgement against A at 142 races, and adopted for production
   issuance on 2026-10-31 by user decision. Only the production
-  publish lane passes ``"B"``; seals and scoreboards never do.
+  publish lane passed ``"B"`` until 2026-11-08; seals and
+  scoreboards never do.
+- ``"R24"``: the same mark-order skeleton with the 1st leg narrowed
+  to model ranks 1-2 (2nd/3rd legs stay ranks 1-5): 24 points fixed
+  with five marked runners, no probability cut and no point cap —
+  a strict subset of formation B. Screened on the graded 194
+  production races of 2026-11-04..07 (B ROI 0.7230 -> R24 0.9055;
+  NAR 0.8041 -> 0.9970) and adopted as the production recommendation
+  on 2026-11-08 by explicit user order, superseding B for
+  production issuance. The forward lane v34 keeps B as its control
+  arm; seals and scoreboards never pass ``"R24"`` either.
 """
 from __future__ import annotations
 
@@ -50,7 +60,7 @@ from .forecast import RaceForecast
 KINDS = ("win", "place", "wide", "quinella", "exacta", "trio", "trifecta")
 
 #: Trifecta formations accepted by generate_tickets (see module docstring).
-TRIFECTA_FORMATIONS = ("legacy", "B")
+TRIFECTA_FORMATIONS = ("legacy", "B", "R24")
 
 #: Mark symbols in model-rank order (rank 1 .. rank 5).
 MARK_ORDER = ("◎", "○", "▲", "△", "☆")
@@ -78,6 +88,20 @@ def formation_b_selections(ranked_marks: list[int]) -> list[tuple]:
     (4 marks -> 18 points, 3 marks -> 6 points, fewer -> none).
     """
     first = ranked_marks[:3]
+    legs = ranked_marks[:5]
+    return [c for c in permutations(legs, 3) if c[0] in first]
+
+
+def formation_r24_selections(ranked_marks: list[int]) -> list[tuple]:
+    """R24 trifecta combinations from mark-ordered runners.
+
+    Formation B with the first leg narrowed to the top two marks:
+    every permutation of the top five marked runners whose first
+    leg is one of the top two (24 points with five marks; 4 marks
+    -> 12 points, 3 marks -> 4 points, fewer -> none). A strict
+    subset of formation_b_selections on the same marks.
+    """
+    first = ranked_marks[:2]
     legs = ranked_marks[:5]
     return [c for c in permutations(legs, 3) if c[0] in first]
 
@@ -167,6 +191,8 @@ def _candidates(forecast: RaceForecast, kind: str, ranked: list[int],
     if kind == "trifecta":
         if trifecta_formation == "B":
             return formation_b_selections(mark_order(forecast))
+        if trifecta_formation == "R24":
+            return formation_r24_selections(mark_order(forecast))
         return list(permutations(top["w"][:4], 3))
     return []
 
@@ -202,11 +228,13 @@ def generate_tickets(
     ev_tickets: list[Ticket] = []
     suppressed: dict[str, int] = {}
     for kind in KINDS:
-        # Formation B is a fixed formation: every combination is
-        # issued, so neither the min-probability cut nor the point
-        # cap applies to the trifecta. All other kinds, and the
-        # legacy trifecta, keep the policy gates unchanged.
-        fixed_formation = kind == "trifecta" and trifecta_formation == "B"
+        # Formations B and R24 are fixed formations: every
+        # combination is issued, so neither the min-probability cut
+        # nor the point cap applies to the trifecta. All other
+        # kinds, and the legacy trifecta, keep the policy gates
+        # unchanged.
+        fixed_formation = (kind == "trifecta"
+                           and trifecta_formation in ("B", "R24"))
         scored: list[Ticket] = []
         for selection in _candidates(forecast, kind, ranked,
                                      trifecta_formation=trifecta_formation):

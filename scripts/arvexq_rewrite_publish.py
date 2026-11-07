@@ -42,7 +42,17 @@ current payload carries an observed place range for every active
 runner and the post is still at least 60 minutes away; the
 re-issue is surgical (stored probabilities, marks and tickets are
 kept; only the place side and the combined-gate 注 overlay are
-added), and a race already carrying placeExpectedValues is final. The v9b
+added), and a race already carrying placeExpectedValues is final.
+A fifth exception of the same kind is the ticket-R24 upgrade
+(2026-11-08): the production trifecta recommendation switched
+from formation B (36 points) to R24 (24 points) by user order, so
+a forecast frozen with the B-form trifecta is re-issued once —
+stamped kind "ticket-r24-upgrade" — with ONLY the trifecta
+recommendation narrowed to the R24 subset of the very same stored
+combinations (win leg = mark ranks 1-2); the forecast, marks,
+probabilities, odds and every other ticket kind are kept
+byte-for-byte, and a race whose trifecta already is the R24
+subset is final. The v9b
 adoption (2026-11-03) adds one dated branch of the same kind: a
 forecast frozen on the v8 lane for a race dated 2026-11-04 is
 re-issued on the v9b lane (revision reason
@@ -189,6 +199,21 @@ BLEND_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 # the freshest stored forecast, after the blend upgrade in the
 # same pass. A race already carrying placeExpectedValues is final.
 PLACE_EV_UPGRADE_MIN_LEAD = timedelta(minutes=60)
+
+# Ticket-R24 upgrade (2026-11-08, user order: the production
+# trifecta recommendation switches from formation B to R24 —
+# win leg narrowed from mark ranks 1-3 to mark ranks 1-2, 36 ->
+# 24 points — after the screen on the graded 194 production
+# races of 2026-11-04..07, B ROI 0.7230 -> R24 0.9055). Races
+# already published with the B-form trifecta are re-issued ONCE
+# under the surgical pattern of the place-EV upgrade (see
+# _ticket_r24_upgrade_info / _apply_ticket_r24_upgrade): only the
+# trifecta recommendation blocks are filtered to the R24 subset
+# of the stored combinations; the forecast itself never moves.
+# The same 60-minute guard as the other upgrades keeps the
+# recommendation stable in the final hour before post. The
+# forward lane v34 is untouched: its control arm stays B36.
+TICKET_R24_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 
 
 def _get(path: str) -> dict:
@@ -571,6 +596,227 @@ def _apply_place_ev_upgrade(old: dict, info: dict, captured: str):
     return new, unified["receiptSha256"]
 
 
+def _stored_mark_order(old: dict) -> list[int] | None:
+    """Mark-ordered runner numbers (◎○▲△☆) from the stored detail.
+
+    Read from BOTH stored mark blocks (top-level predictionMarks
+    and the unified forecast's marks); the two must agree exactly,
+    and every marked runner must carry one of the five symbols.
+    Anything unreadable returns None (fail-closed).
+    """
+    symbols = ("◎", "○", "▲", "△", "☆")
+
+    def _order(entries, number_key, symbol_key):
+        if not isinstance(entries, list):
+            return None
+        by_symbol: dict[str, int] = {}
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            symbol = entry.get(symbol_key)
+            if symbol not in symbols:
+                continue
+            try:
+                number = int(entry[number_key])
+            except (KeyError, TypeError, ValueError):
+                return None
+            if symbol in by_symbol:
+                return None
+            by_symbol[symbol] = number
+        if not by_symbol:
+            return None
+        return [by_symbol[s] for s in symbols if s in by_symbol]
+
+    top = _order(old.get("predictionMarks"), "horseNumber", "mark")
+    unified = old.get("unifiedForecast")
+    inner = _order(unified.get("marks") if isinstance(unified, dict)
+                   else None, "horseNumber", "markSymbol")
+    if top is None or inner is None or top != inner:
+        return None
+    return top
+
+
+def _ticket_r24_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time ticket-R24 upgrade of a frozen race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it carries this lane's publish marker (the caller reaches
+      here only for a race the freeze decision classified as this
+      lane's frozen publication, so marker/receipt consistency is
+      already established) and it does not already carry a
+      ticket-r24-upgrade revision (the upgrade is exactly-once);
+    - the post is still at least TICKET_R24_UPGRADE_MIN_LEAD away;
+    - the stored mark order is readable and identical in both
+      stored mark blocks, with at least the ◎○▲ marks present;
+    - the stored recommended trifecta is still exactly the
+      formation-B construction on those marks (a race already
+      carrying the R24 subset, or anything else, is final — the
+      upgrade narrows B to R24 and invents nothing).
+
+    Anything unreadable simply does not qualify; the caller keeps
+    the frozen forecast (fail-closed).
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    revision = marker.get("revision")
+    if isinstance(revision, dict) and (
+            revision.get("kind") == "ticket-r24-upgrade"
+            or revision.get("reason") == "ticket-r24-upgrade"):
+        return None
+    post = _post_at(old)
+    if post is None or post - now < TICKET_R24_UPGRADE_MIN_LEAD:
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    if not isinstance(unified.get("ticketPlan"), dict):
+        return None
+    mark_order = _stored_mark_order(old)
+    if mark_order is None or len(mark_order) < 3:
+        return None
+    from rewrite.analysis.tickets import (
+        formation_b_selections, formation_r24_selections)
+    trifecta = None
+    for entry in old.get("recommendedBets") or []:
+        if isinstance(entry, dict) and entry.get("kind") == "3連単":
+            trifecta = entry
+            break
+    if trifecta is None:
+        return None
+    try:
+        stored = {tuple(int(n) for n in combo)
+                  for combo in trifecta.get("combos") or []}
+    except (TypeError, ValueError):
+        return None
+    if stored == set(formation_r24_selections(mark_order)):
+        return None  # already R24: final
+    if stored != set(formation_b_selections(mark_order)):
+        return None  # not the B construction: do not guess
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": marker.get("abilityLane"),
+            "reason": "ticket-r24-upgrade",
+            "markOrder": mark_order}
+
+
+def _apply_ticket_r24_upgrade(old: dict, info: dict, captured: str):
+    """Build the ticket-R24 upgrade re-issue of a frozen forecast.
+
+    Surgical by construction: the stored forecast — probabilities,
+    marks, diagnosis, odds, EV blocks and every non-trifecta ticket
+    kind — is kept exactly as published. Only the trifecta
+    recommendation is narrowed: in the grouped recommendedBets
+    (top level, and the prediction block's mirror, which the
+    publisher always writes identical to it) every stored
+    combination whose first leg is not a mark-rank 1-2 runner is
+    dropped, and in the unified ticket plan the 3連単 items are
+    filtered the same way. The result must equal the canonical
+    R24 construction on the stored marks exactly, or the upgrade
+    aborts (returns None; the caller keeps the frozen forecast).
+    The receipt is re-sealed over the modified unified forecast
+    and the revision is stamped kind "ticket-r24-upgrade" with the
+    first publication time preserved.
+    """
+    import copy
+
+    from rewrite.analysis.tickets import formation_r24_selections
+
+    mark_order = info["markOrder"]
+    top_two = set(mark_order[:2])
+    expected = set(formation_r24_selections(mark_order))
+
+    def _narrow(bets):
+        if not isinstance(bets, list):
+            return None
+        out = []
+        for entry in bets:
+            if not isinstance(entry, dict):
+                return None
+            entry = copy.deepcopy(entry)
+            if entry.get("kind") == "3連単":
+                try:
+                    kept = [list(combo) for combo in entry.get("combos") or []
+                            if int(combo[0]) in top_two]
+                    kept_set = {tuple(int(n) for n in combo)
+                                for combo in kept}
+                except (TypeError, ValueError, IndexError):
+                    return None
+                if kept_set != expected:
+                    return None
+                entry["combos"] = kept
+                entry["points"] = len(kept)
+            out.append(entry)
+        return out
+
+    new = copy.deepcopy(old)
+    narrowed = _narrow(new.get("recommendedBets"))
+    if narrowed is None:
+        return None
+    new["recommendedBets"] = narrowed
+    prediction = new.get("prediction")
+    if isinstance(prediction, dict):
+        # The publisher writes prediction.recommendedBets identical
+        # to the top-level list; the API projection strips it from
+        # the read, so restore the mirror from the narrowed list
+        # rather than dropping the stored block.
+        prediction["recommendedBets"] = copy.deepcopy(narrowed)
+    unified = new.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    plan = unified.get("ticketPlan")
+    if not isinstance(plan, dict) or not isinstance(plan.get("items"), list):
+        return None
+    items = []
+    for item in plan["items"]:
+        if isinstance(item, dict) and item.get("kind") == "3連単":
+            combo = item.get("combo") or []
+            try:
+                first = int(combo[0])
+            except (TypeError, ValueError, IndexError):
+                return None
+            if first not in top_two:
+                continue
+        items.append(item)
+    plan["items"] = items
+    unified["receiptSha256"] = _canonical_receipt(unified)
+
+    previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+    prev_revision = previous.get("revision")
+    prev_count = (prev_revision.get("revisionCount")
+                  if isinstance(prev_revision, dict) else None)
+    meta = dict(old.get("preparedMeta") or {})
+    marker = dict(previous)
+    marker["publishedAt"] = captured
+    marker["receiptSha256"] = unified["receiptSha256"]
+    marker["firstPublishedAt"] = (
+        info.get("firstPublishedAt") or info.get("publishedAt") or captured)
+    marker["revision"] = {
+        "kind": "ticket-r24-upgrade",
+        "reason": "ticket-r24-upgrade",
+        "revisedAt": captured,
+        "revisionCount": (prev_count if isinstance(prev_count, int)
+                          else 0) + 1,
+        "previousReceiptSha256": info.get("receipt")
+        or previous.get("receiptSha256"),
+        "previousAbilityLane": info.get("previousAbilityLane"),
+        "abilityLane": info.get("previousAbilityLane"),
+        "note": ("one-time ticket-R24 upgrade (user order "
+                 "2026-11-08): the production trifecta "
+                 "recommendation switched from formation B (win "
+                 "leg = mark ranks 1-3, 36 points) to R24 (win "
+                 "leg = mark ranks 1-2, 24 points); probabilities, "
+                 "marks and every other ticket kind are the stored "
+                 "ones, only the trifecta recommendation was "
+                 "narrowed to the R24 subset of the stored "
+                 "combinations"),
+    }
+    meta["rewritePublish"] = marker
+    new["preparedMeta"] = meta
+    return new, unified["receiptSha256"]
+
+
 def _is_inactive(horse: dict) -> bool:
     if horse.get("scratched") or horse.get("withdrawn"):
         return True
@@ -767,9 +1013,50 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 if blend_upgrade is None:
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
-                        return None, (f"frozen: already published ready "
-                                      f"(receipt {str(freeze[1])[:12]}…); "
-                                      f"roster unchanged")
+                        # The last freeze exception: a forecast
+                        # frozen with the formation-B trifecta is
+                        # re-issued once with the recommendation
+                        # narrowed to R24 (see
+                        # _ticket_r24_upgrade_info — surgical, it
+                        # applies on top of the freshest stored
+                        # forecast and never undoes a blend or
+                        # place-EV upgrade). Anything else stays
+                        # frozen.
+                        ticket_upgrade = _ticket_r24_upgrade_info(old, now)
+                        if ticket_upgrade is None:
+                            return None, (
+                                f"frozen: already published ready "
+                                f"(receipt {str(freeze[1])[:12]}…); "
+                                f"roster unchanged")
+                        if _projection_tombstone(old):
+                            # The surgical ticket upgrade rebuilds
+                            # the recommendation blocks from the
+                            # stored detail; through the API
+                            # projection the prediction blocks are
+                            # stripped, so applying it from this
+                            # read could damage the publication.
+                            # Keep the frozen forecast and leave
+                            # the upgrade pending for a read that
+                            # carries the stored blocks.
+                            return None, (
+                                f"frozen: already published ready "
+                                f"(receipt {str(freeze[1])[:12]}…); "
+                                f"ticket-R24 upgrade deferred: the "
+                                f"API projection does not carry the "
+                                f"stored prediction blocks for this "
+                                f"race")
+                        ticket_upgrade["receipt"] = freeze[1]
+                        upgraded = _apply_ticket_r24_upgrade(
+                            old, ticket_upgrade,
+                            now.isoformat(timespec="seconds"))
+                        if upgraded is None:
+                            return None, (
+                                f"frozen: already published ready "
+                                f"(receipt {str(freeze[1])[:12]}…); "
+                                f"ticket-R24 upgrade could not be "
+                                f"computed from the stored product; "
+                                f"keeping the frozen forecast")
+                        return upgraded
                     if _projection_tombstone(old):
                         # The surgical place-EV upgrade rebuilds the
                         # marks and prediction blocks from the stored
@@ -896,10 +1183,16 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"(receipt {str(blend_upgrade['receipt'])[:12]}…); "
                       f"blend upgrade did not land; keeping the "
                       f"frozen calibration-only forecast")
-    # Trifecta formation B (adopted 2026-10-31 after the
-    # pre-registered primary paired judgement against legacy A at
-    # 142 races). Probabilities, marks and every other ticket kind
-    # are unchanged; the sealing lane keeps the legacy formation.
+    # Trifecta R24 (adopted 2026-11-08 by user order after the
+    # screen on the graded 194 production races: B ROI 0.7230 ->
+    # R24 0.9055): formation B's mark-order skeleton with the win
+    # leg narrowed to mark ranks 1-2 (24 points). Formation B was
+    # the production formation from 2026-10-31 to this switch;
+    # races already frozen with the B-form trifecta are narrowed
+    # by the one-time ticket-r24-upgrade above. Probabilities,
+    # marks and every other ticket kind are unchanged; the
+    # sealing lane keeps the legacy formation and lane v34 keeps
+    # B36 as its control arm.
     # Place （複勝） odds ranges from the same payload rows as the
     # win odds: carried into the ticket plan as display-only place
     # EV ranges. Runners without an observed range simply have no
@@ -915,7 +1208,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 place_odds[r.number] = (float(low), float(high))
     tickets = generate_tickets(forecast, win_odds,
                                calibration_validated=False,
-                               trifecta_formation="B",
+                               trifecta_formation="R24",
                                place_odds=place_odds)
     captured = now.isoformat(timespec="seconds")
     payload = race_payload(

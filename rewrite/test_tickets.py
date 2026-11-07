@@ -5,7 +5,8 @@ from pathlib import Path
 
 from rewrite.analysis.forecast import forecast_race
 from rewrite.analysis.tickets import (
-    TicketPolicy, formation_b_selections, generate_tickets, mark_order,
+    TicketPolicy, formation_b_selections, formation_r24_selections,
+    generate_tickets, mark_order,
 )
 from rewrite.data.normalize import normalize_race
 from rewrite.test_analysis import CLOSER_RUNS, FRONT_RUNS, MID_RUNS, SUMMARY, horse
@@ -138,6 +139,59 @@ class TicketTests(unittest.TestCase):
         for ranked in ([7, 3, 5, 1, 9], [2, 4, 6, 8], [1, 2, 3]):
             self.assertEqual(set(formation_b_selections(ranked)),
                              shadow.formation_b(list(ranked)))
+
+    def test_formation_r24_is_24_points_with_top2_win_leg(self):
+        # The production R24 contract (user order 2026-11-08): the
+        # recommended trifecta is exactly 24 points on a five-mark
+        # fixture, the win leg is mark ranks 1-2 only, the 2nd/3rd
+        # legs stay within mark ranks 1-5, and the set is a strict
+        # subset of formation B on the same marks.
+        ranked = mark_order(self.forecast)
+        self.assertEqual(len(ranked), 5)
+        plan = generate_tickets(self.forecast, self.odds,
+                                calibration_validated=False,
+                                trifecta_formation="R24")
+        got = [t.selection for t in plan.probability_tickets
+               if t.kind == "trifecta"]
+        self.assertEqual(len(got), 24)
+        self.assertEqual(len(set(got)), 24)
+        for selection in got:
+            self.assertIn(selection[0], ranked[:2])
+            self.assertLessEqual(set(selection), set(ranked[:5]))
+            self.assertEqual(len(set(selection)), 3)
+        plan_b = generate_tickets(self.forecast, self.odds,
+                                  calibration_validated=False,
+                                  trifecta_formation="B")
+        b_set = {t.selection for t in plan_b.probability_tickets
+                 if t.kind == "trifecta"}
+        self.assertEqual(len(b_set), 36)
+        self.assertLess(set(got), b_set)
+        # EV stays uncomputed for combinations under R24 as well.
+        for t in plan.probability_tickets:
+            if t.kind == "trifecta":
+                self.assertIsNone(t.expected_return)
+                self.assertEqual(t.odds_status, "unavailable")
+        self.assertEqual(plan.ev_tickets, ())
+
+    def test_formation_r24_shrinks_with_fewer_marks(self):
+        self.assertEqual(len(formation_r24_selections([1, 2, 3, 4, 5])), 24)
+        self.assertEqual(len(formation_r24_selections([1, 2, 3, 4])), 12)
+        self.assertEqual(len(formation_r24_selections([1, 2, 3])), 4)
+        self.assertEqual(formation_r24_selections([1, 2]), [])
+        for ranked in ([7, 3, 5, 1, 9], [2, 4, 6, 8], [1, 2, 3]):
+            self.assertLess(set(formation_r24_selections(ranked)),
+                            set(formation_b_selections(ranked)))
+
+    def test_formation_r24_leaves_other_kinds_untouched(self):
+        legacy = generate_tickets(self.forecast, self.odds,
+                                  calibration_validated=False)
+        plan_r24 = generate_tickets(self.forecast, self.odds,
+                                    calibration_validated=False,
+                                    trifecta_formation="R24")
+        for kind in ("win", "place", "wide", "quinella", "exacta", "trio"):
+            self.assertEqual(
+                [t for t in legacy.probability_tickets if t.kind == kind],
+                [t for t in plan_r24.probability_tickets if t.kind == kind])
 
     def test_formation_b_leaves_other_kinds_and_legacy_untouched(self):
         legacy = generate_tickets(self.forecast, self.odds,
