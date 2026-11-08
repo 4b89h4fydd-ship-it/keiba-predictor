@@ -283,7 +283,7 @@ JRA_TRACK_CODE_BY_NAME = {v:k for k,v in JRA_TRACK_CODES.items()}
 JRA_MEETING_DAY_RE = re.compile(r"(\d+)回(札幌|函館|福島|新潟|東京|中山|中京|京都|阪神|小倉)(\d+)日")
 JRA_CNAME_RE = re.compile(r"pw01dde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
 JRA_HORSE_CNAME_RE = re.compile(r"pw01dud\d{12,}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
-JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
+JRA_RESULT_CNAME_RE = re.compile(r"pw01sde(?:00|01|10)\d{20}(?:/|%2F)[0-9A-Fa-f]{2}",re.I)
 _jra_cache_lock = threading.Lock()
 _jra_text_cache: dict[str, tuple[float,str]] = {}
 
@@ -2155,19 +2155,51 @@ def _netkeiba_current_result(detail:dict)->dict|None:
 
 def _jra_result_cname_from_card(cname:str)->str:
     if not cname:return ""
+    # The card page carries result links for the past races of every
+    # entered horse, so the first result token on the page is usually
+    # ANOTHER race's. Accept only the candidate whose identity embedded
+    # in the token (date / track / race number) is this race's own, and
+    # fail closed (no result link) when none matches so the caller
+    # falls back instead of merging a foreign race's result. (On
+    # 2026-11-08 Fukushima 7R stored Hanshin 2026-09-20 8R's result
+    # this way: its card's first token was a past race of a runner.)
+    want_date=_jra_date_from_cname(cname)
+    want_track=_jra_any_track(cname)
+    want_no=_jra_any_race_no(cname)
+    if not want_date or not want_track or not want_no:return ""
     try:html=_jra_request("https://www.jra.go.jp/JRADB/accessD.html",cname,20)
     except Exception as exc:
         print("JRA result link fetch failed",exc);return ""
-    vals=[_jra_norm_cname(x) for x in JRA_RESULT_CNAME_RE.findall(html)]
-    return vals[0] if vals else ""
+    vals=[]
+    for x in JRA_RESULT_CNAME_RE.findall(html):
+        v=_jra_norm_cname(x)
+        if v not in vals:vals.append(v)
+    for v in vals:
+        if (_jra_date_from_cname(v)==want_date and _jra_any_track(v)==want_track
+                and _jra_any_race_no(v)==want_no):
+            return v
+    return ""
 
 def _jra_any_track(cname:str)->str:
-    m=re.search(r"pw01(?:d|s)de(?:01|10)(\d{2})",cname or "",re.I)
+    m=re.search(r"pw01(?:d|s)de(?:00|01|10)(\d{2})",cname or "",re.I)
     return JRA_TRACK_CODES.get(m.group(1),"") if m else ""
 
 def _jra_any_race_no(cname:str)->int:
-    m=re.search(r"pw01(?:d|s)de(?:01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "",re.I)
+    m=re.search(r"pw01(?:d|s)de(?:00|01|10)\d{2}\d{4}\d{4}(\d{2})20\d{6}/",cname or "",re.I)
     return int(m.group(1)) if m else 0
+
+def _jra_result_cname_matches_detail(cname:str,detail:dict)->bool:
+    """Whether a result token's embedded identity names this race.
+
+    A token that decodes to a different date, track or race number is
+    poisoned state, not a shortcut. An undecodable token cannot be
+    judged here and is left to the merge-time identity guard.
+    """
+    date=_jra_date_from_cname(cname); track=_jra_any_track(cname); no=_jra_any_race_no(cname)
+    if date and str(detail.get("date") or "") and date!=str(detail.get("date")):return False
+    if track and str(detail.get("track") or "") and track!=str(detail.get("track")):return False
+    if no and int(detail.get("raceNumber") or 0) and no!=int(detail.get("raceNumber") or 0):return False
+    return True
 
 # The historical result menu publishes month tokens (objParam) and meeting links.
 # Use those actual official links when D1's original source has no horse cname.
@@ -3958,6 +3990,13 @@ def _refresh_result_fast(race_id: str) -> dict | None:
     else:
         try:
             result_cname=str(detail.get("resultCname") or "")
+            if result_cname and not _jra_result_cname_matches_detail(result_cname,detail):
+                # A stored result token naming a different race is
+                # poisoned state (its result block came with it and
+                # reads as final, so nothing downstream questions it).
+                # Drop the token and re-derive it from the race card.
+                print("JRA stored result cname identity mismatch; re-deriving",race_id,result_cname)
+                result_cname=""
             if not result_cname:
                 cname=_jra_find_cname(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
                 if cname:result_cname=_jra_result_cname_from_card(cname)

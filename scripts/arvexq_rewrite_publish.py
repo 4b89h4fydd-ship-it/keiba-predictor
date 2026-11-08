@@ -1483,10 +1483,37 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 print(f"FAIL {race_id}: sync rejected: {result}")
                 continue
             back = _get("/api/race/" + urllib.parse.quote(str(race_id), safe=""))
-            stored = (back.get("detail") or {}).get("unifiedForecast") or {}
+            back_detail = back.get("detail") or {}
+            stored = back_detail.get("unifiedForecast") or {}
             if stored.get("receiptSha256") != receipt:
                 counts["failed"] += 1
                 print(f"FAIL {race_id}: read-back receipt mismatch")
+                continue
+            # The receipt covers only the unified product. The stored
+            # detail also carries predictionMarks (what the entry list
+            # renders), and the blend-upgrade reissues of 2026-11-07/08
+            # stored details whose predictionMarks still named the
+            # first publication's horses beside the reissue's
+            # unifiedForecast — two different ◎ for one race, invisible
+            # to the receipt check. Verify the marks blocks agree.
+            def _marks_of(entries, *keys):
+                out = {}
+                for e in entries or []:
+                    if not isinstance(e, dict):
+                        continue
+                    label = next((e.get(k) for k in keys if e.get(k)), None)
+                    if label:
+                        out[str(label)] = e.get("horseNumber")
+                return out
+            built_pm = _marks_of(new.get("predictionMarks"), "mark")
+            stored_pm = _marks_of(back_detail.get("predictionMarks"), "mark")
+            stored_uf = _marks_of(stored.get("marks"), "markSymbol", "mark")
+            if (len(built_pm) == 5 and stored_pm != built_pm) or (
+                    len(stored_uf) == 5 and stored_pm != stored_uf):
+                counts["failed"] += 1
+                print(f"FAIL {race_id}: read-back marks mismatch "
+                      f"(stored predictionMarks {stored_pm} vs built "
+                      f"{built_pm} / stored unified {stored_uf})")
                 continue
             counts["published"] += 1
             print(f"OK   {race_id}: receipt {receipt[:12]}… live"

@@ -59,6 +59,91 @@ def _write_json(path: str, value: Any) -> None:
     )
 
 
+_MARK_ORDER = ("◎", "○", "▲", "△", "☆")
+
+
+def _marks_map(entries: Any, *keys: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    if not isinstance(entries, list):
+        return out
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        label = next((entry.get(k) for k in keys if entry.get(k)), None)
+        if label:
+            out[str(label)] = entry.get("horseNumber")
+    return out
+
+
+def _heal_marks_consistency(detail: dict[str, Any] | None) -> bool:
+    """Align predictionMarks to the authoritative unifiedForecast marks.
+
+    The unified product is the receipt-verified publication (the
+    publish marker chain and the read-back verification both key on
+    it); the entry list renders predictionMarks. The blend-upgrade
+    reissues of 2026-11-07/08 left stored details whose
+    predictionMarks still named the first publication's horses
+    beside the reissue's unifiedForecast — two different ◎ for one
+    race. Only the marks assignment is aligned (the marks list, the
+    prediction block's copy of it, its ordered candidate list, and
+    the horses' predMark): probabilities, tickets, the unified
+    product itself and the sealed pre-off archive are untouched.
+    Returns True when the detail was changed.
+    """
+    if not isinstance(detail, dict):
+        return False
+    if detail.get("predictionStatus") != "ready":
+        return False
+    uf_entries = (detail.get("unifiedForecast") or {}).get("marks")
+    uf_map = _marks_map(uf_entries, "markSymbol", "mark")
+    if len(uf_map) != 5:
+        return False
+    pm_map = _marks_map(detail.get("predictionMarks"), "mark")
+    if pm_map == uf_map:
+        return False
+    uf_by_label: dict[str, dict[str, Any]] = {}
+    for entry in uf_entries or []:
+        if not isinstance(entry, dict):
+            continue
+        label = entry.get("markSymbol") or entry.get("mark")
+        if label:
+            uf_by_label[str(label)] = entry
+    new_pm: list[dict[str, Any]] = []
+    for label in _MARK_ORDER:
+        src = uf_by_label[label]
+        entry: dict[str, Any] = {
+            "horseNumber": src.get("horseNumber"),
+            "mark": label,
+            "winProbability": src.get("winProbability"),
+        }
+        if src.get("attention"):
+            entry["attention"] = True
+        new_pm.append(entry)
+    # Attention-only overlay entries (empty mark) keep their carrier.
+    marked_numbers = set(uf_map.values())
+    for entry in detail.get("predictionMarks") or []:
+        if (isinstance(entry, dict) and not entry.get("mark")
+                and entry.get("attention")
+                and entry.get("horseNumber") not in marked_numbers):
+            new_pm.append(copy.deepcopy(entry))
+    detail["predictionMarks"] = new_pm
+    prediction = detail.get("prediction")
+    if isinstance(prediction, dict):
+        prediction["predictionMarks"] = copy.deepcopy(new_pm)
+        value = ((prediction.get("stages") or {}).get("marks") or {}).get("value")
+        if isinstance(value, dict) and "orderedWinCandidates" in value:
+            value["orderedWinCandidates"] = [uf_map[label] for label in _MARK_ORDER]
+    number_to_mark = {number: label for label, number in uf_map.items()}
+    for horse in detail.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        if horse.get("horseNumber") in number_to_mark:
+            horse["predMark"] = number_to_mark[horse["horseNumber"]]
+        else:
+            horse.pop("predMark", None)
+    return True
+
+
 def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
     if not isinstance(detail, dict) or not detail.get("id"):
         return
@@ -154,6 +239,19 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
 
+    # Marks-consistency heal: a stored detail whose predictionMarks
+    # disagree with its unifiedForecast.marks is republished with the
+    # marks assignment aligned to the unified product (see
+    # _heal_marks_consistency). The write carries the stored publish
+    # marker verbatim, so the protect seam treats it as the same
+    # publication re-sent, not a new forecast.
+    marks_healed: set[str] = set()
+    for rid in started_ids:
+        if _heal_marks_consistency(by_id.get(rid)):
+            marks_healed.add(rid)
+            published.add(rid)
+            print("MARKS_HEALED", rid)
+
     summaries = []
     for row in rows:
         z = copy.deepcopy(row)
@@ -205,6 +303,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
             "result_repaired_count": len(repaired),
+            "marks_healed_count": len(marks_healed),
             "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),

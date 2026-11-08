@@ -286,6 +286,43 @@ def _authorized_forecast(detail: dict[str, Any]) -> bool:
     return True
 
 
+def _marks_map(entries: Any, *keys: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    if not isinstance(entries, list):
+        return out
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        label = next((entry.get(k) for k in keys if entry.get(k)), None)
+        if label:
+            out[str(label)] = entry.get("horseNumber")
+    return out
+
+
+def _assert_publish_marks_consistent(detail: dict[str, Any]) -> None:
+    """A publish write must carry ONE marks assignment.
+
+    The detail carries the marks twice (predictionMarks for the entry
+    list, unifiedForecast.marks for the race view). The blend-upgrade
+    reissues of 2026-11-07/08 stored details whose two blocks named
+    different horses (the first publication's predictionMarks beside
+    the reissue's unifiedForecast), so the app showed two different
+    ◎ for the same race. Both blocks derive from one forecast in the
+    publish lane, so a disagreement means the write was assembled
+    from two different publications: fail closed rather than store
+    it. Only the five labelled marks are compared; attention-only
+    overlay entries (empty mark) are not part of the assignment.
+    """
+    pm = _marks_map(detail.get("predictionMarks"), "mark")
+    uf = _marks_map((detail.get("unifiedForecast") or {}).get("marks"),
+                    "markSymbol", "mark")
+    if len(pm) == 5 and len(uf) == 5 and pm != uf:
+        raise RuntimeError(
+            "publish write carries inconsistent marks blocks "
+            "(predictionMarks vs unifiedForecast.marks) for "
+            + str(detail.get("id") or ""))
+
+
 def _archive_restored_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     """Rebuild the stored view of a tombstoned read from its archive.
 
@@ -401,6 +438,8 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         and out.get('predictionStatus') == 'ready'
         and all(key in out for key in forecast_keys if key in old)
         and _rewrite_marker_fresh(stored_marker, marker))
+    if is_publish_write:
+        _assert_publish_marks_consistent(out)
     if not is_publish_write:
         for key in forecast_keys:
             if key in old:
