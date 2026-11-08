@@ -172,6 +172,23 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
 
     now = datetime.now(JST)
     started_ids = [str(r["id"]) for r in rows if started(r, now)]
+
+    # Marks-consistency heal candidates, taken from the bundle
+    # details BEFORE any result refresh replaces them: the refresh
+    # path returns a display-compacted detail whose projection status
+    # ("unified-reference-ready" / "disabled") and rebuilt blocks no
+    # longer carry the stored publication's shape, so healing after
+    # the refresh misses exactly the races the refresh touched. The
+    # healed bundle copy is the stored publication itself (marker
+    # verbatim), which the protect seam accepts as the same
+    # publication re-sent; a fresher result obtained by the refresh
+    # is transplanted into it at payload assembly below.
+    healed_by_id: dict[str, dict[str, Any]] = {}
+    for rid in started_ids:
+        candidate = copy.deepcopy(by_id.get(rid) or {})
+        if candidate.get("id") and _heal_marks_consistency(candidate):
+            healed_by_id[rid] = candidate
+
     pending = []
     for rid in started_ids:
         result_ok, payout_ok, _ = result_state(by_id.get(rid))
@@ -239,18 +256,14 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
 
-    # Marks-consistency heal: a stored detail whose predictionMarks
-    # disagree with its unifiedForecast.marks is republished with the
-    # marks assignment aligned to the unified product (see
-    # _heal_marks_consistency). The write carries the stored publish
-    # marker verbatim, so the protect seam treats it as the same
-    # publication re-sent, not a new forecast.
-    marks_healed: set[str] = set()
-    for rid in started_ids:
-        if _heal_marks_consistency(by_id.get(rid)):
-            marks_healed.add(rid)
-            published.add(rid)
-            print("MARKS_HEALED", rid)
+    # Marks-consistency heal: the candidates were healed from the
+    # bundle copies above; register them for publication (the payload
+    # assembly swaps their entries in, with any fresher refreshed
+    # result transplanted).
+    marks_healed: set[str] = set(healed_by_id)
+    for rid in sorted(marks_healed):
+        published.add(rid)
+        print("MARKS_HEALED", rid)
 
     summaries = []
     for row in rows:
@@ -290,10 +303,21 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             item["error"] = item["error"] or "payout still incomplete"
             payout_missing.append(item)
 
-    detail_payload = [
-        by_id[rid] for rid in sorted(published | repaired)
+    payload_by_id: dict[str, dict[str, Any]] = {
+        str(by_id[rid]["id"]): by_id[rid]
+        for rid in sorted(published | repaired)
         if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
-    ]
+    }
+    for rid, entry in healed_by_id.items():
+        merged = by_id.get(rid) or {}
+        merged_result = merged.get("result")
+        if isinstance(merged_result, dict) and merged_result != entry.get("result"):
+            entry["result"] = copy.deepcopy(merged_result)
+            for key in ("resultCname", "fieldSize"):
+                if merged.get(key) not in (None, "", 0):
+                    entry[key] = merged[key]
+        payload_by_id[rid] = entry
+    detail_payload = list(payload_by_id.values())
     payload = {
         "summaries": summaries,
         "details": detail_payload,

@@ -3961,6 +3961,27 @@ def _result_has_podium(detail: dict | None) -> bool:
     return all(i in ranks for i in (1,2,3))
 
 
+def _result_covers_card(detail: dict | None) -> bool:
+    """Whether the stored result lists every active card runner.
+
+    A podium-shaped interim table satisfies _result_has_podium while
+    most of the field is missing (2026-11-07 Tokyo 2R was stored with
+    five of thirteen finishers). Completeness is judged against the
+    card's active runners, mirroring arvexq.results.state.
+    """
+    d=detail or {}
+    result=d.get("result") or {}
+    finishers=[x for x in (result.get("finishers") or []) if isinstance(x,dict)]
+    if not finishers:return False
+    runners=0
+    for h in d.get("horses") or []:
+        if not isinstance(h,dict):continue
+        if h.get("scratched") or h.get("withdrawn"):continue
+        if any(s in str(h.get("status") or "") for s in ("出走取消","競走除外","欠場")):continue
+        runners+=1
+    return runners==0 or len(finishers)>=runners
+
+
 def _refresh_result_fast(race_id: str) -> dict | None:
     """Refresh only authoritative result data; never rebuild history/diagnosis."""
     detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
@@ -4003,7 +4024,11 @@ def _refresh_result_fast(race_id: str) -> dict | None:
             parsed=_jra_parse_result(result_cname,detail) if result_cname else None
             if parsed:detail=_merge_official_result(detail,parsed)
         except Exception as exc:print("JRA fast result refresh failed",race_id,exc)
-        if not _result_has_podium(detail) and _race_should_have_result(detail):
+        # The fallback must also fire when a podium-shaped but partial
+        # result is already stored and the official token route could
+        # not complete it: gating on the podium alone left interim
+        # top-5 tables frozen forever (2026-11-07 Tokyo 2R).
+        if (not _result_has_podium(detail) or not _result_covers_card(detail)) and _race_should_have_result(detail):
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
