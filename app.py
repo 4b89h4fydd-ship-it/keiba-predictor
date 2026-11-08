@@ -4028,7 +4028,23 @@ def _refresh_result_fast(race_id: str) -> dict | None:
         # result is already stored and the official token route could
         # not complete it: gating on the podium alone left interim
         # top-5 tables frozen forever (2026-11-07 Tokyo 2R).
-        if (not _result_has_podium(detail) or not _result_covers_card(detail)) and _race_should_have_result(detail):
+        # It must likewise fire when the finishers are complete but the
+        # stored payout block is itself unusable — missing entirely, or
+        # failing the payout_combination_shape standard (a netkeiba
+        # table parsed before the payout parser's regrouping fix).
+        # Such races carry no stored result token, and when the token
+        # re-derivation is unavailable the official route above cannot
+        # repair the payouts, so gating on the finishers alone left
+        # them in payout_missing forever (2026-11-08 Tokyo 7R-10R).
+        stored_payouts=((detail.get("result") or {}).get("payouts")) or []
+        payout_broken=not stored_payouts
+        if stored_payouts:
+            try:
+                from arvexq.results.state import payout_combination_violations as _pcv
+                payout_broken=bool(_pcv(detail))
+            except Exception:
+                payout_broken=False
+        if (not _result_has_podium(detail) or not _result_covers_card(detail) or payout_broken) and _race_should_have_result(detail):
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
