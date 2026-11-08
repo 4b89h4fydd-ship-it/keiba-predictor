@@ -27,6 +27,45 @@ class StoredResultMergeTests(unittest.TestCase):
         self.assertEqual(detail["result"], previous)
         self.assertEqual(len(detail["horses"]), 1)
 
+    def test_shorter_clean_payouts_supersede_longer_broken(self):
+        # 2026-11-07 Fukushima 9R/11R shape: the parser defect stored a
+        # 13-row payout block (bogus zipped rows included) where the
+        # official truth has 12 rows. The anti-shrink guard must not
+        # preserve the corrupt block against a final, shape-clean set.
+        finishers = [{"finish": 1, "horseNumber": 7},
+                     {"finish": 2, "horseNumber": 14},
+                     {"finish": 3, "horseNumber": 3}]
+        broken = [{"type": "単勝", "combination": "7", "amount": 600},
+                  {"type": "ワイド", "combination": "110", "amount": 7490},
+                  {"type": "3連単", "combination": "2931", "amount": 10000}]
+        broken += [{"type": "複勝", "combination": "7", "amount": 100}] * 10
+        clean = [{"type": "単勝", "combination": "7", "amount": 600},
+                 {"type": "ワイド", "combination": "7-14", "amount": 7490},
+                 {"type": "3連単", "combination": "7-14-3", "amount": 10000}]
+        clean += [{"type": "複勝", "combination": str(n), "amount": 100}
+                  for n in (7, 14, 3, 1, 2, 4, 5, 6, 8)]
+        self.assertEqual(len(broken), 13)
+        self.assertEqual(len(clean), 12)
+        old = {"status": "確定", "finishers": finishers, "payouts": broken}
+        new = {"status": "確定", "finishers": finishers, "payouts": clean}
+        after = merge_result(old, new)
+        self.assertEqual(after["payouts"], clean)
+
+    def test_shorter_clean_payouts_do_not_supersede_valid(self):
+        # The guard still protects a valid stored block: a shorter
+        # shape-clean set from a final result does NOT replace it.
+        finishers = [{"finish": 1, "horseNumber": 7},
+                     {"finish": 2, "horseNumber": 14},
+                     {"finish": 3, "horseNumber": 3}]
+        valid = [{"type": "単勝", "combination": "7", "amount": 600},
+                 {"type": "馬連", "combination": "7-14", "amount": 420},
+                 {"type": "3連単", "combination": "7-14-3", "amount": 14560}]
+        shorter = valid[:2]
+        old = {"status": "確定", "finishers": finishers, "payouts": valid}
+        new = {"status": "確定", "finishers": finishers, "payouts": shorter}
+        after = merge_result(old, new)
+        self.assertEqual(after["payouts"], valid)
+
     def test_new_complete_payout_supersedes_partial(self):
         initial = {"status": "速報", "finishers": [{"horseNumber": 1, "finish": 1}],
                    "payouts": [{"type": "単勝", "amount": 120}]}

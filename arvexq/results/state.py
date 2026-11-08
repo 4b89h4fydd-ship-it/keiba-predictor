@@ -194,6 +194,10 @@ def started(summary: dict[str, Any], now: datetime) -> bool:
     return sm < 9999 and now_minutes >= sm + 2
 
 
+def _payout_block_broken(payouts: Any) -> bool:
+    return bool(payout_combination_violations({"result": {"payouts": payouts}}))
+
+
 def merge_result(old: Any, new: Any) -> dict[str, Any]:
     old_r = copy.deepcopy(old) if isinstance(old, dict) else {}
     new_r = new if isinstance(new, dict) else {}
@@ -211,7 +215,17 @@ def merge_result(old: Any, new: Any) -> dict[str, Any]:
         if key in {"payouts", "finishers"} and isinstance(value, list):
             previous = old_r.get(key)
             if isinstance(previous, list) and len(previous) > len(value):
-                continue
+                # Payout exception: a shape-broken stored block can be
+                # LONGER than the official truth (the 2026-11-08 parser
+                # defect zipped extra bogus rows into it), so the guard
+                # would preserve the corruption forever. A shorter
+                # shape-clean payout set carried by a final result
+                # supersedes a shape-broken one (2026-11-07 Fukushima
+                # 9R/11R: stored 13 rows vs official 12).
+                if not (key == "payouts" and new_final
+                        and _payout_block_broken(previous)
+                        and not _payout_block_broken(value)):
+                    continue
         out[key] = copy.deepcopy(value)
     return out
 
