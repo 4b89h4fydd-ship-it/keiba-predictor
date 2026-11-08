@@ -29,6 +29,7 @@ from arvexq.results import (
     TERMINAL_NO_PAYOUT,
     merge_detail,
     merge_result,
+    payout_combination_violations,
     result_state,
     row_date,
     start_minutes,
@@ -303,6 +304,21 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             item["error"] = item["error"] or "payout still incomplete"
             payout_missing.append(item)
 
+    # === standing audit check: payout_combination_shape (begin) ===
+    # Nightly shape audit over every started race's stored payouts,
+    # run after the repair passes: each payout row's combination must
+    # match its bet type's arity/range and not repeat within the type
+    # (see arvexq.results.state.payout_combination_violations). Races
+    # still violating here could not be healed by this run's refresh
+    # (e.g. no official result token); they are also payout-incomplete
+    # via result_state, so they appear in payout_missing above and the
+    # run reports incomplete. Keep this block intact and named when
+    # the audit is restructured into named checks.
+    combination_violations: list[dict[str, Any]] = []
+    for rid in started_ids:
+        combination_violations.extend(payout_combination_violations(by_id.get(rid)))
+    # === standing audit check: payout_combination_shape (end) ===
+
     payload_by_id: dict[str, dict[str, Any]] = {
         str(by_id[rid]["id"]): by_id[rid]
         for rid in sorted(published | repaired)
@@ -331,6 +347,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
+            "payout_combination_violation_count": len(combination_violations),
             "result_detail_write_count": len(detail_payload),
             "result_repair_complete": not unresolved and not payout_missing,
             "result_repair_at": int(now.timestamp()),
@@ -345,6 +362,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
+        "payout_combination_violations": combination_violations,
         "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)
@@ -364,6 +382,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         print("RESULT_MISSING", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     for item in payout_missing:
         print("PAYOUT_MISSING", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
+    for item in combination_violations:
+        print("PAYOUT_COMBINATION_VIOLATION", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     return 0
 
 

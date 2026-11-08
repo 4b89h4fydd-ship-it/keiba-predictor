@@ -23,6 +23,17 @@ _ALIASES = {
 }
 _LABEL_KEYS = sorted(_ALIASES, key=len, reverse=True)
 
+# Combination arity per bet type: 単勝・複勝 are single numbers, 枠連・
+# 馬連・馬単・ワイド are pairs, 3連複・3連単 are triples. An entry whose
+# combination carries any other count of numbers is not a payout row for
+# that type (the JRA text-fallback used to emit popularity numbers and
+# neighbouring amounts as combinations; see _parse_refund_dl below).
+_COMBINATION_ARITY = {
+    "単勝": 1, "複勝": 1,
+    "枠連": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
+    "3連複": 3, "3連単": 3,
+}
+
 
 def _norm(value: Any) -> str:
     return re.sub(r"\s+", "", unicodedata.normalize("NFKC", str(value or "")))
@@ -53,12 +64,42 @@ def parse_payouts(soup: BeautifulSoup) -> list[dict[str, Any]]:
         amount_match = re.fullmatch(r"([\d,]+)円?", amount)
         if not combo_match or not amount_match:
             return
+        arity = _COMBINATION_ARITY.get(kind)
+        if arity is not None and len(re.findall(r"\d+", combo)) != arity:
+            return
         value = int(amount_match.group(1).replace(",", ""))
         key = (kind, combo, value)
         if key in seen:
             return
         seen.add(key)
         out.append({"type": kind, "combination": combo, "amount": value})
+
+    # JRA official result pages do not put payouts in a <table> at all:
+    # they live in <div class="refund_area"> as <dl><dt>券種</dt><dd>
+    # rows of <div class="line"><div class="num">組合せ</div><div
+    # class="yen">金額円</div><div class="pop">人気</div></div>. Parse
+    # that structure directly, pairing each combination with the amount
+    # in its own line. (Before this, JRA pages fell through to the raw
+    # text fallback at the bottom, which zipped independently collected
+    # combination-shaped lines and amount tokens: popularity numbers
+    # and neighbouring amounts landed in the combination field, e.g.
+    # 複勝 "170" or ワイド "133", and ticket graders reading those
+    # rows lost every multi-line payout type.)
+    for dl in soup.find_all("dl"):
+        dt = dl.find("dt")
+        dd = dl.find("dd")
+        if dt is None or dd is None:
+            continue
+        kind = _ALIASES.get(_norm(dt.get_text()))
+        if kind is None:
+            continue
+        lines = dd.find_all(class_="line")
+        for line in lines or [dd]:
+            num_el = line.find(class_="num")
+            yen_el = line.find(class_="yen")
+            if num_el is None or yen_el is None:
+                continue
+            add(kind, num_el.get_text(), yen_el.get_text())
 
     for table in soup.find_all("table"):
         current = ""
@@ -89,6 +130,21 @@ def parse_payouts(soup: BeautifulSoup) -> list[dict[str, Any]]:
 
             combos = [value for value in payload if re.fullmatch(r"\d+(?:[-→・]\d+){0,2}", _norm(value))]
             amounts = [value for value in payload if re.fullmatch(r"[\d,]+円", _norm(value))]
+            # Some providers (netkeiba's Payout_Detail_Table) put each
+            # number of a combination on its own line inside the
+            # combination cell: a 馬連 cell reads "7\n14" for the single
+            # combination 7-14, a ワイド cell reads six numbers for its
+            # three combinations. When the number-line count is exactly
+            # arity x amount count, regroup the single numbers into
+            # combinations; pairing each number with the next amount
+            # instead stored the first number alone as the combination
+            # (netkeiba-sourced JRA payouts, repaired 2026-11-08).
+            arity = _COMBINATION_ARITY.get(current)
+            if (arity and arity > 1 and amounts
+                    and len(combos) == arity * len(amounts)
+                    and all(re.fullmatch(r"\d+", _norm(c)) for c in combos)):
+                combos = ["-".join(combos[i:i + arity])
+                          for i in range(0, len(combos), arity)]
             for combo, amount in zip(combos, amounts):
                 add(current, combo, amount)
 

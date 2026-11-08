@@ -90,6 +90,68 @@ def podium_final(result: Any) -> bool:
     return 1 in finishes and sum(1 for finish in finishes if finish <= 3) >= 3
 
 
+# ---------------------------------------------------------------------------
+# Named check: payout_combination_shape
+#
+# Every stored payout row must carry a combination whose shape matches
+# its bet type: 単勝・複勝 are a single horse number (1..18), 枠連 a
+# frame pair (1..8), 馬連・馬単・ワイド a horse pair, 3連複・3連単 a
+# horse triple, and no (type, combination) pair may repeat. The JRA
+# payout-parser defect repaired on 2026-11-08 stored popularity numbers
+# and neighbouring amounts as combinations (複勝 "170", ワイド "133",
+# a duplicated 複勝 number with two amounts); rows of that shape are
+# not payouts, so a result carrying them is payout-incomplete and the
+# result-repair lane re-fetches it. Unknown bet types are not judged.
+# ---------------------------------------------------------------------------
+_PAYOUT_COMBINATION_ARITY = {
+    "単勝": 1, "複勝": 1,
+    "枠連": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
+    "3連複": 3, "3連単": 3,
+}
+
+
+def payout_combination_violations(detail: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Shape violations in a detail's stored payout rows.
+
+    Returns one record per offending row: race_id (the detail id),
+    bet type, the stored combination, and the reason. An empty list
+    means every judged row is well-formed (or there are no payouts).
+    """
+    d = detail if isinstance(detail, dict) else {}
+    result = d.get("result") if isinstance(d.get("result"), dict) else {}
+    payouts = result.get("payouts") if isinstance(result.get("payouts"), list) else []
+    race_id = str(d.get("id") or "")
+    violations: list[dict[str, Any]] = []
+    seen: set[tuple[str, tuple[int, ...]]] = set()
+    for row in payouts:
+        if not isinstance(row, dict):
+            continue
+        kind = str(row.get("type") or "")
+        arity = _PAYOUT_COMBINATION_ARITY.get(kind)
+        if arity is None:
+            continue
+        raw = str(row.get("combination") or "")
+        numbers = [int(x) for x in re.findall(r"\d+", raw)]
+        reason = ""
+        if len(numbers) != arity:
+            reason = f"combination has {len(numbers)} numbers, expected {arity}"
+        else:
+            limit = 8 if kind == "枠連" else 18
+            if any(n < 1 or n > limit for n in numbers):
+                reason = f"combination number outside 1..{limit}"
+            elif (kind, tuple(numbers)) in seen:
+                reason = "duplicate combination for bet type"
+        if reason:
+            violations.append({
+                "race_id": race_id,
+                "type": kind,
+                "combination": raw,
+                "reason": reason,
+            })
+        seen.add((kind, tuple(numbers)))
+    return violations
+
+
 def result_state(detail: dict[str, Any] | None) -> tuple[bool, bool, str]:
     d = detail if isinstance(detail, dict) else {}
     result = d.get("result") if isinstance(d.get("result"), dict) else {}
@@ -112,7 +174,11 @@ def result_state(detail: dict[str, Any] | None) -> tuple[bool, bool, str]:
         # foreign data, not a final result for this race.
         if _result_cname_conflicts(d):
             final = False
-    return final, bool(payouts), status
+    # Payout rows whose combination shape is impossible for their bet
+    # type (payout_combination_shape check above) are corrupt data,
+    # not a completed payout set: the repair lane must re-fetch them.
+    payout_ok = bool(payouts) and not payout_combination_violations(d)
+    return final, payout_ok, status
 
 
 def started(summary: dict[str, Any], now: datetime) -> bool:
