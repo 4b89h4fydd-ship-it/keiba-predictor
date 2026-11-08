@@ -1,3 +1,8 @@
+# 注意: これは独立実装 backtest_v206.py の研究用バックテストであり、
+# 本番モデル v9b (arvexq-rewrite-v3-v9b) の検証ではない。
+# 本番の精度検証は、保存済み本番予想に対するローカルスコアボードと
+# MotherDuck 採点で行う。
+# 2026-11-09: 毎日の定期実行 (23:45 JST) を廃止し、手動実行のみとした。
 name: ARVEXQ Backtest v206
 
 "on":
@@ -19,9 +24,6 @@ name: ARVEXQ Backtest v206
     branches: [main]
     paths:
       - .github/workflows/arvexq-backtest.yml
-  schedule:
-    - cron: "45 14 * * *"
-
 permissions:
   contents: read
 
