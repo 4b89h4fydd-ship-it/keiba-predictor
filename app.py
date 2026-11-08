@@ -4410,7 +4410,19 @@ def _nar_official_card_rows_fast(detail:dict)->list[dict]:
             print("NAR official card failed",detail.get("id"),url,exc);continue
         for row in _parse_nar_official_card_html(detail,html):
             no=int(row.get("horseNumber") or 0)
-            if no:out_by_no[no]=row
+            if not no:continue
+            existing=out_by_no.get(no)
+            if existing is None:
+                out_by_no[no]=row
+            else:
+                # Fill-missing across layouts: a later layout must not
+                # overwrite a body weight/change an earlier layout
+                # already published; it only fills what is still
+                # missing (a full card once supplied a past-run weight
+                # that crushed the correct current value).
+                for k,v in row.items():
+                    if existing.get(k) in (None,"") and v not in (None,""):
+                        existing[k]=v
         if out_by_no and (not target or len(out_by_no)>=target):break
     return [out_by_no[k] for k in sorted(out_by_no)]
 

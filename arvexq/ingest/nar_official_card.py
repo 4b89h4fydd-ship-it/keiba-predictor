@@ -6,6 +6,11 @@ from arvexq.ingest.nar_fields.body_weight import extract as observed_body_weight
 from arvexq.ingest.nar_fields.carried_weight import extract as observed_carried_weight
 
 
+def _pair_completeness(row):
+    return ((row.get("bodyWeight") is not None)
+            + (row.get("bodyWeightChange") is not None))
+
+
 def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
     """Return per-horse observed weight/weight-change/carried-weight fields."""
     if not html:
@@ -71,12 +76,26 @@ def parse_card_html(detail: dict, html: str, clean) -> list[dict]:
 
             if not weight and carried is None:
                 continue
-            out_by_no[horse_number] = {
+            row_out = {
                 "horseNumber": horse_number,
                 "bodyWeight": weight,
                 "bodyWeightChange": change,
                 "carriedWeight": carried,
                 "source": "NAR公式出馬表",
             }
+            existing = out_by_no.get(horse_number)
+            if existing is None:
+                out_by_no[horse_number] = row_out
+                continue
+            # The same card can appear several times in one page.
+            # Completeness wins over last-wins: a copy without a change
+            # must not erase a change an earlier copy published. Keep
+            # the (weight, change) pair as a unit; fill carried weight
+            # only when it is still missing.
+            if _pair_completeness(row_out) > _pair_completeness(existing):
+                existing["bodyWeight"] = row_out["bodyWeight"]
+                existing["bodyWeightChange"] = row_out["bodyWeightChange"]
+            if existing.get("carriedWeight") is None:
+                existing["carriedWeight"] = row_out.get("carriedWeight")
 
     return [out_by_no[number] for number in sorted(out_by_no)]
