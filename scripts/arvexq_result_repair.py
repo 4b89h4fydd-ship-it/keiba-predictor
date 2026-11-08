@@ -317,6 +317,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "started": len(started_ids),
         "pending_before": len(pending),
         "repaired": sorted(repaired),
+        "marks_healed": sorted(marks_healed),
         "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
