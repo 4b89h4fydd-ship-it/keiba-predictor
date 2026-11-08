@@ -304,6 +304,67 @@ def merge_summary(row: dict[str, Any], detail: dict[str, Any] | None) -> dict[st
 SWEEP_AHEAD_MIN = 240
 MAX_LIVE_TARGETS = 30
 
+# Blend-repair window: a race first-published on the v9b lane WITHOUT
+# its market blend (win odds incomplete at first publication) can only
+# be upgraded by the publish lane once this sync has landed complete
+# win odds into its stored detail, and the publish guard for that
+# upgrade closes at post-60min. Window-based targeting alone leaves
+# such a race unrepaired for hours when the one odds pass that covered
+# its card missed it (2026-11-09: Morioka 4R/6R/7R/8R missed the
+# ~02:12 netkeiba preview pass that covered the other 44 races, and
+# no lane ever retried them — they were still blendApplied=false at
+# the 08:12 morning verify, hours before post, with full forecast
+# odds already standing upstream). Any stored v9b forecast still
+# carrying blendApplied=false is therefore an explicit sync target
+# on every run while its post is more than 60 minutes away, whatever
+# the sweep window says. The D1 detail probes this costs are capped
+# per run, nearest post first (nearest guard deadline first).
+BLEND_REPAIR_MIN_LEAD_MIN = 60
+MAX_BLEND_REPAIR_PROBES = 16
+
+
+def blend_repair_targets(
+    rows: list[dict[str, Any]],
+    details_by_id: dict[str, dict[str, Any]],
+    now_min: int,
+) -> list[str]:
+    """Ids of races whose stored v9b forecast still lacks its blend.
+
+    A race qualifies only when its stored detail's rewritePublish
+    marker is readable, sits on the v9b lane (abilityLane
+    v9b-cal-market) with blendApplied exactly False, carries no
+    blend-upgrade revision yet, and its post is still more than
+    BLEND_REPAIR_MIN_LEAD_MIN away. Anything unreadable does not
+    qualify (fail-closed: ordinary targeting still applies).
+    """
+    found: list[tuple[int, str]] = []
+    for r in rows:
+        rid = str(r.get("id") or "")
+        if not rid:
+            continue
+        sm = start_min(r)
+        if sm >= 9999 or sm - now_min <= BLEND_REPAIR_MIN_LEAD_MIN:
+            continue
+        detail = details_by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        marker = (detail.get("preparedMeta") or {}).get("rewritePublish")
+        if not isinstance(marker, dict):
+            continue
+        if marker.get("abilityLane") != "v9b-cal-market":
+            continue
+        if marker.get("blendApplied") is not False:
+            continue
+        revision = marker.get("revision")
+        if isinstance(revision, dict) and (
+            revision.get("kind") == "blend-upgrade"
+            or revision.get("reason") == "blend-upgrade"
+        ):
+            continue
+        found.append((sm, rid))
+    found.sort()
+    return [rid for _sm, rid in found]
+
 
 def choose_targets(rows: list[dict[str, Any]], now_min: int) -> list[str]:
     groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
@@ -582,6 +643,41 @@ def main() -> int:
                     detail = None
                 if detail:
                     base_by_id[rid] = detail
+
+    # Blend repair: probe the stored details of unstarted races that
+    # ordinary targeting did not pick (nearest post first, capped)
+    # and add any whose v9b forecast still lacks its market blend.
+    # Their refreshed odds are what the publish lane's blend upgrade
+    # consumes; without this, a race missed by an early odds pass is
+    # never retried until the sweep window reaches it.
+    probe_rows = sorted(
+        (r for r in rows
+         if str(r.get("id") or "") not in targets
+         and str(r.get("id") or "") not in base_by_id
+         and start_min(r) < 9999
+         and start_min(r) - now_min > BLEND_REPAIR_MIN_LEAD_MIN),
+        key=start_min,
+    )[:MAX_BLEND_REPAIR_PROBES]
+    if probe_rows:
+        with ThreadPoolExecutor(max_workers=min(8, len(probe_rows))) as ex:
+            futures = {
+                ex.submit(fetch_d1_detail, str(r.get("id") or "")): str(r.get("id") or "")
+                for r in probe_rows
+            }
+            for fut in as_completed(futures):
+                rid = futures[fut]
+                try:
+                    detail = fut.result()
+                except Exception:
+                    detail = None
+                if detail:
+                    base_by_id[rid] = detail
+    repair = blend_repair_targets(rows, base_by_id, now_min)
+    for rid in repair:
+        if rid not in targets:
+            targets.append(rid)
+    if repair:
+        print("BLEND_REPAIR_TARGETS", len(repair), ",".join(repair))
 
     # Seed the rich D1 payload into local RaceDB before any live collector runs.
     for rid in targets:
