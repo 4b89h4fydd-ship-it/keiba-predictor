@@ -1,0 +1,2309 @@
+{
+ "artefact": "arvexq-course-geometry-master",
+ "version": "1.1.0",
+ "generated": "2026-11-08",
+ "scope": "JRA全10場＋地方競馬14場（帯広ばんえいはARVEXQ対象外のため除外）。平地コースのみ（障害コースは対象外）。",
+ "provenance": {
+  "fetched_date": "2026-11-08",
+  "primary_sources": [
+   {
+    "name": "JRA公式 コース紹介（各競馬場）",
+    "url_pattern": "https://www.jra.go.jp/facilities/race/<venue>/course/index.html（一部 jra.jp）",
+    "fields": [
+     "lap_distance_m",
+     "final_straight_to_finish_m",
+     "elevation_difference_m",
+     "width_m",
+     "race_distances_m",
+     "direction"
+    ]
+   },
+   {
+    "name": "地方競馬全国協会（NAR）公式 競馬場ガイド コース一覧",
+    "url": "https://www.keiba.go.jp/guide/course/",
+    "fields": [
+     "lap_distance_m",
+     "final_straight_to_finish_m",
+     "home_stretch_total_m",
+     "elevation_difference_m",
+     "width_m",
+     "direction"
+    ]
+   },
+   {
+    "name": "JRA-VAN 競馬場コース解説（JRAグループ公式）",
+    "url_pattern": "https://ts31sugo.jra-van.jp/sugotoku/crs/",
+    "fields": [
+     "first_corner_by_distance（サンプル距離のみ・近似値）"
+    ]
+   },
+   {
+    "name": "NAR公式 ダートグレード競走特設サイト レース紹介",
+    "url_pattern": "https://www.keiba.go.jp/dirtgraderace/",
+    "fields": [
+     "first_corner_by_distance（対象重賞の距離のみ・近似値）"
+    ]
+   },
+   {
+    "name": "JRA公式 今週の注目レース 歴史・コース",
+    "url_pattern": "https://www.jra.go.jp/keiba/thisweek/",
+    "fields": [
+     "first_corner_by_distance（対象重賞の距離のみ・近似値）"
+    ]
+   }
+  ],
+  "cross_checks": [
+   "東京：JRA公式 馬場概要（第4回・第5回東京）で芝A 2,083.1m/直線525.9m・ダート1,899.0m/直線501.6m がコース紹介と一致（Wikipediaのダート直線500.1m表記とは異なるが公式値を採用）",
+   "函館：JRA公式 馬場概要（第1回函館）で芝A 1,626.6m/262.1m・B 1,651.8m がコース紹介と一致",
+   "中京：JRA公式 馬場概要（第1回中京）で芝A 1,705.9m/412.5m・ダート1,530.0m/410.7m がコース紹介と一致",
+   "南関4場：南関東4競馬場公式サイト（nankankeiba.com）コース情報で大井・川崎・船橋・浦和の1周・幅員がNARガイドと一致",
+   "大井・川崎・船橋・浦和：NAR公式の各場PDF（sougou）掲載値がNARガイドと一致",
+   "v1.1.0: 全44コースの数値フィールドを出典（JRA公式コース紹介・NAR公式ガイド）と全件照合した（2026-11-08）。"
+  ],
+  "conventions": [
+   "final_straight_to_finish_m は「最後のコーナー（4コーナー）からゴール板まで」の距離。JRAの「直線距離」はこの定義。NARの「直線距離」はゴール板以遠まで含むホームストレッチ全長のため、NARでは括弧内の「ゴールまで」を final_straight_to_finish_m とし、全長を home_stretch_total_m に分離した。",
+   "elevation_difference_m は公式公表の「高低差」。NARで公式表記が「平坦」の場は 0.0 とし notes に明記した。",
+   "芝コースの数値はAコース（内柵最内）を正とし、B/C/Dコースは rail_variants に格納した。",
+   "first_corner_by_distance は公式（JRA-VAN等のJRA/NAR公式グループ含む）が距離別に公表する近似値（「約○m」）のみを、出典つきで格納した。公表が無い距離は空とし、推定・補間は一切していない。",
+   "straight_gradient（直線の勾配%）は公式が数値を公表する場（中山・中京・阪神）だけ notes 形式で格納し、それ以外は null（未公表）。",
+   "盛岡の直線は公式ガイドが芝・ダート共通表記のため両コース同値を格納した。"
+  ]
+ },
+ "venues": [
+  {
+   "venue": "札幌",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1640.9,
+     "final_straight_to_finish_m": 266.1,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 0.7,
+     "straight_gradient": null,
+     "width_m": "25-27",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1500,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1640.9,
+       "width_m": "25-27",
+       "final_straight_to_finish_m": 266.1
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1650.4,
+       "width_m": "22-25.5",
+       "final_straight_to_finish_m": 267.6
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1659.8,
+       "width_m": "19-25",
+       "final_straight_to_finish_m": 269.1
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 200,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01t1000.html"
+      },
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 400,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01t1200.html"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 180,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01t1800.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 380,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01t2000.html"
+      },
+      {
+       "race_distance_m": 2600,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 160,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01t2600.html"
+      }
+     ],
+     "shape_notes": [
+      "円形に近い形状でコーナー部分の割合が大きい（JRA公式紹介）",
+      "スパイラルカーブは採用されていない（JRA公式紹介）",
+      "芝はオール洋芝"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/sapporo/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1487.0,
+     "final_straight_to_finish_m": 264.3,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 0.9,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1700,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 280,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01d1000.html"
+      },
+      {
+       "race_distance_m": 1700,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 240,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01d1700.html"
+      },
+      {
+       "race_distance_m": 2400,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 197,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs01d2400.html"
+      }
+     ],
+     "shape_notes": [],
+     "source_url": "https://www.jra.go.jp/facilities/race/sapporo/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "函館",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1626.6,
+     "final_straight_to_finish_m": 262.1,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.5,
+     "straight_gradient": null,
+     "width_m": "29",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1700,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1626.6,
+       "width_m": "29",
+       "final_straight_to_finish_m": 262.1
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1651.8,
+       "width_m": "25",
+       "final_straight_to_finish_m": 262.1
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1675.8,
+       "width_m": "21-22",
+       "final_straight_to_finish_m": 264.5
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 290,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02t1000.html"
+      },
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 490,
+       "approx": true,
+       "source_name": "JRA-VAN 競馬場コース解説 函館芝1200m",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02t1200.html",
+       "provenance_class": "official-published"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 275,
+       "approx": true,
+       "source_name": "JRA-VAN 競馬場コース解説 函館芝1800m",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02t1800.html",
+       "provenance_class": "official-published"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 475,
+       "approx": true,
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02t2000.html",
+       "provenance_class": "official-published",
+       "cross_check_flag": "v1.0.0 の出典（JRA公式 今週の注目レース 函館記念）は約470mとしており、JRA-VAN コース解説の約475mと5m異なる。errata として記録し JRA-VAN 値を採用。"
+      }
+     ],
+     "shape_notes": [
+      "3・4コーナーにスパイラルカーブ（JRA公式紹介）",
+      "芝はオール洋芝",
+      "直線はJRA全場で最も短い（JRA公式紹介）"
+     ],
+     "source_url": "https://jra.jp/facilities/race/hakodate/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1475.8,
+     "final_straight_to_finish_m": 260.3,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.5,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1700,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 366,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02d1000.html"
+      },
+      {
+       "race_distance_m": 1700,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 329,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02d1700.html"
+      }
+     ],
+     "shape_notes": [],
+     "source_url": "https://jra.jp/facilities/race/hakodate/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "福島",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1600.0,
+     "final_straight_to_finish_m": 292.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 1.9,
+     "straight_gradient": null,
+     "width_m": "25-27",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1700,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1600.0,
+       "width_m": "25-27",
+       "final_straight_to_finish_m": 292.0
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1614.1,
+       "width_m": "22.5-25",
+       "final_straight_to_finish_m": 297.5
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1628.1,
+       "width_m": "20-23",
+       "final_straight_to_finish_m": 299.7
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 212,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03t1000.html"
+      },
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 412,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03t1200.html"
+      },
+      {
+       "race_distance_m": 1700,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 205,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03t1700.html"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 305,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03t1800.html",
+       "cross_check_flag": "JRA公式「今週の注目レース」福島牝馬ステークス解説も『1コーナーまでの距離は約300メートル』としており近似として整合する。"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 505,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03t2000.html"
+      }
+     ],
+     "shape_notes": [
+      "3・4コーナーにスパイラルカーブ（JRA公式紹介）",
+      "1周の間にアップダウンを2回繰り返す起伏構成（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/fukushima/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1444.6,
+     "final_straight_to_finish_m": 295.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.1,
+     "straight_gradient": null,
+     "width_m": "20-25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1150,
+      1700,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 330,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03d1000.html"
+      },
+      {
+       "race_distance_m": 1150,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 480,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03d1150.html"
+      },
+      {
+       "race_distance_m": 1700,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 338,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs03d1700.html"
+      }
+     ],
+     "shape_notes": [
+      "ダート1150mは芝スタート（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/fukushima/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "新潟",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "inner",
+     "direction": "left",
+     "lap_distance_m": 1623.0,
+     "final_straight_to_finish_m": 358.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 0.8,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1400,
+      2000,
+      2200,
+      2400
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1623.0,
+       "width_m": "25"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1648.1,
+       "width_m": "21"
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 448,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t1200.html"
+      },
+      {
+       "race_distance_m": 1400,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 648,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t1400.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 436,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t2000.html"
+      },
+      {
+       "race_distance_m": 2200,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 636,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t2200.html"
+      },
+      {
+       "race_distance_m": 2400,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 836,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t2400.html"
+      }
+     ],
+     "shape_notes": [
+      "3・4コーナーにスパイラルカーブ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/niigata/course/index.html"
+    },
+    {
+     "surface": "turf",
+     "variant": "outer",
+     "direction": "left",
+     "lap_distance_m": 2223.0,
+     "final_straight_to_finish_m": 658.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.2,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1400,
+      1600,
+      1800,
+      2000,
+      3000,
+      3200
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 2223.0,
+       "width_m": "25"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 2248.1,
+       "width_m": "21"
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 550,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t1600out.html"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 748,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t1800out.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 948,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t2000out.html"
+      }
+     ],
+     "shape_notes": [
+      "1周・直線とも日本最長（JRA公式紹介）",
+      "3・4コーナーにスパイラルカーブ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/niigata/course/index.html"
+    },
+    {
+     "surface": "turf",
+     "variant": "straight",
+     "direction": "straight",
+     "lap_distance_m": null,
+     "final_straight_to_finish_m": 1000.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": null,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 0,
+     "race_distances_m": [
+      1000
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1000,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": null,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs04t1000.html",
+       "cross_check_flag": "直線コースのためコーナー自体が存在しない（JRA-VANページで確認）。距離・角番号は構造的に該当なし。"
+      }
+     ],
+     "shape_notes": [
+      "直線1000m専用コース（国内唯一）。コーナーは無い",
+      "高低差はJRA公式コース表では外回り2.2m/内回り0.8mのみ公表され直線コース単独値は無い"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/niigata/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1472.5,
+     "final_straight_to_finish_m": 353.9,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 0.6,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1700,
+      1800,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "ダート1200mは芝スタート（JRA公式紹介）",
+      "3・4コーナーにスパイラルカーブ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/niigata/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "東京",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 2083.1,
+     "final_straight_to_finish_m": 525.9,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.7,
+     "straight_gradient": "直線の坂の高低差は約2m（区間460m→300m地点）。勾配%の公式公表値は無い",
+     "width_m": "31-41",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1400,
+      1600,
+      1800,
+      2000,
+      2300,
+      2400,
+      2500,
+      2600,
+      3400
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 2083.1,
+       "width_m": "31-41"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 2101.9,
+       "width_m": "28-38"
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 2120.8,
+       "width_m": "25-35"
+      },
+      {
+       "rail": "D",
+       "lap_distance_m": 2139.6,
+       "width_m": "22-32"
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 542,
+       "approx": true,
+       "source_name": "JRA-VAN 競馬場コース解説 東京芝1600m",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs05t1600.html",
+       "provenance_class": "official-published"
+      },
+      {
+       "race_distance_m": 2400,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 350,
+       "approx": true,
+       "source_name": "JRA-VAN 競馬場コース解説 東京芝2400m",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs05t2400.html",
+       "provenance_class": "official-published"
+      }
+     ],
+     "shape_notes": [
+      "直線の上り坂は残り460mから300m地点、高低差約2m（JRA公式紹介）",
+      "1周の間に2つの坂を上り下りする起伏構成（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/tokyo/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1899.0,
+     "final_straight_to_finish_m": 501.6,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.5,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1300,
+      1400,
+      1600,
+      2100,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "ダート1600mのみ芝スタート（JRA公式紹介）",
+      "直線の上り坂の高低差は2.4m（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/tokyo/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "中山",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "inner",
+     "direction": "right",
+     "lap_distance_m": 1667.1,
+     "final_straight_to_finish_m": 310.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 5.3,
+     "straight_gradient": "ゴール前急坂（残り180m→70m、高低差2.2m）の最大勾配2.24%＝JRA全10場最大（JRA公式紹介）",
+     "width_m": "20-32",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1800,
+      2000,
+      2500,
+      3200,
+      3600
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1667.1,
+       "width_m": "20-32"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1686.0,
+       "width_m": "17-29"
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1704.8,
+       "width_m": "14-26"
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 205,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs06t1800.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 405,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs06t2000.html"
+      },
+      {
+       "race_distance_m": 2500,
+       "first_corner_no": 4,
+       "distance_to_first_corner_m": 192,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs06t2500.html",
+       "cross_check_flag": "発走地点は外回りコースの3コーナー手前で、最初に通過する4コーナーまで約192m（Aコース時）。その後内回りコースへ合流する（JRA-VAN本文の記述に基づく）。"
+      }
+     ],
+     "shape_notes": [
+      "内回りは2・3コーナーのカーブがタイトな小回り（JRA公式紹介）",
+      "芝2500m（有馬記念）は発走地点が外回りコース上に設けられる（JRA公式紹介）"
+     ],
+     "source_url": "https://jra.jp/facilities/race/nakayama/course/index.html"
+    },
+    {
+     "surface": "turf",
+     "variant": "outer",
+     "direction": "right",
+     "lap_distance_m": 1839.7,
+     "final_straight_to_finish_m": 310.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 5.3,
+     "straight_gradient": "ゴール前急坂の最大勾配2.24%（JRA公式紹介）",
+     "width_m": "24-32",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1600,
+      2200,
+      2600,
+      3200,
+      4000
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1839.7,
+       "width_m": "24-32"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1858.5,
+       "width_m": "21-29"
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1877.3,
+       "width_m": "18-26"
+      }
+     ],
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "内回りと2コーナーで分岐し3コーナーで合流（JRA公式紹介）"
+     ],
+     "source_url": "https://jra.jp/facilities/race/nakayama/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1493.0,
+     "final_straight_to_finish_m": 308.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 4.5,
+     "straight_gradient": null,
+     "width_m": "20-25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1700,
+      1800,
+      2400,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "ダート1200mのみ芝スタート（JRA公式紹介）"
+     ],
+     "source_url": "https://jra.jp/facilities/race/nakayama/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "中京",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1705.9,
+     "final_straight_to_finish_m": 412.5,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.5,
+     "straight_gradient": "直線入口の上り坂は勾配約2%・高低差約2m（JRA公式紹介）",
+     "width_m": "28-30",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1300,
+      1400,
+      1600,
+      2000,
+      2200,
+      3000
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1705.9,
+       "width_m": "28-30"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1724.8,
+       "width_m": "25-27"
+      }
+     ],
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "3・4コーナーはスパイラルカーブ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/chukyo/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1530.0,
+     "final_straight_to_finish_m": 410.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.4,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1400,
+      1800,
+      1900,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "ダート1400mは芝スタート（JRA公式紹介）",
+      "3・4コーナーはスパイラルカーブ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/chukyo/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "京都",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "inner",
+     "direction": "right",
+     "lap_distance_m": 1782.8,
+     "final_straight_to_finish_m": 328.4,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.1,
+     "straight_gradient": null,
+     "width_m": "27-38",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1100,
+      1200,
+      1400,
+      1600,
+      2000
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1782.8,
+       "width_m": "27-38",
+       "final_straight_to_finish_m": 328.4
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1802.2,
+       "width_m": "24-35",
+       "final_straight_to_finish_m": 323.4
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1821.1,
+       "width_m": "21-32",
+       "final_straight_to_finish_m": 323.4
+      },
+      {
+       "rail": "D",
+       "lap_distance_m": 1839.9,
+       "width_m": "18-29",
+       "final_straight_to_finish_m": 323.4
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 700,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs08t1600.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 300,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs08t2000.html"
+      }
+     ],
+     "shape_notes": [
+      "3コーナーに坂（小高い丘）。それ以外はほぼ平坦で直線も平坦（JRA公式紹介）",
+      "内回り芝1600mは向正面奥の引き込み線からスタート（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/kyoto/course/index.html"
+    },
+    {
+     "surface": "turf",
+     "variant": "outer",
+     "direction": "right",
+     "lap_distance_m": 1894.3,
+     "final_straight_to_finish_m": 403.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 4.3,
+     "straight_gradient": null,
+     "width_m": "24-38",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1400,
+      1600,
+      1800,
+      2000,
+      2200,
+      2400,
+      3000,
+      3200
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1894.3,
+       "width_m": "24-38",
+       "final_straight_to_finish_m": 403.7
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1913.6,
+       "width_m": "21-35",
+       "final_straight_to_finish_m": 398.7
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1932.4,
+       "width_m": "18-32",
+       "final_straight_to_finish_m": 398.7
+      },
+      {
+       "rail": "D",
+       "lap_distance_m": 1951.3,
+       "width_m": "15-29",
+       "final_straight_to_finish_m": 398.7
+      }
+     ],
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "3コーナーの坂は向正面半ばから上り4コーナーにかけて下る（JRA公式紹介）",
+      "外回り芝1600m・1800mは向正面奥の引き込み線からスタート（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/kyoto/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1607.6,
+     "final_straight_to_finish_m": 329.1,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1100,
+      1200,
+      1400,
+      1800,
+      1900,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "ダート1400mは芝スタート（JRA公式紹介）",
+      "ダートにも3コーナーの丘がある（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/kyoto/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "阪神",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "inner",
+     "direction": "right",
+     "lap_distance_m": 1689.0,
+     "final_straight_to_finish_m": 356.5,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 1.9,
+     "straight_gradient": "ゴール前の急坂は高低差1.8m・勾配1.5%（JRA公式紹介）",
+     "width_m": "24-28",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1400,
+      2000,
+      2200,
+      3000,
+      3200
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1689.0,
+       "width_m": "24-28",
+       "final_straight_to_finish_m": 356.5
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1713.2,
+       "width_m": "20-25",
+       "final_straight_to_finish_m": 359.1
+      }
+     ],
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 243,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09t1200.html"
+      },
+      {
+       "race_distance_m": 1400,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 443,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09t1400.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 325,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09t2000.html"
+      },
+      {
+       "race_distance_m": 2200,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 525,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09t2200.html",
+       "cross_check_flag": "発走地点は外回りコースの4コーナー出口で、3・4コーナーは内回りコースを使用する（JRA-VAN本文）。"
+      }
+     ],
+     "shape_notes": [
+      "内回り芝1200mと外回り芝1600mは発走地点が同じ（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/hanshin/course/index.html"
+    },
+    {
+     "surface": "turf",
+     "variant": "outer",
+     "direction": "right",
+     "lap_distance_m": 2089.0,
+     "final_straight_to_finish_m": 473.6,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.4,
+     "straight_gradient": "ゴール前の急坂は高低差1.8m・勾配1.5%（JRA公式紹介）",
+     "width_m": "24-29",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1400,
+      1600,
+      1800,
+      2400,
+      2600,
+      3200
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 2089.0,
+       "width_m": "24-29",
+       "final_straight_to_finish_m": 473.6
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 2113.2,
+       "width_m": "20-25",
+       "final_straight_to_finish_m": 476.3
+      }
+     ],
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "右回りでは日本最長の1周（JRA公式紹介）",
+      "バックストレッチが非常に長い（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/hanshin/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1517.6,
+     "final_straight_to_finish_m": 352.7,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 1.6,
+     "straight_gradient": null,
+     "width_m": "22-25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1400,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 342,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09d1200.html"
+      },
+      {
+       "race_distance_m": 1400,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 542,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "JRA-VAN コース解説",
+       "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs09d1400.html"
+      }
+     ],
+     "shape_notes": [
+      "ダート1400m・2000mは芝スタート（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/hanshin/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "小倉",
+   "box": "jra",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1615.1,
+     "final_straight_to_finish_m": 293.0,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 3.0,
+     "straight_gradient": null,
+     "width_m": "30",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1700,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": [
+      {
+       "rail": "A",
+       "lap_distance_m": 1615.1,
+       "width_m": "30"
+      },
+      {
+       "rail": "B",
+       "lap_distance_m": 1633.9,
+       "width_m": "27"
+      },
+      {
+       "rail": "C",
+       "lap_distance_m": 1652.8,
+       "width_m": "24"
+      }
+     ],
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "3・4コーナーにスパイラルカーブ、直線は平坦で坂は無い（JRA公式紹介）",
+      "2コーナーに小高い丘（芝全体の高低差3mの主因）（JRA公式紹介）",
+      "芝1200mは2コーナー奥のポケットからスタートしゴールまで上り勾配の局面がほとんどない（JRA公式紹介）"
+     ],
+     "source_url": "https://www.jra.go.jp/facilities/race/kokura/course/index.html"
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1445.4,
+     "final_straight_to_finish_m": 291.3,
+     "home_stretch_total_m": null,
+     "elevation_difference_m": 2.9,
+     "straight_gradient": null,
+     "width_m": "24",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1700,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [],
+     "source_url": "https://www.jra.go.jp/facilities/race/kokura/course/index.html"
+    }
+   ]
+  },
+  {
+   "venue": "門別",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "outer",
+     "direction": "right",
+     "lap_distance_m": 1600.0,
+     "final_straight_to_finish_m": 330.0,
+     "home_stretch_total_m": 400.0,
+     "elevation_difference_m": 1.54,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1100,
+      1200,
+      1700,
+      1800,
+      2000,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": null,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1103_JBCnisaiyushun/introduction.html",
+       "cross_check_flag": "『300m弱』とのみ公表されており確定した数値がないため、距離は空欄とし角番号のみ記録した。"
+      }
+     ],
+     "shape_notes": [
+      "直線が長くカーブが緩いコース形態（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック コース図（門別）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2024/sougou_3.pdf"
+     }
+    },
+    {
+     "surface": "dirt",
+     "variant": "inner",
+     "direction": "right",
+     "lap_distance_m": 1376.0,
+     "final_straight_to_finish_m": 218.0,
+     "home_stretch_total_m": 288.0,
+     "elevation_difference_m": 1.54,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1500,
+      1600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック コース図（門別）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2024/sougou_3.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "盛岡",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "turf",
+     "variant": "outer",
+     "direction": "left",
+     "lap_distance_m": 1400.0,
+     "final_straight_to_finish_m": 300.0,
+     "home_stretch_total_m": 400.0,
+     "elevation_difference_m": 4.6,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1600,
+      1700,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "地方競馬で唯一の芝コース併設場。直線・高低差とも地方最大級（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "岩手競馬公式サイト 盛岡競馬場コース案内（設定距離）",
+      "source_url": "https://www.iwatekeiba.or.jp/oro_01"
+     }
+    },
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1600.0,
+     "final_straight_to_finish_m": 300.0,
+     "home_stretch_total_m": 400.0,
+     "elevation_difference_m": 4.4,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1400,
+      1600,
+      1800,
+      2000,
+      2500,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": 500,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/0811_clustercup/introduction.html",
+       "cross_check_flag": "ページは『最初のカーブ』とのみ記し角番号を明示しないため角番号は空欄。"
+      },
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 900,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1012_milechampionshipnambuhai/introduction.html",
+       "cross_check_flag": "岩手競馬公式コースツアーは同距離を約700mとしており、公式情報の間でも値が異なる。本マスタはNAR特設サイトの約900mを採用した。"
+      }
+     ],
+     "shape_notes": [],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "岩手競馬公式サイト 盛岡競馬場コース案内（設定距離）",
+      "source_url": "https://www.iwatekeiba.or.jp/oro_01"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "水沢",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1200.0,
+     "final_straight_to_finish_m": 245.0,
+     "home_stretch_total_m": 317.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      850,
+      1300,
+      1400,
+      1600,
+      1800,
+      1900,
+      2000,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "高低差0mと公式表記（平坦）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "岩手競馬公式サイト 水沢競馬場案内／NAR総合ガイドブック コース図",
+      "source_url": "https://www.iwatekeiba.or.jp/mizusawakeiba/mizu_02"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "浦和",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1200.0,
+     "final_straight_to_finish_m": 220.0,
+     "home_stretch_total_m": 300.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "16-21.5",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      800,
+      1300,
+      1400,
+      1500,
+      1600,
+      1900,
+      2000
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1400,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 280,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/0923_ovalsprint/introduction.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": 2,
+       "distance_to_first_corner_m": 300,
+       "approx": true,
+       "source_name": "NAR公式 ダートグレード競走特設サイト 浦和記念 レース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2021/1123_urawakinen/introduction.html",
+       "provenance_class": "official-published"
+      }
+     ],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "3コーナーが仕掛けどころ（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/"
+    }
+   ]
+  },
+  {
+   "venue": "船橋",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "outer",
+     "direction": "left",
+     "lap_distance_m": 1400.0,
+     "final_straight_to_finish_m": 308.0,
+     "home_stretch_total_m": 362.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1500,
+      1600,
+      1700,
+      1800,
+      2000,
+      2200,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 250,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2021/0505_kashiwakinen/introduction.html"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": 450,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/0930_nippontvhai/introduction.html",
+       "cross_check_flag": "発走は4コーナーのポケット。ページは最初のコーナーの番号を明示しないため角番号は空欄。"
+      }
+     ],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "コーナーの内外に高低差を付けたスパイラルカーブ（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（船橋）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_3_funabashi.pdf"
+     }
+    },
+    {
+     "surface": "dirt",
+     "variant": "inner",
+     "direction": "left",
+     "lap_distance_m": 1250.0,
+     "final_straight_to_finish_m": 308.0,
+     "home_stretch_total_m": 362.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1400,
+      1500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "直線距離は外回りと共通表記（NAR公式ガイドは内外を分けていない）",
+      "内回りは2006年を最後に本競走では未使用とされるが公式ガイド上は現行コースとして掲載"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（船橋）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_3_funabashi.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "大井",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "outer_right",
+     "direction": "right",
+     "lap_distance_m": 1600.0,
+     "final_straight_to_finish_m": 386.0,
+     "home_stretch_total_m": 486.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1000,
+      1200,
+      1400,
+      1650,
+      1700,
+      1800,
+      2000,
+      2400,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1200,
+       "first_corner_no": 3,
+       "distance_to_first_corner_m": 500,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1008_tokyohai/introduction.html"
+      },
+      {
+       "race_distance_m": 1800,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 300,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1006_ladiesprelude/introduction.html"
+      },
+      {
+       "race_distance_m": 2000,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": 500,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1007_japandirtclassic/introduction.html",
+       "cross_check_flag": "発走は4コーナー付近。ページは最初のコーナーの番号を明示しないため角番号は空欄。"
+      }
+     ],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "外回りは世界唯一の左右両回り併用コース（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/"
+    },
+    {
+     "surface": "dirt",
+     "variant": "outer_left",
+     "direction": "left",
+     "lap_distance_m": 1600.0,
+     "final_straight_to_finish_m": 300.0,
+     "home_stretch_total_m": 486.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1200,
+      1400,
+      1600,
+      1700,
+      1800,
+      2000
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "左回りの発走距離は公式PDFの左回りコース図による（ガイド表は左右共通の距離図）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/"
+    },
+    {
+     "surface": "dirt",
+     "variant": "inner",
+     "direction": "right",
+     "lap_distance_m": 1400.0,
+     "final_straight_to_finish_m": 286.0,
+     "home_stretch_total_m": 386.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      1500,
+      1600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [],
+     "source_url": "https://www.keiba.go.jp/guide/course/"
+    }
+   ]
+  },
+  {
+   "venue": "川崎",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "left",
+     "lap_distance_m": 1200.0,
+     "final_straight_to_finish_m": 300.0,
+     "home_stretch_total_m": 400.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      900,
+      1400,
+      1500,
+      1600,
+      2000,
+      2100
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1600,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": 500,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2025/1217_zen-nipponnisaiyushun/introduction.html",
+       "cross_check_flag": "発走は4コーナーのポケット。ページは最初のコーナーの番号を明示しないため角番号は空欄。"
+      },
+      {
+       "race_distance_m": 2100,
+       "first_corner_no": 2,
+       "distance_to_first_corner_m": 400,
+       "approx": true,
+       "source_name": "NAR公式 ダートグレード競走特設サイト 川崎記念 レース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2024/0403_kawasakikinen/introduction.html",
+       "provenance_class": "official-published"
+      }
+     ],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "タイトなコーナー（NAR公式ガイド）",
+      "コーナーを6回通過する2100m等、周回数の多い距離設定がある"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/"
+    }
+   ]
+  },
+  {
+   "venue": "金沢",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1200.0,
+     "final_straight_to_finish_m": 236.0,
+     "home_stretch_total_m": 286.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      900,
+      1300,
+      1400,
+      1500,
+      1700,
+      1900,
+      2000,
+      2100,
+      2300,
+      2600
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [
+      {
+       "race_distance_m": 1400,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": null,
+       "approx": false,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1103_JBCsprint/introduction.html",
+       "cross_check_flag": "『300m弱』とのみ公表されており確定した数値がないため、距離は空欄とし角番号のみ記録した。"
+      },
+      {
+       "race_distance_m": 1500,
+       "first_corner_no": 1,
+       "distance_to_first_corner_m": 400,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2021/1103_JBCladiesclassic/introduction.html",
+       "cross_check_flag": "2026年版ページは1400mと同一文面で『300m弱』とするが転記誤りとみられるため、2021年版ページの約400mを採用した。"
+      },
+      {
+       "race_distance_m": 2100,
+       "first_corner_no": null,
+       "distance_to_first_corner_m": 350,
+       "approx": true,
+       "provenance_class": "official-published",
+       "source_name": "地方競馬情報サイト ダートグレード競走特設サイト コース紹介",
+       "source_url": "https://www.keiba.go.jp/dirtgraderace/2026/1103_JBCclassic/introduction.html",
+       "cross_check_flag": "ページは最初のコーナーの番号を明示しないため角番号は空欄。"
+      }
+     ],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "4つのコーナーすべてにポケットが設けられている（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック コース図（金沢）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2023/sougou_3_kanazawa.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "笠松",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1100.0,
+     "final_straight_to_finish_m": 201.0,
+     "home_stretch_total_m": 238.0,
+     "elevation_difference_m": 1.92,
+     "straight_gradient": null,
+     "width_m": "20",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      800,
+      1400,
+      1580,
+      1800,
+      1900,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "向正面の直線距離は251m（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（笠松）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_3_kasamatsu.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "名古屋",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1180.0,
+     "final_straight_to_finish_m": 240.0,
+     "home_stretch_total_m": 300.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "30",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      900,
+      920,
+      1400,
+      1500,
+      1700,
+      2000,
+      2100
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "高低差は公式表記「平坦」",
+      "第3・第4コーナーは入口から出口にかけて半径が小さくなるスパイラルカーブ（NAR公式ガイド）",
+      "2022年移転後の現コース（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2025 コース図（名古屋・現行コース）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2025/sougou_3.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "園田",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1051.0,
+     "final_straight_to_finish_m": 213.0,
+     "home_stretch_total_m": 241.0,
+     "elevation_difference_m": 1.23,
+     "straight_gradient": null,
+     "width_m": "20-24",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      820,
+      1230,
+      1400,
+      1700,
+      1870,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "向正面の直線距離は246m（NAR公式ガイド）",
+      "向正面から3コーナーにかけて高低差1.2mの上り坂（NAR公式ガイド）",
+      "日本で1周が最も短い競馬場（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（園田）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_3_sonodahimeji.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "姫路",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1200.0,
+     "final_straight_to_finish_m": 230.0,
+     "home_stretch_total_m": 350.0,
+     "elevation_difference_m": 0.0,
+     "straight_gradient": null,
+     "width_m": "20-25",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      800,
+      1400,
+      1500,
+      1800,
+      2000
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "高低差0mと公式表記（平坦）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（姫路）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_3_sonodahimeji.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "高知",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1100.0,
+     "final_straight_to_finish_m": 200.0,
+     "home_stretch_total_m": 230.0,
+     "elevation_difference_m": 1.58,
+     "straight_gradient": null,
+     "width_m": "22-27",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      800,
+      1000,
+      1300,
+      1400,
+      1600,
+      1800,
+      1900,
+      2100,
+      2400
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [
+      "3・4コーナーに比べ1・2コーナーの半径が小さい（NAR公式ガイド）"
+     ],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2026 コース図（高知）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2026/sougou_2_kouchi.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "venue": "佐賀",
+   "box": "nar",
+   "courses": [
+    {
+     "surface": "dirt",
+     "variant": "standard",
+     "direction": "right",
+     "lap_distance_m": 1100.0,
+     "final_straight_to_finish_m": 200.0,
+     "home_stretch_total_m": 250.0,
+     "elevation_difference_m": 1.0,
+     "straight_gradient": null,
+     "width_m": "19.2-24",
+     "corner_count_per_lap": 4,
+     "race_distances_m": [
+      900,
+      1300,
+      1400,
+      1750,
+      1800,
+      1860,
+      2000,
+      2400,
+      2500
+     ],
+     "rail_variants": null,
+     "first_corner_by_distance": [],
+     "shape_notes": [],
+     "source_url": "https://www.keiba.go.jp/guide/course/",
+     "race_distances_source": {
+      "source_name": "NAR 地方競馬総合ガイドブック2025 コース図（佐賀）",
+      "source_url": "https://www.keiba.go.jp/pdf/about/sougou/2025/sougou_3.pdf"
+     }
+    }
+   ]
+  }
+ ],
+ "changelog": [
+  {
+   "version": "1.1.0",
+   "date": "2026-11-08",
+   "changes": [
+    "初角距離を拡充（出典クラス別に内訳を記録）: official-published 52件、 derived-from-official 0件。",
+    "地方の発走距離一覧を追加: 門別 dirt|outer、門別 dirt|inner、盛岡 turf|outer、盛岡 dirt|standard、水沢 dirt|standard、船橋 dirt|outer、船橋 dirt|inner、金沢 dirt|standard、笠松 dirt|standard、名古屋 dirt|standard、園田 dirt|standard、姫路 dirt|standard、高知 dirt|standard、佐賀 dirt|standard。",
+    "全数値の出典照合を実施し、v1.0.0 の誤りを errata として記録・v1.1.0 で修正: 1件（函館 芝2000m 初角距離 470→475m、出典差し替え）。",
+    "障害コースは対象外のまま（障害専用マスタは障害モデルと一体で将来構築する旨を明記）。",
+    "v1.0.0 から引き継いだ初角エントリ6件にも provenance_class (official-published) を補記した（値の変更なし）。"
+   ],
+   "first_corner_added_official_published": [
+    "札幌 turf standard 1000m",
+    "札幌 turf standard 1200m",
+    "札幌 turf standard 1800m",
+    "札幌 turf standard 2000m",
+    "札幌 turf standard 2600m",
+    "札幌 dirt standard 1000m",
+    "札幌 dirt standard 1700m",
+    "札幌 dirt standard 2400m",
+    "函館 turf standard 1000m",
+    "函館 dirt standard 1000m",
+    "函館 dirt standard 1700m",
+    "福島 turf standard 1000m",
+    "福島 turf standard 1200m",
+    "福島 turf standard 1700m",
+    "福島 turf standard 1800m",
+    "福島 turf standard 2000m",
+    "福島 dirt standard 1000m",
+    "福島 dirt standard 1150m",
+    "福島 dirt standard 1700m",
+    "新潟 turf inner 1200m",
+    "新潟 turf inner 1400m",
+    "新潟 turf inner 2000m",
+    "新潟 turf inner 2200m",
+    "新潟 turf inner 2400m",
+    "新潟 turf outer 1600m",
+    "新潟 turf outer 1800m",
+    "新潟 turf outer 2000m",
+    "新潟 turf straight 1000m",
+    "中山 turf inner 1800m",
+    "中山 turf inner 2000m",
+    "中山 turf inner 2500m",
+    "京都 turf inner 1600m",
+    "京都 turf inner 2000m",
+    "阪神 turf inner 1200m",
+    "阪神 turf inner 1400m",
+    "阪神 turf inner 2000m",
+    "阪神 turf inner 2200m",
+    "阪神 dirt standard 1200m",
+    "阪神 dirt standard 1400m",
+    "大井 dirt outer_right 2000m",
+    "大井 dirt outer_right 1800m",
+    "大井 dirt outer_right 1200m",
+    "船橋 dirt outer 1800m",
+    "船橋 dirt outer 1600m",
+    "盛岡 dirt standard 1600m",
+    "盛岡 dirt standard 1200m",
+    "門別 dirt outer 1800m",
+    "金沢 dirt standard 2100m",
+    "金沢 dirt standard 1400m",
+    "金沢 dirt standard 1500m",
+    "川崎 dirt standard 1600m",
+    "浦和 dirt standard 1400m"
+   ],
+   "first_corner_added_derived_from_official": [],
+   "errata_corrected": [
+    {
+     "venue": "函館",
+     "surface": "turf",
+     "variant": "standard",
+     "race_distance_m": 2000,
+     "field": "first_corner_by_distance.distance_to_first_corner_m",
+     "stored_v1.0.0": 470,
+     "corrected_v1.1.0": 475,
+     "reason": "v1.0.0 は JRA公式『今週の注目レース』函館記念ページの約470mを採用していたが、コース解説の系統出典である JRA-VAN コース解説は約475mとする。系統出典に合わせて v1.1.0 で修正した（出典も JRA-VAN へ差し替え）。",
+     "source_name": "JRA-VAN コース解説",
+     "source_url": "https://ts31sugo.jra-van.jp/sugotoku/crs/crs02t2000.html"
+    }
+   ]
+  }
+ ]
+}
