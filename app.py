@@ -4498,6 +4498,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         wm=re.search(r"天候\s*[：:]?\s*(小雨|小雪|晴|曇|雨|雪)",full)
         cm=re.search(r"馬場(?:状態)?\s*[：:]?\s*(不良|稍重|重|良)",full)
         finishers=[]
+        non_finishers=[]
         for table in soup.find_all("table"):
             rows=table.find_all("tr")
             if not rows:continue
@@ -4526,8 +4527,6 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                     return vals[j] if j>=0 and j<len(vals) else ""
                 fin_txt=val("fin") or vals[0]
                 mf=re.match(r"^\s*(\d+)\s*$",fin_txt)
-                if not mf:continue
-                fin=int(mf.group(1))
                 name=val("name")
                 no=0
                 mno=re.search(r"\d+",val("no")) if val("no") else None
@@ -4538,6 +4537,42 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                         if nm and nm in _clean(tr.get_text(" ",strip=True)):
                             no=hno;name=name or nm;break
                 if not no:continue
+                if not mf:
+                    # A horse that started but did not finish (競走中止
+                    # etc.) has no numeric placing: the official table
+                    # still accounts for it (blank 着順, status text in
+                    # the 着順 or 着差 cell). Record it as a
+                    # non-finisher so the stored result accounts for
+                    # the whole field; dropping the row silently left
+                    # races such as 2026-11-07 Kochi 5R (2番 ゲクウ,
+                    # 中止) one horse short in the named audit's
+                    # finisher_completeness check. Status text is taken
+                    # only from the row itself, never guessed: the
+                    # 着順 cell's own text if non-empty, else the 着差
+                    # cell when it carries a known non-finisher marker.
+                    margin_cell=val("margin")
+                    status_txt=""
+                    if str(fin_txt or "").strip():
+                        status_txt=str(fin_txt).strip()
+                    elif any(m in margin_cell for m in (
+                            "中止","競走中止","失格","落馬","転倒",
+                            "競走除外","出走取消")):
+                        status_txt=margin_cell.strip()
+                    if not status_txt:continue
+                    if any(int(x.get("horseNumber") or 0)==no for x in non_finishers):continue
+                    bw_nf=None;chg_nf=None
+                    bwtxt_nf=val("bw") or _clean(tr.get_text(" ",strip=True))
+                    mbw_nf=re.search(r"(?<!\d)(\d{3,4})\s*(?:kg)?\s*[（(]\s*([+\-]?\d+)\s*[）)]",bwtxt_nf)
+                    if mbw_nf:bw_nf=int(mbw_nf.group(1));chg_nf=int(mbw_nf.group(2))
+                    non_finishers.append({
+                        "horseNumber":no,
+                        "name":name or next((nm for nm,hno in known.items() if hno==no),""),
+                        "finish":0,"finishLabel":status_txt,"status":status_txt,
+                        "marginText":margin_cell,
+                        "bodyWeight":bw_nf,"bodyWeightChange":chg_nf,
+                    })
+                    continue
+                fin=int(mf.group(1))
                 fr=0;mfr=re.search(r"\d+",val("frame")) if val("frame") else None
                 if mfr:fr=int(mfr.group())
                 bw=None;chg=None
@@ -4588,6 +4623,7 @@ def _nar_official_result_fast(detail:dict)->dict|None:
         payouts=_parse_payouts(soup)
         explicit_final=official_confirmed(full)
         out={"status":"確定" if explicit_final else "速報","finishers":finishers,"source":"NAR公式競走成績","payouts":payouts}
+        if non_finishers:out["nonFinishers"]=non_finishers
         laps=_nar_race_lap_times(soup)
         if laps:out["raceLapTimes"]=laps
         if wm:out["weather"]=_env_clean_weather(wm.group(1))
