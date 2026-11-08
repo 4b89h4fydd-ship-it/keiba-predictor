@@ -319,6 +319,30 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         combination_violations.extend(payout_combination_violations(by_id.get(rid)))
     # === standing audit check: payout_combination_shape (end) ===
 
+    # === standing audit: named checks (begin) ===
+    # The same independent named checks the workflow's final verify
+    # step runs (arvexq.results.audit), applied here to the post-repair
+    # bundle state so the repair report itself names every failure by
+    # check and race instead of only result_missing / payout_missing.
+    # save_read_back is not judged here (nothing has been saved yet);
+    # the workflow audit judges it against the D1 read-back.
+    from arvexq.results.audit import audit_detail, summarise
+
+    audit_failures: list[dict[str, Any]] = []
+    for rid in started_ids:
+        row = summary_by_id[rid]
+        audit_failures.extend(audit_detail(
+            by_id.get(rid),
+            expected_race_id=rid,
+            expected_identity={
+                "date": row.get("date") or "",
+                "track": row.get("track") or "",
+                "raceNumber": row.get("raceNumber") or row.get("raceNo") or "",
+            },
+            now=now, retry_state="in_repair_report"))
+    audit_by_check = summarise(audit_failures)
+    # === standing audit: named checks (end) ===
+
     payload_by_id: dict[str, dict[str, Any]] = {
         str(by_id[rid]["id"]): by_id[rid]
         for rid in sorted(published | repaired)
@@ -348,6 +372,11 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
             "payout_combination_violation_count": len(combination_violations),
+            "audit_failure_count": len(audit_failures),
+            "audit_failures_by_check": {
+                name: bucket["failure_count"]
+                for name, bucket in audit_by_check.items()
+            },
             "result_detail_write_count": len(detail_payload),
             "result_repair_complete": not unresolved and not payout_missing,
             "result_repair_at": int(now.timestamp()),
@@ -363,6 +392,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "result_missing": unresolved,
         "payout_missing": payout_missing,
         "payout_combination_violations": combination_violations,
+        "audit_failures": audit_failures,
+        "audit_by_check": audit_by_check,
         "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)
@@ -384,6 +415,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         print("PAYOUT_MISSING", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     for item in combination_violations:
         print("PAYOUT_COMBINATION_VIOLATION", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
+    for item in audit_failures:
+        print("RESULT_AUDIT_FAILURE", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     return 0
 
 
