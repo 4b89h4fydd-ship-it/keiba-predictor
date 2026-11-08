@@ -60,6 +60,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
           python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
 
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
@@ -228,6 +229,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
           python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
 
       - name: Set sync date
         run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date -d yesterday +%F)" >> "$GITHUB_ENV"

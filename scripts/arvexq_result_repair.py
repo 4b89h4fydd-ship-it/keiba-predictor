@@ -154,6 +154,83 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
         print("RESULT_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
 
 
+_ENV_UNKNOWN = (None, "", "不明")
+
+
+def _fill_missing_environment(
+    by_id: dict[str, Any],
+    summary_by_id: dict[str, Any],
+    race_ids: list[str],
+    fetch_env: Any,
+    limit: int = 12,
+) -> list[str]:
+    """Backfill JRA weather/going on started races whose stored detail
+    still carries the list builder's placeholder.
+
+    JRA summary rows are born with weather/condition "不明" (the
+    netkeiba list builder hardcodes them), and the values only ever
+    landed when a best-effort live refresh or an official-result
+    merge happened to run for that race: on 2026-11-07/08, 44 of 72
+    JRA races (all of Kyoto/Tokyo) kept the placeholder permanently,
+    while Fukushima — refreshed successfully — had none. The fetch
+    machinery itself works (official result page, then the netkeiba
+    race page, inside app._jra_fetch_environment); nothing steady
+    called it per race. This pass is that steady call, scoped to
+    races this lane already owns: started, JRA, values still unknown.
+    Only values the fetcher actually observed are written; existing
+    values are never overwritten. Attempts are capped per run (the
+    lane runs every few minutes, so a day's backlog drains over
+    consecutive runs instead of bursting the official site).
+    """
+    filled: list[str] = []
+    attempts = 0
+    for rid in race_ids:
+        if attempts >= max(0, int(limit)):
+            break
+        if not str(rid).startswith("jra-"):
+            continue
+        detail = by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        missing = [k for k in ("weather", "condition")
+                   if detail.get(k) in _ENV_UNKNOWN]
+        if not missing:
+            continue
+        attempts += 1
+        row = summary_by_id.get(rid) or {}
+        probe = {
+            "date": detail.get("date") or row.get("date") or "",
+            "track": detail.get("track") or row.get("track") or "",
+            "raceNumber": detail.get("raceNumber")
+            or row.get("raceNumber") or row.get("raceNo") or 0,
+            "surface": detail.get("surface") or row.get("surface") or "",
+            "jraCname": detail.get("jraCname") or "",
+        }
+        try:
+            env = fetch_env(probe) or {}
+        except Exception as exc:
+            print("RESULT_ENV_FILL_ERROR", rid, type(exc).__name__, exc)
+            continue
+        changed = False
+        for key in missing:
+            value = env.get(key)
+            if value not in _ENV_UNKNOWN:
+                detail[key] = value
+                if isinstance(summary_by_id.get(rid), dict):
+                    summary_by_id[rid][key] = value
+                changed = True
+        if changed:
+            detail["environmentMeta"] = {
+                "source": env.get("source") or "JRA公式優先",
+                "updatedAtEpoch": int(time.time()),
+                "filledBy": "result-repair-env-backfill",
+            }
+            filled.append(rid)
+            print("RESULT_ENV_FILLED", rid,
+                  detail.get("weather"), detail.get("condition"))
+    return filled
+
+
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
     bundle = _read_json(bundle_path)
     # The D1 calendar can retain retired Banei summary IDs without detail
@@ -256,6 +333,17 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             unresolved_now = [rid for rid in todo if not all(result_state(by_id.get(rid))[:2])]
             if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
+
+    # Environment backfill: races whose result/payout are already
+    # complete are never refreshed above, so a stored JRA placeholder
+    # ("不明" weather/going from the list builder) would otherwise
+    # survive forever. Fill the ones the official fetcher can observe
+    # now and publish them with this run's payload.
+    environment_filled = _fill_missing_environment(
+        by_id, summary_by_id, started_ids, app._jra_fetch_environment,
+        int(os.getenv("ARVEXQ_RESULT_ENV_FILL_LIMIT", "12")))
+    for rid in environment_filled:
+        published.add(rid)
 
     # Marks-consistency heal: the candidates were healed from the
     # bundle copies above; register them for publication (the payload
@@ -368,6 +456,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "result_pending_before": len(pending),
             "result_repaired_count": len(repaired),
             "marks_healed_count": len(marks_healed),
+            "environment_filled_count": len(environment_filled),
             "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
@@ -388,6 +477,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "pending_before": len(pending),
         "repaired": sorted(repaired),
         "marks_healed": sorted(marks_healed),
+        "environment_filled": sorted(environment_filled),
         "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
