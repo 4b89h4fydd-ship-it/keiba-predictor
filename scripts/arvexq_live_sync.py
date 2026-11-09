@@ -13,6 +13,7 @@ import argparse
 import copy
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -511,6 +512,105 @@ def preserve_present_weights(
     return merged
 
 
+# Odds-provenance repair window (2026-11-09, direct-acquisition
+# plan §7.1): the official OddsTanFuku fetch/parse leg is exact
+# (verified 11/11 win, place, popularity and weight on a captured
+# live page), but a stored detail's win odds only change when some
+# non-market field forces a full write — the durable-write gate
+# strips every market field before fingerprinting, so an odds-only
+# refresh lands in the odds_current side table and never in the
+# detail's horses. A detail first written in the morning therefore
+# keeps the day's first, tiny-pool official capture (coarse repeated
+# values: Morioka 4R 2026-11-09 served 26.0 for four horses and
+# 52.0 for four more, frozen from before 12:45 until after post,
+# while the official page moved every few minutes) under a
+# "NAR公式" label all day. A stored NAR race whose win odds are
+# missing, not official-sourced, or stale is therefore an explicit
+# sync target on every run while its post is still ahead, and for
+# these targets the refreshed detail is written in full so the
+# official values at fetch time are what the detail stores.
+ODDS_REPAIR_MIN_LEAD_MIN = 10
+ODDS_REPAIR_MAX_LEAD_MIN = 240
+ODDS_REPAIR_STALE_MIN = 20
+MAX_ODDS_REPAIR_PROBES = 16
+
+
+def _odds_stamp_minutes(value: Any) -> int | None:
+    """Minutes-of-day for a stored oddsUpdatedAt stamp.
+
+    Details carry either a time-of-day ("10:22:30") or a full ISO
+    stamp; anything else is unparseable and counts as missing.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    m = re.match(r"^(\d{1,2}):(\d{2})", value.strip())
+    if m:
+        return int(m.group(1)) * 60 + int(m.group(2))
+    parsed = _stamp(value)
+    return parsed.hour * 60 + parsed.minute if parsed else None
+
+
+def _stored_odds_need_repair(detail: dict[str, Any], now_min: int) -> bool:
+    horses = detail.get("horses")
+    if not isinstance(horses, list) or not horses:
+        return False
+    active = []
+    for h in horses:
+        if not isinstance(h, dict):
+            continue
+        if h.get("scratched") or str(h.get("status") or "") in _SCRATCH_STATUSES:
+            continue
+        active.append(h)
+    if not active:
+        return False
+    for h in active:
+        odds = h.get("winOdds")
+        if not isinstance(odds, (int, float)) or isinstance(odds, bool) or odds <= 0:
+            return True
+        if str(h.get("oddsSource") or "") != "NAR公式":
+            return True
+    stamp = _odds_stamp_minutes(detail.get("oddsUpdatedAt"))
+    if stamp is None:
+        return True
+    return abs(now_min - stamp) > ODDS_REPAIR_STALE_MIN
+
+
+def odds_repair_targets(
+    rows: list[dict[str, Any]],
+    details_by_id: dict[str, dict[str, Any]],
+    now_min: int,
+) -> list[str]:
+    """Ids of unstarted NAR races whose stored win odds are not the
+    current official values.
+
+    A race qualifies only when it is a NAR race (nar- id), its post
+    is between ODDS_REPAIR_MIN_LEAD_MIN and ODDS_REPAIR_MAX_LEAD_MIN
+    minutes away, and its stored detail is readable and fails the
+    official-freshness check (any active runner missing win odds,
+    any active runner's odds not sourced from the official page, or
+    an odds stamp missing/stale). Anything unreadable does not
+    qualify (fail-closed: ordinary targeting still applies).
+    """
+    found: list[tuple[int, str]] = []
+    for r in rows:
+        rid = str(r.get("id") or "")
+        if not rid.startswith("nar-"):
+            continue
+        sm = start_min(r)
+        if sm >= 9999:
+            continue
+        lead = sm - now_min
+        if lead < ODDS_REPAIR_MIN_LEAD_MIN or lead > ODDS_REPAIR_MAX_LEAD_MIN:
+            continue
+        detail = details_by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        if _stored_odds_need_repair(detail, now_min):
+            found.append((sm, rid))
+    found.sort()
+    return [rid for _sm, rid in found]
+
+
 def env_repair_targets(
     rows: list[dict[str, Any]],
     details_by_id: dict[str, dict[str, Any]],
@@ -969,6 +1069,45 @@ def main() -> int:
     if weight_repair:
         print("WEIGHT_REPAIR_TARGETS", len(weight_repair), ",".join(weight_repair))
 
+    # Odds-provenance repair (§7.1): the same probe pattern for NAR
+    # races whose stored win odds are missing, not official-sourced,
+    # or stale. The durable-write gate never rewrites a detail for
+    # an odds-only change, so without an explicit target these races
+    # keep their first, tiny-pool capture under an official label
+    # until some unrelated field forces a write. For these targets
+    # the refreshed detail is written in full below, so the stored
+    # horses carry the official values at fetch time.
+    odds_probe_rows = sorted(
+        (r for r in rows
+         if str(r.get("id") or "").startswith("nar-")
+         and str(r.get("id") or "") not in targets
+         and str(r.get("id") or "") not in base_by_id
+         and start_min(r) < 9999
+         and ODDS_REPAIR_MIN_LEAD_MIN <= start_min(r) - now_min <= ODDS_REPAIR_MAX_LEAD_MIN),
+        key=start_min,
+    )[:MAX_ODDS_REPAIR_PROBES]
+    if odds_probe_rows:
+        with ThreadPoolExecutor(max_workers=min(8, len(odds_probe_rows))) as ex:
+            futures = {
+                ex.submit(fetch_d1_detail, str(r.get("id") or "")): str(r.get("id") or "")
+                for r in odds_probe_rows
+            }
+            for fut in as_completed(futures):
+                rid = futures[fut]
+                try:
+                    detail = fut.result()
+                except Exception:
+                    detail = None
+                if detail:
+                    base_by_id[rid] = detail
+    odds_repair = odds_repair_targets(rows, base_by_id, now_min)
+    odds_repair_set = set(odds_repair)
+    for rid in odds_repair:
+        if rid not in targets:
+            targets.append(rid)
+    if odds_repair:
+        print("ODDS_REPAIR_TARGETS", len(odds_repair), ",".join(odds_repair))
+
     # Seed the rich D1 payload into local RaceDB before any live collector runs.
     for rid in targets:
         seed_prepared_base(rid, base_by_id.get(rid))
@@ -1020,7 +1159,7 @@ def main() -> int:
                 refreshed[rid] = d
                 odds_current.extend(horse_live_rows(d))
                 if detail_safe_for_replace(d):
-                    if requires_full_write(base_by_id.get(rid), d):
+                    if rid in odds_repair_set or requires_full_write(base_by_id.get(rid), d):
                         details.append(d)
                     else:
                         # odds_current holds the live ticks; repeatedly replacing
@@ -1048,6 +1187,7 @@ def main() -> int:
             "missing_d1_base_count": len(missing_base),
             "reanalyzed_count": len(reanalyzed),
             "weight_repair_target_count": len(weight_repair),
+            "odds_repair_target_count": len(odds_repair),
             "environment_track_count": len(environment),
             "official_course_event_count": len(official_conditions),
             "user_model_revision_approval": "user-approved-past-five-from-2026-10-09-20-10-jst"
@@ -1065,6 +1205,7 @@ def main() -> int:
         "environment": environment,
         "thin_detail_skipped": sorted(skipped_thin),
         "weight_repair_targets": sorted(weight_repair_set),
+        "odds_repair_targets": sorted(odds_repair_set),
         "unchanged_detail_not_rewritten": sorted(skipped_odds_only),
         "missing_d1_base": sorted(missing_base),
         "errors": errors,

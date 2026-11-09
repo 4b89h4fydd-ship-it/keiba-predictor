@@ -493,7 +493,7 @@ SOURCE = (
     '                try:pop=int(z.get("popularity")) if z.get("popularity") not in (None,"") else None\n'
     '                except Exception:pop=None\n'
     '                conn.execute("INSERT OR REPLACE INTO odds_history(race_id,horse_no,captured_at,win_odds,popularity,source,raw_json) VALUES(?,?,?,?,?,?,?)",\n'
-    '                             (race_id,no,ts,wo,pop,str(source or z.get("oddsSource") or ""),json.dumps(z,ensure_ascii=False,separators=(",",":"),default=str)))\n'
+    '                             (race_id,no,ts,wo,pop,str(z.get("oddsSource") or source or ""),json.dumps(z,ensure_ascii=False,separators=(",",":"),default=str)))\n'
     '                count+=1\n'
     '            conn.commit();return count\n'
     '        finally:conn.close()\n'

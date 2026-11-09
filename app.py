@@ -6123,6 +6123,21 @@ def odds_refresh(race_id:str, force: int = Query(0)):
     horses=_merge_live_market_rows(race_id,horses,saved)
     if not source:
         source=next((str(h.get("oddsSource") or "") for h in horses if h.get("oddsSource")),"")
+    if race_id.startswith("nar-"):
+        # Provenance honesty (direct-acquisition plan §7.1): the
+        # detail-level label may claim the official OddsTanFuku source
+        # only when every active runner's stored win odds actually
+        # carry that source. A field completed from netkeiba or from a
+        # previous saved snapshot keeps that source's label instead,
+        # so a mixed field is never presented as purely official.
+        _active=[h for h in horses if not h.get("scratched") and int(h.get("horseNumber") or 0)>0]
+        _with_odds=[h for h in _active if float(h.get("winOdds") or 0)>0]
+        if _with_odds:
+            _labels=[str(h.get("oddsSource") or "") for h in _with_odds]
+            if all(x=="NAR公式" for x in _labels):
+                source="NAR公式"
+            else:
+                source=next((x for x in _labels if x and x!="NAR公式"),"") or "保存済み"
     if horses:
         try:RACEDB.save_odds(race_id,horses,source)
         except Exception as exc:print("RaceDB odds save failed",race_id,exc)
