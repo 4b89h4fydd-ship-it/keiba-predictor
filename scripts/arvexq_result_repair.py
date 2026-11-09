@@ -445,6 +445,34 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 if merged.get(key) not in (None, "", 0):
                     entry[key] = merged[key]
         payload_by_id[rid] = entry
+    # Compact-tombstone shaping: for races whose stored detail is a
+    # nightly-compact tombstone, the seed step recorded the pristine
+    # pre-seed stub in a bundle sidecar. The protect layer admits
+    # only a result-only write over such a stub, so the payload entry
+    # becomes the stub itself with the refreshed result/payout fields
+    # overlaid — by construction nothing else can differ. The protect
+    # predicate is re-checked here (and again, authoritatively, by
+    # protect_detail at sync time); a sidecar entry that does not
+    # satisfy it is left unshaped on the normal path.
+    tombstone_shaped: list[str] = []
+    sidecar = Path(str(bundle_path) + ".tombstone-stubs.json")
+    if sidecar.exists():
+        from scripts.arvexq_protect_sync import _compact_tombstone_stub
+        stubs = (json.loads(sidecar.read_text(encoding="utf-8"))
+                 or {}).get("stubs") or {}
+        for rid in sorted(stubs):
+            entry = payload_by_id.get(rid)
+            stub = stubs[rid]
+            if not isinstance(entry, dict) or not isinstance(stub, dict):
+                continue
+            if not _compact_tombstone_stub(stub):
+                continue
+            shaped = copy.deepcopy(stub)
+            for key in ("result", "resultCname", "payouts"):
+                if key in entry:
+                    shaped[key] = copy.deepcopy(entry[key])
+            payload_by_id[rid] = shaped
+            tombstone_shaped.append(rid)
     detail_payload = list(payload_by_id.values())
     payload = {
         "summaries": summaries,
@@ -467,6 +495,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 for name, bucket in audit_by_check.items()
             },
             "result_detail_write_count": len(detail_payload),
+            "tombstone_shaped_count": len(tombstone_shaped),
             "result_repair_complete": not unresolved and not payout_missing,
             "result_repair_at": int(now.timestamp()),
         },
@@ -484,6 +513,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "payout_combination_violations": combination_violations,
         "audit_failures": audit_failures,
         "audit_by_check": audit_by_check,
+        "tombstone_shaped": tombstone_shaped,
         "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)

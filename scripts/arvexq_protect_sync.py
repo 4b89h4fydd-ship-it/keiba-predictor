@@ -141,6 +141,14 @@ def _fetch_display_restored(base: str, rid: str) -> dict[str, Any]:
     if str(candidate.get("id") or "") != rid:
         raise RuntimeError("D1 display returned mismatched race")
     if _projection_tombstone(candidate):
+        if _compact_tombstone_stub(candidate):
+            # The display view faithfully returned the stored state:
+            # the nightly compact left this race as a stub in storage
+            # itself, so there is no forecast to restore. Return the
+            # stub so the caller judges the write against the real
+            # stored state; protect_detail re-checks the same
+            # predicate and admits only a result-only write over it.
+            return candidate
         raise RuntimeError(
             "D1 display view could not restore the tombstoned forecast: "
             + rid)
@@ -247,6 +255,61 @@ def _projection_tombstone(detail: dict[str, Any]) -> bool:
     return (detail.get("predictionStatus") == "disabled"
             and detail.get("predictionModelVersion")
             == "arvexq-prediction-removed")
+
+
+_RESULT_ONLY_WRITE_KEYS = frozenset(("result", "resultCname", "payouts"))
+_FORECAST_CONTENT_KEYS = ("unifiedForecast", "prediction", "predictionMarks",
+                          "recommendedBets", "preoffStage64Archive")
+_MISSING = object()
+
+
+def _compact_tombstone_stub(detail: dict[str, Any]) -> bool:
+    """Whether this detail is a nightly-compact tombstone IN STORAGE.
+
+    The D1 nightly compact replaces a finished race's stored detail
+    with a summary stub and stamps it ``predictionStatus="disabled"``
+    / ``predictionModelVersion="arvexq-prediction-removed"`` — the
+    same stamps the worker's read projection puts on a tombstoned
+    read, but here the stored bytes themselves are the stub (the
+    compact envelope unpacks to the stub; the original detail is
+    gone).  The compact provenance (``compactedFrom``) plus the
+    absence of the card and of every forecast block distinguish it
+    from a projection tombstone of a live race, whose stored detail
+    still carries horses and whose read never carries the compact
+    markers.  A compact tombstone that kept a pre-off archive is NOT
+    matched here: the archive-restore path owns it, as before.
+    """
+    if not isinstance(detail, dict) or not _projection_tombstone(detail):
+        return False
+    if not detail.get("compactedFrom"):
+        return False
+    if detail.get("horses"):
+        return False
+    return not any(detail.get(key) for key in _FORECAST_CONTENT_KEYS)
+
+
+def _changed_keys(old: dict[str, Any], incoming: dict[str, Any]) -> set:
+    changed = set()
+    for key in set(old) | set(incoming):
+        if old.get(key, _MISSING) != incoming.get(key, _MISSING):
+            changed.add(key)
+    return changed
+
+
+def _compact_tombstone_result_write(old: dict[str, Any],
+                                    incoming: dict[str, Any]) -> bool:
+    """The single narrow exception to the tombstone fail-closed rule.
+
+    A result-only repair write over a compact tombstone: the stored
+    detail holds no forecast at all (no blocks, no archive), so there
+    is nothing to restore and nothing a write could destroy; the
+    write may change ONLY the result/payout fields.  Anything wider
+    is refused here and fails closed in the caller, exactly like
+    every other unverifiable tombstone.
+    """
+    if not _compact_tombstone_stub(old):
+        return False
+    return _changed_keys(old, incoming) <= _RESULT_ONLY_WRITE_KEYS
 
 
 def _authorized_forecast(detail: dict[str, Any]) -> bool:
@@ -371,13 +434,20 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         # stored status. Restore the stored view from the sealed
         # pre-off archive instead, or fail closed.
         restored = _archive_restored_detail(old)
-        if restored is None:
+        if restored is not None:
+            old = restored
+        elif not _compact_tombstone_result_write(old, incoming):
             raise RuntimeError(
                 "stored forecast is tombstoned in the API projection "
                 "and carries no verified pre-off archive; failing "
                 "closed rather than restoring from the tombstone: "
                 + str(old.get("id") or ""))
-        old = restored
+        # Otherwise the write is result-only over a compact tombstone
+        # that holds no forecast blocks at all: keep the stub as `old`.
+        # The generic protection below still restores every
+        # forecast-shaped key from it (the stub shares only the status
+        # stamps and text with the write) and the genuine-publish path
+        # can never trigger, because the write's status is not "ready".
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out

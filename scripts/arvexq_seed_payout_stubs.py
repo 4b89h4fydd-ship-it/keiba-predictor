@@ -44,6 +44,7 @@ def main() -> int:
 
     details = bundle.get("details") or []
     replaced: list[str] = []
+    replaced_stubs: dict[str, Any] = {}
     seen: set[str] = set()
     for idx, detail in enumerate(details):
         if not isinstance(detail, dict):
@@ -57,6 +58,13 @@ def main() -> int:
         if str(seed.get("id") or "") != rid or not seed.get("horses"):
             print(f"::error::seed for {rid} is unusable (id/horses mismatch)")
             return 1
+        # Keep the pristine pre-seed stub: for a nightly-compact
+        # tombstone the repair payload must be shaped back to this
+        # stub plus the refreshed result fields (the protect layer
+        # admits only a result-only write over a tombstone). The
+        # repair step reads the sidecar and applies the protect
+        # predicate itself before shaping anything.
+        replaced_stubs[rid] = detail
         details[idx] = seed
         replaced.append(rid)
         seen.add(rid)
@@ -69,7 +77,12 @@ def main() -> int:
     bundle["details"] = details
     Path(args.bundle).write_text(
         json.dumps(bundle, ensure_ascii=False), encoding="utf-8")
+    sidecar = Path(str(args.bundle) + ".tombstone-stubs.json")
+    sidecar.write_text(
+        json.dumps({"stubs": replaced_stubs}, ensure_ascii=False),
+        encoding="utf-8")
     print(f"seeded {len(replaced)} stub details: {sorted(replaced)}")
+    print(f"recorded {len(replaced_stubs)} pre-seed stubs in {sidecar.name}")
     return 0
 
 
