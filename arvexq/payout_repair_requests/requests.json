@@ -1,7 +1,8 @@
 {
-  "date": "2026-11-01",
+  "date": "2026-10-31",
   "scope": "jra-only",
   "env_fill_limit": 0,
-  "requested_by": "jra-payout-repair-1031-1101-20261109",
-  "attempt": 1
+  "requested_by": "jra-payout-repair-1031-stubs-20261109",
+  "attempt": 2,
+  "note": "Stub-card seeding run: seeds file covers only the 4 stub races whose stored detail is not protect-tombstoned (Kyoto 05/06, Tokyo 04/05). The other 13 stub races fail protect closed by design and stay untouched."
 }
