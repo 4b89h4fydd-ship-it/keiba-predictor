@@ -26,6 +26,15 @@
    "mode": "dry-run",
    "requested_at": "2026-11-09T15:33:20+09:00",
    "requested_by": "arvexq_reissue_request.py"
+  },
+  {
+   "request_id": "req-20261109153713-0e8b64",
+   "race_id": "nar-2026-11-09-川崎-01",
+   "revision_kind": "ticket-r24-upgrade",
+   "reason": "slim path dry-run proof: stored trifecta already the R24 shape; also drains the two entries whose results commit raced",
+   "mode": "dry-run",
+   "requested_at": "2026-11-09T15:37:13+09:00",
+   "requested_by": "arvexq_reissue_request.py"
   }
  ],
  "version": 1
