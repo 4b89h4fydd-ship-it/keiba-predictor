@@ -3,6 +3,6 @@
   "scope": "jra-only",
   "env_fill_limit": 0,
   "requested_by": "jra-tombstone-repair-20261109",
-  "attempt": 4,
-  "note": "Attempt 4: re-run after attempt 3 failed inside the repair step (no writes landed; state unchanged). Same seeds/protect as attempt 3."
+  "attempt": 5,
+  "note": "Attempt 5: sync_batches now ships compact-tombstone writes verbatim (attempts 3/4 repaired fine but the sync step's protect refused the career-transport keys sync_batches had added). Same seeds/protect exception as attempts 3/4."
 }
