@@ -5,7 +5,9 @@ name: ARVEXQ Master Candidate Validation
     branches: [main]
     paths:
       - rewrite/analysis/master_v1.py
+      - rewrite/analysis/master18.py
       - tests/test_master_v1.py
+      - rewrite/test_master18.py
       - scripts/arvexq_master_candidate.py
       - .github/workflows/arvexq-master-candidate.yml
   workflow_dispatch:
@@ -25,6 +27,10 @@ jobs:
       - name: Syntax
         run: |
           python -m py_compile rewrite/analysis/master_v1.py \
-            scripts/arvexq_master_candidate.py tests/test_master_v1.py
+            scripts/arvexq_master_candidate.py tests/test_master_v1.py \
+            rewrite/analysis/master18.py rewrite/test_master18.py \
+            scripts/arvexq_rewrite_publish.py
       - name: Invariant tests
-        run: python -m unittest discover -s tests -p 'test_master_v1.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_master_v1.py' -v
+          python -m unittest rewrite.test_master18 -v
