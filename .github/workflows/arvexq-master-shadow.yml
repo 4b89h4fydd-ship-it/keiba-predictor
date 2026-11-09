@@ -6,12 +6,16 @@ name: ARVEXQ Master Forecast Shadow Tests
     paths:
       - rewrite/**
       - scripts/arvexq_rewrite_publish.py
+      - scripts/arvexq_protect_sync.py
+      - tests/test_master_sidecar_guard.py
       - .github/workflows/arvexq-master-shadow.yml
   push:
     branches: [feat/master-18-factor-forecast-20261109]
     paths:
       - rewrite/**
       - scripts/arvexq_rewrite_publish.py
+      - scripts/arvexq_protect_sync.py
+      - tests/test_master_sidecar_guard.py
       - .github/workflows/arvexq-master-shadow.yml
 
 jobs:
@@ -24,6 +28,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile shadow and publisher
-        run: python -m py_compile rewrite/analysis/master_v1.py rewrite/analysis/master_bets.py rewrite/analysis/master_scoreboard.py rewrite/analysis/master_selection.py rewrite/test_master_v1.py rewrite/test_master_scoreboard.py rewrite/test_master_selection.py scripts/arvexq_master_scoreboard.py scripts/arvexq_rewrite_publish.py
+        run: python -m py_compile rewrite/analysis/master_v1.py rewrite/analysis/master_bets.py rewrite/analysis/master_scoreboard.py rewrite/analysis/master_selection.py rewrite/test_master_v1.py rewrite/test_master_scoreboard.py rewrite/test_master_selection.py scripts/arvexq_master_scoreboard.py scripts/arvexq_rewrite_publish.py scripts/arvexq_protect_sync.py tests/test_master_sidecar_guard.py
       - name: Regression and probability contracts
-        run: python -m unittest rewrite.test_master_v1 rewrite.test_master_scoreboard rewrite.test_master_selection rewrite.test_analysis rewrite.test_forecast rewrite.test_tickets rewrite.test_output -v
+        run: python -m unittest tests.test_master_sidecar_guard rewrite.test_master_v1 rewrite.test_master_scoreboard rewrite.test_master_selection rewrite.test_analysis rewrite.test_forecast rewrite.test_tickets rewrite.test_output -v
