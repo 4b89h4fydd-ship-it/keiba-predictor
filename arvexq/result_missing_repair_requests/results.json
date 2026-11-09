@@ -1,0 +1,424 @@
+{
+ "run_id": "42704204430",
+ "dates": {
+  "2026-10-20": {
+   "stages": {
+    "audit": "audit-FAILED",
+    "restore": "restore-ok",
+    "sync": "sync-ok",
+    "fetch": "fetch-ok",
+    "repair": "repair-ok",
+    "sanitize": "sanitize-ok"
+   },
+   "repaired": [],
+   "result_missing": [
+    {
+     "race_id": "nar-2026-10-20-盛岡-01",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 1,
+     "start_time": "11:40",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    },
+    {
+     "race_id": "nar-2026-10-20-盛岡-02",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 2,
+     "start_time": "12:15",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    }
+   ],
+   "payout_missing": [],
+   "audit_failures": [
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-20-盛岡-01",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:38:17.212882+09:00",
+     "retry_state": "in_repair_report"
+    },
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-20-盛岡-02",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:38:17.212882+09:00",
+     "retry_state": "in_repair_report"
+    }
+   ],
+   "repair_log_tail": [
+    "RESULT_REPAIR pass=1 pending=2",
+    "RESULT_REPAIR_ERROR nar-2026-10-20-盛岡-02 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-20-盛岡-01 result refresher returned no usable detail",
+    "RESULT_REPAIR pass=2 pending=2",
+    "RESULT_REPAIR_ERROR nar-2026-10-20-盛岡-01 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-20-盛岡-02 result refresher returned no usable detail",
+    "RESULT_REPAIR_AUDIT started=48 pending_before=2 repaired=0 published=0 detail_write_count=0 result_missing=2 payout_missing=0",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-20-盛岡-01\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":1,\"start_time\":\"11:40\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-20-盛岡-02\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":2,\"start_time\":\"12:15\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-20-盛岡-01\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:38:17.212882+09:00\",\"retry_state\":\"in_repair_report\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-20-盛岡-02\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:38:17.212882+09:00\",\"retry_state\":\"in_repair_report\"}"
+   ],
+   "audit_report": {
+    "date": "2026-10-20",
+    "generated_at": "2026-11-10T06:38:25.974580+09:00",
+    "started_race_count": 48,
+    "success": false,
+    "checks": {
+     "result_fetch": {
+      "failure_count": 2,
+      "race_ids": [
+       "nar-2026-10-20-盛岡-01",
+       "nar-2026-10-20-盛岡-02"
+      ]
+     },
+     "race_identity": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "finisher_completeness": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "payout_cross_check": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "save_read_back": {
+      "failure_count": 0,
+      "race_ids": []
+     }
+    },
+    "failures": [
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-20-盛岡-01",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:38:25.974580+09:00",
+      "retry_state": "due"
+     },
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-20-盛岡-02",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:38:25.974580+09:00",
+      "retry_state": "due"
+     }
+    ],
+    "deferred_failures": [],
+    "deferred_race_ids": []
+   }
+  },
+  "2026-10-23": {
+   "stages": {
+    "restore": "restore-ok",
+    "sanitize": "sanitize-ok",
+    "audit": "audit-FAILED",
+    "repair": "repair-ok",
+    "sync": "sync-ok",
+    "fetch": "fetch-ok"
+   },
+   "repaired": [],
+   "result_missing": [
+    {
+     "race_id": "nar-2026-10-23-浦和-03",
+     "circuit": "地方",
+     "track": "浦和",
+     "race_no": 3,
+     "start_time": "13:20",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    }
+   ],
+   "payout_missing": [],
+   "audit_failures": [
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-23-浦和-03",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:39:15.845755+09:00",
+     "retry_state": "in_repair_report"
+    }
+   ],
+   "repair_log_tail": [
+    "RESULT_REPAIR pass=1 pending=1",
+    "RESULT_REPAIR_ERROR nar-2026-10-23-浦和-03 result refresher returned no usable detail",
+    "RESULT_REPAIR pass=2 pending=1",
+    "RESULT_REPAIR_ERROR nar-2026-10-23-浦和-03 result refresher returned no usable detail",
+    "RESULT_REPAIR_AUDIT started=36 pending_before=1 repaired=0 published=0 detail_write_count=0 result_missing=1 payout_missing=0",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-23-浦和-03\",\"circuit\":\"地方\",\"track\":\"浦和\",\"race_no\":3,\"start_time\":\"13:20\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-23-浦和-03\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:39:15.845755+09:00\",\"retry_state\":\"in_repair_report\"}"
+   ],
+   "audit_report": {
+    "date": "2026-10-23",
+    "generated_at": "2026-11-10T06:39:24.301904+09:00",
+    "started_race_count": 36,
+    "success": false,
+    "checks": {
+     "result_fetch": {
+      "failure_count": 1,
+      "race_ids": [
+       "nar-2026-10-23-浦和-03"
+      ]
+     },
+     "race_identity": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "finisher_completeness": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "payout_cross_check": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "save_read_back": {
+      "failure_count": 0,
+      "race_ids": []
+     }
+    },
+    "failures": [
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-23-浦和-03",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:39:24.301904+09:00",
+      "retry_state": "due"
+     }
+    ],
+    "deferred_failures": [],
+    "deferred_race_ids": []
+   }
+  },
+  "2026-10-25": {
+   "stages": {
+    "repair": "repair-ok",
+    "sync": "sync-ok",
+    "audit": "audit-FAILED",
+    "sanitize": "sanitize-ok",
+    "restore": "restore-ok",
+    "fetch": "fetch-ok"
+   },
+   "repaired": [],
+   "result_missing": [
+    {
+     "race_id": "jra-2026-10-25-東京-11",
+     "circuit": "中央",
+     "track": "東京",
+     "race_no": 11,
+     "start_time": "15:20",
+     "status": "確定",
+     "error": "result refresher returned no usable detail"
+    },
+    {
+     "race_id": "nar-2026-10-25-盛岡-02",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 2,
+     "start_time": "12:15",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    },
+    {
+     "race_id": "nar-2026-10-25-盛岡-03",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 3,
+     "start_time": "12:50",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    },
+    {
+     "race_id": "nar-2026-10-25-盛岡-11",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 11,
+     "start_time": "17:40",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    },
+    {
+     "race_id": "nar-2026-10-25-盛岡-12",
+     "circuit": "地方",
+     "track": "盛岡",
+     "race_no": 12,
+     "start_time": "18:15",
+     "status": "",
+     "error": "result refresher returned no usable detail"
+    }
+   ],
+   "payout_missing": [],
+   "audit_failures": [
+    {
+     "check": "race_identity",
+     "race_id": "jra-2026-10-25-東京-11",
+     "failure_class": "result_cname_identity_conflict",
+     "expected": "resultCname naming this race (date/raceNumber)",
+     "actual": "pw01sde1003202602081120260719/6C",
+     "timestamp": "2026-11-10T06:40:11.295089+09:00",
+     "retry_state": "in_repair_report"
+    },
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-25-盛岡-02",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:40:11.295089+09:00",
+     "retry_state": "in_repair_report"
+    },
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-25-盛岡-03",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:40:11.295089+09:00",
+     "retry_state": "in_repair_report"
+    },
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-25-盛岡-11",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:40:11.295089+09:00",
+     "retry_state": "in_repair_report"
+    },
+    {
+     "check": "result_fetch",
+     "race_id": "nar-2026-10-25-盛岡-12",
+     "failure_class": "result_missing",
+     "expected": "result block present",
+     "actual": "result block absent",
+     "timestamp": "2026-11-10T06:40:11.295089+09:00",
+     "retry_state": "in_repair_report"
+    }
+   ],
+   "repair_log_tail": [
+    "RESULT_REPAIR pass=1 pending=5",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-02 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-12 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-11 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-03 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR jra-2026-10-25-東京-11 result refresher returned no usable detail",
+    "RESULT_REPAIR pass=2 pending=5",
+    "RESULT_REPAIR_ERROR jra-2026-10-25-東京-11 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-11 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-02 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-12 result refresher returned no usable detail",
+    "RESULT_REPAIR_ERROR nar-2026-10-25-盛岡-03 result refresher returned no usable detail",
+    "RESULT_REPAIR_AUDIT started=78 pending_before=5 repaired=0 published=0 detail_write_count=0 result_missing=5 payout_missing=0",
+    "RESULT_MISSING {\"race_id\":\"jra-2026-10-25-東京-11\",\"circuit\":\"中央\",\"track\":\"東京\",\"race_no\":11,\"start_time\":\"15:20\",\"status\":\"確定\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-25-盛岡-02\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":2,\"start_time\":\"12:15\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-25-盛岡-03\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":3,\"start_time\":\"12:50\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-25-盛岡-11\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":11,\"start_time\":\"17:40\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_MISSING {\"race_id\":\"nar-2026-10-25-盛岡-12\",\"circuit\":\"地方\",\"track\":\"盛岡\",\"race_no\":12,\"start_time\":\"18:15\",\"status\":\"\",\"error\":\"result refresher returned no usable detail\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"race_identity\",\"race_id\":\"jra-2026-10-25-東京-11\",\"failure_class\":\"result_cname_identity_conflict\",\"expected\":\"resultCname naming this race (date/raceNumber)\",\"actual\":\"pw01sde1003202602081120260719/6C\",\"timestamp\":\"2026-11-10T06:40:11.295089+09:00\",\"retry_state\":\"in_repair_report\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-25-盛岡-02\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:40:11.295089+09:00\",\"retry_state\":\"in_repair_report\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-25-盛岡-03\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:40:11.295089+09:00\",\"retry_state\":\"in_repair_report\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-25-盛岡-11\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:40:11.295089+09:00\",\"retry_state\":\"in_repair_report\"}",
+    "RESULT_AUDIT_FAILURE {\"check\":\"result_fetch\",\"race_id\":\"nar-2026-10-25-盛岡-12\",\"failure_class\":\"result_missing\",\"expected\":\"result block present\",\"actual\":\"result block absent\",\"timestamp\":\"2026-11-10T06:40:11.295089+09:00\",\"retry_state\":\"in_repair_report\"}"
+   ],
+   "audit_report": {
+    "date": "2026-10-25",
+    "generated_at": "2026-11-10T06:40:20.522975+09:00",
+    "started_race_count": 78,
+    "success": false,
+    "checks": {
+     "result_fetch": {
+      "failure_count": 4,
+      "race_ids": [
+       "nar-2026-10-25-盛岡-02",
+       "nar-2026-10-25-盛岡-03",
+       "nar-2026-10-25-盛岡-11",
+       "nar-2026-10-25-盛岡-12"
+      ]
+     },
+     "race_identity": {
+      "failure_count": 1,
+      "race_ids": [
+       "jra-2026-10-25-東京-11"
+      ]
+     },
+     "finisher_completeness": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "payout_cross_check": {
+      "failure_count": 0,
+      "race_ids": []
+     },
+     "save_read_back": {
+      "failure_count": 0,
+      "race_ids": []
+     }
+    },
+    "failures": [
+     {
+      "check": "race_identity",
+      "race_id": "jra-2026-10-25-東京-11",
+      "failure_class": "result_cname_identity_conflict",
+      "expected": "resultCname naming this race (date/raceNumber)",
+      "actual": "pw01sde1003202602081120260719/6C",
+      "timestamp": "2026-11-10T06:40:20.522975+09:00",
+      "retry_state": "due"
+     },
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-25-盛岡-02",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:40:20.522975+09:00",
+      "retry_state": "due"
+     },
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-25-盛岡-03",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:40:20.522975+09:00",
+      "retry_state": "due"
+     },
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-25-盛岡-11",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:40:20.522975+09:00",
+      "retry_state": "due"
+     },
+     {
+      "check": "result_fetch",
+      "race_id": "nar-2026-10-25-盛岡-12",
+      "failure_class": "result_missing",
+      "expected": "result block present",
+      "actual": "result block absent",
+      "timestamp": "2026-11-10T06:40:20.522975+09:00",
+      "retry_state": "due"
+     }
+    ],
+    "deferred_failures": [],
+    "deferred_race_ids": []
+   }
+  }
+ }
+}
