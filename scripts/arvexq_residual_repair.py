@@ -62,15 +62,27 @@ def get_json(url: str, retries: int = 4) -> dict:
     raise RuntimeError(f"GET failed {url}: {last}")
 
 
-def fetch_bundle(date: str, work: Path) -> dict:
-    out = work / f"bundle-{date}.json"
-    cmd = [sys.executable, str(ROOT / "scripts/arvexq_fetch_d1_bundle.py"),
-           "--api-base", API_BASE, "--date", date, "--out", str(out)]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    if proc.returncode != 0:
-        raise RuntimeError(f"bundle fetch failed for {date}: "
-                           f"{proc.stdout[-500:]} {proc.stderr[-500:]}")
-    return json.loads(out.read_text(encoding="utf-8"))
+def fetch_detail(rid: str) -> dict | None:
+    """Mirror arvexq_fetch_d1_bundle.fetch_one: plain view first,
+    display view as fallback; never accept another race's detail."""
+    import urllib.parse
+    base = f"{API_BASE}/api/race/{urllib.parse.quote(rid, safe='')}"
+    for suffix in ("?t=", "?view=display&t="):
+        try:
+            value = get_json(base + suffix + str(int(time.time() * 1000)))
+        except Exception:  # noqa: BLE001 - fall through to next view
+            continue
+        detail = value.get("detail") if isinstance(value, dict) else None
+        if isinstance(detail, dict) and detail.get("id") == rid:
+            return detail
+    return None
+
+
+def fetch_summaries(date: str) -> dict:
+    day = get_json(f"{API_BASE}/api/day?date={date}&details=0&t="
+                   f"{int(time.time() * 1000)}")
+    return {s.get("id"): s for s in day.get("races") or []
+            if isinstance(s, dict)}
 
 
 def health_diff(a: dict, b: dict) -> list[str]:
@@ -104,16 +116,14 @@ def main() -> int:
 
     for job in request.get("jobs") or []:
         date = job["date"]
-        bundle = fetch_bundle(date, work)
-        details = {d.get("id"): d for d in bundle.get("details") or []}
-        summaries = {s.get("id"): s for s in bundle.get("races") or []}
+        summaries = fetch_summaries(date)
         for spec in job.get("races") or []:
             rid = spec["id"]
-            old = details.get(rid)
+            old = fetch_detail(rid)
             entry = {"date": date}
             report["races"][rid] = entry
             if old is None:
-                entry["status"] = "missing-in-bundle"
+                entry["status"] = "missing-in-api"
                 continue
             if protect._compact_tombstone_stub(old):
                 entry["status"] = "skipped-tombstone-stub"
@@ -156,6 +166,9 @@ def main() -> int:
                 sync_summaries.append(summaries[rid])
             intended[rid] = {"health": new["dataCoreHealth"],
                              "bodyweight": entry.get("bodyweight") or []}
+        (work / "report.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=1),
+            encoding="utf-8")
 
     if not sync_details:
         log("nothing to sync")
