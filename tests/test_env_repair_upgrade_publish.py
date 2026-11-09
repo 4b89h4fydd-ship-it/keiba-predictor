@@ -64,6 +64,10 @@ def stored_detail(*, race_id=RACE_ID, date=DATE, post=POST,
     }
 
 
+def qualify(detail, now=NOW, surface="ダート"):
+    return _env_repair_upgrade_info(detail, now, surface)
+
+
 def revision(kind, revised_at, *, with_kind=True):
     rev = {"reason": kind, "revisedAt": revised_at,
            "revisionCount": 1, "previousReceiptSha256": "b" * 64}
@@ -74,7 +78,7 @@ def revision(kind, revised_at, *, with_kind=True):
 
 class EnvRepairQualificationTests(TestCase):
     def test_qualifies_when_probabilities_predate_the_fix(self):
-        info = _env_repair_upgrade_info(stored_detail(), NOW)
+        info = qualify(stored_detail())
         self.assertIsNotNone(info)
         self.assertEqual(info["reason"], "env-repair-upgrade")
         self.assertEqual(info["surface"], "ダート")
@@ -89,7 +93,7 @@ class EnvRepairQualificationTests(TestCase):
         for kind in ("place-ev-upgrade", "ticket-r24-upgrade"):
             detail = stored_detail(revision=revision(
                 kind, "2026-11-09T14:01:20+09:00"))
-            info = _env_repair_upgrade_info(detail, NOW)
+            info = qualify(detail)
             self.assertIsNotNone(info, kind)
             self.assertEqual(info["probabilityComputedAt"],
                              FIRST_PUBLISHED_AT)
@@ -97,7 +101,7 @@ class EnvRepairQualificationTests(TestCase):
     def test_blend_revision_before_fix_sets_computation_time(self):
         detail = stored_detail(revision=revision(
             "blend-upgrade", "2026-11-09T02:16:06+09:00"))
-        info = _env_repair_upgrade_info(detail, NOW)
+        info = qualify(detail)
         self.assertIsNotNone(info)
         self.assertEqual(info["probabilityComputedAt"],
                          "2026-11-09T02:16:06+09:00")
@@ -106,44 +110,44 @@ class EnvRepairQualificationTests(TestCase):
         for kind in ("blend-upgrade", "lane-upgrade"):
             detail = stored_detail(revision=revision(
                 kind, "2026-11-09T11:05:00+09:00"))
-            self.assertIsNone(_env_repair_upgrade_info(detail, NOW),
+            self.assertIsNone(qualify(detail),
                               kind)
         # Roster-change revisions carry no "kind", only "reason".
         detail = stored_detail(revision=revision(
             "roster-change", "2026-11-09T14:02:11+09:00",
             with_kind=False))
-        self.assertIsNone(_env_repair_upgrade_info(detail, NOW))
+        self.assertIsNone(qualify(detail))
 
     def test_exactly_once(self):
         detail = stored_detail(revision=revision(
             "env-repair-upgrade", "2026-11-09T14:40:00+09:00"))
-        self.assertIsNone(_env_repair_upgrade_info(detail, NOW))
+        self.assertIsNone(qualify(detail))
 
     def test_scope_is_dated_and_nar_only(self):
-        self.assertIsNone(_env_repair_upgrade_info(
-            stored_detail(date="2026-11-10"), NOW))
-        self.assertIsNone(_env_repair_upgrade_info(
-            stored_detail(race_id="jra-2026-11-09-東京-05"), NOW))
+        self.assertIsNone(qualify(stored_detail(date="2026-11-10")))
+        self.assertIsNone(qualify(
+            stored_detail(race_id="jra-2026-11-09-東京-05")))
 
     def test_requires_the_live_surface(self):
-        self.assertIsNone(_env_repair_upgrade_info(
-            stored_detail(surface=""), NOW))
-        self.assertIsNone(_env_repair_upgrade_info(
-            stored_detail(surface=None), NOW))
+        # The rebuild takes the race surface from the SUMMARY
+        # (normalize_race's _first keeps "" as a value), so the
+        # summary's surface is the gate — the stored detail may
+        # still carry the pre-fix "" without blocking the repair.
+        self.assertIsNone(qualify(stored_detail(), surface=""))
+        self.assertIsNone(qualify(stored_detail(), surface=None))
+        self.assertIsNotNone(qualify(stored_detail(surface="")))
 
     def test_requires_v9b_lane_and_a_readable_marker(self):
         self.assertIsNone(_env_repair_upgrade_info(
             stored_detail(lane="v8-elo-speed2"), NOW))
         detail = stored_detail()
         detail["preparedMeta"] = {}
-        self.assertIsNone(_env_repair_upgrade_info(detail, NOW))
+        self.assertIsNone(qualify(detail))
 
     def test_post_guard(self):
         # 10 minutes before post: inside the final quarter hour.
         inside = datetime(2026, 11, 9, 16, 50, tzinfo=JST)
-        self.assertIsNone(_env_repair_upgrade_info(
-            stored_detail(), inside))
+        self.assertIsNone(qualify(stored_detail(), now=inside))
         # Exactly 15 minutes before post still qualifies.
         edge = datetime(2026, 11, 9, 16, 45, tzinfo=JST)
-        self.assertIsNotNone(_env_repair_upgrade_info(
-            stored_detail(), edge))
+        self.assertIsNotNone(qualify(stored_detail(), now=edge))

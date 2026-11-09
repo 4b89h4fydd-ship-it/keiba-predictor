@@ -243,13 +243,12 @@ TICKET_R24_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 # stored probabilities), the first publication time. Races already
 # recomputed at or after the fix (e.g. a roster-change re-issue
 # later that morning) do not qualify. The lead guard is 15
-# minutes: the repair input (the race's surface) is static,
-# unlike the odds completeness the other upgrades wait on, and
-# the surface only reaches this lane's read of a race inside
-# the live window shortly before its post — a longer guard
-# would close before the input exists. The buffer exists so a
-# race cannot start between the guard's evaluation (per race,
-# at its build) and its write.
+# minutes: the repair input (the race's surface, served by the
+# summary builder from the stored races.surface) is static and
+# has been available since the fix, unlike the odds
+# completeness the other upgrades wait on. The buffer exists
+# so a race cannot start between the guard's evaluation (per
+# race, at its build) and its write.
 ENV_REPAIR_DATE = "2026-11-09"
 ENV_REPAIR_FIX_LIVE_AT = datetime(2026, 11, 9, 10, 22, tzinfo=JST)
 ENV_REPAIR_MIN_LEAD = timedelta(minutes=15)
@@ -448,7 +447,8 @@ def _parse_stamp(value) -> datetime | None:
     return parsed
 
 
-def _env_repair_upgrade_info(old: dict, now: datetime) -> dict | None:
+def _env_repair_upgrade_info(old: dict, now: datetime,
+                             summary_surface=None) -> dict | None:
     """Facts for the one-time env-repair re-issue of a frozen v9b race.
 
     A stored forecast qualifies only when ALL of these hold:
@@ -472,10 +472,14 @@ def _env_repair_upgrade_info(old: dict, now: datetime) -> dict | None:
       surface and does not qualify;
     - it does not already carry an env-repair-upgrade revision
       (the repair is exactly-once);
-    - the CURRENT payload carries the race's surface (the
-      repair's input must actually be there — a rebuild on a
-      payload that still serves "" would change nothing but the
-      stamp);
+    - the rebuild's surface input is real: normalize_race takes
+      the race surface as _first(summary.surface,
+      detail.surface) and keeps "" as a value, so the SUMMARY's
+      surface is the value the rebuild computes with. The stored
+      detail's own surface may still carry the "" baked in
+      before the fix — that does not block the repair, and the
+      summary (which the fixed summary builder serves from the
+      stored races.surface) is what must be non-empty;
     - the post is still at least ENV_REPAIR_MIN_LEAD away.
 
     Anything unreadable does not qualify; the caller keeps the
@@ -509,7 +513,7 @@ def _env_repair_upgrade_info(old: dict, now: datetime) -> dict | None:
             marker.get("firstPublishedAt") or marker.get("publishedAt"))
     if computed_at is None or computed_at >= ENV_REPAIR_FIX_LIVE_AT:
         return None
-    surface = old.get("surface")
+    surface = summary_surface
     if not (isinstance(surface, str) and surface.strip()):
         return None
     post = _post_at(old)
@@ -1147,7 +1151,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 blend_upgrade = _blend_upgrade_info(old, now)
                 if blend_upgrade is None:
                     env_repair_upgrade = _env_repair_upgrade_info(
-                        old, now)
+                        old, now, summary.get("surface"))
                 if (blend_upgrade is None
                         and env_repair_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
