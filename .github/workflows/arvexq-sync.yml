@@ -151,8 +151,22 @@ jobs:
             --out-dir live-sync-batches
           COUNT=$(find live-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 live batches=$COUNT"
+          REJECTED=0
           for file in live-sync-batches/batch-*.json; do
-            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
+            # Per-batch isolation (2026-11-09): the protect seam
+            # refuses a batch whose details it cannot accept (one
+            # race's marks blocks diverged after a roster change:
+            # Morioka 11R, whose batch aborted this whole push and
+            # starved every later batch in the run). The seam's
+            # verdict on the refused batch stands — nothing of it
+            # is posted — but the remaining batches still land,
+            # and the step fails at the end naming the rejected
+            # files so the refusal stays visible.
+            if ! PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"; then
+              echo "D1_BATCH_REJECTED $file"
+              REJECTED=1
+              continue
+            fi
             BYTES=$(wc -c < "$file" | tr -d ' ')
             echo "POST $(basename "$file") bytes=$BYTES"
             # Storage-full and Worker-1102 responses are permanent for this
@@ -161,6 +175,10 @@ jobs:
               --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
             PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
           done
+          if [ "$REJECTED" = "1" ]; then
+            echo "D1 live batched push completed with rejected batches (see D1_BATCH_REJECTED above)"
+            exit 1
+          fi
           echo "D1 live batched push OK"
 
       - name: Verify D1 first-paint endpoint

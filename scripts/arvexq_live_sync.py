@@ -377,7 +377,7 @@ def blend_repair_targets(
 # detail still lacks its surface is therefore an explicit sync
 # target on every run while its post is far enough away for the
 # rebuilt detail to reach the publish lane inside its own
-# 30-minute guard (see _env_repair_upgrade_info in
+# 15-minute guard (see _env_repair_upgrade_info in
 # arvexq_rewrite_publish.py, whose qualification this mirrors).
 # The date scope makes the targeting inert after 2026-11-09.
 ENV_REPAIR_DATE = "2026-11-09"
