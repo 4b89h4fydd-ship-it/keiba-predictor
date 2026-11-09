@@ -527,6 +527,34 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
             merged_meta = dict(out.get('preparedMeta') or {})
             merged_meta['rewritePublish'] = copy.deepcopy(stored_marker)
             out['preparedMeta'] = merged_meta
+    # The experimental 18-factor master sidecar belongs to the same
+    # pre-off rewrite publish lane as the forecast. Prefetch/live/result
+    # syncs often send thin details and must never erase its evidence,
+    # timestamp, or signature. Nor may they inject a forged candidate.
+    # The unified receipt and production marks are intentionally separate.
+    if not is_publish_write:
+        if 'masterAnalysis' in old:
+            out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
+        else:
+            out.pop('masterAnalysis', None)
+    elif 'masterAnalysis' in out:
+        from hashlib import sha256
+        sidecar = out['masterAnalysis']
+        if not isinstance(sidecar, dict) or sidecar.get('version') != 'master-18-factor-shadow-v1':
+            raise ValueError('invalid masterAnalysis publication identity')
+        digest = sidecar.get('contentSha256')
+        unsigned = {k: v for k, v in sidecar.items() if k != 'contentSha256'}
+        expected = sha256(json.dumps(
+            unsigned, sort_keys=True, separators=(',', ':'),
+            ensure_ascii=False).encode('utf-8')).hexdigest()
+        if (digest != expected or sidecar.get('capturedAt') !=
+                (out.get('prediction') or {}).get('capturedAt')):
+            raise ValueError('masterAnalysis signature or capture mismatch')
+    elif 'masterAnalysis' in old:
+        # A surgical publication may update only odds or a ticket
+        # formation; retaining the prior research seal is preferable
+        # to silently discarding the already captured comparison.
+        out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.
