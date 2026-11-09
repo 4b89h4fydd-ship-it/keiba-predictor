@@ -17,6 +17,7 @@ on:
     branches: [main]
     paths:
       - scripts/arvexq_rewrite_publish.py
+      - rewrite/analysis/master18.py
       - arvexq/prediction/**
       - arvexq/forecast/**
       - .github/workflows/arvexq-rewrite-publish.yml
