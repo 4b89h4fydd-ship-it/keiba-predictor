@@ -14,7 +14,6 @@ import copy
 import json
 import os
 import re
-import subprocess
 import sys
 import time
 import urllib.parse
@@ -32,8 +31,7 @@ import app
 from arvexq.pipeline.fingerprints import analysis_input_hash
 from arvexq.ingest.official_changes import collect_nar_changes
 from arvexq.ingest.official_course_feeds import fetch_course_events
-from arvexq.prediction.official_course_revision import pre_off_change, official_event
-from arvexq.prediction.user_approved_model_revision import enabled as user_revision_enabled, update_marks as user_update_marks
+from arvexq.prediction.official_course_revision import official_event
 from arvexq.infra.live_delta_guard import requires_full_write
 from arvexq.prediction.prerace_archive import post_at
 
@@ -739,76 +737,6 @@ def refresh_environment(rows: list[dict[str, Any]], target_ids: set[str]) -> dic
     return states
 
 
-def apply_official_mark_revision(
-    base: dict[str, Any] | None, incoming: dict[str, Any] | None,
-    now: datetime,
-) -> tuple[dict[str, Any] | None, str]:
-    """Append revisions only for a verified, meaningful pre-off official change.
-
-    Keep original marks, betting tickets, and the server seal untouched.
-    A feed that merely reports a new weather/odds value cannot change marks.
-    """
-    if not isinstance(base, dict) or not isinstance(incoming, dict):
-        return incoming, ""
-    original = base.get("morningMarkSnapshot")
-    if not isinstance(original, dict) or original.get("version") != "arvexq-morning-marks-v1":
-        return incoming, ""
-    if str(original.get("raceId") or "") != str(incoming.get("id") or ""):
-        return incoming, ""
-    previous = base.get("officialCourseCondition")
-    current = incoming.get("officialCourseCondition")
-    reason = pre_off_change(incoming, previous, current, now)
-    if not reason:
-        return incoming, ""
-    official = official_event(current)
-    if not official:
-        return incoming, ""
-    revisions = list(base.get("officialMarkRevisions") or [])
-    if any((r.get("officialCourseCondition") or {}).get("publishedAt") == official["publishedAt"]
-           for r in revisions if isinstance(r, dict)):
-        return incoming, ""
-    try:
-        working = copy.deepcopy(incoming)
-        working["morningMarkSnapshot"] = copy.deepcopy(original)
-        working["officialCourseCondition"] = official
-        # Do not use any result/finisher data or post-off recomputation.
-        process = subprocess.run(
-            ["node", "scripts/arvexq_capture_course_revised_marks.js"],
-            input=json.dumps(working, ensure_ascii=False), text=True,
-            capture_output=True, timeout=25,
-            env={**os.environ, "TZ": "Asia/Tokyo"},
-        )
-        if process.returncode:
-            return incoming, "official-change mark compute failed: " + process.stderr[-400:]
-        predicted = json.loads(process.stdout)
-        horses = predicted.get("horses")
-        if not isinstance(horses, list) or len(horses) < 3:
-            return incoming, "official-change forecast incomplete"
-        previous_marks = revisions[-1].get("horses") if revisions else original.get("horses")
-        if not isinstance(previous_marks, list):
-            return incoming, "previous snapshot unavailable"
-        old = {int(h["horseNumber"]): str(h.get("mark") or "") for h in previous_marks}
-        new = {int(h["horseNumber"]): str(h.get("mark") or "") for h in horses}
-        affected = sorted(no for no in new if new[no] != old.get(no, ""))
-        if not affected:
-            # Evidence changed, but no meaningful mark changes. Persist source
-            # metadata only; never advertise a phantom revised prediction.
-            incoming["officialCourseCondition"] = official
-            return incoming, ""
-        revision = {"version": "arvexq-official-mark-revision-v1",
-                    "raceId": str(incoming["id"]), "raceDate": str(incoming["date"]),
-                    "revisedAt": now.isoformat(timespec="seconds"),
-                    "reason": reason, "officialCourseCondition": official,
-                    "affectedHorseNumbers": affected, "horses": horses}
-        revisions.append(revision)
-        incoming["morningMarkSnapshot"] = copy.deepcopy(original)
-        incoming["officialMarkRevisions"] = revisions
-        incoming["officialCourseCondition"] = official
-        return incoming, reason
-    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
-        return incoming, "official-change mark error: " + type(exc).__name__ + ": " + str(exc)
-
-
 def pre_post_time_guard(row: dict[str, Any], now_min: int) -> bool:
     return start_min(row) < 9999 and now_min < start_min(row)
 
@@ -865,25 +793,12 @@ def refresh_one(
     if merged and pre_post and official_condition:
         merged["officialCourseCondition"] = copy.deepcopy(official_condition)
         merged["condition"] = official_condition["going"]
-    if merged and pre_post:
-        merged, official_status = apply_official_mark_revision(base, merged, datetime.now(JST))
-        if official_status:
-            print("OFFICIAL_COURSE_MARK_EVENT", rid, official_status)
-            if "failed" in official_status or "error" in official_status:
-                errors.append(official_status)
-            else:
-                analysis_changed = True
-    if merged and pre_post and user_revision_enabled(datetime.now(JST)):
-        before_original = copy.deepcopy((merged.get("morningMarkSnapshot") or {}))
-        merged, model_status = user_update_marks(merged, now=datetime.now(JST))
-        if model_status.startswith("changed:"):
-            print("USER_APPROVED_MODEL_MARK_REVISION", rid, model_status)
-            if merged.get("morningMarkSnapshot") != before_original:
-                raise RuntimeError("user-approved revision mutated the morning original")
-            analysis_changed = True
-        elif model_status.startswith("compute-failed") or model_status == "invalid-preoff-revision":
-            errors.append("user-model-revision:" + model_status)
-            print("USER_APPROVED_MODEL_MARK_ERROR", rid, model_status)
+    # The official-course and user-approved mark revision generators that
+    # used to run here are retired (stage 2, 2026-11-10): both required a
+    # morning mark snapshot no writer has produced since the 2026-10-28
+    # cutover (the user-approved path was also date-locked to 2026-10-09),
+    # and the differential corpus showed them returning "no change" for
+    # every real stored race (216/216).
     if merged and analysis_changed and pre_post:
         pm = dict(merged.get("preparedMeta") or {})
         pm["analysisInputHash"] = analysis_input_hash(merged)
@@ -914,16 +829,6 @@ def main() -> int:
     now_min = now.hour * 60 + now.minute
     row_by_id = {str(r["id"]): r for r in rows}
     targets = choose_targets(rows, now_min)
-    # One explicit user approval applies only to still-unstarted races today.
-    # New days use the updated morning model instead of rewriting old archives.
-    if user_revision_enabled(now):
-        pending_model_targets = [str(r["id"]) for r in rows
-                                 if str(r.get("date") or "") == now.date().isoformat()
-                                 and post_at(r) and now < post_at(r)]
-        for rid in pending_model_targets:
-            if rid not in targets:
-                targets.append(rid)
-        print("USER_APPROVED_MODEL_TARGETS", "eligible", len(pending_model_targets))
     # RaceList 変更情報 is venue-wide. Capture cancellations even when their
     # races are more than an hour away or have left the rolling live window.
     tracks = {str(r.get("track")): str(app.NAR_BABA_CODES.get(str(r.get("track")) or "") or "")
@@ -1190,8 +1095,7 @@ def main() -> int:
             "odds_repair_target_count": len(odds_repair),
             "environment_track_count": len(environment),
             "official_course_event_count": len(official_conditions),
-            "user_model_revision_approval": "user-approved-past-five-from-2026-10-09-20-10-jst"
-                if user_revision_enabled(now) else "",
+            "user_model_revision_approval": "",
             "odds_row_count": len(odds_current),
             "error_count": len(errors),
             "live_updated_at": int(time.time()),
