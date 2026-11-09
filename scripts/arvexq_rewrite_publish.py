@@ -104,6 +104,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from rewrite.analysis.forecast import forecast_race  # noqa: E402
+from rewrite.analysis.master18 import analyze_master18  # noqa: E402
 from rewrite.analysis.lane_config import LANE_BETA, LANE_WEIGHTS  # noqa: E402
 from rewrite.analysis.pace import forecast_pace  # noqa: E402
 from rewrite.analysis.shadow_v8 import WEIGHTS as V8_WEIGHTS  # noqa: E402
@@ -1410,6 +1411,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         calibrated_probabilities=used_v9b)
     built = payload["detail"]
     unified = built["unifiedForecast"]
+    # Add the full-runner 18-section audit before canonical receipt sealing.
+    # It is a research candidate only: production marks/R24 remain unchanged
+    # until a separately registered, held-out evaluation passes.
+    unified["masterAnalysis"] = analyze_master18(race, forecast, pace)
     # Production receipt semantics: roster is the detail's ACTIVE roster
     # (production verification rebuilds it from the stored horses), the
     # family comes from the production classifier, and the receipt hash
