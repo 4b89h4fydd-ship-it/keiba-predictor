@@ -471,7 +471,10 @@ def _env_repair_upgrade_info(old: dict, now: datetime,
       re-issue later that morning) already ran with the live
       surface and does not qualify;
     - it does not already carry an env-repair-upgrade revision
-      (the repair is exactly-once);
+      (the repair is exactly-once — the sole exception is a
+      stored detail whose two marks blocks DISAGREE after the
+      first repair's write raced a sync refresh; that race
+      re-qualifies as a marks resync, see below);
     - the rebuild's surface input is real: normalize_race takes
       the race surface as _first(summary.surface,
       detail.surface) and keeps "" as a value, so the SUMMARY's
@@ -503,15 +506,45 @@ def _env_repair_upgrade_info(old: dict, now: datetime,
     if isinstance(revision, dict):
         kind = revision.get("kind") or revision.get("reason")
         revised_at = revision.get("revisedAt")
+    resync = False
     if kind == "env-repair-upgrade":
-        return None
-    if kind in ("blend-upgrade", "lane-upgrade",
-                "lane-upgrade-v9b-adoption", "roster-change"):
+        # Exactly-once — with one narrow exception: the first
+        # repair's write raced a concurrent sync refresh on three
+        # races (Saga 3R, Nagoya 7R, Morioka 10R, 2026-11-09) and
+        # the stored detail came out of the merge with the NEW
+        # unifiedForecast beside the OLD predictionMarks — the
+        # two marks blocks disagree, the state the protect seam
+        # exists to prevent. Such a race re-qualifies so the
+        # rebuild re-derives both blocks from one forecast and
+        # the stored detail resyncs; a repaired race whose
+        # blocks agree is final.
+        def _marks(entries, *keys):
+            out = {}
+            for e in entries or []:
+                if not isinstance(e, dict):
+                    continue
+                label = next((e.get(k) for k in keys if e.get(k)), None)
+                if label:
+                    out[str(label)] = e.get("horseNumber")
+            return out
+        pm = _marks(old.get("predictionMarks"), "mark")
+        uf = _marks((old.get("unifiedForecast") or {}).get("marks"),
+                    "markSymbol", "mark")
+        if not (len(pm) == 5 and len(uf) == 5 and pm != uf):
+            return None
+        resync = True
+        computed_at = _parse_stamp(
+            revision.get("probabilityComputedAt") or revised_at)
+        if computed_at is None:
+            return None
+    elif kind in ("blend-upgrade", "lane-upgrade",
+                  "lane-upgrade-v9b-adoption", "roster-change"):
         computed_at = _parse_stamp(revised_at)
     else:
         computed_at = _parse_stamp(
             marker.get("firstPublishedAt") or marker.get("publishedAt"))
-    if computed_at is None or computed_at >= ENV_REPAIR_FIX_LIVE_AT:
+    if not resync and (computed_at is None
+                       or computed_at >= ENV_REPAIR_FIX_LIVE_AT):
         return None
     surface = summary_surface
     if not (isinstance(surface, str) and surface.strip()):
@@ -524,6 +557,7 @@ def _env_repair_upgrade_info(old: dict, now: datetime,
             "previousAbilityLane": V9B_LANE,
             "reason": "env-repair-upgrade",
             "surface": surface,
+            "marksResync": resync,
             "probabilityComputedAt":
                 computed_at.isoformat(timespec="seconds")}
 
@@ -1614,6 +1648,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "surface": env_repair_upgrade["surface"],
             "probabilityComputedAt":
                 env_repair_upgrade["probabilityComputedAt"],
+            **({"marksResync": True}
+               if env_repair_upgrade.get("marksResync") else {}),
             "note": ("one-time env-repair re-issue (user "
                      "instruction 2026-11-09): the stored "
                      "probabilities were computed while the NAR "

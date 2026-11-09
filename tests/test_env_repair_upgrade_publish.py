@@ -123,6 +123,29 @@ class EnvRepairQualificationTests(TestCase):
             "env-repair-upgrade", "2026-11-09T14:40:00+09:00"))
         self.assertIsNone(qualify(detail))
 
+    def test_env_repair_resync_when_stored_marks_blocks_disagree(self):
+        # The first repair's write raced a sync refresh: the
+        # stored unifiedForecast carries the new marks while
+        # predictionMarks still carries the old ones. The race
+        # re-qualifies (as a resync) so one rebuild re-derives
+        # both blocks from the same forecast.
+        detail = stored_detail(revision=revision(
+            "env-repair-upgrade", "2026-11-09T14:53:00+09:00"))
+        detail["predictionMarks"] = [
+            {"horseNumber": n, "mark": m} for m, n in
+            {"◎": 1, "○": 2, "▲": 3, "△": 4, "☆": 5}.items()]
+        detail["unifiedForecast"] = {"marks": [
+            {"horseNumber": n, "markSymbol": m} for m, n in
+            {"◎": 6, "○": 2, "▲": 3, "△": 4, "☆": 5}.items()]}
+        info = qualify(detail)
+        self.assertIsNotNone(info)
+        self.assertTrue(info["marksResync"])
+        # Agreeing blocks stay exactly-once.
+        detail["unifiedForecast"] = {"marks": [
+            {"horseNumber": n, "markSymbol": m} for m, n in
+            {"◎": 1, "○": 2, "▲": 3, "△": 4, "☆": 5}.items()]}
+        self.assertIsNone(qualify(detail))
+
     def test_scope_is_dated_and_nar_only(self):
         self.assertIsNone(qualify(stored_detail(date="2026-11-10")))
         self.assertIsNone(qualify(
