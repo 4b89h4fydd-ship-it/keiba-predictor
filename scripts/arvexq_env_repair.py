@@ -250,7 +250,10 @@ def repair(bundle_path: str, payload_path: str, report_path: str) -> int:
 
     for detail in details:
         rid = str(detail.get("id") or "")
-        if not _is_target(detail):
+        row = rows.get(rid) or {}
+        summary_unknown = (row.get("weather") in UNKNOWN
+                           or row.get("condition") in UNKNOWN)
+        if not _is_target(detail) and not summary_unknown:
             continue
         if _is_compact_tombstone(detail):
             skipped.append({
@@ -294,29 +297,35 @@ def repair(bundle_path: str, payload_path: str, report_path: str) -> int:
         if new_detail.get("condition") in UNKNOWN and condition not in UNKNOWN:
             new_detail["condition"] = condition
             n_changed += 1
-        if not n_changed:
-            skipped.append({"race_id": rid,
-                            "reason": "official environment also unknown"})
-            continue
-        new_detail["environmentMeta"] = {
-            "source": "JRA公式結果",
-            "updatedAt": int(time.time() * 1000),
-            "raceId": rid,
-        }
-        repaired.append(rid)
-        official_env[rid] = {"weather": new_detail.get("weather"),
-                             "condition": new_detail.get("condition")}
-        changed_fields[rid] = n_changed
-        changed_details.append(new_detail)
+        new_row = None
+        summary_changed = False
         row = rows.get(rid)
         if row is not None:
             new_row = copy.deepcopy(row)
             if new_row.get("weather") in UNKNOWN \
                     and new_detail.get("weather") not in UNKNOWN:
                 new_row["weather"] = new_detail["weather"]
+                summary_changed = True
             if new_row.get("condition") in UNKNOWN \
                     and new_detail.get("condition") not in UNKNOWN:
                 new_row["condition"] = new_detail["condition"]
+                summary_changed = True
+        if not n_changed and not summary_changed:
+            skipped.append({"race_id": rid,
+                            "reason": "official environment also unknown"})
+            continue
+        if n_changed:
+            new_detail["environmentMeta"] = {
+                "source": "JRA公式結果",
+                "updatedAt": int(time.time() * 1000),
+                "raceId": rid,
+            }
+        repaired.append(rid)
+        official_env[rid] = {"weather": new_detail.get("weather"),
+                             "condition": new_detail.get("condition")}
+        changed_fields[rid] = n_changed
+        changed_details.append(new_detail)
+        if new_row is not None:
             changed_summaries.append(new_row)
 
     payload = {
