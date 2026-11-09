@@ -651,6 +651,11 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
                 out['kikkaCandidate'] = copy.deepcopy(old_c)
         elif 'kikkaCandidate' in out and candidate_marks(out) is None:
             raise ValueError('new Kikuka challenger cannot be verified')
+    # The full morning prediction is a permanent, first-published record.
+    # It must survive a later live odds refresh, prefetch or result repair.
+    baseline = old.get("morningMarkSnapshot")
+    if isinstance(baseline, dict) and baseline.get("version") == "arvexq-morning-marks-v1":
+        out["morningMarkSnapshot"] = copy.deepcopy(baseline)
     # Frozen mass-feature evidence is an immutable pre-off training record,
     # not a transient result. Convert a legacy raw snapshot to the lossless
     # archive on the next safe replace and keep the original feature hash.
