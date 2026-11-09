@@ -147,6 +147,22 @@ def _is_target(detail: dict[str, Any]) -> bool:
             or detail.get("condition") in UNKNOWN)
 
 
+def _is_compact_tombstone(detail: dict[str, Any]) -> bool:
+    """Archive-less compact tombstone (the 2026-11-01 D1 compact
+    destroyed the forecast blocks; see the 2026-11-09 tombstone
+    repair). protect_sync fail-closes any write to these that is not
+    result/payout-only -- its registered exception covers
+    {result, resultCname, payouts} only -- so an environment write
+    through the sync route is refused by design. These races are
+    reported as skipped with that reason instead of aborting the
+    whole day's batches."""
+    return (detail.get("predictionModelVersion")
+            == "arvexq-prediction-removed"
+            and not detail.get("unifiedForecast")
+            and not detail.get("preoffStage64Archive")
+            and not detail.get("horses"))
+
+
 def _header_env_fallback(result_cname: str,
                          detail: dict[str, Any]) -> dict[str, Any]:
     """Fallback for races whose structured parse returns no weather
@@ -235,6 +251,13 @@ def repair(bundle_path: str, payload_path: str, report_path: str) -> int:
     for detail in details:
         rid = str(detail.get("id") or "")
         if not _is_target(detail):
+            continue
+        if _is_compact_tombstone(detail):
+            skipped.append({
+                "race_id": rid,
+                "reason": "compact tombstone: protect fail-closes "
+                          "non-result writes by design (env fields are "
+                          "outside the result-only exception)"})
             continue
         targets.append(rid)
         try:
