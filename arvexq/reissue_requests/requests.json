@@ -1,1 +1,14 @@
-{"requests":[],"version":1}
+{
+ "requests": [
+  {
+   "request_id": "req-20261109153256-8c95aa",
+   "race_id": "nar-2026-11-09-川崎-01",
+   "revision_kind": "env-repair-upgrade",
+   "reason": "slim path dry-run proof: env-repair stamp already on this race (Actions run 42566921630)",
+   "mode": "dry-run",
+   "requested_at": "2026-11-09T15:32:56+09:00",
+   "requested_by": "arvexq_reissue_request.py"
+  }
+ ],
+ "version": 1
+}
