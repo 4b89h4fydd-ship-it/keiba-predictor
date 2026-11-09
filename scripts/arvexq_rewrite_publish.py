@@ -1785,3 +1785,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+# Cycle trigger 2026-11-09 15:20 JST: give the env-repair
+# marks-resync branch another evaluation while Nagoya 7R is
+# still outside its 15-minute lead guard (post 16:05).
