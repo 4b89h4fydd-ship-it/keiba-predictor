@@ -9,6 +9,7 @@ name: ARVEXQ Validation
       - build_static.py
       - workers/**
       - arvexq/**
+      - rewrite/**
       - scripts/**
       - tests/**
       - .github/workflows/arvexq-*.yml
@@ -60,6 +61,9 @@ jobs:
 
       - name: Full Python regression suite including official CSV and career evidence
         run: PYTHONPATH=.:tests python -m pytest tests -q
+
+      - name: Master18 all-runner forecast contract
+        run: python -m unittest rewrite.test_master18 -v
 
       - name: Python syntax
         run: |
