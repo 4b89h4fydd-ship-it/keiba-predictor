@@ -3,6 +3,6 @@
   "scope": "jra-only",
   "env_fill_limit": 0,
   "requested_by": "jra-tombstone-repair-20261109",
-  "attempt": 3,
-  "note": "Compact-tombstone run: seeds file covers the 13 nightly-compact tombstone races of 2026-10-31 (Kyoto 01/02/03/04/07/08, Tokyo 01/02/03/06/07/08/09). Protect admits only result-only writes over the archive-less tombstones; Tokyo 02/08 also get their foreign stored results replaced with the official ones. Seeds are lane-steering skeletons of the archived cards (equivalence with full-card seeds proven by simulation)."
+  "attempt": 4,
+  "note": "Attempt 4: re-run after attempt 3 failed inside the repair step (no writes landed; state unchanged). Same seeds/protect as attempt 3."
 }
