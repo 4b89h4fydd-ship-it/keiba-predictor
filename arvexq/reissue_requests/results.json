@@ -31,6 +31,102 @@
      "env-repair-upgrade",
      "marksResync"
     ]
+   },
+   {
+    "observed_at": "2026-11-09T15:37:42+09:00",
+    "request_id": "req-20261109153320-02b80b",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v9b-cal-market",
+      "blendApplied": true,
+      "postBlendApplied": true,
+      "firstPublishedAt": "2026-11-08T21:55:37+09:00",
+      "publishedAt": "2026-11-09T14:22:58+09:00",
+      "receiptSha256": "ca0230a8c616f7d04b40aafe6f2655443bd8251c141e6a0f91c44e64c709c4ab"
+     },
+     "revision": {
+      "kind": "env-repair-upgrade",
+      "reason": "env-repair-upgrade",
+      "revisedAt": "2026-11-09T14:22:58+09:00",
+      "revisionCount": 2,
+      "probabilityComputedAt": "2026-11-09T02:16:32+09:00",
+      "surface": "ダート"
+     },
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "lane-upgrade",
+     "blend-upgrade",
+     "place-ev-upgrade",
+     "ticket-r24-upgrade",
+     "env-repair-upgrade",
+     "marksResync"
+    ]
+   },
+   {
+    "observed_at": "2026-11-09T15:37:43+09:00",
+    "request_id": "req-20261109153713-0e8b64",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v9b-cal-market",
+      "blendApplied": true,
+      "postBlendApplied": true,
+      "firstPublishedAt": "2026-11-08T21:55:37+09:00",
+      "publishedAt": "2026-11-09T14:22:58+09:00",
+      "receiptSha256": "ca0230a8c616f7d04b40aafe6f2655443bd8251c141e6a0f91c44e64c709c4ab"
+     },
+     "revision": {
+      "kind": "env-repair-upgrade",
+      "reason": "env-repair-upgrade",
+      "revisedAt": "2026-11-09T14:22:58+09:00",
+      "revisionCount": 2,
+      "probabilityComputedAt": "2026-11-09T02:16:32+09:00",
+      "surface": "ダート"
+     },
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "lane-upgrade",
+     "blend-upgrade",
+     "place-ev-upgrade",
+     "ticket-r24-upgrade",
+     "env-repair-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-09-佐賀-03": [
+   {
+    "observed_at": "2026-11-09T15:37:40+09:00",
+    "request_id": "req-20261109153309-3304c4",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v9b-cal-market",
+      "blendApplied": true,
+      "postBlendApplied": true,
+      "firstPublishedAt": "2026-11-08T21:54:31+09:00",
+      "publishedAt": "2026-11-09T14:57:37+09:00",
+      "receiptSha256": "b8a0cff42abd410772a9d8edf3a50e0ee649b1675570e57be150bbaeb6bf8daa"
+     },
+     "revision": {
+      "kind": "env-repair-upgrade",
+      "reason": "env-repair-upgrade",
+      "revisedAt": "2026-11-09T14:57:37+09:00",
+      "revisionCount": 4,
+      "probabilityComputedAt": "2026-11-08T21:54:31+09:00",
+      "marksResync": true,
+      "surface": "ダート"
+     },
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "lane-upgrade",
+     "blend-upgrade",
+     "place-ev-upgrade",
+     "ticket-r24-upgrade",
+     "env-repair-upgrade",
+     "marksResync"
+    ]
    }
   ]
  },
@@ -42,6 +138,39 @@
    "mode": "dry-run",
    "processed_at": "2026-11-09T15:33:23+09:00",
    "run_id": "42573724760",
+   "status": "dry-run-already-applied",
+   "detail": "slim-ledger-observation: observed applied on 2026-11-09T15:33:23+09:00 (request req-20261109153256-8c95aa)",
+   "attempts": 1
+  },
+  "req-20261109153309-3304c4": {
+   "request_id": "req-20261109153309-3304c4",
+   "race_id": "nar-2026-11-09-佐賀-03",
+   "revision_kind": "marksResync",
+   "mode": "dry-run",
+   "processed_at": "2026-11-09T15:37:40+09:00",
+   "run_id": "42574172505",
+   "status": "dry-run-already-applied",
+   "detail": "slim-ledger-observation: observed applied on 2026-11-09T15:37:40+09:00 (request req-20261109153309-3304c4)",
+   "attempts": 1
+  },
+  "req-20261109153320-02b80b": {
+   "request_id": "req-20261109153320-02b80b",
+   "race_id": "nar-2026-11-09-川崎-01",
+   "revision_kind": "blend-upgrade",
+   "mode": "dry-run",
+   "processed_at": "2026-11-09T15:37:42+09:00",
+   "run_id": "42574172505",
+   "status": "dry-run-already-applied",
+   "detail": "slim-ledger-observation: observed applied on 2026-11-09T15:33:23+09:00 (request req-20261109153256-8c95aa)",
+   "attempts": 1
+  },
+  "req-20261109153713-0e8b64": {
+   "request_id": "req-20261109153713-0e8b64",
+   "race_id": "nar-2026-11-09-川崎-01",
+   "revision_kind": "ticket-r24-upgrade",
+   "mode": "dry-run",
+   "processed_at": "2026-11-09T15:37:43+09:00",
+   "run_id": "42574172505",
    "status": "dry-run-already-applied",
    "detail": "slim-ledger-observation: observed applied on 2026-11-09T15:33:23+09:00 (request req-20261109153256-8c95aa)",
    "attempts": 1
