@@ -167,6 +167,44 @@ class CompactTombstoneExceptionTests(TestCase):
             protect_detail(deepcopy(old), deepcopy(incoming))
 
 
+    def test_packed_result_only_write_passes(self):
+        # The sync path delivers details packed in the full-snapshot
+        # envelope (sync_batches). The exception judges the unpacked
+        # content, so the packed form of a result-only write passes.
+        from arvexq.ingest.full_snapshot_codec import (
+            pack_detail as pack_full, unpack_detail as unpack_full)
+        old = _stub()
+        incoming = pack_full(_result_only_write(old))
+        out = unpack_full(protect_detail(deepcopy(old), incoming))
+        self.assertEqual(out["result"]["payouts"][0]["combination"],
+                         "3-5-7")
+        self.assertEqual(out["resultCname"], TOKEN)
+
+    def test_packed_write_touching_another_field_is_refused(self):
+        from arvexq.ingest.full_snapshot_codec import (
+            pack_detail as pack_full)
+        old = _stub()
+        incoming = _result_only_write(old)
+        incoming["title"] = "書き換え"
+        with self.assertRaises(RuntimeError):
+            protect_detail(deepcopy(old), pack_full(incoming))
+
+    def test_transport_materialised_write_is_refused(self):
+        # The career-transport normalisation materialises ``horses: []``
+        # and stamps ``preparedMeta`` onto every detail it packs. Those
+        # are field differences beyond result/payout, so the exception
+        # itself stays closed to them: sync_batches is responsible for
+        # shipping a tombstone write verbatim instead (see
+        # tests/test_sync_batches_tombstone.py). This pins that the
+        # exception was NOT widened to fit the transport.
+        old = _stub()
+        incoming = _result_only_write(old)
+        incoming["horses"] = []
+        incoming["preparedMeta"] = {"careerTransportVersion": "v1"}
+        with self.assertRaises(RuntimeError):
+            protect_detail(deepcopy(old), deepcopy(incoming))
+
+
 class _FakeResponse(io.BytesIO):
     def __enter__(self):
         return self

@@ -70,6 +70,18 @@ def main() -> int:
     orphan_unsealed: list[str] = []
     def prepare_detail(raw: dict[str, Any]) -> dict[str, Any]:
         detail = unpack_full_snapshot(raw)
+        # A compact-tombstone repair write (nightly-compact stub plus a
+        # result-only overlay, admitted by protect_detail's narrow
+        # exception) must reach protect byte-identical to the payload:
+        # the career-transport normalisation below would materialise
+        # ``horses: []`` and stamp ``preparedMeta``, which are field
+        # differences beyond result/payout and would make the write
+        # inadmissible. The stub predicate is protect's own, re-checked
+        # authoritatively at protect time; normal details never match
+        # it (they carry a card or forecast blocks).
+        from scripts.arvexq_protect_sync import _compact_tombstone_stub
+        if _compact_tombstone_stub(detail):
+            return detail
         if (live_delta and isinstance(detail.get("massFeatureSnapshot"), dict)
                 and not isinstance(detail.get("preRacePrediction"), dict)):
             orphan_unsealed.append(race_id(detail))
