@@ -1,0 +1,68 @@
+name: ARVEXQ NAR Missing-Result Probe (2026-11-10)
+
+# Read-only probe for the 7 result-missing NAR races: checks the
+# official keiba.go.jp tables and the nar.netkeiba.com result pages
+# from the Actions network and commits the findings back to
+# arvexq/nar_missing_probe_requests/results/. Triggered by a push to
+# arvexq/nar_missing_probe_requests/requests.json. Writes nothing to
+# production data.
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - arvexq/nar_missing_probe_requests/requests.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arvexq-nar-missing-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install runtime dependencies
+        run: python -m pip install -q -r requirements.txt
+
+      - name: Probe official + netkeiba result pages
+        run: python scripts/arvexq_nar_missing_probe.py
+
+      - name: Commit probe results back to the repo
+        if: always()
+        run: |
+          git config user.name "arvexq-nar-missing-probe"
+          git config user.email "actions@github.com"
+          git add arvexq/nar_missing_probe_requests/results
+          if git diff --cached --quiet; then
+            echo "no probe results to commit"
+            exit 0
+          fi
+          git commit -m "probe(nar-missing): run ${GITHUB_RUN_ID} results"
+          commit=$(git rev-parse HEAD)
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git push origin "$commit:main"; then
+              echo "probe results pushed"
+              exit 0
+            fi
+            git rebase origin/main || git rebase --abort
+            commit=$(git rev-parse HEAD)
+          done
+          echo "::warning::probe results push failed after retries"
+          exit 0
