@@ -8,6 +8,15 @@
    "mode": "dry-run",
    "requested_at": "2026-11-09T15:32:56+09:00",
    "requested_by": "arvexq_reissue_request.py"
+  },
+  {
+   "request_id": "req-20261109153309-3304c4",
+   "race_id": "nar-2026-11-09-佐賀-03",
+   "revision_kind": "marksResync",
+   "reason": "slim path dry-run proof: marks blocks auto-resolved by the sync facts refresh",
+   "mode": "dry-run",
+   "requested_at": "2026-11-09T15:33:09+09:00",
+   "requested_by": "arvexq_reissue_request.py"
   }
  ],
  "version": 1
