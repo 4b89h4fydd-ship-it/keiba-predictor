@@ -147,6 +147,34 @@ def _is_target(detail: dict[str, Any]) -> bool:
             or detail.get("condition") in UNKNOWN)
 
 
+def _header_env_fallback(result_cname: str,
+                         detail: dict[str, Any]) -> dict[str, Any]:
+    """Fallback for races whose structured parse returns no weather
+    or condition even though the official result page header prints
+    them (observed on jra-2026-10-24-東京-10: the page header reads
+     ダート , the production parse extracted neither).
+    Reads the SAME official result page's header text only; the
+    going is taken for the race's own surface."""
+    try:
+        html = _request(ACCESS_S, result_cname, 86400)
+    except Exception:
+        return {}
+    import unicodedata
+    text = re.sub(r"<[^>]+>", " ", html)
+    text = unicodedata.normalize("NFKC", text)
+    text = re.sub(r"\s+", " ", text)
+    out: dict[str, Any] = {}
+    wm = re.search(r"天候\s*(晴|曇|雨|小雨|雪|小雪)", text)
+    if wm:
+        out["weather"] = wm.group(1)
+        tail = text[wm.end():wm.end() + 40]
+        gm = re.search(r"(芝|ダート)\s*(良|稍重|重|不良)", tail)
+        if gm and (not detail.get("surface")
+                   or gm.group(1) == str(detail.get("surface"))):
+            out["condition"] = gm.group(2)
+    return out
+
+
 def _official_env(detail: dict[str, Any],
                   discovery: _TokenDiscovery) -> dict[str, Any] | None:
     """Official JRA environment for this race from its result page.
@@ -175,8 +203,16 @@ def _official_env(detail: dict[str, Any],
         if mine not in (None, "", 0) and theirs not in (None, "", 0) \
                 and str(mine) != str(theirs):
             return None
-    return {"weather": parsed.get("weather"),
-            "condition": parsed.get("condition")}
+    env = {"weather": parsed.get("weather"),
+           "condition": parsed.get("condition")}
+    if env["weather"] in UNKNOWN or env["condition"] in UNKNOWN:
+        fb = _header_env_fallback(result_cname, detail)
+        if env["weather"] in UNKNOWN and fb.get("weather") not in UNKNOWN:
+            env["weather"] = fb["weather"]
+        if env["condition"] in UNKNOWN \
+                and fb.get("condition") not in UNKNOWN:
+            env["condition"] = fb["condition"]
+    return env
 
 
 def repair(bundle_path: str, payload_path: str, report_path: str) -> int:
