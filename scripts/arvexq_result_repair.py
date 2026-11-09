@@ -231,6 +231,83 @@ def _fill_missing_environment(
     return filled
 
 
+def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Rebuild a fresh detail for a race the fast refresher cannot reach.
+
+    The fast refresher reads locally stored full details; a historical
+    race whose stored detail was compacted to a summary has none, so the
+    refresher returns nothing and the race stays unrepairable forever
+    (the 2026-11-09 payout-duplicate census: 345 races sat in exactly
+    this state). The official result fetchers only need the race
+    identity — date / track / race number, the stored JRA result token,
+    and, for NAR, a name->number map that the stored finishers already
+    provide — all of which the bundle detail still carries. The result
+    is merged into a copy of the bundle detail exactly as the fast path
+    merges it into the locally stored one; forecasts are untouched
+    (the protect seam restores them from the stored publication).
+    """
+    if not isinstance(base, dict) or not base.get("id"):
+        return None
+    fresh = copy.deepcopy(base)
+    if rid.startswith("nar-"):
+        minimal = {
+            "id": rid,
+            "date": base.get("date"),
+            "track": base.get("track"),
+            "raceNumber": base.get("raceNumber"),
+            "horses": [
+                {"name": f.get("name"), "horseNumber": f.get("horseNumber")}
+                for f in (base.get("result") or {}).get("finishers") or []
+                if isinstance(f, dict) and f.get("name") and f.get("horseNumber")
+            ],
+        }
+        official = app._nar_official_result_fast(minimal)
+        if not official:
+            return None
+        fresh["result"] = official
+        if official.get("weather") not in (None, "", "不明"):
+            fresh["weather"] = official["weather"]
+        if official.get("condition") not in (None, "", "不明"):
+            fresh["condition"] = official["condition"]
+        fresh = app._merge_result_fields(fresh, official)
+        if app._result_has_podium(fresh):
+            try:
+                fresh = app._attach_nar_payouts(fresh)
+            except Exception as exc:
+                print("NAR payout attach after bundle refresh failed", rid, exc)
+        return fresh
+    # JRA: reuse the stored result token when it still names this race;
+    # otherwise re-derive it from the race card, as the fast path does.
+    result_cname = str(base.get("resultCname") or "")
+    if result_cname and not app._jra_result_cname_matches_detail(result_cname, base):
+        result_cname = ""
+    if not result_cname:
+        cname = app._jra_find_cname(str(base.get("date") or ""),
+                                    str(base.get("track") or ""),
+                                    int(base.get("raceNumber") or 0))
+        if cname:
+            result_cname = app._jra_result_cname_from_card(cname)
+    if result_cname:
+        parsed = app._jra_parse_result(result_cname, fresh)
+        if parsed:
+            fresh = app._merge_official_result(fresh, parsed)
+    stored_payouts = ((fresh.get("result") or {}).get("payouts")) or []
+    payout_broken = not stored_payouts or bool(payout_combination_violations(fresh))
+    if (not app._result_has_podium(fresh)
+            or not app._result_covers_card(fresh)
+            or payout_broken) and app._race_should_have_result(fresh):
+        try:
+            nk = app._netkeiba_current_result(fresh)
+            if nk:
+                fresh["result"] = nk
+                fresh = app._merge_result_fields(fresh, nk)
+        except Exception as exc:
+            print("JRA result fallback after bundle refresh failed", rid, exc)
+    if fresh.get("result") == base.get("result"):
+        return None
+    return fresh
+
+
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
     bundle = _read_json(bundle_path)
     # The D1 calendar can retain retired Banei summary IDs without detail
@@ -284,11 +361,20 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     def refresh_one(rid: str) -> tuple[str, dict[str, Any] | None, str]:
         try:
             fresh = app._refresh_result_fast(rid)
-            if not isinstance(fresh, dict) or not fresh.get("id"):
-                return rid, None, "result refresher returned no usable detail"
-            return rid, fresh, ""
+            if isinstance(fresh, dict) and fresh.get("id"):
+                return rid, fresh, ""
+        except Exception:
+            pass
+        # The fast refresher needs a locally stored full detail, which
+        # compacted historical races no longer have; rebuild the
+        # official result from the bundle detail instead.
+        try:
+            fresh = _official_refresh_from_bundle(rid, by_id.get(rid))
         except Exception as exc:
             return rid, None, f"{type(exc).__name__}: {exc}"
+        if not isinstance(fresh, dict) or not fresh.get("id"):
+            return rid, None, "result refresher returned no usable detail"
+        return rid, fresh, ""
 
     for attempt in (1, 2):
         todo = []

@@ -72,6 +72,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
           python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
           python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
+          python -m pytest tests/test_result_repair_bundle_fallback.py -q
 
       - name: Read and validate the requested dates
         run: |
@@ -137,6 +138,13 @@ jobs:
             if [ "$ok" = 1 ]; then
               jq -c '{date, started, pending_before, repairedCount:(.repaired|length), resultMissing:(.result_missing|length), payoutMissing:(.payout_missing|length)}' \
                 "result-repair-report-$DATE.json" >> repair-summary.txt || true
+              # A repaired detail can carry a raw mass-feature matrix
+              # whose prediction twin lives in the stored publication;
+              # pack_detail refuses it and one refusal would kill the
+              # whole day's sync. Convert such snapshots to their
+              # verified archive form (or isolate the detail) first.
+              PYTHONPATH=. python scripts/arvexq_payout_payload_sanitize.py \
+                --payload "result-repair-payload-$DATE.json" || ok=0
               STARTED=$(jq '.meta.started_race_count // 0' "result-repair-payload-$DATE.json")
               if [ "$STARTED" -gt 0 ]; then
                 python scripts/arvexq_sync_batches.py \
