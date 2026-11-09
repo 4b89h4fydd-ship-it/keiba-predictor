@@ -366,6 +366,105 @@ def blend_repair_targets(
     return [rid for _sm, rid in found]
 
 
+# Env-repair targeting (2026-11-09, user instruction 「印かえていいよ」):
+# the publish lane re-issues a 2026-11-09 NAR v9b forecast whose
+# probabilities were computed while the surface builders served ""
+# (fixed in main 2e01ec9e) — but only from a stored detail that
+# already carries the real surface, and most stored details still
+# carry the "" baked in before the fix, because only each venue's
+# standing targets get their facts rebuilt. A stored race whose
+# forecast qualifies for the env-repair re-issue and whose stored
+# detail still lacks its surface is therefore an explicit sync
+# target on every run while its post is far enough away for the
+# rebuilt detail to reach the publish lane inside its own
+# 30-minute guard (see _env_repair_upgrade_info in
+# arvexq_rewrite_publish.py, whose qualification this mirrors).
+# The date scope makes the targeting inert after 2026-11-09.
+ENV_REPAIR_DATE = "2026-11-09"
+ENV_REPAIR_FIX_LIVE_AT = datetime(2026, 11, 9, 10, 22, tzinfo=JST)
+ENV_REPAIR_MIN_LEAD_MIN = 35
+MAX_ENV_REPAIR_PROBES = 16
+
+
+def _stamp(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=JST)
+    return parsed
+
+
+def env_repair_targets(
+    rows: list[dict[str, Any]],
+    details_by_id: dict[str, dict[str, Any]],
+    now_min: int,
+) -> list[str]:
+    """Ids of races whose stored detail must be rebuilt so the
+    publish lane's env-repair re-issue can fire.
+
+    A race qualifies only when it is a 2026-11-09 NAR race whose
+    stored detail's rewritePublish marker sits on the v9b lane
+    (abilityLane v9b-cal-market), carries no env-repair-upgrade
+    revision yet, its probabilities were last computed before
+    ENV_REPAIR_FIX_LIVE_AT (the latest forecast-recomputing
+    revision — roster change / lane upgrade / blend upgrade —
+    sets the time; surgical revisions keep the stored
+    probabilities, so with one of those on top the time is the
+    first publication), its post is still more than
+    ENV_REPAIR_MIN_LEAD_MIN away, and its stored detail still
+    serves an empty surface — the one thing this sync's rebuild
+    supplies. Anything unreadable does not qualify (fail-closed:
+    ordinary targeting still applies).
+    """
+    found: list[tuple[int, str]] = []
+    for r in rows:
+        rid = str(r.get("id") or "")
+        if not rid.startswith("nar-"):
+            continue
+        if str(r.get("date") or "") not in ("", ENV_REPAIR_DATE):
+            continue
+        sm = start_min(r)
+        if sm >= 9999 or sm - now_min <= ENV_REPAIR_MIN_LEAD_MIN:
+            continue
+        detail = details_by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        if str(detail.get("date") or "") != ENV_REPAIR_DATE:
+            continue
+        surface = detail.get("surface")
+        if isinstance(surface, str) and surface.strip():
+            continue
+        marker = (detail.get("preparedMeta") or {}).get("rewritePublish")
+        if not isinstance(marker, dict):
+            continue
+        if marker.get("abilityLane") != "v9b-cal-market":
+            continue
+        revision = marker.get("revision")
+        kind = None
+        revised_at = None
+        if isinstance(revision, dict):
+            kind = revision.get("kind") or revision.get("reason")
+            revised_at = revision.get("revisedAt")
+        if kind == "env-repair-upgrade":
+            continue
+        if kind in ("blend-upgrade", "lane-upgrade",
+                    "lane-upgrade-v9b-adoption", "roster-change"):
+            computed_at = _stamp(revised_at)
+        else:
+            computed_at = _stamp(
+                marker.get("firstPublishedAt")
+                or marker.get("publishedAt"))
+        if computed_at is None or computed_at >= ENV_REPAIR_FIX_LIVE_AT:
+            continue
+        found.append((sm, rid))
+    found.sort()
+    return [rid for _sm, rid in found]
+
+
 def choose_targets(rows: list[dict[str, Any]], now_min: int) -> list[str]:
     groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for r in rows:
@@ -678,6 +777,43 @@ def main() -> int:
             targets.append(rid)
     if repair:
         print("BLEND_REPAIR_TARGETS", len(repair), ",".join(repair))
+
+    # Env repair (2026-11-09 only): the same probe pattern for
+    # races whose stored forecast qualifies for the publish lane's
+    # env-repair re-issue but whose stored detail still serves an
+    # empty surface. Their refreshed detail is what the publish
+    # lane consumes; without this, a race ordinary targeting has
+    # not reached keeps the "" baked into its stored detail until
+    # it becomes its venue's next race — inside the publish
+    # guard, too late to repair.
+    env_probe_rows = sorted(
+        (r for r in rows
+         if str(r.get("id") or "") not in targets
+         and str(r.get("id") or "") not in base_by_id
+         and start_min(r) < 9999
+         and start_min(r) - now_min > ENV_REPAIR_MIN_LEAD_MIN),
+        key=start_min,
+    )[:MAX_ENV_REPAIR_PROBES]
+    if env_probe_rows:
+        with ThreadPoolExecutor(max_workers=min(8, len(env_probe_rows))) as ex:
+            futures = {
+                ex.submit(fetch_d1_detail, str(r.get("id") or "")): str(r.get("id") or "")
+                for r in env_probe_rows
+            }
+            for fut in as_completed(futures):
+                rid = futures[fut]
+                try:
+                    detail = fut.result()
+                except Exception:
+                    detail = None
+                if detail:
+                    base_by_id[rid] = detail
+    env_repair = env_repair_targets(rows, base_by_id, now_min)
+    for rid in env_repair:
+        if rid not in targets:
+            targets.append(rid)
+    if env_repair:
+        print("ENV_REPAIR_TARGETS", len(env_repair), ",".join(env_repair))
 
     # Seed the rich D1 payload into local RaceDB before any live collector runs.
     for rid in targets:
