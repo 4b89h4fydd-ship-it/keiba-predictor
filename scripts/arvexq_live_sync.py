@@ -398,6 +398,119 @@ def _stamp(value: Any) -> datetime | None:
     return parsed
 
 
+# Weight-repair window (2026-11-09, direct-acquisition plan §7.2):
+# the official NAR card publishes every runner's current body weight
+# only ~60 minutes before post. The fetch/parse/merge chain that
+# carries it into a stored detail exists (odds_refresh's official
+# card fallback -> merge_live -> the durable-write gate) and works
+# when invoked — but invocation was left to ordinary targeting
+# (venue's live + next race, then a 240-minute sweep capped at 30),
+# and the sync workflow itself is scheduler-starved (11 completed
+# runs on 2026-11-09, gaps up to ~6.5 hours), so most races never
+# saw a single run inside their publication window: entry-side
+# coverage sat at 51.8% (276/533) that day, all-or-nothing per race.
+# No lane ever erases a landed weight (the publish lane carries the
+# stored horses verbatim; result repair protects them), so a race
+# that misses the window keeps the pre-publication card forever.
+# A stored NAR race whose card entries still lack body weight is
+# therefore an explicit sync target on every run once its post is
+# inside the publication window, so any single landed run repairs
+# it. Targeting opens slightly before publication (75 minutes) so
+# the first run after the weights stand finds the race already
+# queued, and closes 5 minutes out, when a write can no longer be
+# expected to land before post.
+WEIGHT_REPAIR_WINDOW_MIN = 75
+WEIGHT_REPAIR_MIN_LEAD_MIN = 5
+MAX_WEIGHT_REPAIR_PROBES = 16
+
+_WEIGHT_MISSING = (None, "", 0)
+_SCRATCH_STATUSES = {"取消", "除外", "競走除外", "競走取消", "出走取消", "欠場"}
+
+
+def _active_horses_missing_weight(detail: dict[str, Any]) -> bool:
+    horses = detail.get("horses")
+    if not isinstance(horses, list) or not horses:
+        return False
+    for h in horses:
+        if not isinstance(h, dict):
+            continue
+        if h.get("scratched") or str(h.get("status") or "") in _SCRATCH_STATUSES:
+            continue
+        if h.get("bodyWeight") in _WEIGHT_MISSING:
+            return True
+    return False
+
+
+def weight_repair_targets(
+    rows: list[dict[str, Any]],
+    details_by_id: dict[str, dict[str, Any]],
+    now_min: int,
+) -> list[str]:
+    """Ids of unstarted NAR races whose stored card still lacks
+    body weights inside the official publication window.
+
+    A race qualifies only when it is a NAR race (nar- id), its post
+    is between WEIGHT_REPAIR_MIN_LEAD_MIN and WEIGHT_REPAIR_WINDOW_MIN
+    minutes away, and its stored detail is readable and has at least
+    one active runner without a bodyWeight. Anything unreadable does
+    not qualify (fail-closed: ordinary targeting still applies).
+    """
+    found: list[tuple[int, str]] = []
+    for r in rows:
+        rid = str(r.get("id") or "")
+        if not rid.startswith("nar-"):
+            continue
+        sm = start_min(r)
+        if sm >= 9999:
+            continue
+        lead = sm - now_min
+        if lead < WEIGHT_REPAIR_MIN_LEAD_MIN or lead > WEIGHT_REPAIR_WINDOW_MIN:
+            continue
+        detail = details_by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        if _active_horses_missing_weight(detail):
+            found.append((sm, rid))
+    found.sort()
+    return [rid for _sm, rid in found]
+
+
+def preserve_present_weights(
+    base: dict[str, Any] | None,
+    merged: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """Enforce the weight repair's fill-missing-only semantics.
+
+    The shared refresh path treats the official card as the current
+    truth and may replace a stored weight with a fresher one. For a
+    race targeted ONLY because some entries still lack a weight,
+    the repair must never rewrite a value that is already stored:
+    any horse whose stored entry carries a bodyWeight keeps that
+    weight and its change figure (the pair moves as a unit, as in
+    the official card parser); entries still missing take the
+    refreshed value. Nothing else in the detail is touched.
+    """
+    if not isinstance(base, dict) or not isinstance(merged, dict):
+        return merged
+    stored = {
+        int(h.get("horseNumber") or 0): h
+        for h in base.get("horses") or []
+        if isinstance(h, dict) and int(h.get("horseNumber") or 0) > 0
+    }
+    if not stored:
+        return merged
+    for h in merged.get("horses") or []:
+        if not isinstance(h, dict):
+            continue
+        old = stored.get(int(h.get("horseNumber") or 0))
+        if old is None:
+            continue
+        if old.get("bodyWeight") not in _WEIGHT_MISSING:
+            h["bodyWeight"] = copy.deepcopy(old.get("bodyWeight"))
+            h["bodyWeightChange"] = copy.deepcopy(old.get("bodyWeightChange"))
+    return merged
+
+
 def env_repair_targets(
     rows: list[dict[str, Any]],
     details_by_id: dict[str, dict[str, Any]],
@@ -815,6 +928,47 @@ def main() -> int:
     if env_repair:
         print("ENV_REPAIR_TARGETS", len(env_repair), ",".join(env_repair))
 
+    # Weight repair (§7.2): the same probe pattern for NAR races
+    # inside the official body-weight publication window (~60 min
+    # before post) whose stored card entries still lack a weight.
+    # The sync workflow is scheduler-starved, so a race cannot rely
+    # on ordinary targeting reaching it inside that one window:
+    # every landed run must retry every incomplete race in it. The
+    # refresh itself reuses the ordinary chain (odds_refresh's
+    # official card fallback merges the current weights); the
+    # fill-missing-only guard is applied to these targets when
+    # their refreshed details are assembled below.
+    weight_probe_rows = sorted(
+        (r for r in rows
+         if str(r.get("id") or "").startswith("nar-")
+         and str(r.get("id") or "") not in targets
+         and str(r.get("id") or "") not in base_by_id
+         and start_min(r) < 9999
+         and WEIGHT_REPAIR_MIN_LEAD_MIN <= start_min(r) - now_min <= WEIGHT_REPAIR_WINDOW_MIN),
+        key=start_min,
+    )[:MAX_WEIGHT_REPAIR_PROBES]
+    if weight_probe_rows:
+        with ThreadPoolExecutor(max_workers=min(8, len(weight_probe_rows))) as ex:
+            futures = {
+                ex.submit(fetch_d1_detail, str(r.get("id") or "")): str(r.get("id") or "")
+                for r in weight_probe_rows
+            }
+            for fut in as_completed(futures):
+                rid = futures[fut]
+                try:
+                    detail = fut.result()
+                except Exception:
+                    detail = None
+                if detail:
+                    base_by_id[rid] = detail
+    weight_repair = weight_repair_targets(rows, base_by_id, now_min)
+    weight_repair_set = set(weight_repair)
+    for rid in weight_repair:
+        if rid not in targets:
+            targets.append(rid)
+    if weight_repair:
+        print("WEIGHT_REPAIR_TARGETS", len(weight_repair), ",".join(weight_repair))
+
     # Seed the rich D1 payload into local RaceDB before any live collector runs.
     for rid in targets:
         seed_prepared_base(rid, base_by_id.get(rid))
@@ -848,6 +1002,11 @@ def main() -> int:
             if analysis_changed:
                 reanalyzed.append(rid)
             if isinstance(d, dict) and d.get("id"):
+                if rid in weight_repair_set:
+                    # Fill-missing-only: a weight already stored is
+                    # never rewritten by this repair, however the
+                    # shared refresh path treated it.
+                    d = preserve_present_weights(base_by_id.get(rid), d) or d
                 d, updated = apply_official_scratch_changes(d, official_changes.get(rid, {}))
                 if updated:
                     print("OFFICIAL_SCRATCH_APPLIED", rid, ",".join(map(str, updated)))
@@ -888,6 +1047,7 @@ def main() -> int:
             "thin_detail_skipped_count": len(skipped_thin),
             "missing_d1_base_count": len(missing_base),
             "reanalyzed_count": len(reanalyzed),
+            "weight_repair_target_count": len(weight_repair),
             "environment_track_count": len(environment),
             "official_course_event_count": len(official_conditions),
             "user_model_revision_approval": "user-approved-past-five-from-2026-10-09-20-10-jst"
@@ -904,6 +1064,7 @@ def main() -> int:
         "reanalyzed": sorted(reanalyzed),
         "environment": environment,
         "thin_detail_skipped": sorted(skipped_thin),
+        "weight_repair_targets": sorted(weight_repair_set),
         "unchanged_detail_not_rewritten": sorted(skipped_odds_only),
         "missing_d1_base": sorted(missing_base),
         "errors": errors,
