@@ -1,8 +1,3 @@
 {
-  "date": "2026-10-31",
-  "scope": "jra-only",
-  "env_fill_limit": 0,
-  "requested_by": "jra-tombstone-repair-20261109",
-  "attempt": 5,
-  "note": "Attempt 5: sync_batches now ships compact-tombstone writes verbatim (attempts 3/4 repaired fine but the sync step's protect refused the career-transport keys sync_batches had added). Same seeds/protect exception as attempts 3/4."
+  "date": "2026-11-01"
 }
