@@ -97,6 +97,54 @@ def health_diff(a: dict, b: dict) -> list[str]:
     return diffs
 
 
+def _patch_race(spec, summaries, app_module, protect, entry,
+                sync_details, sync_summaries, intended) -> None:
+    rid = spec["id"]
+    old = fetch_detail(rid)
+    if old is None:
+        entry["status"] = "missing-in-api"
+        return
+    if protect._compact_tombstone_stub(old):
+        entry["status"] = "skipped-tombstone-stub"
+        return
+    if not (old.get("horses") or []):
+        entry["status"] = "skipped-no-horses"
+        return
+    new = copy.deepcopy(old)
+    for num, fix in (spec.get("bodyweightFixes") or {}).items():
+        cell = next((h for h in new["horses"]
+                     if int(h.get("horseNumber") or 0) == int(num)), None)
+        if cell is None:
+            raise RuntimeError(f"{rid}: horse {num} not found")
+        if cell.get("bodyWeight") != fix["from"]:
+            raise RuntimeError(
+                f"{rid} #{num}: stored bodyWeight "
+                f"{cell.get('bodyWeight')!r} != expected "
+                f"{fix['from']!r}; aborting this race")
+        cell["bodyWeight"] = fix["to"]
+        cell["bodyWeightChange"] = fix["changeTo"]
+        entry.setdefault("bodyweight", []).append(
+            {"horseNumber": int(num), "from": fix["from"],
+             "to": fix["to"], "changeTo": fix["changeTo"]})
+    new["dataCoreHealth"] = app_module._data_core_health(new)
+    new["dataCoreVersion"] = app_module.ARVEXQ_DATA_CORE_VERSION
+    new["dataCoreUpdatedAt"] = int(time.time())
+    entry["healthDiff"] = health_diff(old.get("dataCoreHealth"),
+                                      new["dataCoreHealth"])
+    guarded = protect.protect_detail(old, new)
+    if guarded != new:
+        raise RuntimeError(f"{rid}: protect_detail modified the patch")
+    if new == old and not spec.get("force"):
+        entry["status"] = "unchanged"
+        return
+    entry["status"] = "to-sync"
+    sync_details.append(new)
+    if rid in summaries:
+        sync_summaries.append(summaries[rid])
+    intended[rid] = {"health": new["dataCoreHealth"],
+                     "bodyweight": entry.get("bodyweight") or []}
+
+
 def main() -> int:
     request_path = Path(sys.argv[1]) if len(sys.argv) > 1 else \
         ROOT / "arvexq/residual_repair/requests.json"
@@ -116,56 +164,26 @@ def main() -> int:
 
     for job in request.get("jobs") or []:
         date = job["date"]
-        summaries = fetch_summaries(date)
+        try:
+            summaries = fetch_summaries(date)
+        except Exception as exc:  # noqa: BLE001 - record and move on
+            report["races"][f"__date__{date}"] = {
+                "status": f"date-fetch-failed: {type(exc).__name__}: "
+                          f"{str(exc)[:200]}"}
+            (work / "report.json").write_text(
+                json.dumps(report, ensure_ascii=False, indent=1),
+                encoding="utf-8")
+            continue
         for spec in job.get("races") or []:
             rid = spec["id"]
-            old = fetch_detail(rid)
             entry = {"date": date}
             report["races"][rid] = entry
-            if old is None:
-                entry["status"] = "missing-in-api"
-                continue
-            if protect._compact_tombstone_stub(old):
-                entry["status"] = "skipped-tombstone-stub"
-                continue
-            if not (old.get("horses") or []):
-                entry["status"] = "skipped-no-horses"
-                continue
-            new = copy.deepcopy(old)
-            for num, fix in (spec.get("bodyweightFixes") or {}).items():
-                cell = next((h for h in new["horses"]
-                             if int(h.get("horseNumber") or 0) == int(num)),
-                            None)
-                if cell is None:
-                    raise RuntimeError(f"{rid}: horse {num} not found")
-                if cell.get("bodyWeight") != fix["from"]:
-                    raise RuntimeError(
-                        f"{rid} #{num}: stored bodyWeight "
-                        f"{cell.get('bodyWeight')!r} != expected "
-                        f"{fix['from']!r}; aborting")
-                cell["bodyWeight"] = fix["to"]
-                cell["bodyWeightChange"] = fix["changeTo"]
-                entry.setdefault("bodyweight", []).append(
-                    {"horseNumber": int(num), "from": fix["from"],
-                     "to": fix["to"], "changeTo": fix["changeTo"]})
-            new["dataCoreHealth"] = app_module._data_core_health(new)
-            new["dataCoreVersion"] = app_module.ARVEXQ_DATA_CORE_VERSION
-            new["dataCoreUpdatedAt"] = int(time.time())
-            entry["healthDiff"] = health_diff(old.get("dataCoreHealth"),
-                                              new["dataCoreHealth"])
-            guarded = protect.protect_detail(old, new)
-            if guarded != new:
-                raise RuntimeError(
-                    f"{rid}: protect_detail modified the patch; aborting")
-            if new == old and not spec.get("force"):
-                entry["status"] = "unchanged"
-                continue
-            entry["status"] = "to-sync"
-            sync_details.append(new)
-            if rid in summaries:
-                sync_summaries.append(summaries[rid])
-            intended[rid] = {"health": new["dataCoreHealth"],
-                             "bodyweight": entry.get("bodyweight") or []}
+            try:
+                _patch_race(spec, summaries, app_module, protect,
+                            entry, sync_details, sync_summaries, intended)
+            except Exception as exc:  # noqa: BLE001 - per-race isolation
+                entry["status"] = (f"patch-failed: {type(exc).__name__}: "
+                                   f"{str(exc)[:300]}")
         (work / "report.json").write_text(
             json.dumps(report, ensure_ascii=False, indent=1),
             encoding="utf-8")
@@ -190,7 +208,14 @@ def main() -> int:
         capture_output=True, text=True)
     log(proc.stdout[-2000:])
     if proc.returncode != 0:
-        raise RuntimeError(f"sync failed: {proc.stderr[-1000:]}")
+        for rid in intended:
+            report["races"][rid]["status"] = "sync-failed"
+        report["syncStderr"] = proc.stderr[-1000:]
+        (work / "report.json").write_text(
+            json.dumps(report, ensure_ascii=False, indent=1),
+            encoding="utf-8")
+        log(f"sync failed: {proc.stderr[-500:]}")
+        return 1
 
     failures = []
     for rid, want in intended.items():
