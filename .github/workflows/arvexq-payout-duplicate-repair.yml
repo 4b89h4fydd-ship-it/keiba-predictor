@@ -73,6 +73,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
           python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
           python -m pytest tests/test_result_repair_bundle_fallback.py -q
+          python -m pytest tests/test_payout_payload_shape_stubs.py -q
 
       - name: Read and validate the requested dates
         run: |
@@ -145,6 +146,14 @@ jobs:
               # verified archive form (or isolate the detail) first.
               PYTHONPATH=. python scripts/arvexq_payout_payload_sanitize.py \
                 --payload "result-repair-payload-$DATE.json" || ok=0
+              # Compact-tombstone stub entries must be rebuilt on the
+              # API display detail so the sync stays a result-only
+              # write in protect's comparison; a shaping failure only
+              # leaves protect failing closed, as before.
+              PYTHONPATH=. python scripts/arvexq_payout_payload_shape_stubs.py \
+                --payload "result-repair-payload-$DATE.json" \
+                --api-base "$CLOUDFLARE_API_BASE" \
+                || echo "::warning::stub shaping failed for $DATE"
               STARTED=$(jq '.meta.started_race_count // 0' "result-repair-payload-$DATE.json")
               if [ "$STARTED" -gt 0 ]; then
                 python scripts/arvexq_sync_batches.py \
