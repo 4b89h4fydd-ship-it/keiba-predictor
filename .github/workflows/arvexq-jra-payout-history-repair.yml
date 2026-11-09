@@ -10,18 +10,16 @@ name: ARVEXQ JRA Payout History Repair (2026-10-31 / 2026-11-01)
 #   * the environment backfill pass is disabled
 #     (ARVEXQ_RESULT_ENV_FILL_LIMIT=0) — past environment backfill for old
 #     JRA days was decided against on 2026-11-09;
-#   * no schedule and no push trigger: dispatch only, one date per run.
+#   * no schedule; triggered by a push to
+#     arvexq/payout_repair_requests/requests.json (a PAT cannot dispatch
+#     workflows), one date per push, the date read from that file.
 
 "on":
   workflow_dispatch:
-    inputs:
-      date:
-        description: "Race date to repair (JRA races only)"
-        required: true
-        type: choice
-        options:
-          - "2026-10-31"
-          - "2026-11-01"
+  push:
+    branches: [main]
+    paths:
+      - arvexq/payout_repair_requests/requests.json
 
 concurrency:
   group: arvexq-result-repair
@@ -67,7 +65,13 @@ jobs:
           python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
 
       - name: Set sync date
-        run: echo "SYNC_DATE=${{ inputs.date }}" >> "$GITHUB_ENV"
+        run: |
+          DATE=$(jq -r '.date' arvexq/payout_repair_requests/requests.json)
+          case "$DATE" in
+            2026-10-31|2026-11-01) ;;
+            *) echo "::error::unsupported repair date: $DATE"; exit 1 ;;
+          esac
+          echo "SYNC_DATE=$DATE" >> "$GITHUB_ENV"
 
       - name: Restore warm cache read-only
         uses: actions/cache/restore@v4
@@ -185,7 +189,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: arvexq-jra-payout-history-repair-${{ inputs.date }}-${{ github.run_number }}
+          name: arvexq-jra-payout-history-repair-${{ env.SYNC_DATE }}-${{ github.run_number }}
           path: |
             bundle-jra.json
             d1-bundle-report.json
