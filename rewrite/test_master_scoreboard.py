@@ -1,11 +1,13 @@
 """Frozen forecast pair scoring cannot promote post-result backfill."""
 import unittest
+import json
+from hashlib import sha256
 
 from rewrite.analysis.master_scoreboard import grade_master_pairs
 
 
 def sample(rid="race-1"):
-    return {
+    payload = {
         "id": rid, "date": "2026-11-10", "startTime": "12:30",
         "circuit": "地方", "track": "名古屋",
         "preRaceBet": {"fixedBeforePost": True},
@@ -30,6 +32,12 @@ def sample(rid="race-1"):
             {"horseNumber": 3, "finish": 3},
         ]},
     }
+    analysis = payload["masterAnalysis"]
+    analysis["capturedAt"] = payload["prediction"]["capturedAt"]
+    analysis["contentSha256"] = sha256(json.dumps(
+        analysis, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False).encode("utf-8")).hexdigest()
+    return payload
 
 
 class PairedScoreboardTests(unittest.TestCase):
@@ -57,6 +65,13 @@ class PairedScoreboardTests(unittest.TestCase):
         payload = sample()
         payload["masterAnalysis"]["runners"].pop()
         self.assertEqual(grade_master_pairs([payload])["overall"]["races"], 0)
+
+    def test_shadow_checksum_tamper_excluded(self):
+        payload = sample()
+        payload["masterAnalysis"]["runners"][0]["pWin"] = 0.6
+        result = grade_master_pairs([payload])
+        self.assertEqual(result["overall"]["races"], 0)
+        self.assertEqual(result["excluded"]["shadow-seal-mismatch"], 1)
 
     def test_pending_and_duplicate_excluded(self):
         payload = sample()
