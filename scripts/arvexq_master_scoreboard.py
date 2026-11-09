@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import json
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from rewrite.analysis.master_scoreboard import grade_master_pairs  # noqa: E402
+from rewrite.analysis.master_selection import select_daily_races  # noqa: E402
 
 
 def main(argv=None):
@@ -40,6 +42,16 @@ def main(argv=None):
         detail = item.get("detail") if isinstance(item.get("detail"), dict) else item
         details.append(detail)
     report = grade_master_pairs(details)
+    by_date = defaultdict(list)
+    for detail in details:
+        if detail.get("date"):
+            by_date[detail["date"]].append({
+                "raceId": detail.get("id") or detail.get("raceId"),
+                "masterAnalysis": detail.get("masterAnalysis") or {},
+            })
+    report["shadowSelectionByDate"] = {
+        date: select_daily_races(items) for date, items in sorted(by_date.items())
+    }
     body = json.dumps(report, indent=2, ensure_ascii=False)
     print(body)
     if len(argv) == 2:
