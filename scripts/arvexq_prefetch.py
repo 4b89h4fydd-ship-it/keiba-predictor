@@ -299,36 +299,8 @@ def _enrich_cards_concurrently(cards: dict[str, dict[str, Any]], workers: int = 
 
 def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[str, Any]:
     out = copy.deepcopy(detail)
-    # Optional internal research input from licensed VIDEO artifacts. Never
-    # fetch external media in Full Prefetch and never treat unvalidated vision
-    # observations as a correction to product marks or wager probabilities.
-    vision_dir = str(os.getenv("ARVEXQ_VISION_EVIDENCE_DIR") or "").strip()
-    if vision_dir and os.path.isdir(vision_dir):
-        from arvexq.vision.history import attach_from_store
-        try:
-            out = attach_from_store(out, vision_dir)
-        except (ValueError, OSError, KeyError) as exc:
-            print("VISION_RESEARCH_EVIDENCE_REJECTED",
-                  str(detail.get("id") or ""), type(exc).__name__, flush=True)
     attach_career_readiness(out)
     pm = dict(out.get("preparedMeta") or {})
-    vision_samples = sum(len(h.get("visionResearchHistory") or [])
-                         for h in (out.get("horses") or []) if isinstance(h, dict))
-    if vision_samples:
-        verified_samples = sum(
-            1 for h in (out.get("horses") or []) if isinstance(h, dict)
-            for row in (h.get("visionResearchHistory") or [])
-            if isinstance(row, dict)
-            and row.get("researchOnly") is True
-            and row.get("identitySource") == "externally-reviewed"
-            and type(row.get("trackingCoverage")) in (int, float)
-            and row["trackingCoverage"] >= .8
-        )
-        pm["visionResearchStatus"] = (
-            "verified-historical-video-available"
-            if verified_samples else "provisional-video-not-applied")
-        pm["visionResearchHistoricalRuns"] = vision_samples
-        pm["visionResearchVerifiedRuns"] = verified_samples
     active = active_horses(out)
     with_history = sum(
         1 for h in active
