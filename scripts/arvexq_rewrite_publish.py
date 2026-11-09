@@ -52,7 +52,18 @@ recommendation narrowed to the R24 subset of the very same stored
 combinations (win leg = mark ranks 1-2); the forecast, marks,
 probabilities, odds and every other ticket kind are kept
 byte-for-byte, and a race whose trifecta already is the R24
-subset is final. The v9b
+subset is final. A sixth exception of the same kind is the
+env-repair re-issue (2026-11-09): the NAR summary/detail builders
+hardcoded the race surface to "" until main 2e01ec9e, so every
+forecast computed from a payload fetched before that fix took
+effect ran with the surface suitability feature dead for every
+runner. By user instruction (「印かえていいよ」, 2026-11-09) a
+frozen v9b forecast dated 2026-11-09 (NAR) whose probabilities
+were last computed before the fix is re-issued once — stamped
+kind "env-repair-upgrade" — recomputed from the current payload,
+which now carries the stored surface; marks may move. Races
+already recomputed after the fix do not qualify, and finished
+races never reach the branch. The v9b
 adoption (2026-11-03) adds one dated branch of the same kind: a
 forecast frozen on the v8 lane for a race dated 2026-11-04 is
 re-issued on the v9b lane (revision reason
@@ -214,6 +225,31 @@ PLACE_EV_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 # recommendation stable in the final hour before post. The
 # forward lane v34 is untouched: its control arm stays B36.
 TICKET_R24_UPGRADE_MIN_LEAD = timedelta(minutes=60)
+
+# Env-repair re-issue (2026-11-09, user instruction 「印かえていいよ」):
+# the NAR summary/detail builders hardcoded the race surface to ""
+# (app.py nar_race_summaries / nar_race_detail /
+# _fast_local_race_detail) until main 2e01ec9e (committed
+# 2026-11-09 10:21 JST) made them serve the stored races.surface,
+# so any forecast computed from a payload fetched before the fix
+# took effect ran with the surface suitability feature dead for
+# every runner. A frozen v9b forecast dated ENV_REPAIR_DATE (NAR
+# only) whose probabilities were last computed before
+# ENV_REPAIR_FIX_LIVE_AT is therefore re-issued ONCE from the
+# current payload — see _env_repair_upgrade_info. The probability
+# computation time is the latest forecast-recomputing revision
+# (roster change / lane upgrade / blend upgrade) or, when the
+# latest revision is surgical (place-EV / ticket-R24 keep the
+# stored probabilities), the first publication time. Races already
+# recomputed at or after the fix (e.g. a roster-change re-issue
+# later that morning) do not qualify. The lead guard is 30
+# minutes: the repair input (the race's surface) is static and
+# already stored, unlike the odds completeness the other upgrades
+# wait on, but a forecast on sale still does not move in the
+# final half hour before post.
+ENV_REPAIR_DATE = "2026-11-09"
+ENV_REPAIR_FIX_LIVE_AT = datetime(2026, 11, 9, 10, 22, tzinfo=JST)
+ENV_REPAIR_MIN_LEAD = timedelta(minutes=30)
 
 
 def _get(path: str) -> dict:
@@ -395,6 +431,94 @@ def _blend_upgrade_info(old: dict, now: datetime) -> dict | None:
             "firstPublishedAt": marker.get("firstPublishedAt"),
             "previousAbilityLane": V9B_LANE,
             "reason": "blend-upgrade"}
+
+
+def _parse_stamp(value) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=JST)
+    return parsed
+
+
+def _env_repair_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time env-repair re-issue of a frozen v9b race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - the race is dated ENV_REPAIR_DATE and is a NAR race (the
+      surface builders that hardcoded "" serve the NAR payloads;
+      the dated scope keeps the repair to the day the user
+      authorised it for);
+    - it was published on the v9b lane (abilityLane
+      v9b-cal-market);
+    - its probabilities were last computed BEFORE
+      ENV_REPAIR_FIX_LIVE_AT — the moment the surface fix
+      (main 2e01ec9e) landed. The computation time is read from
+      the lane marker: the latest forecast-recomputing revision
+      (roster change / lane upgrade / blend upgrade) sets it;
+      surgical revisions (place-EV, ticket-R24) keep the stored
+      probabilities, so with one of those on top the
+      probabilities still date from the first publication. A
+      race recomputed at or after the fix (e.g. a roster-change
+      re-issue later that morning) already ran with the live
+      surface and does not qualify;
+    - it does not already carry an env-repair-upgrade revision
+      (the repair is exactly-once);
+    - the CURRENT payload carries the race's surface (the
+      repair's input must actually be there — a rebuild on a
+      payload that still serves "" would change nothing but the
+      stamp);
+    - the post is still at least ENV_REPAIR_MIN_LEAD away.
+
+    Anything unreadable does not qualify; the caller keeps the
+    frozen forecast (fail-closed). The caller still re-verifies
+    after the rebuild that the forecast landed on the v9b lane
+    before stamping anything.
+    """
+    if str(old.get("date") or "") != ENV_REPAIR_DATE:
+        return None
+    race_id = str(old.get("id") or "")
+    if not race_id.startswith("nar-"):
+        return None
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    revision = marker.get("revision")
+    kind = None
+    revised_at = None
+    if isinstance(revision, dict):
+        kind = revision.get("kind") or revision.get("reason")
+        revised_at = revision.get("revisedAt")
+    if kind == "env-repair-upgrade":
+        return None
+    if kind in ("blend-upgrade", "lane-upgrade",
+                "lane-upgrade-v9b-adoption", "roster-change"):
+        computed_at = _parse_stamp(revised_at)
+    else:
+        computed_at = _parse_stamp(
+            marker.get("firstPublishedAt") or marker.get("publishedAt"))
+    if computed_at is None or computed_at >= ENV_REPAIR_FIX_LIVE_AT:
+        return None
+    surface = old.get("surface")
+    if not (isinstance(surface, str) and surface.strip()):
+        return None
+    post = _post_at(old)
+    if post is None or post - now < ENV_REPAIR_MIN_LEAD:
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "env-repair-upgrade",
+            "surface": surface,
+            "probabilityComputedAt":
+                computed_at.isoformat(timespec="seconds")}
 
 
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
@@ -991,6 +1115,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     reissue = None
     lane_upgrade = None
     blend_upgrade = None
+    env_repair_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -1001,7 +1126,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 # WITHOUT its market blend only because win odds
                 # were incomplete at first publication is re-issued
                 # once when the odds complete (see
-                # _blend_upgrade_info); a v9b forecast frozen
+                # _blend_upgrade_info); a v9b forecast whose
+                # probabilities were computed while the NAR surface
+                # builders served "" is re-issued once from the
+                # repaired payload (see _env_repair_upgrade_info —
+                # a full rebuild, so it precedes the surgical
+                # upgrades below; a blend upgrade in the same pass
+                # already rebuilds from the repaired payload and
+                # subsumes it); a v9b forecast frozen
                 # WITHOUT placeExpectedValues only because the
                 # upstream sync did not carry place odds yet is
                 # re-issued once when they complete (see
@@ -1011,6 +1143,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 # frozen.
                 blend_upgrade = _blend_upgrade_info(old, now)
                 if blend_upgrade is None:
+                    env_repair_upgrade = _env_repair_upgrade_info(
+                        old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exception: a forecast
@@ -1084,7 +1220,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                             f"from the stored product; keeping the "
                             f"frozen forecast")
                     return upgraded
-                blend_upgrade["receipt"] = freeze[1]
+                if blend_upgrade is not None:
+                    blend_upgrade["receipt"] = freeze[1]
+                elif env_repair_upgrade is not None:
+                    env_repair_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -1110,7 +1249,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 else:
                     v8_fallback_status = v8_forecast.status
         elif reissue is None and lane_upgrade is None \
-                and blend_upgrade is None:
+                and blend_upgrade is None \
+                and env_repair_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -1183,6 +1323,18 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"(receipt {str(blend_upgrade['receipt'])[:12]}…); "
                       f"blend upgrade did not land; keeping the "
                       f"frozen calibration-only forecast")
+    if env_repair_upgrade is not None and not used_v9b:
+        # The repair was attempted but the rebuild did not land
+        # on the v9b lane (the v8 forecast did not come back ok,
+        # or the v9b transform passed through): re-issuing now
+        # would move the race onto another lane or an uncalibrated
+        # vector, which the repair never justifies. Keep the
+        # frozen forecast byte-stable; the qualification stands
+        # down because this branch is dated to 2026-11-09.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(env_repair_upgrade['receipt'])[:12]}…); "
+                      f"env-repair rebuild did not land on the "
+                      f"v9b lane; keeping the frozen forecast")
     # Trifecta R24 (adopted 2026-11-08 by user order after the
     # screen on the graded 194 production races: B ROI 0.7230 ->
     # R24 0.9055): formation B's mark-order skeleton with the win
@@ -1422,6 +1574,48 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                      "first publication, so the race was frozen "
                      "with temperature calibration only; the "
                      "market blend applies from this revision"),
+        }
+    if env_repair_upgrade is not None:
+        # Env-repair re-issue of a frozen forecast: the roster and
+        # the lane are unchanged — the only change is that the
+        # forecast is recomputed from a payload whose race surface
+        # is real, where the stored probabilities were computed
+        # while the builders served "" and the surface suitability
+        # feature was dead. Same audit chain as the other
+        # re-issues: the first publication time is preserved, the
+        # previous receipt is recorded, and the revision also
+        # carries the surface the rebuild used and the time the
+        # stored probabilities dated from, so the repair stays
+        # auditable per race. The exactly-once property is the
+        # revision kind itself (see _env_repair_upgrade_info).
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            env_repair_upgrade.get("firstPublishedAt")
+            or env_repair_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "env-repair-upgrade",
+            "reason": "env-repair-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": env_repair_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "surface": env_repair_upgrade["surface"],
+            "probabilityComputedAt":
+                env_repair_upgrade["probabilityComputedAt"],
+            "note": ("one-time env-repair re-issue (user "
+                     "instruction 2026-11-09): the stored "
+                     "probabilities were computed while the NAR "
+                     "surface builders served an empty surface "
+                     "(fixed in main 2e01ec9e), so the surface "
+                     "suitability feature was dead for every "
+                     "runner; the forecast is recomputed from "
+                     "the current payload, which carries the "
+                     "stored surface"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
