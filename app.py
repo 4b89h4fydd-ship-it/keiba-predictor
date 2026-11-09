@@ -1321,7 +1321,7 @@ def nar_race_summaries(iso_date: str) -> list[dict]:
                 "circuit":"地方","date":iso_date,"track":r["track"],"raceNumber":int(r["race_no"]),
                 "title":r["title"] or f"{int(r['race_no'])}R","distance":int(r["distance"] or 0),
                 "condition":r["condition"] or "不明","weather":r["weather"] or "不明",
-                "fieldSize":count,"racePrize1":int(r["prize1"] or 0),"surface":"",
+                "fieldSize":count,"racePrize1":int(r["prize1"] or 0),"surface":(r["surface"] if "surface" in r.keys() else "") or "",
                 "startTime":r["start_time"] or "","scheduledStartTime":r["scheduled_start_time"] or r["start_time"] or "",
                 "startTimeChanged":bool((r["scheduled_start_time"] or "") and (r["start_time"] or "") and r["scheduled_start_time"]!=r["start_time"]),
                 "horses":[],"result":{"status":"確定","finishers":real_finishers.get((str(r["track"]),int(r["race_no"])),[])} if finalized else None,"source":"NAR公式"
@@ -1717,7 +1717,7 @@ def nar_race_detail(race_id: str) -> dict | None:
         detail={"id":race_id,"circuit":"地方","date":iso_date,"track":track,"raceNumber":race_no,
                 "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),"condition":race["condition"] or "不明",
                 "weather":race["weather"] or "不明","fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
-                "surface":"","startTime":race["start_time"] or "","scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
+                "surface":(race["surface"] if "surface" in race.keys() else "") or "","startTime":race["start_time"] or "","scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
                 "startTimeChanged":bool((race["scheduled_start_time"] or "") and (race["start_time"] or "") and race["scheduled_start_time"]!=race["start_time"]),
                 "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,"source":"NAR公式"}
         return detail
@@ -4213,7 +4213,7 @@ def _fast_local_race_detail(race_id:str)->dict|None:
                 "title":race["title"] or f"{race_no}R","distance":int(race["distance"] or 0),
                 "condition":race["condition"] or "不明","weather":race["weather"] or "不明",
                 "fieldSize":int(race["field_size"] or len(entries)),"racePrize1":int(race["prize1"] or 0),
-                "surface":"","startTime":race["start_time"] or "",
+                "surface":(race["surface"] if "surface" in race.keys() else "") or "","startTime":race["start_time"] or "",
                 "scheduledStartTime":race["scheduled_start_time"] or race["start_time"] or "",
                 "horses":horses,"result":{"status":"確定","finishers":finishers} if finalized else None,
                 "source":"NAR公式・高速Snapshot"}
