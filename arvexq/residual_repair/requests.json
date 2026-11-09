@@ -88,5 +88,5 @@
  ],
  "note": "2026-11-10 residual-defect sweep. Saga R4 #5 bodyweight proven from keiba.go.jp RaceMarkTable (465kg, +1). Health refresh races: stored dataCoreHealth disagrees with a recomputation on the stored form (census 2026-11-10). Tombstone stubs and horse-less result-only records are skipped by the runner and documented in the sweep report.",
  "requestId": "residual-repair-20261110",
- "attempt": 3
+ "attempt": 4
 }
