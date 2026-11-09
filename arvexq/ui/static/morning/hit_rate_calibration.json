@@ -1,52 +1,68 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
   "modelVersion": "arvexq-rewrite-v3-v9b",
-  "asOfDate": "2026-11-09",
+  "asOfDate": "2026-11-10",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
   "minimumObservedHitRate": 0.8,
   "minimumWilsonLower95": 0.65,
-  "totalVerifiedRaces": 453,
+  "totalVerifiedRaces": 515,
   "buckets": {
     "ワイド|6": {
       "kind": "ワイド",
       "points": 6,
-      "sample": 420,
-      "wins": 323,
-      "hitRate": 0.769048,
-      "wilsonLower95": 0.726412,
+      "sample": 478,
+      "wins": 367,
+      "hitRate": 0.767782,
+      "wilsonLower95": 0.727885,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
-          "sample": 59,
-          "wins": 37,
-          "hitRate": 0.627119
+          "sample": 82,
+          "wins": 49,
+          "hitRate": 0.597561
         },
         "nar": {
-          "sample": 361,
-          "wins": 286,
-          "hitRate": 0.792244
+          "sample": 396,
+          "wins": 318,
+          "hitRate": 0.80303
         }
       }
     },
     "ワイド|5": {
       "kind": "ワイド",
       "points": 5,
-      "sample": 33,
-      "wins": 20,
-      "hitRate": 0.606061,
-      "wilsonLower95": 0.436831,
+      "sample": 36,
+      "wins": 21,
+      "hitRate": 0.583333,
+      "wilsonLower95": 0.422,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
-          "sample": 10,
-          "wins": 3,
-          "hitRate": 0.3
+          "sample": 13,
+          "wins": 4,
+          "hitRate": 0.307692
         },
         "nar": {
           "sample": 23,
           "wins": 17,
           "hitRate": 0.73913
+        }
+      }
+    },
+    "ワイド|4": {
+      "kind": "ワイド",
+      "points": 4,
+      "sample": 1,
+      "wins": 1,
+      "hitRate": 1.0,
+      "wilsonLower95": 0.206543,
+      "qualified": false,
+      "bySegment": {
+        "jra_flat": {
+          "sample": 1,
+          "wins": 1,
+          "hitRate": 1.0
         }
       }
     }
