@@ -7,6 +7,7 @@ from rewrite.analysis.master_v1 import (
     CATEGORY_POINTS, MODEL_VERSION, PROBABILITY_STATUS, master_candidate,
 )
 from rewrite.analysis.tickets import generate_tickets
+from rewrite.analysis.master_bets import ticket_styles
 from rewrite.test_analysis import (
     CLOSER_RUNS, FRONT_RUNS, MID_RUNS, horse, race_with, run,
 )
@@ -58,6 +59,18 @@ class MasterCandidateTests(unittest.TestCase):
         self.assertEqual(set(audit["pace"]["scenarioOrder"]), {"slow", "normal", "fast"})
         self.assertIsNone(audit["pace"]["scenarioProbabilities"])
 
+    def test_three_ticket_styles_use_joint_probabilities_without_ev(self):
+        race = sample_race()
+        result, assessment = master_candidate(race, forecast_race(race))
+        styles = ticket_styles(result, assessment)
+        self.assertEqual(styles["status"], "conditional-research-only")
+        self.assertEqual(styles["styles"]["hit_first"]["kind"], "place")
+        self.assertEqual(styles["styles"]["balanced"]["kind"], "wide")
+        self.assertIsNone(styles["stakeAllocationYen"])
+        self.assertFalse(styles["styles"]["hit_first"]["purchaseRecommended"])
+        self.assertFalse(styles["calibrationValidated"])
+        self.assertTrue(0 < styles["styles"]["balanced"]["modelHitProbability"] < 1)
+
     def test_missing_data_never_imputed(self):
         race = race_with([
             horse(1, FRONT_RUNS, winOdds=2.2),
@@ -71,6 +84,7 @@ class MasterCandidateTests(unittest.TestCase):
         self.assertEqual(len(audit["runners"]), 5)
         self.assertEqual(audit["marketStatus"], "unavailable")
         self.assertFalse(any(r["valueHypothesis"] for r in audit["runners"]))
+        self.assertIsNone(ticket_styles(result, audit)["styles"]["outsider"])
         unscored = next(r for r in audit["runners"] if r["horseNumber"] == 4)
         self.assertIsNone(unscored["score100"])
         self.assertEqual(unscored["coveragePoints"], 0)
