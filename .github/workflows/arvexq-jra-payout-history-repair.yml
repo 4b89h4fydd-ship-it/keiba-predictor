@@ -111,6 +111,13 @@ jobs:
           assert len(races) == 24 and len(details) == 24, "expected the day's 24 JRA races"
           PYEOF
 
+      - name: Seed archived cards into stub details (2026-10-31 stubs)
+        if: env.SYNC_DATE == '2026-10-31'
+        run: |
+          python scripts/arvexq_seed_payout_stubs.py \
+            --bundle bundle-jra.json \
+            --seeds arvexq/payout_repair_requests/seeds-2026-10-31.json
+
       - name: Repair started incomplete results (JRA only, env fill off)
         env:
           # Step-scoped on purpose: repair() reads this limit from the
