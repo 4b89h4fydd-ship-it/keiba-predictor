@@ -1,0 +1,29 @@
+name: ARVEXQ Master Forecast Shadow Tests
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - rewrite/**
+      - scripts/arvexq_rewrite_publish.py
+      - .github/workflows/arvexq-master-shadow.yml
+  push:
+    branches: [feat/master-18-factor-forecast-20261109]
+    paths:
+      - rewrite/**
+      - scripts/arvexq_rewrite_publish.py
+      - .github/workflows/arvexq-master-shadow.yml
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile shadow and publisher
+        run: python -m py_compile rewrite/analysis/master_v1.py rewrite/analysis/master_bets.py rewrite/test_master_v1.py scripts/arvexq_rewrite_publish.py
+      - name: Regression and probability contracts
+        run: python -m unittest rewrite.test_master_v1 rewrite.test_analysis rewrite.test_forecast rewrite.test_tickets rewrite.test_output -v
