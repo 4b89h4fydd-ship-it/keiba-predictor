@@ -417,6 +417,58 @@ def _archive_restored_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
     return restored
 
 
+_FORECAST_REVISION_VERSION = "arvexq-forecast-revision-v1"
+
+
+def _forecast_revision_digest(value: Any) -> str:
+    from hashlib import sha256
+    return sha256(json.dumps(
+        value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+        allow_nan=False).encode()).hexdigest()
+
+
+def _latest_forecast_revision(detail: dict[str, Any]) -> dict[str, Any] | None:
+    revisions = detail.get("forecastRevisions") or []
+    current = detail.get("currentForecastRevisionId")
+    matches = [r for r in revisions
+               if isinstance(r, dict) and r.get("revisionId") == current
+               and r.get("version") == _FORECAST_REVISION_VERSION
+               and r.get("raceId") == detail.get("id")
+               and r.get("raceDate") == detail.get("date")]
+    if len(matches) != 1:
+        return None
+    revision = matches[0]
+    expected = _forecast_revision_digest(
+        {k: v for k, v in revision.items()
+         if k not in ("revisionId", "createdAt")})
+    return revision if expected == current else None
+
+
+def _preserve_forecast_revisions(previous: dict[str, Any],
+                                 incoming: dict[str, Any]) -> dict[str, Any]:
+    """Retain immutable revision history across writes; reject divergent chains.
+
+    Inlined verbatim from the retired arvexq.prediction.forecast_revisions
+    module: protect is the chain's last production reader, and its
+    accept/reject behaviour here is unchanged (stage-2 differential
+    corpus, 2026-11-10).
+    """
+    out = copy.deepcopy(incoming)
+    old = previous.get("forecastRevisions") or []
+    proposed = out.get("forecastRevisions") or []
+    if proposed[:len(old)] != old:
+        if proposed:
+            raise ValueError("forecast revision history prefix changed")
+        out["forecastRevisions"] = copy.deepcopy(old)
+        if previous.get("currentForecastRevisionId"):
+            out["currentForecastRevisionId"] = \
+                previous["currentForecastRevisionId"]
+    if (out.get("currentForecastRevisionId")
+            and _latest_forecast_revision(out) is None):
+        raise ValueError("current forecast revision pointer is invalid")
+    return out
+
+
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
     if FULL_PAYLOAD_KEY in incoming:
         # Archive protection must edit the real original, then recompress it.
@@ -451,8 +503,7 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
-    from arvexq.prediction.forecast_revisions import preserve_revisions
-    out = preserve_revisions(old, out)
+    out = _preserve_forecast_revisions(old, out)
     # Forecast blocks are owned by the rewrite publish lane
     # (scripts/arvexq_rewrite_publish.py). Any other lane's write preserves
     # the stored forecast blocks verbatim and drops its own forecast fields;
@@ -600,11 +651,6 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
                 out['kikkaCandidate'] = copy.deepcopy(old_c)
         elif 'kikkaCandidate' in out and candidate_marks(out) is None:
             raise ValueError('new Kikuka challenger cannot be verified')
-    # The full morning prediction is a permanent, first-published record.
-    # It must survive a later live odds refresh, prefetch or result repair.
-    baseline = old.get("morningMarkSnapshot")
-    if isinstance(baseline, dict) and baseline.get("version") == "arvexq-morning-marks-v1":
-        out["morningMarkSnapshot"] = copy.deepcopy(baseline)
     # Frozen mass-feature evidence is an immutable pre-off training record,
     # not a transient result. Convert a legacy raw snapshot to the lossless
     # archive on the next safe replace and keep the original feature hash.
@@ -618,48 +664,18 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
                 out[key] = copy.deepcopy(frozen[key])
             else:
                 out.pop(key, None)
+    # Stored revision chains are preserved verbatim; a write that lacks
+    # them never erases them. The former append allowances are retired
+    # with their generators (stage 2, 2026-11-10): the official append
+    # required a morning snapshot no writer has produced since the
+    # 2026-10-28 cutover, the user-approved append is date-locked to
+    # 2026-10-09 by its enable switch, and no stored detail carries
+    # either chain (MotherDuck census 2026-11-10: 0 of 1,340 rows).
     previous_revisions = old.get("officialMarkRevisions")
     if isinstance(previous_revisions, list) and previous_revisions:
-        candidate = out.get("officialMarkRevisions")
-        allow_append = False
-        if isinstance(candidate, list) and len(candidate) > len(previous_revisions):
-            # Same immutable historical prefix, plus a newly authenticated
-            # pre-off revision justified by a real official source change.
-            from datetime import datetime
-            from arvexq.prediction.prerace_archive import JST
-            from arvexq.prediction.official_course_revision import pre_off_change
-            allow_append = (
-                candidate[:len(previous_revisions)] == previous_revisions
-                and len(candidate) == len(previous_revisions) + 1
-                and bool(pre_off_change(old, old.get("officialCourseCondition"),
-                                        out.get("officialCourseCondition"), datetime.now(JST)))
-            )
-        if not allow_append:
-            out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
-    # User-directed model revisions have a different trust origin from
-    # official condition revisions. Only one valid append to the original
-    # revision chain is allowed. Failed attempts never wipe earlier records.
-    previous_models = list(old.get("modelMarkRevisions") or [])
-    proposed_models = out.get("modelMarkRevisions")
-    allow_new_model = False
-    if isinstance(proposed_models, list) and len(proposed_models) == len(previous_models) + 1:
-        if proposed_models[:-1] == previous_models:
-            from datetime import datetime, timedelta
-            from arvexq.prediction.prerace_archive import JST, post_at
-            from arvexq.prediction.user_approved_model_revision import valid_revision, enabled
-            at_now = datetime.now(JST)
-            item = proposed_models[-1]
-            post = post_at(old)
-            if isinstance(item, dict) and valid_revision(old, item) and enabled(at_now):
-                submitted = datetime.fromisoformat(str(item["revisedAt"]).replace("Z", "+00:00"))
-                allow_new_model = (bool(post) and at_now < post and
-                                   not sealed_lock(old) and
-                                   not (isinstance(old.get("preRaceBet"), dict) and
-                                        old["preRaceBet"].get("fixedAt")) and
-                                   timedelta(0) <= at_now - submitted <= timedelta(minutes=8))
-    if allow_new_model:
-        out["modelMarkRevisions"] = copy.deepcopy(proposed_models)
-    elif previous_models:
+        out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
+    previous_models = old.get("modelMarkRevisions")
+    if isinstance(previous_models, list) and previous_models:
         out["modelMarkRevisions"] = copy.deepcopy(previous_models)
     else:
         out.pop("modelMarkRevisions", None)
