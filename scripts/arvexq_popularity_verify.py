@@ -3,20 +3,24 @@
 """Read-back proof for the JRA popularity history repair.
 
 For every race the repair claims to have changed, fetch the CURRENT
-detail from the production API and prove two things:
-  1. every finisher's popularity now equals the official value the
-     repair recorded;
-  2. with popularity masked out, the current detail is identical to
-     the pre-repair bundle detail - i.e. the write changed nothing
-     else (payouts, finishers, cards, forecasts all untouched).
-Exits non-zero if any race fails either check.
+detail from the production API and prove:
+  1. popularity_match - every finisher's popularity now equals the
+     official value the repair recorded, and every finisher who
+     actually ran (finish >= 1) carries one;
+  2. result_intact - the result block with popularity masked out is
+     identical to the pre-repair bundle detail (finishers' other
+     fields, payouts, status untouched);
+  3. forecasts_intact - the forecast-bearing blocks (unifiedForecast,
+     predictionMarks, prediction, recommendedBets) are identical.
+Any other differing top-level key is reported as observed_diffs for
+the record. Exits non-zero if any race fails checks 1-3.
 """
 from __future__ import annotations
 
 import argparse
 import copy
 import json
-import sys
+import time
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -24,22 +28,27 @@ from typing import Any
 UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
       "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
       "Mobile/15E148 Safari/604.1")
+FORECAST_KEYS = ("unifiedForecast", "predictionMarks", "prediction",
+                 "recommendedBets")
 
 
 def _fetch(api_base: str, race_id: str) -> dict[str, Any] | None:
-    req = urllib.request.Request(
-        f"{api_base}/api/race/{race_id}", headers={"User-Agent": UA})
+    # Cache-busting query, mirroring the bundle fetcher: the API can
+    # serve a cached projection otherwise.
+    url = f"{api_base}/api/race/{race_id}?t={int(time.time() * 1000)}"
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=30) as res:
         body = json.loads(res.read().decode("utf-8"))
     return body.get("detail") or body
 
 
-def _masked(detail: dict[str, Any]) -> dict[str, Any]:
-    d = copy.deepcopy(detail)
-    for f in ((d.get("result") or {}).get("finishers") or []):
-        if isinstance(f, dict):
-            f["popularity"] = "<masked>"
-    return d
+def _masked_result(detail: dict[str, Any]) -> Any:
+    res = copy.deepcopy((detail or {}).get("result"))
+    if isinstance(res, dict):
+        for f in res.get("finishers") or []:
+            if isinstance(f, dict):
+                f["popularity"] = "<masked>"
+    return res
 
 
 def main() -> int:
@@ -59,7 +68,9 @@ def main() -> int:
     failures = 0
     for rid in report.get("repaired") or []:
         entry: dict[str, Any] = {"popularity_match": False,
-                                 "only_popularity_changed": False}
+                                 "result_intact": False,
+                                 "forecasts_intact": False,
+                                 "observed_diffs": []}
         try:
             now = _fetch(args.api_base, rid)
         except Exception as exc:
@@ -67,16 +78,24 @@ def main() -> int:
             verdicts[rid] = entry
             failures += 1
             continue
+        fins = (now.get("result") or {}).get("finishers") or []
         pops = {str(int(f.get("horseNumber") or 0)): f.get("popularity")
-                for f in ((now.get("result") or {}).get("finishers") or [])
-                if int(f.get("horseNumber") or 0) > 0}
+                for f in fins if int(f.get("horseNumber") or 0) > 0}
         expected = official.get(rid) or {}
-        entry["popularity_match"] = all(
-            pops.get(no) == pop for no, pop in expected.items())
-        old = before.get(rid)
-        entry["only_popularity_changed"] = bool(
-            old is not None and _masked(old) == _masked(now))
-        if not (entry["popularity_match"] and entry["only_popularity_changed"]):
+        entry["popularity_match"] = (
+            all(pops.get(no) == pop for no, pop in expected.items())
+            and all(f.get("popularity") is not None for f in fins
+                    if int(f.get("finish") or 0) >= 1))
+        old = before.get(rid) or {}
+        entry["result_intact"] = _masked_result(old) == _masked_result(now)
+        entry["forecasts_intact"] = all(
+            old.get(k) == now.get(k) for k in FORECAST_KEYS)
+        checked = {"result", *FORECAST_KEYS}
+        entry["observed_diffs"] = sorted(
+            k for k in set(old) | set(now)
+            if k not in checked and old.get(k) != now.get(k))
+        if not (entry["popularity_match"] and entry["result_intact"]
+                and entry["forecasts_intact"]):
             failures += 1
         verdicts[rid] = entry
     out = {"date": report.get("date") or "",
@@ -85,6 +104,10 @@ def main() -> int:
     Path(args.out).write_text(
         json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({"checked": out["checked"], "failures": failures}))
+    for rid, v in verdicts.items():
+        if not (v["popularity_match"] and v["result_intact"]
+                and v["forecasts_intact"]):
+            print("VERIFY_FAIL", rid, json.dumps(v, ensure_ascii=False))
     return 1 if failures else 0
 
 
