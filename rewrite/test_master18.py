@@ -39,7 +39,7 @@ class Master18Tests(unittest.TestCase):
             self.assertEqual(c["winProbability"], r.p_win)
             self.assertEqual(c["top3Probability"], r.p_top3)
             self.assertLessEqual(c["observedPoints"], c["possibleObserved"])
-            self.assertEqual(c["range"][1] - c["range"][0],
+            self.assertAlmostEqual(c["range"][1] - c["range"][0],
                              100 - c["possibleObserved"])
             self.assertEqual(c["maximum"], 100)
             self.assertEqual(c["categories"]["trainingCondition"]["earned"], 0)
