@@ -21,6 +21,7 @@ import argparse
 import copy
 import json
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -34,12 +35,21 @@ FORECAST_KEYS = ("unifiedForecast", "predictionMarks", "prediction",
 
 def _fetch(api_base: str, race_id: str) -> dict[str, Any] | None:
     # Cache-busting query, mirroring the bundle fetcher: the API can
-    # serve a cached projection otherwise.
-    url = f"{api_base}/api/race/{race_id}?t={int(time.time() * 1000)}"
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=30) as res:
-        body = json.loads(res.read().decode("utf-8"))
-    return body.get("detail") or body
+    # serve a cached projection otherwise. Bounded retries, as in the
+    # bundle fetcher: large details occasionally truncate in transit.
+    url = (f"{api_base}/api/race/{urllib.parse.quote(race_id, safe='')}"
+           f"?t={int(time.time() * 1000)}")
+    last: Exception | None = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=30) as res:
+                body = json.loads(res.read().decode("utf-8"))
+            return body.get("detail") or body
+        except Exception as exc:
+            last = exc
+            time.sleep(1.5 * (attempt + 1))
+    raise last  # type: ignore[misc]
 
 
 def _masked_result(detail: dict[str, Any]) -> Any:
