@@ -1,0 +1,79 @@
+name: arvexq-reissue
+
+# Slim reissue path: processes ONLY the races listed in
+# arvexq/reissue_requests/requests.json through the publish lane's
+# per-race machinery (build -> protect -> POST /api/sync ->
+# read-back), instead of re-evaluating a whole date the way
+# arvexq-rewrite-publish does. Publishing still happens only inside
+# GitHub Actions with the existing SYNC_TOKEN secret; there is no
+# new credential and the protect seam is untouched.
+#
+# The results commit touches only results.json, which is outside
+# this workflow's path filter (and outside the publish workflow's),
+# so it cannot retrigger either workflow.
+#
+# Shares its concurrency group with arvexq-rewrite-publish so a
+# slim reissue can never write the same race concurrently with a
+# full publish run.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/reissue_requests/requests.json'
+  workflow_dispatch:
+    inputs:
+      dry_run_all:
+        description: 'Evaluate every pending request in dry-run mode (build only, never post)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arvexq-rewrite-publish
+  cancel-in-progress: false
+
+jobs:
+  reissue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Process reissue requests
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          args=""
+          if [ "${{ inputs.dry_run_all }}" = "true" ]; then args="--dry-run-all"; fi
+          python3 scripts/arvexq_reissue_process.py $args
+
+      - name: Commit reissue results
+        if: always()
+        run: |
+          git config user.name "ARVEXQ Reissue Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add arvexq/reissue_requests/results.json
+          if git diff --cached --quiet; then
+            echo "RESULTS_UNCHANGED"
+            exit 0
+          fi
+          git commit -m "data: slim reissue results (run ${{ github.run_id }})"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "RESULTS_COMMITTED"
+              break
+            fi
+            git fetch origin main
+            git -c rebase.autoStash=true pull --rebase origin main || git rebase --abort
+            sleep 3
+          done
