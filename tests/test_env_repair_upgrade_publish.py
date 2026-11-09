@@ -139,11 +139,11 @@ class EnvRepairQualificationTests(TestCase):
         self.assertIsNone(_env_repair_upgrade_info(detail, NOW))
 
     def test_post_guard(self):
-        # 20 minutes before post: inside the final half hour.
-        inside = datetime(2026, 11, 9, 16, 40, tzinfo=JST)
+        # 10 minutes before post: inside the final quarter hour.
+        inside = datetime(2026, 11, 9, 16, 50, tzinfo=JST)
         self.assertIsNone(_env_repair_upgrade_info(
             stored_detail(), inside))
-        # Exactly 30 minutes before post still qualifies.
-        edge = datetime(2026, 11, 9, 16, 30, tzinfo=JST)
+        # Exactly 15 minutes before post still qualifies.
+        edge = datetime(2026, 11, 9, 16, 45, tzinfo=JST)
         self.assertIsNotNone(_env_repair_upgrade_info(
             stored_detail(), edge))

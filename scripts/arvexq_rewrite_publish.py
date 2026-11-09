@@ -242,14 +242,17 @@ TICKET_R24_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 # latest revision is surgical (place-EV / ticket-R24 keep the
 # stored probabilities), the first publication time. Races already
 # recomputed at or after the fix (e.g. a roster-change re-issue
-# later that morning) do not qualify. The lead guard is 30
-# minutes: the repair input (the race's surface) is static and
-# already stored, unlike the odds completeness the other upgrades
-# wait on, but a forecast on sale still does not move in the
-# final half hour before post.
+# later that morning) do not qualify. The lead guard is 15
+# minutes: the repair input (the race's surface) is static,
+# unlike the odds completeness the other upgrades wait on, and
+# the surface only reaches this lane's read of a race inside
+# the live window shortly before its post — a longer guard
+# would close before the input exists. The buffer exists so a
+# race cannot start between the guard's evaluation (per race,
+# at its build) and its write.
 ENV_REPAIR_DATE = "2026-11-09"
 ENV_REPAIR_FIX_LIVE_AT = datetime(2026, 11, 9, 10, 22, tzinfo=JST)
-ENV_REPAIR_MIN_LEAD = timedelta(minutes=30)
+ENV_REPAIR_MIN_LEAD = timedelta(minutes=15)
 
 
 def _get(path: str) -> dict:
