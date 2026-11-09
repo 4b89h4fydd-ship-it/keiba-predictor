@@ -40,7 +40,6 @@ jobs:
       NAR_ON_DEMAND_HISTORY_MONTHS: "12"
       ARVEXQ_RESULT_WORKERS: "6"
       ARVEXQ_RESULT_RETRY_SLEEP_SEC: "3"
-      ARVEXQ_RESULT_ENV_FILL_LIMIT: "0"
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PIP_NO_INPUT: "1"
 
@@ -113,6 +112,11 @@ jobs:
           PYEOF
 
       - name: Repair started incomplete results (JRA only, env fill off)
+        env:
+          # Step-scoped on purpose: repair() reads this limit from the
+          # process env, and the regression tests above exercise repair()
+          # with the default limit — a job-level 0 would fail them.
+          ARVEXQ_RESULT_ENV_FILL_LIMIT: "0"
         run: |
           if ! PYTHONPATH=. python scripts/arvexq_result_repair.py \
               --bundle bundle-jra.json --payload result-repair-payload.json \
