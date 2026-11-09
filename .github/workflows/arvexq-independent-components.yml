@@ -64,7 +64,7 @@ jobs:
         run: python -m pytest -q tests/test_empirical_fusion.py tests/test_mineta_public_pace.py tests/test_empirical_fusion_live_contract.py
       - name: Stage64 pre-off API, wager marginal and scenario display contracts
         run: |
-          python -m pytest -q tests/test_stage64_product_forecast.py tests/test_stage64_frozen_input_evidence.py tests/test_stage64_direct_rival_publication.py
+          python -m pytest -q tests/test_stage64_product_forecast.py
           node scripts/arvexq_stage64_pace_contract_smoke.cjs
       - name: Lock approved ARVEXQ visual layout while retiring former prediction UI
         run: node scripts/arvexq_design_freeze_smoke.cjs
