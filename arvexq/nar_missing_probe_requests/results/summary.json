@@ -1,0 +1,186 @@
+{
+ "nar-2026-10-20-盛岡-01": {
+  "id": "nar-2026-10-20-盛岡-01",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102001",
+  "netkeiba": {
+   "status": 200,
+   "length": 92626,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-20-盛岡-02": {
+  "id": "nar-2026-10-20-盛岡-02",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102002",
+  "netkeiba": {
+   "status": 200,
+   "length": 92671,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-23-浦和-03": {
+  "id": "nar-2026-10-23-浦和-03",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202642102303",
+  "netkeiba": {
+   "status": 200,
+   "length": 92653,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-25-盛岡-02": {
+  "id": "nar-2026-10-25-盛岡-02",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102502",
+  "netkeiba": {
+   "status": 200,
+   "length": 92254,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-25-盛岡-03": {
+  "id": "nar-2026-10-25-盛岡-03",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102503",
+  "netkeiba": {
+   "status": 200,
+   "length": 92756,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-25-盛岡-11": {
+  "id": "nar-2026-10-25-盛岡-11",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102511",
+  "netkeiba": {
+   "status": 200,
+   "length": 92753,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-25-盛岡-12": {
+  "id": "nar-2026-10-25-盛岡-12",
+  "official": {
+   "status": 200,
+   "length": 7733,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 6531,
+   "has_result_table": false,
+   "no_info": true
+  },
+  "netkeiba_race_id": "202635102512",
+  "netkeiba": {
+   "status": 200,
+   "length": 92311,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 1
+ },
+ "nar-2026-10-25-盛岡-01": {
+  "id": "nar-2026-10-25-盛岡-01",
+  "official": {
+   "status": 200,
+   "length": 87013,
+   "has_result_table": true,
+   "no_info": false
+  },
+  "official_ipat": {
+   "status": 200,
+   "length": 85165,
+   "has_result_table": true,
+   "no_info": false
+  },
+  "netkeiba_race_id": "202635102501",
+  "netkeiba": {
+   "status": 200,
+   "length": 107831,
+   "has_result_table": true,
+   "no_data": false
+  },
+  "netkeiba_tables": 3
+ }
+}
