@@ -146,11 +146,15 @@ def _patch_race(spec, summaries, app_module, protect, entry,
 
 
 def main() -> int:
-    request_path = Path(sys.argv[1]) if len(sys.argv) > 1 else \
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    verify_mode = "--verify" in sys.argv
+    request_path = Path(args[0]) if len(args) > 0 else \
         ROOT / "arvexq/residual_repair/requests.json"
-    work = Path(sys.argv[2]) if len(sys.argv) > 2 else \
+    work = Path(args[1]) if len(args) > 1 else \
         ROOT / "arvexq/residual_repair/work"
     work.mkdir(parents=True, exist_ok=True)
+    if verify_mode:
+        return verify(work)
     request = json.loads(request_path.read_text(encoding="utf-8"))
     log(f"request {request.get('requestId')}")
 
@@ -201,25 +205,28 @@ def main() -> int:
     sync_path = work / "sync-input.json"
     sync_path.write_text(json.dumps(sync_input, ensure_ascii=False),
                          encoding="utf-8")
-    out_dir = work / "sync-out"
-    proc = subprocess.run(
-        [sys.executable, str(ROOT / "scripts/arvexq_sync_batches.py"),
-         "--input", str(sync_path), "--out-dir", str(out_dir)],
-        capture_output=True, text=True)
-    log(proc.stdout[-2000:])
-    if proc.returncode != 0:
-        for rid in intended:
-            report["races"][rid]["status"] = "sync-failed"
-        report["syncStderr"] = proc.stderr[-1000:]
-        (work / "report.json").write_text(
-            json.dumps(report, ensure_ascii=False, indent=1),
-            encoding="utf-8")
-        log(f"sync failed: {proc.stderr[-500:]}")
-        return 1
+    (work / "intended.json").write_text(
+        json.dumps(intended, ensure_ascii=False, indent=1), encoding="utf-8")
+    (work / "report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    log(f"prepared {len(sync_details)} races for batched sync")
+    return 0
 
+
+def verify(work: Path) -> int:
+    """API read-back assertions for a previously prepared+synced run."""
+    intended = json.loads((work / "intended.json").read_text(
+        encoding="utf-8"))
+    report_path = work / "report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8")) \
+        if report_path.exists() else {"races": {}}
     failures = []
     for rid, want in intended.items():
-        detail = get_json(f"{API_BASE}/api/race/{rid}")["detail"]
+        try:
+            detail = get_json(f"{API_BASE}/api/race/{rid}")["detail"]
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"{rid} read-back failed: {exc}")
+            continue
         got_health = detail.get("dataCoreHealth") or {}
         for key, want_field in (want["health"] or {}).items():
             got_field = got_health.get(key) or {}
@@ -240,14 +247,15 @@ def main() -> int:
                     f"{(cell or {}).get('bodyWeightChange')!r} want "
                     f"{fix['to']!r}/{fix['changeTo']!r}")
         report["races"][rid]["status"] = "synced-verified" \
-            if not any(f.startswith(rid) for f in failures) else "verify-failed"
+            if not any(f.startswith(rid) for f in failures) \
+            else "verify-failed"
     report["failures"] = failures
-    (work / "report.json").write_text(
-        json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=1),
+                           encoding="utf-8")
     if failures:
         log("VERIFY FAILURES: " + " | ".join(failures))
         return 1
-    log(f"done: {len(intended)} races synced and verified")
+    log(f"verified {len(intended)} races by API read-back")
     return 0
 
 
