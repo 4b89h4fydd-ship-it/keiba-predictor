@@ -154,9 +154,11 @@ def podium_final(result: Any) -> bool:
 # Named check: payout_combination_shape
 #
 # Every stored payout row must carry a combination whose shape matches
-# its bet type: 単勝・複勝 are a single horse number (1..18), 枠連 a
-# frame pair (1..8), 馬連・馬単・ワイド a horse pair, 3連複・3連単 a
-# horse triple, and no (type, combination) pair may repeat. The JRA
+# its bet type: 単勝・複勝 are a single horse number (1..18), 枠連・
+# 枠連単 a frame pair (1..8), 馬連・馬単・ワイド a horse pair,
+# 3連複・3連単 a horse triple, and no (type, combination) pair may
+# repeat. (The NAR parser's unrecognised 枠連単 section leaked its
+# amount into 馬連 as a duplicate combination until 2026-11-09.) The JRA
 # payout-parser defect repaired on 2026-11-08 stored popularity numbers
 # and neighbouring amounts as combinations (複勝 "170", ワイド "133",
 # a duplicated 複勝 number with two amounts); rows of that shape are
@@ -165,7 +167,7 @@ def podium_final(result: Any) -> bool:
 # ---------------------------------------------------------------------------
 _PAYOUT_COMBINATION_ARITY = {
     "単勝": 1, "複勝": 1,
-    "枠連": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
+    "枠連": 2, "枠連単": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
     "3連複": 3, "3連単": 3,
 }
 
@@ -196,7 +198,7 @@ def payout_combination_violations(detail: dict[str, Any] | None) -> list[dict[st
         if len(numbers) != arity:
             reason = f"combination has {len(numbers)} numbers, expected {arity}"
         else:
-            limit = 8 if kind == "枠連" else 18
+            limit = 8 if kind in ("枠連", "枠連単") else 18
             if any(n < 1 or n > limit for n in numbers):
                 reason = f"combination number outside 1..{limit}"
             elif (kind, tuple(numbers)) in seen:

@@ -116,3 +116,90 @@ def test_payout_parser_accepts_line_break_cells_without_inventing_rows():
         {"type": "ワイド", "combination": "1-2", "amount": 540},
         {"type": "ワイド", "combination": "2-3", "amount": 760},
     ]
+
+
+def test_payout_parser_keeps_nar_frame_exacta_out_of_quinella():
+    # keiba.go.jp payout tables list 枠連単 (frame exacta) between
+    # 馬連複 and 馬連単 at the tracks that sell it. The 枠連単 row used
+    # to be read as a continuation of the 馬連 section, storing its
+    # amount as a second 馬連 payout for the same combination
+    # (Kawasaki 2026-11-09 1R: 馬連 4-5 at both 330 and 950).
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><td class="title" rowspan="1">枠連複</td>
+              <td class="a">4-5</td><td class="refundMoney">400円</td><td class="c">1人気</td></tr>
+          <tr><td class="title" rowspan="1">馬連複</td>
+              <td class="a">4-5</td><td class="refundMoney">330円</td><td class="c">1人気</td></tr>
+          <tr><td class="title" rowspan="1">枠連単</td>
+              <td class="a">4-5</td><td class="refundMoney">950円</td><td class="c">1人気</td></tr>
+          <tr><td class="title" rowspan="1">馬連単</td>
+              <td class="a">4-5</td><td class="refundMoney">640円</td><td class="c">1人気</td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+    assert parse_payouts(soup) == [
+        {"type": "枠連", "combination": "4-5", "amount": 400},
+        {"type": "馬連", "combination": "4-5", "amount": 330},
+        {"type": "枠連単", "combination": "4-5", "amount": 950},
+        {"type": "馬単", "combination": "4-5", "amount": 640},
+    ]
+
+
+def test_payout_parser_never_stores_one_combination_twice():
+    # The same pool listed twice with different amounts (an interim
+    # table and a final table) must collapse to one row carrying the
+    # final amount; an exact repeat is a no-op.
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><th>馬連</th><td>4-5</td><td>330円</td></tr>
+          <tr><th>馬連</th><td>4-5</td><td>950円</td></tr>
+          <tr><th>馬連</th><td>4-5</td><td>950円</td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+    assert parse_payouts(soup) == [
+        {"type": "馬連", "combination": "4-5", "amount": 950},
+    ]
+
+
+def test_payout_parser_unknown_section_does_not_inherit_previous_pool():
+    # A section label the parser does not know must not have its rows
+    # attributed to the pool above it.
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><td class="title">馬連複</td><td>4-5</td><td>330円</td></tr>
+          <tr><td class="title">重勝単</td><td>4-5</td><td>950円</td></tr>
+          <tr><td class="title">馬連単</td><td>4-5</td><td>640円</td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+    assert parse_payouts(soup) == [
+        {"type": "馬連", "combination": "4-5", "amount": 330},
+        {"type": "馬単", "combination": "4-5", "amount": 640},
+    ]
+
+
+def test_payout_parser_continuation_rows_keep_their_pool():
+    # Multi-row pools list the label once (rowspan); the following
+    # rows open with the combination and belong to the same pool.
+    soup = BeautifulSoup(
+        """
+        <table>
+          <tr><td class="title" rowspan="3">複勝</td><td>4</td><td>110円</td><td>2人気</td></tr>
+          <tr><td>5</td><td>100円</td><td>1人気</td></tr>
+          <tr><td>8</td><td>160円</td><td>4人気</td></tr>
+        </table>
+        """,
+        "html.parser",
+    )
+    assert parse_payouts(soup) == [
+        {"type": "複勝", "combination": "4", "amount": 110},
+        {"type": "複勝", "combination": "5", "amount": 100},
+        {"type": "複勝", "combination": "8", "amount": 160},
+    ]

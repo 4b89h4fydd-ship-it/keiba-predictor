@@ -5,16 +5,26 @@ bet types, calculate returns, or change prediction output.
 """
 from __future__ import annotations
 
+import logging
 import re
 import unicodedata
 from typing import Any
 
 from bs4 import BeautifulSoup
 
+_log = logging.getLogger(__name__)
+
 
 _ALIASES = {
     "単勝": "単勝", "複勝": "複勝",
     "枠連": "枠連", "枠複": "枠連", "枠連複": "枠連",
+    # 枠連単 (frame exacta) is a real NAR pool listed on the official
+    # payout tables of some tracks （川崎・船橋・金沢・大井・浦和）. It
+    # must map to its own type: while it was unrecognised, its rows were
+    # read as continuation rows of the preceding 馬連複 section and the
+    # frame-exacta amount was stored as a second, phantom 馬連 payout
+    # for the same combination (Kawasaki 2026-11-09 1R/4R et al.).
+    "枠連単": "枠連単",
     "馬連": "馬連", "馬複": "馬連", "馬連複": "馬連",
     "ワイド": "ワイド",
     "馬単": "馬単", "馬連単": "馬単",
@@ -30,7 +40,7 @@ _LABEL_KEYS = sorted(_ALIASES, key=len, reverse=True)
 # neighbouring amounts as combinations; see _parse_refund_dl below).
 _COMBINATION_ARITY = {
     "単勝": 1, "複勝": 1,
-    "枠連": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
+    "枠連": 2, "枠連単": 2, "馬連": 2, "馬単": 2, "ワイド": 2,
     "3連複": 3, "3連単": 3,
 }
 
@@ -54,7 +64,7 @@ def _cell_lines(cell: Any) -> list[str]:
 def parse_payouts(soup: BeautifulSoup) -> list[dict[str, Any]]:
     """Parse official payout tables, including NAR line-break cells."""
     out: list[dict[str, Any]] = []
-    seen: set[tuple[str, str, int]] = set()
+    positions: dict[tuple[str, str], int] = {}
 
     def add(kind: str, combo: str, amount: str) -> None:
         kind = _ALIASES.get(kind, kind)
@@ -68,10 +78,25 @@ def parse_payouts(soup: BeautifulSoup) -> list[dict[str, Any]]:
         if arity is not None and len(re.findall(r"\d+", combo)) != arity:
             return
         value = int(amount_match.group(1).replace(",", ""))
-        key = (kind, combo, value)
-        if key in seen:
+        # A (type, combination) pair can only ever pay ONE amount, so
+        # deduplicate on the pair alone — the previous key also carried
+        # the amount, which let the same combination be stored twice
+        # whenever two different amounts were paired with it. A repeat
+        # with the same amount is a no-op; a repeat with a different
+        # amount means the page carried the pool twice (interim and
+        # final tables), so the later, final value wins and the
+        # conflict is logged rather than silently storing both rows.
+        key = (kind, combo)
+        if key in positions:
+            kept = out[positions[key]]
+            if kept["amount"] == value:
+                return
+            _log.warning(
+                "payout amount conflict for %s %s: %s -> %s (kept final)",
+                kind, combo, kept["amount"], value)
+            kept["amount"] = value
             return
-        seen.add(key)
+        positions[key] = len(out)
         out.append({"type": kind, "combination": combo, "amount": value})
 
     # JRA official result pages do not put payouts in a <table> at all:
@@ -124,6 +149,20 @@ def parse_payouts(soup: BeautifulSoup) -> list[dict[str, Any]]:
                 current = _ALIASES[label_raw]
                 payload = [value for group in cell_lines[label_i + 1:] for value in group]
             elif current:
+                # A row with no recognised label is a continuation row
+                # of the current pool only when it OPENS with a
+                # combination or an amount (multi-row pools list their
+                # label once, with rowspan). A row that opens with any
+                # other text opens a section this parser does not know:
+                # attributing its rows to the previous pool is how the
+                # NAR 枠連単 row was stored as a phantom second 馬連
+                # payout. Close the section and skip the row instead.
+                first = _norm(cell_lines[0][0]) if cell_lines and cell_lines[0] else ""
+                if (first
+                        and not re.fullmatch(r"\d+(?:[-→・]\d+){0,2}", first)
+                        and not re.fullmatch(r"[\d,]+円", first)):
+                    current = ""
+                    continue
                 payload = flat
             else:
                 continue
