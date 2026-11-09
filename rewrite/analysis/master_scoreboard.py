@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 from math import log
+import json
 
 JST = timezone(timedelta(hours=9))
 EPS = 1e-12
@@ -101,6 +103,14 @@ def grade_master_pairs(details: list[dict]) -> dict:
         candidate = detail.get("masterAnalysis") or {}
         if candidate.get("status") != "shadow-candidate" or candidate.get("validated") is not False:
             exclusions["no-shadow-candidate"] += 1
+            continue
+        digest = candidate.get("contentSha256")
+        unsigned = {k: v for k, v in candidate.items() if k != "contentSha256"}
+        actual = sha256(json.dumps(
+            unsigned, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False).encode("utf-8")).hexdigest()
+        if candidate.get("capturedAt") != prediction.get("capturedAt") or digest != actual:
+            exclusions["shadow-seal-mismatch"] += 1
             continue
         try:
             base_probs = {int(n): float(p) for n, p in base.items()}
