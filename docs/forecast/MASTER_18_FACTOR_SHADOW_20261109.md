@@ -50,6 +50,8 @@ log-strength perturbation. Win probabilities sum to 1, top-two and
 top-three are monotonic, and top-three mass sums to 3 for eligible
 races. They are not calibrated and cannot support EV claims.
 
+Image ①–③: `select_daily_races` filters an entire race card (which may contain 36 races), proposes two head candidates, and reports dangerous popular horses as avoid hypotheses. It never forces a fixed quota or deletes an entrant. Criteria are research-only.
+
 12–14: `ticket_styles` computes exact joint probabilities for
 conservative place, a two-head wide hedge, and an outsider wide
 conditional on *observed* potential underpricing. It does not treat
@@ -82,4 +84,21 @@ requires a separate verified UI release.
 - Refit parameters only on training dates strictly before test dates.
   Do not import held-out results into the published engine.
 
-Commands: `python -m unittest rewrite.test_master_v1 -v`.
+### Forward comparison
+
+The sidecar is stamped with the same pre-off capturedAt and a canonical
+content SHA. A separate grader refuses mismatched hashes, post-off
+captures, duplicate races, missing results and changed rosters.
+
+Export full race details (including the original pre-off masterAnalysis
+and later official result) as a JSON list, then run:
+
+`python scripts/arvexq_master_scoreboard.py race-details.json report.json`
+
+The report grades incumbent and challenger on exactly the same races and
+splits JRA/NAR; the same command generates daily shortlists.
+Content SHA protects against accidental edits, but a true independent
+audit also needs an externally held immutable before-off snapshot.
+This alone does not prove betting profitability.
+
+Commands: `python -m unittest rewrite.test_master_v1 rewrite.test_master_scoreboard rewrite.test_master_selection -v`.
