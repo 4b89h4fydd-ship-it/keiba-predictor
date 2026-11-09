@@ -174,3 +174,7 @@ class EnvRepairQualificationTests(TestCase):
         # Exactly 15 minutes before post still qualifies.
         edge = datetime(2026, 11, 9, 16, 45, tzinfo=JST)
         self.assertIsNotNone(qualify(stored_detail(), now=edge))
+
+# Trigger note 2026-11-09 15:20 JST: cycle requested so the
+# env-repair marks-resync branch retries Nagoya 7R before its
+# 15-minute lead guard closes (post 16:05).
