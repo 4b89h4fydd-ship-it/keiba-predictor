@@ -64,6 +64,23 @@ def parse_current_result_html(
         if mo:
             try:odd=float(mo.group())
             except Exception:pass
+        if pop is None or odd is None:
+            # The smartphone layout (the default fetch UA) has no 人気
+            # column at all: the odds cell carries both facts as one
+            # string, e.g. "2.7倍 1人気". Without this, every finisher
+            # parsed through the fallback stored popularity=None (the
+            # 2026-11-07/08 Kyoto/Tokyo results), which silently blocked
+            # every market-relative measurement for those races.
+            for cell in vals:
+                cm=re.search(r"(\d+(?:\.\d+)?)\s*倍\s*(\d+)\s*人気",cell)
+                if cm:
+                    if odd is None:
+                        try:odd=float(cm.group(1))
+                        except Exception:pass
+                    if pop is None:
+                        try:pop=int(cm.group(2))
+                        except Exception:pass
+                    break
         mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val(i_bw)) if i_bw>=0 else None
         if mb:
             try:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
