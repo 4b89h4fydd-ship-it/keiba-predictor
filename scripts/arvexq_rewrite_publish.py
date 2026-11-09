@@ -1448,6 +1448,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         master_analysis["status"] = "shadow-evaluation-error"
         master_analysis["errorType"] = type(exc).__name__
     captured = now.isoformat(timespec="seconds")
+    master_analysis["capturedAt"] = captured
+    master_analysis["contentSha256"] = sha256(json.dumps(
+        master_analysis, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False).encode("utf-8")).hexdigest()
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
