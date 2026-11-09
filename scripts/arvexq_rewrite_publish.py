@@ -112,6 +112,8 @@ from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa:
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
+from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
+from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
 from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
 
@@ -1403,7 +1405,53 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                                calibration_validated=False,
                                trifecta_formation="R24",
                                place_odds=place_odds)
+    # Evaluate the user's 18-factor master specification on the EXACT same
+    # pre-off race and incumbent forecast. Shadow output is advisory only:
+    # production v9b marks, R24 tickets, receipts, and frozen history remain
+    # authoritative until paired forward accuracy / ROI is validated.
+    master_analysis = {"version": "master-18-factor-shadow-v1",
+                       "status": "unavailable"}
+    try:
+        master_forecast, master_audit = master_candidate(race, forecast)
+        master_plans = ticket_styles(master_forecast, master_audit)
+        master_analysis = {
+            "version": master_audit["version"],
+            "status": master_audit["status"],
+            "probabilityStatus": master_audit["probabilityStatus"],
+            "validated": False,
+            "evidenceConfidence": master_audit.get("evidenceConfidence"),
+            "marketStatus": master_audit.get("marketStatus"),
+            "pace": master_audit["pace"],
+            "runners": [
+                {
+                    "horseNumber": item["horseNumber"],
+                    "score100": item["score100"],
+                    "coveragePoints": item["coveragePoints"],
+                    "evidenceRuns": item["evidenceRuns"],
+                    "categories": {
+                        k: v["earned"] for k, v in item["categories"].items()
+                    },
+                    "missingCategories": item["missingCategories"],
+                    "mark": item.get("mark"),
+                    "pWin": item.get("pWin"),
+                    "pTop3": item.get("pTop3"),
+                    "marketRank": item.get("marketRank"),
+                    "popularRisk": item.get("popularRisk"),
+                    "valueHypothesis": item.get("valueHypothesis", False),
+                }
+                for item in master_audit["runners"]
+            ],
+            "ticketStyles": master_plans,
+        }
+    except Exception as exc:
+        # A shadow experiment is never allowed to block pre-off publication.
+        master_analysis["status"] = "shadow-evaluation-error"
+        master_analysis["errorType"] = type(exc).__name__
     captured = now.isoformat(timespec="seconds")
+    master_analysis["capturedAt"] = captured
+    master_analysis["contentSha256"] = sha256(json.dumps(
+        master_analysis, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False).encode("utf-8")).hexdigest()
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
@@ -1500,6 +1548,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     new["predictionStatus"] = "ready"
     new["predictionModelVersion"] = MODEL_VERSION
     new["preRaceBet"] = pre_race_bet
+    # Namespaced research-only sidecar. No prediction marks / tickets change.
+    new["masterAnalysis"] = master_analysis
     by_no = {m["horseNumber"]: m["mark"] for m in marks}
     horses = []
     for h in old.get("horses") or []:
