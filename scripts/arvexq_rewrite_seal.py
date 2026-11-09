@@ -108,7 +108,10 @@ def main() -> int:
                 for r in race.runners
                 if r.win_odds.present and isinstance(r.win_odds.value, (int, float))
             }
-            tickets = generate_tickets(forecast, win_odds, calibration_validated=False)
+            # Frozen lane: trifecta formation pinned to "legacy" (A).
+            # Production formation B must never drift into the seals.
+            tickets = generate_tickets(forecast, win_odds, calibration_validated=False,
+                                       trifecta_formation="legacy")
             payload = {
                 "kind": "arvexq-sealed-forecast",
                 "racePayload": race_payload(

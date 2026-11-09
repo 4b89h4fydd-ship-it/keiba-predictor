@@ -44,7 +44,15 @@ def public_race(detail):
             {'horseNumber': r['horseNumber'], 'mark': r['markSymbol']}
             for r in active['marks']]
         result['forecastText'] = active['pace']['text']
-        result['recommendedBets'] = []  # Research ticket candidates, never paid advice
+        # The stored detail's grouped probability tickets were authored by
+        # the publishing lane for this same verified product; carry them
+        # through instead of discarding the bet list. They stay
+        # uncalibrated reference candidates (each group carries the text
+        # stating EV is not computed); the capped ticketPlan reference
+        # remains available alongside as recommendedBetPlan.
+        source_bets = detail.get('recommendedBets')
+        result['recommendedBets'] = (
+            deepcopy(source_bets) if isinstance(source_bets, list) else [])
         result['recommendedBetPlan'] = deepcopy(active['ticketPlan'])
         by_no = {r['horseNumber']: r['markSymbol'] for r in active['marks']}
         for horse in result.get('horses') or []:

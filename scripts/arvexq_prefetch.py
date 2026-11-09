@@ -299,36 +299,8 @@ def _enrich_cards_concurrently(cards: dict[str, dict[str, Any]], workers: int = 
 
 def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[str, Any]:
     out = copy.deepcopy(detail)
-    # Optional internal research input from licensed VIDEO artifacts. Never
-    # fetch external media in Full Prefetch and never treat unvalidated vision
-    # observations as a correction to product marks or wager probabilities.
-    vision_dir = str(os.getenv("ARVEXQ_VISION_EVIDENCE_DIR") or "").strip()
-    if vision_dir and os.path.isdir(vision_dir):
-        from arvexq.vision.history import attach_from_store
-        try:
-            out = attach_from_store(out, vision_dir)
-        except (ValueError, OSError, KeyError) as exc:
-            print("VISION_RESEARCH_EVIDENCE_REJECTED",
-                  str(detail.get("id") or ""), type(exc).__name__, flush=True)
     attach_career_readiness(out)
     pm = dict(out.get("preparedMeta") or {})
-    vision_samples = sum(len(h.get("visionResearchHistory") or [])
-                         for h in (out.get("horses") or []) if isinstance(h, dict))
-    if vision_samples:
-        verified_samples = sum(
-            1 for h in (out.get("horses") or []) if isinstance(h, dict)
-            for row in (h.get("visionResearchHistory") or [])
-            if isinstance(row, dict)
-            and row.get("researchOnly") is True
-            and row.get("identitySource") == "externally-reviewed"
-            and type(row.get("trackingCoverage")) in (int, float)
-            and row["trackingCoverage"] >= .8
-        )
-        pm["visionResearchStatus"] = (
-            "verified-historical-video-available"
-            if verified_samples else "provisional-video-not-applied")
-        pm["visionResearchHistoricalRuns"] = vision_samples
-        pm["visionResearchVerifiedRuns"] = verified_samples
     active = active_horses(out)
     with_history = sum(
         1 for h in active
@@ -503,39 +475,6 @@ def prepare(
 
 
 
-def _attach_empirical_fusion_products(detail: dict[str, Any]) -> dict[str, Any]:
-    """Publish empirically fused pre-off predictions through the existing D1 projection.
-
-    Prefetch D1 payloads previously bypassed public_race, unlike HTTP snapshots.
-    Keep the original D1 record (including sealed pre-off archives and every
-    career observation); only attach the approved server-computed product fields.
-    A blocked/incomplete forecast must never become a synthetic prediction.
-    """
-    from arvexq.forecast.publication import public_race
-    published = public_race(detail)
-    # The projection also preserves genuinely frozen historical Stage64 picks.
-    # This new-forecast attachment must not re-promote those as fresh D1
-    # products; only the replacement engine's own output is eligible.
-    from arvexq.prediction.empirical_fusion import VERSION as FUSION_VERSION
-    if (published.get("predictionStatus") != "ready"
-            or published.get("predictionModelVersion") != FUSION_VERSION):
-        return detail
-    result = copy.deepcopy(detail)
-    for key in ("predictionStatus", "predictionModelVersion", "prediction",
-                "predictionMarks", "recommendedBets", "forecastText"):
-        if key in published:
-            result[key] = copy.deepcopy(published[key])
-    # Preserve original runner facts while attaching only the approved
-    # per-horse marks from the same computed prediction.
-    marks = {m["horseNumber"]: m["mark"] for m in published["predictionMarks"]}
-    result["horses"] = [
-        dict(h, predMark=marks[h["horseNumber"]])
-        if isinstance(h, dict) and h.get("horseNumber") in marks else copy.deepcopy(h)
-        for h in detail.get("horses") or []
-    ]
-    return result
-
-
 def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> int:
     """Analyze D1 readback only, via the SAME diagnosis engine as before.
 
@@ -611,20 +550,6 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
         except Exception as exc:
             analyzed[rid] = fact
             errors[rid] = f"{type(exc).__name__}: {exc}"
-    # Diagnosis-ready does not establish full empirical method coverage.
-    # Attach only products actually computed from the read-back, pre-off facts.
-    from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
-    eligible = 0
-    products_ready = 0
-    for rid, detail in list(analyzed.items()):
-        if not may_create_prerace_prediction(detail):
-            continue
-        eligible += 1
-        published = _attach_empirical_fusion_products(detail)
-        if published.get("predictionStatus") == "ready" and published.get("predictionMarks"):
-            analyzed[rid] = published
-            products_ready += 1
-    print("PERSISTED_D1_EMPIRICAL_FUSION_PRODUCTS", "preoff=", eligible, "ready=", products_ready)
     payload = {
         "summaries": rows,
         "details": [analyzed[str(r["id"])] for r in rows if str(r["id"]) in analyzed],

@@ -8,6 +8,7 @@
 .arv-three-ticket{min-width:0;padding:10px 9px;margin:6px 0;border-radius:8px;background:rgba(24,50,78,.62)}
 .arv-three-ticket-head{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:7px;color:#b5dfff;font-size:13px}
 .arv-three-ticket>strong{display:block;max-width:100%;min-width:0;color:#fff;font-size:15px;line-height:1.7;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
+.arv-three-summary{font-size:16px;letter-spacing:.03em}
 .arv-three-ticket>p,.arv-three-skip{margin:7px 0 0;font-size:12px;line-height:1.65;color:#c2cddb;white-space:normal;overflow-wrap:anywhere}
 .arv-three-budget,.arv-three-ev,.arv-three-fixed,.arv-three-provisional,.arv-three-reason{box-sizing:border-box;max-width:100%;font-size:12px;line-height:1.65;white-space:normal;overflow-wrap:anywhere}
 .arv-three-budget{color:#f2dfab;font-weight:700}
@@ -93,6 +94,12 @@
   background:rgba(9,25,46,.70);color:#fff;
   font-size:17px;font-weight:900;white-space:nowrap;
 }
+.arv-three-bet .arv-three-box-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:36px;padding:5px 9px;border-radius:8px;
+  background:rgba(38,120,74,.88);color:#eafff3;
+  font-size:13px;font-weight:900;letter-spacing:.08em;white-space:nowrap;
+}
 .arv-three-bet .arv-three-ticket-reason{margin:8px 0 0!important;color:#b5c6d6;font-size:12px;line-height:1.55}
 .arv-three-bet .arv-three-skip{
   margin:0;padding:7px 2px 3px;color:#95a9bc;font-size:12px;line-height:1.55;
@@ -141,4 +148,41 @@
   .bet-detail-page-shell .arv-three-bet .ai-bet-meta>span.arv-bet-status{
     min-height:38px!important;
   }
+}
+
+/* 2026-11-04: same-model ticket group + one-screen compaction.
+   Presentation only — every combination stays fully listed; the
+   five kinds render as rows of ONE group card with hairline
+   dividers, the shared reason prints once under the group, and
+   spacing/typography tightens so the bets view fits one phone
+   screen for a typical race. */
+.arv-three-bet .arv-three-group{
+  border:1px solid rgba(83,133,173,.17);border-radius:10px;
+  background:rgba(27,52,82,.78);overflow:hidden;
+}
+.arv-three-bet .arv-three-group .arv-three-ticket{
+  background:transparent;border:0;border-radius:0;
+  margin:0;padding:7px 10px;
+}
+.arv-three-bet .arv-three-group .arv-three-ticket + .arv-three-ticket{
+  border-top:1px solid rgba(83,133,173,.16);
+}
+.arv-three-bet .arv-three-group-reason{
+  margin:0!important;padding:6px 10px 8px;
+  border-top:1px solid rgba(83,133,173,.16);
+}
+.bet-detail-page-shell .arv-three-bet{padding:10px!important}
+.arv-three-bet .arv-three-ticket{padding:8px 10px;margin:5px 0 0}
+.arv-three-bet .arv-three-ticket-head{margin-bottom:4px}
+.arv-three-bet .arv-three-combo{min-height:30px;padding:3px 10px}
+.arv-three-bet .arv-three-box-label{min-height:30px;padding:3px 8px}
+.arv-three-bet .arv-three-section{margin:8px 0;padding:9px 10px}
+.arv-three-bet .arv-three-section>h3{margin:0 0 6px;font-size:15px}
+.arv-three-bet .arv-three-ticket-reason{margin:5px 0 0!important;line-height:1.45}
+.arv-three-bet .arv-three-fixed{margin:2px 2px 6px}
+@media(max-width:430px){
+  .bet-detail-page-shell .arv-three-bet{padding:8px!important}
+  .arv-three-bet .arv-three-ticket{padding:7px 9px}
+  .arv-three-bet .arv-three-group .arv-three-ticket{padding:6px 9px}
+  .arv-three-bet .arv-three-section{padding:8px}
 }

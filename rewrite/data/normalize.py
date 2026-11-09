@@ -92,6 +92,11 @@ class RunnerRecord:
     scratched: bool
     past_runs: tuple[PastRun, ...]
     rejected_future_runs: int = 0
+    # Observed place （複勝） odds range from the same payload row as
+    # win_odds (placeOddsLow/placeOddsHigh). Carried exactly like
+    # win_odds: unknown stays unknown, never imputed from win odds.
+    place_odds_low: Obs = Obs(None, "normalize", "not_captured")
+    place_odds_high: Obs = Obs(None, "normalize", "not_captured")
 
 
 @dataclass(frozen=True)
@@ -188,6 +193,8 @@ def normalize_runner(row: dict, race_date: str, source: str) -> RunnerRecord:
         scratched=bool(row.get("scratched")),
         past_runs=tuple(kept),
         rejected_future_runs=rejected,
+        place_odds_low=obs(row.get("placeOddsLow"), source),
+        place_odds_high=obs(row.get("placeOddsHigh"), source),
     )
 
 

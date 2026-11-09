@@ -14,8 +14,7 @@ The existing frontend (arvexq/ui/static) consumes two payload families:
 Honesty rules enforced here:
 
 - Flags are fixed truthful values: probabilities are NOT calibrated,
-  video identity is NOT validated, output is research-only, and no
-  human override exists.
+  output is research-only, and no human override exists.
 - Expected value is never emitted: the tickets layer suppresses EV
   while calibration is unvalidated, so every EV field is null and the
   suppression reason is carried in text the UI surfaces.
@@ -55,7 +54,7 @@ from ..safety.contracts import Segment
 
 UNIFIED_VERSION = "arvexq-unified-live-v1"
 ADAPTER_VERSION = "arvexq-rewrite-output-v1"
-MODEL_VERSION = "arvexq-rewrite-v1-uncalibrated-prior"
+MODEL_VERSION = "arvexq-rewrite-v3-v9b"
 # The serving beta was fitted on the 2026-10-21..2026-10-23 training
 # slice only (time-ordered backtest). Races on/before that window must
 # not be presented as pre-off forecasts of this model, so the same date
@@ -63,7 +62,6 @@ MODEL_VERSION = "arvexq-rewrite-v1-uncalibrated-prior"
 BETA_FIT_THROUGH = "2026-10-23"
 
 PROBABILITIES_CALIBRATED = False
-VIDEO_IDENTITY_VALIDATED = False
 RESEARCH_ONLY = True
 HUMAN_OVERRIDES = False
 
@@ -259,12 +257,13 @@ def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
 # --------------------------------------------------------------- marks
 
 
-def _mark_reason(runner_forecast) -> str:
+def _mark_reason(runner_forecast, calibrated: bool = False) -> str:
     parts = []
     if runner_forecast.p_win is not None:
         parts.append(
             f"勝率推定{runner_forecast.p_win * 100:.1f}%"
-            f"・3着内推定{runner_forecast.p_top3 * 100:.1f}%（未校正）"
+            f"・3着内推定{runner_forecast.p_top3 * 100:.1f}%"
+            f"（{'校正済み' if calibrated else '未校正'}）"
         )
     for reason in runner_forecast.pace_reasons:
         parts.append(f"展開補正:{reason}")
@@ -273,8 +272,39 @@ def _mark_reason(runner_forecast) -> str:
     return "／".join(parts)
 
 
-def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int]]:
-    """(predictionMarks, unifiedForecast.marks, honmei number)."""
+def combined_gate_picks(plan: TicketPlan) -> list[int]:
+    """Runners passing the combined EV gate, in place-EV
+    lower-bound order (the place estimates' own order).
+
+    Gate (user decision 2026-11-04): win EV >= 1.25 AND win
+    probability >= 0.05 AND place EV lower bound >= 1.0. This list
+    is the single source the bets-tab combined block and the 注
+    attention overlay both read, so the two can never disagree.
+    """
+    win = {t.selection[0]: t for t in plan.win_ev_estimates}
+    picks: list[int] = []
+    for est in plan.place_ev_estimates:
+        w = win.get(est.number)
+        if w is None:
+            continue
+        if ((w.expected_return or 0) >= 1.25
+                and (w.probability or 0) >= 0.05
+                and est.expected_value_low >= 1.0):
+            picks.append(est.number)
+    return picks
+
+
+def _marks(forecast: RaceForecast, calibrated: bool = False,
+           attention: Optional[set] = None) -> tuple[list[dict], list[dict], Optional[int]]:
+    """(predictionMarks, unifiedForecast.marks, honmei number).
+
+    ``attention`` is the combined-gate qualifier set: those runners
+    carry ``attention: true`` as an overlay (the 注 mark). The
+    probability marks themselves are mechanically unchanged; a
+    qualifier without a probability mark gets a predictionMarks
+    entry with an empty mark so the overlay still has a carrier.
+    """
+    attention = attention or set()
     marked = [r for r in forecast.runners if r.mark]
     marked.sort(key=lambda r: MARK_ORDER.index(r.mark))
     prediction_marks = [
@@ -282,9 +312,19 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
             "horseNumber": r.number,
             "mark": r.mark,
             "winProbability": r.p_win,
+            **({"attention": True} if r.number in attention else {}),
         }
         for r in marked
     ]
+    marked_numbers = {r.number for r in marked}
+    for r in forecast.runners:
+        if r.number in attention and r.number not in marked_numbers:
+            prediction_marks.append({
+                "horseNumber": r.number,
+                "mark": "",
+                "winProbability": r.p_win,
+                "attention": True,
+            })
     unified_marks = [
         {
             "horseNumber": r.number,
@@ -294,7 +334,8 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
             "top3ProbabilityRange": None,
             "winProbability": r.p_win,
             "top3Probability": r.p_top3,
-            "reason": _mark_reason(r),
+            "reason": _mark_reason(r, calibrated),
+            **({"attention": True} if r.number in attention else {}),
         }
         for r in marked
     ]
@@ -302,21 +343,107 @@ def _marks(forecast: RaceForecast) -> tuple[list[dict], list[dict], Optional[int
     return prediction_marks, unified_marks, honmei
 
 
+def _diagnosis_reason(runner_forecast, calibrated: bool = False) -> str:
+    text = _mark_reason(runner_forecast, calibrated)
+    if runner_forecast.ability_score is None:
+        note = "過去走の証拠不足のため能力スコアなし"
+        return f"{text}／{note}" if text else note
+    return text
+
+
+# Diagnosis grade bands on the FINAL win probability (user decision
+# 2026-11-04). The grade on the 全頭診断 card must agree with the
+# probability printed on the same card; it was previously banded on
+# the raw ability score, which let a runner whose final win
+# probability was 9.2% carry an S because its ability score was
+# high. Bands: S >= 20% / A >= 12% / B >= 7% / C >= 3.5% / D below
+# that. Lane-agnostic: whichever lane produced the forecast, the
+# probability it finally carries is the basis.
+DIAGNOSIS_GRADE_BANDS = ((0.20, "S"), (0.12, "A"), (0.07, "B"),
+                         (0.035, "C"))
+
+
+def _diagnosis_grade(p_win: Optional[float]) -> Optional[str]:
+    """Grade for one runner from its final win probability.
+
+    A runner without a probability (the forecast could not price
+    the field) keeps no grade — None, never an invented letter.
+    """
+    if p_win is None:
+        return None
+    for threshold, grade in DIAGNOSIS_GRADE_BANDS:
+        if p_win >= threshold:
+            return grade
+    return "D"
+
+
+def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
+    """All-runner diagnosis block for the 全頭診断 panel.
+
+    Marks carry probabilities for the five marked runners only; the
+    diagnosis panel renders EVERY runner, so it needs the engine's
+    per-runner ability score and probabilities for the whole field.
+    Values are the engine's own: the ability layer's raw score in
+    [0, 1] (never the win probability), the Plackett-Luce point
+    probabilities, and the same reason text the marks carry. A runner
+    the engine could not score keeps nulls, not invented values.
+
+    The grade is banded on the FINAL win probability (see
+    _diagnosis_grade), never on the ability score, so the grade on
+    a diagnosis card cannot contradict the probability printed
+    beside it; the ability score itself is still carried unchanged
+    as the ability value.
+    """
+    return [
+        {
+            "horseNumber": r.number,
+            "abilityScore": r.ability_score,
+            "winProbability": r.p_win,
+            "top3Probability": r.p_top3,
+            "grade": _diagnosis_grade(r.p_win),
+            "reason": _diagnosis_reason(r, calibrated),
+        }
+        for r in forecast.runners
+    ]
+
+
 # ------------------------------------------------------------- tickets
 
 
-def _ticket_reason(plan: TicketPlan) -> str:
+def _ticket_reason(plan: TicketPlan, calibrated: bool = False) -> str:
     if plan.probability_tickets:
-        base = (
-            "未校正の確率による参考候補。確率校正が未検証のため期待値は"
-            "算出せず、購入推奨ではありません"
-        )
+        if plan.win_ev_estimates:
+            base = (
+                "校正済みの確率による参考候補。購入推奨ではありません"
+                if calibrated else
+                "未校正の確率による参考候補。購入推奨ではありません"
+            )
+        else:
+            base = (
+                "校正済みの確率による参考候補。期待値による購入推奨は"
+                "行わず、購入推奨ではありません"
+                if calibrated else
+                "未校正の確率による参考候補。確率校正が未検証のため期待値は"
+                "算出せず、購入推奨ではありません"
+            )
     else:
         base = "確率候補が基準に達しないため見送り"
     suppressed = plan.suppressed or {}
     notes = []
     if suppressed.get("ev_win") == "calibration-not-validated":
-        notes.append("単勝の期待値は確率未校正のため抑制")
+        if plan.win_ev_estimates:
+            notes.append(
+                "単勝の期待値は校正済みの推定値として表示"
+                "（期待値レーンの購入推奨は引き続き抑制）"
+                if calibrated else
+                "単勝の期待値は未校正の推定値として表示"
+                "（確率校正・実測検証は未完了）"
+            )
+        else:
+            notes.append(
+                "単勝の期待値は表示対象のオッズがないため抑制"
+                if calibrated else
+                "単勝の期待値は確率未校正のため抑制")
     if any(str(k).startswith("ev_") and v == "odds-unavailable"
            for k, v in suppressed.items()):
         notes.append("複合券種は発走前の実オッズ不足のため期待値を算出しない")
@@ -325,7 +452,7 @@ def _ticket_reason(plan: TicketPlan) -> str:
     return "。".join([base, *notes])
 
 
-def _ticket_plan_block(plan: TicketPlan) -> dict:
+def _ticket_plan_block(plan: TicketPlan, calibrated: bool = False) -> dict:
     items = [
         {
             "kind": KIND_LABELS[ticket.kind],
@@ -337,21 +464,56 @@ def _ticket_plan_block(plan: TicketPlan) -> dict:
     ]
     items.sort(key=lambda item: (-item["probability"], item["combo"]))
     items = items[:MAX_UI_TICKET_ITEMS]
-    return {
+    # Win EV estimates (uncalibrated): model win probability x real
+    # win odds, only for runners whose win odds actually exist.
+    # Combination kinds have no real odds and stay without EV.
+    win_ev = [
+        {
+            "horseNumber": ticket.selection[0],
+            "winProbability": ticket.probability,
+            "odds": ticket.odds,
+            "expectedValue": ticket.expected_return,
+        }
+        for ticket in plan.win_ev_estimates
+    ]
+    # Place EV ranges (display only): present only when the payload
+    # carried observed place odds. combinedPicks is the combined
+    # gate's qualifier list (see combined_gate_picks).
+    place_ev = [
+        {
+            "horseNumber": est.number,
+            "top3Probability": est.probability,
+            "placeOddsLow": est.place_odds_low,
+            "placeOddsHigh": est.place_odds_high,
+            "expectedValueLow": est.expected_value_low,
+            "expectedValueHigh": est.expected_value_high,
+        }
+        for est in plan.place_ev_estimates
+    ]
+    block = {
         "status": "参考候補" if items else "見送り",
         "items": items,
-        "reason": _ticket_reason(plan),
+        "reason": _ticket_reason(plan, calibrated),
         "sameModelAndMarks": True,
         "maximumPoints": MAX_UI_TICKET_ITEMS,
         "expectedValue": None,
-        "expectedValueStatus": "suppressed-calibration-not-validated",
+        "expectedValueStatus": (
+            ("calibrated-estimate" if calibrated
+             else "uncalibrated-estimate") if win_ev
+            else "suppressed-calibration-not-validated"
+        ),
+        "winExpectedValues": win_ev,
         "suppressed": {k: str(v) for k, v in (plan.suppressed or {}).items()},
     }
+    if place_ev:
+        block["placeExpectedValues"] = place_ev
+        block["combinedPicks"] = combined_gate_picks(plan)
+    return block
 
 
-def _recommended_bets(plan: TicketPlan) -> list[dict]:
+def _recommended_bets(plan: TicketPlan, calibrated: bool = False) -> list[dict]:
     """Full probability-ticket list in the bet_view plan-item shape."""
-    reason = _ticket_reason(plan)
+    reason = _ticket_reason(plan, calibrated)
     bets = []
     for ticket in plan.probability_tickets:
         bets.append({
@@ -417,6 +579,7 @@ def race_payload(
     tickets: TicketPlan,
     *,
     provenance: Optional[dict] = None,
+    calibrated_probabilities: bool = False,
 ) -> dict:
     """Production /api/race/<id> envelope for one rewrite forecast.
 
@@ -427,7 +590,9 @@ def race_payload(
     frontend's unified gate fails closed.
     """
     provenance = provenance or {}
-    prediction_marks, unified_marks, honmei = _marks(forecast)
+    prediction_marks, unified_marks, honmei = _marks(
+        forecast, calibrated_probabilities,
+        attention=set(combined_gate_picks(tickets)))
     circuit = _value(race.circuit, "")
     start_time = _value(race.start_time, "")
     unified = {
@@ -455,24 +620,27 @@ def race_payload(
             for r in race.runners
         ],
         "marks": unified_marks,
+        "diagnosis": _diagnosis(forecast, calibrated_probabilities),
         "honmeiHorseNumber": honmei,
         "pace": _pace_block(race, pace),
         "paceStages": _pace_stages(race, pace),
-        "ticketPlan": _ticket_plan_block(tickets),
+        "ticketPlan": _ticket_plan_block(tickets, calibrated_probabilities),
         "analysisStages": {
             "ability": {"status": "prior-weights-unfitted",
                         "modelVersion": ABILITY_MODEL_VERSION},
-            "video": {"status": "not-validated",
-                      "identityValidated": VIDEO_IDENTITY_VALIDATED},
             "pace": {"status": "past-corner-evidence-uncalibrated"},
             "probability": {"status": forecast.probability_status,
                             "calibrated": PROBABILITIES_CALIBRATED},
             "marks": {"status": "mechanical-from-probability"},
-            "tickets": {"status": "probability-only-ev-suppressed"},
+            "tickets": {"status": (
+                ("win-ev-calibrated-estimate" if calibrated_probabilities
+                 else "win-ev-uncalibrated-estimate")
+                if tickets.win_ev_estimates
+                else "probability-only-ev-suppressed"
+            )},
         },
         "researchOnly": RESEARCH_ONLY,
         "probabilitiesCalibrated": PROBABILITIES_CALIBRATED,
-        "videoIdentityValidated": VIDEO_IDENTITY_VALIDATED,
         "humanOverrides": HUMAN_OVERRIDES,
         "source": ADAPTER_VERSION,
         # Input provenance only: SHA-256 of the stored raw snapshot.
@@ -501,7 +669,8 @@ def race_payload(
         "predictionModelVersion": MODEL_VERSION,
         "prediction": None,
         "predictionMarks": prediction_marks,
-        "recommendedBets": _recommended_bets(tickets),
+        "recommendedBets": _recommended_bets(
+            tickets, calibrated_probabilities),
         "forecastText": _pace_block(race, pace)["text"],
         "unifiedForecast": unified,
     }

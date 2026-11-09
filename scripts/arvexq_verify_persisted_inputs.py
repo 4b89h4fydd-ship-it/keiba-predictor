@@ -25,7 +25,8 @@ def main() -> int:
     args = parser.parse_args()
     source = json.loads(Path(args.source).read_text(encoding="utf-8"))
     saved = json.loads(Path(args.saved).read_text(encoding="utf-8"))
-    issues = verify_persisted_facts(source, saved)
+    diagnostics: list = []
+    issues = verify_persisted_facts(source, saved, diagnostics)
     expected = len(source.get("summaries") or [])
     found = len(saved.get("races") or [])
     data = {"expected": expected, "stored": found, "errors": issues,
@@ -34,6 +35,8 @@ def main() -> int:
     print("D1_PERSISTED_FACTS", "expected=",expected,"saved=",found,"errors=",len(issues))
     for issue in issues[:25]:
         print("D1_PERSISTED_FACTS_MISMATCH", issue)
+    for entry in diagnostics[:10]:
+        print("D1_PERSISTED_FACTS_DEBUG", json.dumps(entry, ensure_ascii=False))
     return 0 if data["verified"] else 2
 
 

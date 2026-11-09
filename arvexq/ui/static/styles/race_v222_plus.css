@@ -9,6 +9,14 @@
 .diagnosis-horse-name{display:flex!important;flex-direction:column!important;min-width:0!important}
 .diagnosis-horse-name b{font-size:16px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 .diagnosis-horse-name small{margin-top:2px!important;font-size:10px!important;color:#98a8ae!important;white-space:nowrap!important}
+/* ARVEXQDiagnosisView cards emit no check cell and no frame badge: the
+   head has two children (horse-main + eval) and the button a single
+   name span ("number + name"). Under the shared grids above the name
+   span lands in the 36px badge column (inside a button itself squeezed
+   into the 34px check column) and clips to "7 …". Give this head a
+   two-column layout and let the name span take the full button width. */
+.diagnosis-merged-head.diagnosis-view-head{grid-template-columns:minmax(0,1fr) auto!important}
+.diagnosis-view-head .diagnosis-horse-main{display:block!important}
 .diagnosis-eval{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:5px!important;white-space:nowrap!important}
 .diagnosis-eval>.overall-grade{min-width:28px!important;text-align:center!important}
 .diagnosis-eval>b{font-size:17px!important;line-height:1!important;color:#f3f4f4!important}
@@ -21,6 +29,34 @@
 .diagnosis-ai-mark[data-ai-mark="注"]{color:#ffad66!important;border-color:#d77c31!important}
 .diagnosis-merged-row .diag-confidence{padding:7px 10px 2px 51px!important;font-size:11px!important;color:#aebbc0!important}
 .diagnosis-merged-row .diag-explain{padding:0 10px 9px 51px!important;margin:4px 0 0!important;font-size:12px!important;line-height:1.45!important;color:#d0d7da!important}
+/* Grade-band colour coding for the diagnosis cards (user request
+   2026-11-04: 「全頭診断わかりにくいから色つけて」). diagnosis_view.js
+   adds diagnosis-grade-s/a/b/c/d to the card and to its grade chip
+   for the S/A/B/C/D letter grades only; other grades stay unbanded.
+   The filled hues are the app's own grade palette promoted from text
+   colour to badge fill: S uses the alert red #d92d20 (styles.css
+   .time-changed), A the warning orange #b54708 (.flash-badge), B the
+   grade blue #175cd3 (.overall-grade.grade-a text), C the grade
+   green #067647 (.overall-grade.grade-b text), D the grade gray
+   #667085 (.overall-grade.grade-c text). White bold letters keep
+   contrast on the dark card, and the letter is always printed, so
+   colour is never the only signal. A matching left stripe and a
+   faint head tint carry the band across the whole card. */
+.diagnosis-merged-row.diagnosis-grade-s{border-left:4px solid #d92d20!important}
+.diagnosis-merged-row.diagnosis-grade-a{border-left:4px solid #b54708!important}
+.diagnosis-merged-row.diagnosis-grade-b{border-left:4px solid #175cd3!important}
+.diagnosis-merged-row.diagnosis-grade-c{border-left:4px solid #067647!important}
+.diagnosis-merged-row.diagnosis-grade-d{border-left:4px solid #667085!important}
+.diagnosis-grade-s .diagnosis-merged-head{background:rgba(217,45,32,.14)!important}
+.diagnosis-grade-a .diagnosis-merged-head{background:rgba(181,71,8,.18)!important}
+.diagnosis-grade-b .diagnosis-merged-head{background:rgba(23,92,211,.18)!important}
+.diagnosis-grade-c .diagnosis-merged-head{background:rgba(6,118,71,.18)!important}
+.diagnosis-grade-d .diagnosis-merged-head{background:rgba(102,112,133,.16)!important}
+.diagnosis-grade-s .diagnosis-eval>.overall-grade{background:#d92d20!important;color:#fff!important;border-color:#d92d20!important}
+.diagnosis-grade-a .diagnosis-eval>.overall-grade{background:#b54708!important;color:#fff!important;border-color:#b54708!important}
+.diagnosis-grade-b .diagnosis-eval>.overall-grade{background:#175cd3!important;color:#fff!important;border-color:#175cd3!important}
+.diagnosis-grade-c .diagnosis-eval>.overall-grade{background:#067647!important;color:#fff!important;border-color:#067647!important}
+.diagnosis-grade-d .diagnosis-eval>.overall-grade{background:#667085!important;color:#fff!important;border-color:#667085!important}
 .smart-race-head-v222 .smart-race-head-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 148px!important;gap:8px!important;align-items:stretch!important}
 .smart-race-head-v222 .smart-race-left-stack{min-width:0!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:7px!important}
 .smart-race-head-v222 .smart-race-head-left{min-width:0!important;display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:nowrap!important}
@@ -177,6 +213,8 @@
 .fixed-pick-box-head>em{font-style:normal;font-size:9.5px;font-weight:900;color:#8fd9ff}.fixed-pick-box.value .fixed-pick-box-head>em{color:#ffd06a}
 .fixed-pick-row{appearance:none;-webkit-appearance:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 5px;width:100%;min-width:0;padding:7px 8px;border:0;border-bottom:1px solid rgba(80,119,143,.18);background:transparent;color:#eaf5fc;text-align:left}
 .fixed-pick-row:last-child{border-bottom:0}.fixed-pick-row>span{min-width:0}.fixed-pick-row>span>b{display:block;font-size:12.5px;white-space:nowrap}.fixed-pick-row>span>small{display:block;margin-top:2px;font-size:8.8px;color:#9fb4c1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fixed-pick-row>span>small.rank-pick-line,.fixed-pick-row>span>small.rank-pick-fav{white-space:normal;overflow:visible;text-overflow:clip;font-size:10.5px;line-height:1.5}
+.rank-pick-sys{display:inline-block;padding:0 4px;border-radius:3px;background:rgba(23,92,211,.14);font-size:9px;font-weight:900}
 .fixed-pick-row>time{font-size:11px;font-weight:900;color:#c8eaff;white-space:nowrap}.fixed-pick-row>em{grid-column:1/-1;font-style:normal;font-size:9px;font-weight:900;color:#7fd5ff}
 .fixed-pick-row.value>em{color:#ffd06a}.fixed-pick-row.value>span>small{color:#c8b37d}
 .fixed-pick-empty{min-height:62px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.fixed-pick-empty>b{font-size:12px;color:#9fb4c1}.fixed-pick-empty>small{margin-top:3px;font-size:8.8px;line-height:1.3;color:#718895}
@@ -2038,6 +2076,19 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
   .racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-bottom{font-size:12px!important}
 }
 
+/* v343 — 注 (attention) overlay: combined win + place EV gate qualifier.
+   Stacked under the probability mark in the same cell (user layout
+   decision 2026-11-04); a qualifier without a probability mark shows
+   the 注 alone. */
+.racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-stack .rc-mark-bottom.rc-mark-attention{
+  color:#e8a33d!important;
+}
+.racecard-row.rc-racecard-v336.rc-racecard-v339 .rc-mark-attention-only{
+  color:#e8a33d!important;
+  font-weight:950!important;
+  font-size:19px!important;
+}
+
 
 /* v342 — persisted explanations for AI ticket vs marks */
 .ai-bet-why{
@@ -2317,3 +2368,120 @@ html,body,#app{max-width:100%!important;overflow-x:hidden!important}
  .arv-favorite-home-open{gap:5px!important;padding:7px!important}
  .arv-favorite-home-open time{font-size:11px!important}
 }
+
+/* Integrated osusume (2026-11-04): collapsed mechanical reference fold
+   under the integrated recommendation, and the axes/partners line. */
+.arv-three-reference{margin:10px 0 2px}
+.arv-three-reference>summary{cursor:pointer;font-weight:700;font-size:13px;padding:6px 2px;color:#6b6252}
+.arv-osusume-pools{font-weight:600;color:#3d382e}
+
+/* Two-column mark layout (display-only; v26 column added 2026-11-05,
+   layout redesigned the same day after the stacked in-cell label
+   proved unreadable). When a race has a v26 archive entry the table
+   carries .rc-has-v26 and every row is: v26 mark | v9b (production)
+   mark | number | name | weight | odds. The two mark columns are
+   identified by the header row (.racecard-head-row) — no label text
+   is stacked inside the cells: a cell holds only its mark (or a
+   subdued dash), plus the small v26 signal under the v26 mark and
+   the v25 widening flag (▽) under the v9b mark. Same-mark emphasis
+   is a background tint only, so nothing can overlap. The fixed
+   column totals (220/206/194) never exceed the pre-redesign budget
+   (220/207/195), so the name column keeps at least its old width. */
+.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:40px 40px 42px minmax(0,1fr) 54px 44px!important}
+@media(max-width:430px){.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:36px 36px 40px minmax(0,1fr) 52px 42px!important}}
+@media(max-width:360px){.racecard-table.rc-has-v26 .racecard-row{grid-template-columns:34px 34px 38px minmax(0,1fr) 48px 40px!important}}
+.racecard-head-row{display:none!important}
+.racecard-table.rc-has-v26 .racecard-head-row{display:grid!important;grid-template-columns:40px 40px 42px minmax(0,1fr) 54px 44px;border-bottom:1px solid #50616b}
+@media(max-width:430px){.racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:36px 36px 40px minmax(0,1fr) 52px 42px}}
+@media(max-width:360px){.racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:34px 34px 38px minmax(0,1fr) 48px 40px}}
+.racecard-head-row .rch{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;line-height:1.6;text-align:center}
+.racecard-head-row .rch-v26{color:#b7a6e8;background:#241b3a}
+.racecard-head-row .rch-v9b{color:#ffd75a}
+.rc-racecard-v339 .rc-v26-cell{background:#241b3a!important;border-right:1px solid #50616b!important}
+.rc-racecard-v339 .rc-v26-cell .rc-v26-box{height:auto!important;min-height:0!important;flex:0 1 auto!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:1px!important}
+.rc-v26-box .rc-mark-main{font-style:normal!important;font-weight:1000!important;line-height:1!important;color:#d6dde0!important}
+.rc-v26-box[data-v26-mark=""] .rc-mark-main{color:#5f6d75!important}
+.rc-v26-box[data-v26-mark="◎"] .rc-mark-main{color:#ff6675!important}
+.rc-v26-box[data-v26-mark="○"] .rc-mark-main{color:#5fe3ff!important}
+.rc-v26-box[data-v26-mark="▲"] .rc-mark-main{color:#ffd75a!important}
+.rc-v26-box[data-v26-mark="△"] .rc-mark-main{color:#a9c4e9!important}
+.rc-v26-box[data-v26-mark="☆"] .rc-mark-main{color:#d49cff!important}
+.rc-v26-signal{display:block!important;font-size:9px!important;font-weight:800!important;color:#cdbffa!important;text-align:center!important;line-height:1.15!important;white-space:nowrap!important}
+.rc-v26-cell.rc-v26-same{background:#3d2b6e!important;box-shadow:inset 0 0 0 2px #ffd75a!important}
+.rc-v25-added{display:block!important;text-align:center!important;font-size:10px!important;font-weight:900!important;line-height:1.15!important;color:#7ee2a8!important}
+/* In the two-column layout the production mark box is too narrow
+   for its honmei role label ("◎ 本命"): as a flex row it spilled
+   over the number cell. The same label stays visible beside the
+   horse name (and in the cell's aria-label), so the in-box copy
+   is suppressed here only — the single-column layout is untouched. */
+.racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small{display:none!important}
+.rc-v26-legend{padding:6px 2px 8px!important;font-size:11px!important;line-height:1.55!important;color:#8f83c9!important}
+
+/* Two-column mark layout — cascade repair (2026-11-05 follow-up).
+   Root cause of the crushed horse-name column on real devices: the
+   smart race page's compact-row block in sports/unified-home.css
+   (html body .smart-race-page .racecard-row.rc-racecard-v336
+   .rc-racecard-v339, specificity 0-4-2, loaded later) outranked the
+   0-3-0 two-column rule above and forced its FIVE-column template
+   (26px 32px minmax(0,1fr) 42px 51px) onto the SIX-cell v26 rows:
+   the number button swallowed the 1fr track, the horse name was
+   crushed into the 42px track and the odds cell wrapped onto a
+   second row. The rules below restore the six-column order
+   (v26 | v9b incl. the v25 widening flag | number | name | weight |
+   odds) at the compact design's width steps, outranking that block
+   by specificity (rows 0-6-2, head row 0-4-2). The compact block's
+   54px row height and child sizing still apply; non-v26 rows are
+   untouched. */
+html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:30px 30px 36px minmax(0,1fr) 46px 52px!important}
+@media(max-width:430px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:25px 25px 31px minmax(0,1fr) 41px 47px!important}}
+@media(max-width:365px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-row.rc-racecard-v336.rc-racecard-v339{grid-template-columns:23px 23px 29px minmax(0,1fr) 39px 45px!important}}
+html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:30px 30px 36px minmax(0,1fr) 46px 52px!important}
+@media(max-width:430px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:25px 25px 31px minmax(0,1fr) 41px 47px!important}}
+@media(max-width:365px){html body .smart-race-page .racecard-table.rc-has-v26 .racecard-head-row{grid-template-columns:23px 23px 29px minmax(0,1fr) 39px 45px!important}}
+
+/* The ◎ role label ("◎ 発走前参考印" etc.) used to sit on the name
+   line, where its ~72px silently truncated even an 8-character name
+   (ノリウッドテール needed 122px, got 99px). In the two-column
+   layout the label moves back into the v9b mark box — the position
+   the row markup already emits it in — stacked under the glyph as a
+   small wrapped caption, and the duplicate on the name line is
+   hidden (it stays in the cell's aria-label). */
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-mark-box.rc-ai-mark{flex-direction:column!important;gap:1px!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small:not(.rc-v25-added){display:block!important;font-size:7.5px!important;line-height:1.05!important;text-align:center!important;white-space:normal!important;max-width:100%!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark .rc-mark-main{line-height:1.1!important}
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-info .rc-honmei-role{display:none!important}
+
+/* Reload button beside the race-detail favorite star, and the
+   app-wide overscroll guard (2026-11-06, user request). The custom
+   pull-to-refresh module is no longer mounted from app.js; refresh
+   is the on-screen reload buttons only (detail title row beside the
+   star, venue header left cell). The button mirrors the favorite
+   star's box and cream/bronze theme so the title row keeps its
+   existing rhythm; overscroll-behavior also suppresses the
+   browser-native pull-to-refresh where the platform offers one. */
+.arv-reload-button{
+  appearance:none!important;-webkit-appearance:none!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px!important;
+  padding:0!important;margin:0!important;border:1px solid #c39245!important;
+  border-radius:10px!important;background:#fff1cc!important;color:#a66512!important;
+  font-size:21px!important;line-height:1!important;font-weight:700!important;
+  touch-action:manipulation;cursor:pointer;box-sizing:border-box!important
+}
+@media(max-width:380px){
+  .arv-reload-button{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important}
+}
+html,body{overscroll-behavior-y:none!important}
+/* The venue header reload button (app.js venueTopBar) sits in the
+   topbar's reserved left cell; the pull-to-refresh-era rule earlier
+   in this file hides it with display:none. Refresh is on-screen
+   buttons only now, so show it again — its box and glyph styling
+   remain the legacy .smart-venue-reload rules. */
+.smart-venue-reload{display:flex!important}
+/* The v28 added-partner triangle in the v9b mark box is caught by two
+   generic small-hiding rules (.rc-racecard-v339 ... > small and
+   .racecard-table.rc-has-v26 ... .rc-ai-mark small, both
+   display:none!important at higher specificity than the plain
+   .rc-v25-added rule above). Restore it with a selector at least as
+   specific, scoped to exactly that element. */
+html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark small.rc-v25-added{display:block!important;color:#7ee2a8!important;font-size:10px!important;font-weight:900!important;line-height:1.15!important;text-align:center!important}

@@ -34,9 +34,13 @@ assert.equal(shown.items.length,2);
 assert.equal(JSON.stringify(shown.items[0].combos),JSON.stringify([[1,2],[1,3]]));
 assert.equal(JSON.stringify(shown.items[1].combos),JSON.stringify(triples));
 const frame=context.ARVEXQTicketFrame.contents(race);
-assert.match(frame,/おすすめ買い目/);
-assert.match(frame,/1 - 2/);
-assert.match(frame,/3 - 2 - 1/);
+// Heading lives in the composed view (render's h2 / the bets tab's
+// top bar) since the 2026-11-04 grouping rework removed the doubled
+// in-contents titles; contents itself carries no heading any more.
+assert.match(context.ARVEXQTicketFrame.render(race),/おすすめ買い目/);
+assert.doesNotMatch(frame,/おすすめ買い目/);
+assert.match(frame,/1-2\.3/);
+assert.match(frame,/1\.2\.3-1\.2\.3-1\.2\.3/);
 assert.match(frame,/8点|2点/);
 assert.doesNotMatch(frame,/<unsafe>/);
 assert.equal(JSON.stringify(race),original);
@@ -50,7 +54,7 @@ for(const malformed of [
 ]){
  const item=context.ARVEXQProductionTickets.build(malformed);
  assert.equal(item.items.length,0);
- assert.doesNotMatch(context.ARVEXQTicketFrame.render(malformed),/3 - 2 - 1/);
+ assert.doesNotMatch(context.ARVEXQTicketFrame.render(malformed),/1\.2\.3-1\.2\.3-1\.2\.3/);
 }
 
  // Only timestamp-verified genuine frozen originals can be displayed; invented marks are rejected.

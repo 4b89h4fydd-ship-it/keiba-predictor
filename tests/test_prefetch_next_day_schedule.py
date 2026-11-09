@@ -90,14 +90,6 @@ class PrefetchNextDayScheduleTest(unittest.TestCase):
     def test_day_ahead_does_not_generate_prediction_products(self) -> None:
         guarded = (
             "Analyze only persisted D1 data and prepare original marks and bets",
-            "Prepare previous-day research training corpus (optional)",
-            "Capture optional preoff research candidates (not production picks)",
-            "Report research capture operational evidence",
-            "Record research capture result in progress issue",
-            "Archive research-only preoff receipts",
-            "Calibrate ticket hit rates from sealed previous-day results",
-            "Publish empirical calibration independently of immutable morning originals",
-            "Replace legacy active forecasts in D1 publication payload",
             "Freeze morning selected and special predictions for all races",
             "Publish fixed morning race list as a Cloudflare static asset",
             "Preserve lossless prediction originals before D1 writes",

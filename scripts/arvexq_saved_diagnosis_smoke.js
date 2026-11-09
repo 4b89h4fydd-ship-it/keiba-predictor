@@ -31,7 +31,10 @@ for(const circuit of ['中央','地方']){
   const out=root.ARVEXQDiagnosisView.render(r2,{}, {...deps,original:()=>null});
   assert.equal((out.match(/diagnosis-merged-row/g)||[]).length,6);
   assert.ok(out.includes('能力指数')&&out.includes('推定1着率 10.0%')&&out.includes('推定3着内率 10.0%'));
-  assert.ok(out.includes('確率は未校正')&&out.includes('公開Stage64'));
+  // The narration line under the summary (which carried the
+  // 公開Stage64 wording) was removed by user decision 2026-11-04;
+  // the per-horse Stage64 content lines remain.
+  assert.ok(out.includes('確率は未校正')&&!out.includes('公開Stage64の能力・確率・印を表示'));
   assert.ok(out.includes('◎')&&out.includes('☆'));
   assert.ok(!out.includes('発走前の診断根拠は未保存')&&!out.includes('事後評価'));
   assert.equal(JSON.stringify(r2),after);

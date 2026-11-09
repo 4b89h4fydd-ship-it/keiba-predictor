@@ -117,7 +117,7 @@ for filename in BET_ASSETS:
 bet_hash = hashlib.sha256(b"|".join((BET_PATH / filename).read_bytes() for filename in BET_ASSETS)).hexdigest()[:12]
 
 MORNING_PATH = STATIC / "morning"
-MORNING_MODULES = ("ticket_lane_classifier.js", "selection_cut.js", "selected_race_pipeline.js", "special_selection.js", "frozen_ticket_evidence.js", "saved_ticket_receipt.js")
+MORNING_MODULES = ("ticket_lane_classifier.js", "selection_cut.js", "selected_race_pipeline.js", "special_selection.js", "frozen_ticket_evidence.js", "production_lane.js", "saved_ticket_receipt.js", "rank_selection.js")
 for filename in MORNING_MODULES:
     if not (MORNING_PATH / filename).is_file():
         raise RuntimeError(f"missing morning module: {filename}")
@@ -381,6 +381,15 @@ if morning_dir.is_dir():
     target_dir = DIST / "morning-picks"
     target_dir.mkdir(exist_ok=True)
     for archive in morning_dir.glob("????-??-??.json"):
+        shutil.copy2(archive, target_dir / archive.name)
+
+# v26 shadow-lane sealed marks are display-only read copies, published
+# as dated archives with the same treatment as morning-picks.
+v26_marks_dir = STATIC / "v26-marks"
+if v26_marks_dir.is_dir():
+    target_dir = DIST / "v26-marks"
+    target_dir.mkdir(exist_ok=True)
+    for archive in v26_marks_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
 
 # Lightweight, immutable factual racecard backup survives an unavailable D1.

@@ -54,13 +54,26 @@ class NAROfficialMarginBackfillTests(unittest.TestCase):
         self.assertEqual(calls, ["2026-10-10", "2026-10-09"])
         self.assertEqual(len(observed), 1)
         self.assertAlmostEqual(observed[0]["timeBehindWinner"], .8)
-        self.assertFalse(_needs_nar_margins(enriched["horses"][0], race["date"]))
+        # Per-run gate (2026-11-01): the other four runs still lack a measured
+        # margin, so the horse remains eligible for repair on the next pass.
+        self.assertTrue(_needs_nar_margins(enriched["horses"][0], race["date"]))
         self.assertEqual(enriched["horses"][0]["_supplementalSources"],
                          ["nar_official_past_results"])
 
-    def test_genuine_zero_margin_does_not_refetch(self):
+    def test_single_measured_margin_no_longer_blocks_repair(self):
+        # Gate change (2026-11-01): one measured margin used to make the whole
+        # horse ineligible forever. Repair is now per-run, so a horse whose
+        # other recent runs still lack margins stays eligible.
         race = fixture()
         race["horses"][0]["recentRaces"][0]["timeBehindWinner"] = 0.0
+        self.assertTrue(_needs_nar_margins(race["horses"][0], race["date"]))
+
+    def test_genuine_zero_margin_does_not_refetch(self):
+        race = fixture()
+        # Every recent run carries a measured margin; the genuine 0.0 winner
+        # margin on the latest run counts as measured evidence, not missing.
+        for index, run in enumerate(race["horses"][0]["recentRaces"]):
+            run["timeBehindWinner"] = 0.0 if index == 0 else 0.4 * index
         self.assertFalse(_needs_nar_margins(race["horses"][0], race["date"]))
         called = []
         enriched = asyncio.run(enrich_race_missing(

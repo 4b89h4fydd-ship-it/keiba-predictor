@@ -1,8 +1,14 @@
 /* Read-only production prediction status; no on-device forecasting. */
 (function(root){
   'use strict';
-  function render(){
+  function render(race){
     var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();
+    // Race binding (sibling of the 2026-11-03 ticket-frame mixup): the
+    // shared current() slot holds the LAST built race's receipt. When
+    // the caller names the page race, a slot owned by a different race
+    // renders as unacquired — never as this race's forecast.
+    if(race&&race.id&&live&&live.raceId&&String(live.raceId)!==String(race.id))
+      live={active:false,source:'',unavailable:true,marks:[],scenarios:[],pace:[],forecastText:'',modelVersion:''};
     var note=live&&live.source==='saved-preoff'
       ?'<p class="muted">発走前保存の原本だけを表示しています。</p>'
       :live&&live.source==='learned-revision-preoff-candidate'

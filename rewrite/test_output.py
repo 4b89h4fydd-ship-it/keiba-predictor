@@ -2,11 +2,14 @@
 import re
 import unittest
 
+from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.forecast import forecast_race
 from rewrite.analysis.pace import forecast_pace
 from rewrite.analysis.tickets import generate_tickets
 from rewrite.data.normalize import normalize_race
-from rewrite.output.api_shape import day_payload, model_hash, race_payload
+from rewrite.output.api_shape import (
+    _diagnosis, _diagnosis_grade, day_payload, model_hash, race_payload,
+)
 from rewrite.test_analysis import (
     CLOSER_RUNS, FRONT_RUNS, MID_RUNS, SUMMARY, horse,
 )
@@ -102,7 +105,6 @@ class RacePayloadTests(unittest.TestCase):
 
     def test_truthful_flags(self):
         self.assertIs(self.unified["probabilitiesCalibrated"], False)
-        self.assertIs(self.unified["videoIdentityValidated"], False)
         self.assertIs(self.unified["researchOnly"], True)
         self.assertIs(self.unified["humanOverrides"], False)
 
@@ -139,6 +141,26 @@ class RacePayloadTests(unittest.TestCase):
         for entry in self.detail["predictionMarks"]:
             self.assertIsNotNone(entry["winProbability"])
 
+    def test_diagnosis_covers_all_runners(self):
+        diagnosis = self.unified["diagnosis"]
+        roster = {h["horseNumber"] for h in self.detail["horses"]}
+        self.assertEqual({d["horseNumber"] for d in diagnosis}, roster)
+        marks = {m["horseNumber"]: m for m in self.unified["marks"]}
+        for entry in diagnosis:
+            # The ability layer's raw score, never the win probability.
+            self.assertIsNotNone(entry["abilityScore"])
+            self.assertGreaterEqual(entry["abilityScore"], 0.0)
+            self.assertLessEqual(entry["abilityScore"], 1.0)
+            self.assertIsNotNone(entry["winProbability"])
+            self.assertIsNotNone(entry["top3Probability"])
+            self.assertTrue(entry["reason"])
+            marked = marks.get(entry["horseNumber"])
+            if marked is not None:
+                self.assertEqual(entry["winProbability"],
+                                 marked["winProbability"])
+                self.assertEqual(entry["top3Probability"],
+                                 marked["top3Probability"])
+
     def test_four_pace_stages(self):
         keys = [s["key"] for s in self.unified["paceStages"]]
         self.assertEqual(keys, ["start", "turn3", "turn4", "straight"])
@@ -174,16 +196,31 @@ class RacePayloadTests(unittest.TestCase):
         self.assertTrue(all(i["kind"] in ui_kinds for i in items))
         self.assertIs(self.unified["ticketPlan"]["sameModelAndMarks"], True)
 
-    def test_no_ev_numbers_when_unvalidated(self):
+    def test_win_ev_shown_only_as_uncalibrated_estimate(self):
+        # The purchase-candidate lanes still carry no EV numbers.
         for bet in self.detail["recommendedBets"]:
             self.assertIsNone(bet["expectedValue"])
             self.assertIsNone(bet["stakeUnits"])
-        self.assertIsNone(self.unified["ticketPlan"]["expectedValue"])
+        plan_block = self.unified["ticketPlan"]
+        self.assertIsNone(plan_block["expectedValue"])
         self.assertEqual(
-            self.unified["ticketPlan"]["expectedValueStatus"],
-            "suppressed-calibration-not-validated",
-        )
-        self.assertIn("未校正", self.unified["ticketPlan"]["reason"])
+            plan_block["expectedValueStatus"], "uncalibrated-estimate")
+        self.assertIn("未校正", plan_block["reason"])
+        self.assertIn("推定値", plan_block["reason"])
+        # Every fixture horse has real win odds (5.0): each estimate
+        # must equal the model win probability x those odds.
+        estimates = plan_block["winExpectedValues"]
+        self.assertEqual(len(estimates), 5)
+        for entry in estimates:
+            self.assertAlmostEqual(entry["odds"], 5.0)
+            self.assertAlmostEqual(
+                entry["expectedValue"],
+                entry["winProbability"] * entry["odds"],
+                delta=1e-3,
+            )
+        # Combination items never carry an EV figure (no real odds).
+        for item in plan_block["items"]:
+            self.assertNotIn("expectedValue", item)
 
     def test_missing_provenance_fails_closed(self):
         payload = build_payload(self.race, provenance=None)
@@ -203,6 +240,73 @@ class RacePayloadTests(unittest.TestCase):
         self.assertEqual(detail["recommendedBets"], [])
         self.assertEqual(detail["unifiedForecast"]["marks"], [])
         self.assertFalse(payload["analysis_ready"])
+
+
+class DiagnosisGradeTests(unittest.TestCase):
+    """Grade = final-win-probability bands (user decision 2026-11-04).
+
+    The grade must never again be banded on the raw ability score:
+    on the old ability bands 園田1R #7 (ability 0.7955) was an S
+    while its final win probability was 9.2% and it carried no mark.
+    """
+
+    def test_band_edges(self):
+        cases = [
+            (1.0, "S"), (0.20, "S"), (0.1999, "A"),
+            (0.12, "A"), (0.1199, "B"),
+            (0.07, "B"), (0.0699, "C"),
+            (0.035, "C"), (0.0349, "D"),
+            (0.0, "D"),
+        ]
+        for p_win, expected in cases:
+            with self.subTest(p_win=p_win):
+                self.assertEqual(_diagnosis_grade(p_win), expected)
+
+    def test_no_probability_no_grade(self):
+        self.assertIsNone(_diagnosis_grade(None))
+
+    def test_sonoda_1r_2026_11_04_acceptance(self):
+        # (abilityScore, final winProbability, top3Probability) as
+        # stored in the production payload of nar-2026-11-04-園田-01
+        # (v9b calibrated + market-blended probabilities).
+        stored = {
+            1: (0.6, 0.046, 0.1554), 2: (0.7119, 0.1438, 0.4283),
+            3: (0.8739, 0.1315, 0.3986), 4: (0.4768, 0.0137, 0.048),
+            5: (0.0245, 0.0055, 0.0194), 6: (0.24, 0.0079, 0.0277),
+            7: (0.7955, 0.0922, 0.2948), 8: (0.7956, 0.161, 0.4673),
+            9: (0.5894, 0.0324, 0.1112), 10: (0.7808, 0.104, 0.3274),
+            11: (0.8602, 0.2213, 0.5833), 12: (0.5514, 0.0408, 0.1386),
+        }
+        runners = tuple(
+            RunnerForecast(
+                number=no, name=None, ability_score=ability,
+                strength=None, pace_adjustment=1.0, pace_reasons=(),
+                p_win=p_win, p_top2=None, p_top3=p_top3,
+                mark="", status="ok",
+            )
+            for no, (ability, p_win, p_top3) in sorted(stored.items())
+        )
+        forecast = RaceForecast(
+            race_id="nar-2026-11-04-園田-01", beta=2.0,
+            probability_status="uncalibrated-prior", runners=runners,
+            status="ok",
+        )
+        grades = {d["horseNumber"]: d["grade"]
+                  for d in _diagnosis(forecast, calibrated=True)}
+        self.assertEqual(grades, {
+            1: "C", 2: "A", 3: "A", 4: "D", 5: "D", 6: "D",
+            7: "B", 8: "A", 9: "D", 10: "B", 11: "S", 12: "C",
+        })
+        # The user's case: #7 drops from ability-band S to B, and
+        # the only S is the race's ◎ (#11, the highest probability).
+        self.assertEqual([n for n, g in grades.items() if g == "S"],
+                         [11])
+
+    def test_fixture_diagnosis_grades_match_probabilities(self):
+        payload = build_payload()
+        for entry in payload["detail"]["unifiedForecast"]["diagnosis"]:
+            self.assertEqual(entry["grade"],
+                             _diagnosis_grade(entry["winProbability"]))
 
 
 if __name__ == "__main__":

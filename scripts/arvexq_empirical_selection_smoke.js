@@ -13,7 +13,7 @@ const q=lanes.classify({circuit:'地方',raceNumber:1},{rows},{score:40});
 assert.equal(q.selected,true,'ability score of 40 must NOT exclude empirically qualified bets');
 const plan={decision:'購入候補',betInputGate:{ready:true},items:[{level:'本線',kind:'ワイド',combos:[[1,2]]}]};
 assert(!lanes.requireMorningTickets(q,plan).selected,'no observed sample must not claim high hit probability');
-ctx.window.ARVEXQTicketHitCalibration={version:'arvexq-empirical-ticket-hit-v1',modelVersion:'arvexq-true-run-pure-sectional-v2',
+ctx.window.ARVEXQTicketHitCalibration={version:'arvexq-empirical-ticket-hit-v1',modelVersion:'arvexq-rewrite-v3-v9b',
  asOfDate:'2026-10-13',buckets:{'ワイド|1':{kind:'ワイド',points:1,sample:32,wins:28,hitRate:.875,wilsonLower95:.72,qualified:true}}};
 const good=lanes.requireMorningTickets(q,plan);
 assert.equal(good.selected,true);

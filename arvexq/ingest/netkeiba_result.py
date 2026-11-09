@@ -29,7 +29,7 @@ def parse_current_result_html(
             for k in keys:
                 if k in v:return i
         return -1
-    i_fin=hidx("着順");i_frame=hidx("枠");i_no=hidx("馬番");i_name=hidx("馬名");i_time=hidx("タイム");i_corner=hidx("コーナー通過順");i_pop=hidx("人気");i_odds=hidx("単勝オッズ","単勝");i_bw=hidx("馬体重")
+    i_fin=hidx("着順");i_frame=hidx("枠");i_no=hidx("馬番");i_name=hidx("馬名");i_time=hidx("タイム");i_margin=hidx("着差");i_corner=hidx("コーナー通過順");i_pop=hidx("人気");i_odds=hidx("単勝オッズ","単勝");i_bw=hidx("馬体重")
     finishers=[]
     for tr in table.find_all("tr"):
         tds=tr.find_all("td")
@@ -51,6 +51,21 @@ def parse_current_result_html(
             na=tr.select_one(".Horse_Name a,.HorseInfo a,.Horse_Name")
             name=clean(na.get_text(" ",strip=True)) if na else ""
         tm=parse_time_seconds(val(i_time)) if i_time>=0 else 0.0
+        margin=val(i_margin).strip() if i_margin>=0 else ""
+        if i_margin<0 and i_time>=0:
+            # The smartphone layout has no 着差 column either: the
+            # margin rides inside the time cell as
+            # "<time> <margin> (<last 3F>)", e.g. "1:13.4 1 (37.0)" or
+            # "1:14.2 アタマ (37.5)"; the winner's cell carries no
+            # margin token ("1:13.3 (36.7)"), matching the official
+            # table's empty winner margin. Without this, every finisher
+            # parsed through the fallback stored no marginText at all
+            # (the same Kyoto/Tokyo results hit by the popularity drop).
+            mt=re.match(r"^\s*(?:\d{1,2}:)?\d{1,2}(?:\.\d+)?\s*(.*?)\s*(?:\([^)]*\)\s*)?$",val(i_time))
+            if mt:
+                cand=mt.group(1).strip()
+                if cand and len(cand)<=8 and ":" not in cand and "(" not in cand:
+                    margin=cand
         corners=[]
         cs=val(i_corner)
         cm=re.search(r"\d{1,2}(?:-\d{1,2})+",cs)
@@ -64,11 +79,28 @@ def parse_current_result_html(
         if mo:
             try:odd=float(mo.group())
             except Exception:pass
+        if pop is None or odd is None:
+            # The smartphone layout (the default fetch UA) has no 人気
+            # column at all: the odds cell carries both facts as one
+            # string, e.g. "2.7倍 1人気". Without this, every finisher
+            # parsed through the fallback stored popularity=None (the
+            # 2026-11-07/08 Kyoto/Tokyo results), which silently blocked
+            # every market-relative measurement for those races.
+            for cell in vals:
+                cm=re.search(r"(\d+(?:\.\d+)?)\s*倍\s*(\d+)\s*人気",cell)
+                if cm:
+                    if odd is None:
+                        try:odd=float(cm.group(1))
+                        except Exception:pass
+                    if pop is None:
+                        try:pop=int(cm.group(2))
+                        except Exception:pass
+                    break
         mb=re.search(r"(\d{3})(?:\s*[（(]\s*([+\-]?\d+)\s*[）)])?",val(i_bw)) if i_bw>=0 else None
         if mb:
             try:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
             except Exception:pass
-        if no and name:finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val(i_fin),"horseNumber":no,"frameNumber":frame,"name":name,"timeSeconds":tm,"cornerPositions":corners,"winOdds":odd,"popularity":pop,"bodyWeight":bw,"bodyWeightChange":chg})
+        if no and name:finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val(i_fin),"horseNumber":no,"frameNumber":frame,"name":name,"timeSeconds":tm,"marginText":margin,"cornerPositions":corners,"winOdds":odd,"popularity":pop,"bodyWeight":bw,"bodyWeightChange":chg})
     finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
     if len(finishers)<3:return None
     payouts=parse_payouts(soup)

@@ -29,6 +29,7 @@ from arvexq.results import (
     TERMINAL_NO_PAYOUT,
     merge_detail,
     merge_result,
+    payout_combination_violations,
     result_state,
     row_date,
     start_minutes,
@@ -59,6 +60,91 @@ def _write_json(path: str, value: Any) -> None:
     )
 
 
+_MARK_ORDER = ("◎", "○", "▲", "△", "☆")
+
+
+def _marks_map(entries: Any, *keys: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    if not isinstance(entries, list):
+        return out
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        label = next((entry.get(k) for k in keys if entry.get(k)), None)
+        if label:
+            out[str(label)] = entry.get("horseNumber")
+    return out
+
+
+def _heal_marks_consistency(detail: dict[str, Any] | None) -> bool:
+    """Align predictionMarks to the authoritative unifiedForecast marks.
+
+    The unified product is the receipt-verified publication (the
+    publish marker chain and the read-back verification both key on
+    it); the entry list renders predictionMarks. The blend-upgrade
+    reissues of 2026-11-07/08 left stored details whose
+    predictionMarks still named the first publication's horses
+    beside the reissue's unifiedForecast — two different ◎ for one
+    race. Only the marks assignment is aligned (the marks list, the
+    prediction block's copy of it, its ordered candidate list, and
+    the horses' predMark): probabilities, tickets, the unified
+    product itself and the sealed pre-off archive are untouched.
+    Returns True when the detail was changed.
+    """
+    if not isinstance(detail, dict):
+        return False
+    if detail.get("predictionStatus") != "ready":
+        return False
+    uf_entries = (detail.get("unifiedForecast") or {}).get("marks")
+    uf_map = _marks_map(uf_entries, "markSymbol", "mark")
+    if len(uf_map) != 5:
+        return False
+    pm_map = _marks_map(detail.get("predictionMarks"), "mark")
+    if pm_map == uf_map:
+        return False
+    uf_by_label: dict[str, dict[str, Any]] = {}
+    for entry in uf_entries or []:
+        if not isinstance(entry, dict):
+            continue
+        label = entry.get("markSymbol") or entry.get("mark")
+        if label:
+            uf_by_label[str(label)] = entry
+    new_pm: list[dict[str, Any]] = []
+    for label in _MARK_ORDER:
+        src = uf_by_label[label]
+        entry: dict[str, Any] = {
+            "horseNumber": src.get("horseNumber"),
+            "mark": label,
+            "winProbability": src.get("winProbability"),
+        }
+        if src.get("attention"):
+            entry["attention"] = True
+        new_pm.append(entry)
+    # Attention-only overlay entries (empty mark) keep their carrier.
+    marked_numbers = set(uf_map.values())
+    for entry in detail.get("predictionMarks") or []:
+        if (isinstance(entry, dict) and not entry.get("mark")
+                and entry.get("attention")
+                and entry.get("horseNumber") not in marked_numbers):
+            new_pm.append(copy.deepcopy(entry))
+    detail["predictionMarks"] = new_pm
+    prediction = detail.get("prediction")
+    if isinstance(prediction, dict):
+        prediction["predictionMarks"] = copy.deepcopy(new_pm)
+        value = ((prediction.get("stages") or {}).get("marks") or {}).get("value")
+        if isinstance(value, dict) and "orderedWinCandidates" in value:
+            value["orderedWinCandidates"] = [uf_map[label] for label in _MARK_ORDER]
+    number_to_mark = {number: label for label, number in uf_map.items()}
+    for horse in detail.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        if horse.get("horseNumber") in number_to_mark:
+            horse["predMark"] = number_to_mark[horse["horseNumber"]]
+        else:
+            horse.pop("predMark", None)
+    return True
+
+
 def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
     if not isinstance(detail, dict) or not detail.get("id"):
         return
@@ -66,6 +152,160 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
         app._store_fast_snapshot(copy.deepcopy(detail))
     except Exception as exc:
         print("RESULT_BASE_SEED_ERROR", rid, type(exc).__name__, exc)
+
+
+_ENV_UNKNOWN = (None, "", "不明")
+
+
+def _fill_missing_environment(
+    by_id: dict[str, Any],
+    summary_by_id: dict[str, Any],
+    race_ids: list[str],
+    fetch_env: Any,
+    limit: int = 12,
+) -> list[str]:
+    """Backfill JRA weather/going on started races whose stored detail
+    still carries the list builder's placeholder.
+
+    JRA summary rows are born with weather/condition "不明" (the
+    netkeiba list builder hardcodes them), and the values only ever
+    landed when a best-effort live refresh or an official-result
+    merge happened to run for that race: on 2026-11-07/08, 44 of 72
+    JRA races (all of Kyoto/Tokyo) kept the placeholder permanently,
+    while Fukushima — refreshed successfully — had none. The fetch
+    machinery itself works (official result page, then the netkeiba
+    race page, inside app._jra_fetch_environment); nothing steady
+    called it per race. This pass is that steady call, scoped to
+    races this lane already owns: started, JRA, values still unknown.
+    Only values the fetcher actually observed are written; existing
+    values are never overwritten. Attempts are capped per run (the
+    lane runs every few minutes, so a day's backlog drains over
+    consecutive runs instead of bursting the official site).
+    """
+    filled: list[str] = []
+    attempts = 0
+    for rid in race_ids:
+        if attempts >= max(0, int(limit)):
+            break
+        if not str(rid).startswith("jra-"):
+            continue
+        detail = by_id.get(rid)
+        if not isinstance(detail, dict):
+            continue
+        missing = [k for k in ("weather", "condition")
+                   if detail.get(k) in _ENV_UNKNOWN]
+        if not missing:
+            continue
+        attempts += 1
+        row = summary_by_id.get(rid) or {}
+        probe = {
+            "date": detail.get("date") or row.get("date") or "",
+            "track": detail.get("track") or row.get("track") or "",
+            "raceNumber": detail.get("raceNumber")
+            or row.get("raceNumber") or row.get("raceNo") or 0,
+            "surface": detail.get("surface") or row.get("surface") or "",
+            "jraCname": detail.get("jraCname") or "",
+        }
+        try:
+            env = fetch_env(probe) or {}
+        except Exception as exc:
+            print("RESULT_ENV_FILL_ERROR", rid, type(exc).__name__, exc)
+            continue
+        changed = False
+        for key in missing:
+            value = env.get(key)
+            if value not in _ENV_UNKNOWN:
+                detail[key] = value
+                if isinstance(summary_by_id.get(rid), dict):
+                    summary_by_id[rid][key] = value
+                changed = True
+        if changed:
+            detail["environmentMeta"] = {
+                "source": env.get("source") or "JRA公式優先",
+                "updatedAtEpoch": int(time.time()),
+                "filledBy": "result-repair-env-backfill",
+            }
+            filled.append(rid)
+            print("RESULT_ENV_FILLED", rid,
+                  detail.get("weather"), detail.get("condition"))
+    return filled
+
+
+def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Rebuild a fresh detail for a race the fast refresher cannot reach.
+
+    The fast refresher reads locally stored full details; a historical
+    race whose stored detail was compacted to a summary has none, so the
+    refresher returns nothing and the race stays unrepairable forever
+    (the 2026-11-09 payout-duplicate census: 345 races sat in exactly
+    this state). The official result fetchers only need the race
+    identity — date / track / race number, the stored JRA result token,
+    and, for NAR, a name->number map that the stored finishers already
+    provide — all of which the bundle detail still carries. The result
+    is merged into a copy of the bundle detail exactly as the fast path
+    merges it into the locally stored one; forecasts are untouched
+    (the protect seam restores them from the stored publication).
+    """
+    if not isinstance(base, dict) or not base.get("id"):
+        return None
+    fresh = copy.deepcopy(base)
+    if rid.startswith("nar-"):
+        minimal = {
+            "id": rid,
+            "date": base.get("date"),
+            "track": base.get("track"),
+            "raceNumber": base.get("raceNumber"),
+            "horses": [
+                {"name": f.get("name"), "horseNumber": f.get("horseNumber")}
+                for f in (base.get("result") or {}).get("finishers") or []
+                if isinstance(f, dict) and f.get("name") and f.get("horseNumber")
+            ],
+        }
+        official = app._nar_official_result_fast(minimal)
+        if not official:
+            return None
+        fresh["result"] = official
+        if official.get("weather") not in (None, "", "不明"):
+            fresh["weather"] = official["weather"]
+        if official.get("condition") not in (None, "", "不明"):
+            fresh["condition"] = official["condition"]
+        fresh = app._merge_result_fields(fresh, official)
+        if app._result_has_podium(fresh):
+            try:
+                fresh = app._attach_nar_payouts(fresh)
+            except Exception as exc:
+                print("NAR payout attach after bundle refresh failed", rid, exc)
+        return fresh
+    # JRA: reuse the stored result token when it still names this race;
+    # otherwise re-derive it from the race card, as the fast path does.
+    result_cname = str(base.get("resultCname") or "")
+    if result_cname and not app._jra_result_cname_matches_detail(result_cname, base):
+        result_cname = ""
+    if not result_cname:
+        cname = app._jra_find_cname(str(base.get("date") or ""),
+                                    str(base.get("track") or ""),
+                                    int(base.get("raceNumber") or 0))
+        if cname:
+            result_cname = app._jra_result_cname_from_card(cname)
+    if result_cname:
+        parsed = app._jra_parse_result(result_cname, fresh)
+        if parsed:
+            fresh = app._merge_official_result(fresh, parsed)
+    stored_payouts = ((fresh.get("result") or {}).get("payouts")) or []
+    payout_broken = not stored_payouts or bool(payout_combination_violations(fresh))
+    if (not app._result_has_podium(fresh)
+            or not app._result_covers_card(fresh)
+            or payout_broken) and app._race_should_have_result(fresh):
+        try:
+            nk = app._netkeiba_current_result(fresh)
+            if nk:
+                fresh["result"] = nk
+                fresh = app._merge_result_fields(fresh, nk)
+        except Exception as exc:
+            print("JRA result fallback after bundle refresh failed", rid, exc)
+    if fresh.get("result") == base.get("result"):
+        return None
+    return fresh
 
 
 def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
@@ -87,6 +327,23 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
 
     now = datetime.now(JST)
     started_ids = [str(r["id"]) for r in rows if started(r, now)]
+
+    # Marks-consistency heal candidates, taken from the bundle
+    # details BEFORE any result refresh replaces them: the refresh
+    # path returns a display-compacted detail whose projection status
+    # ("unified-reference-ready" / "disabled") and rebuilt blocks no
+    # longer carry the stored publication's shape, so healing after
+    # the refresh misses exactly the races the refresh touched. The
+    # healed bundle copy is the stored publication itself (marker
+    # verbatim), which the protect seam accepts as the same
+    # publication re-sent; a fresher result obtained by the refresh
+    # is transplanted into it at payload assembly below.
+    healed_by_id: dict[str, dict[str, Any]] = {}
+    for rid in started_ids:
+        candidate = copy.deepcopy(by_id.get(rid) or {})
+        if candidate.get("id") and _heal_marks_consistency(candidate):
+            healed_by_id[rid] = candidate
+
     pending = []
     for rid in started_ids:
         result_ok, payout_ok, _ = result_state(by_id.get(rid))
@@ -104,11 +361,20 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     def refresh_one(rid: str) -> tuple[str, dict[str, Any] | None, str]:
         try:
             fresh = app._refresh_result_fast(rid)
-            if not isinstance(fresh, dict) or not fresh.get("id"):
-                return rid, None, "result refresher returned no usable detail"
-            return rid, fresh, ""
+            if isinstance(fresh, dict) and fresh.get("id"):
+                return rid, fresh, ""
+        except Exception:
+            pass
+        # The fast refresher needs a locally stored full detail, which
+        # compacted historical races no longer have; rebuild the
+        # official result from the bundle detail instead.
+        try:
+            fresh = _official_refresh_from_bundle(rid, by_id.get(rid))
         except Exception as exc:
             return rid, None, f"{type(exc).__name__}: {exc}"
+        if not isinstance(fresh, dict) or not fresh.get("id"):
+            return rid, None, "result refresher returned no usable detail"
+        return rid, fresh, ""
 
     for attempt in (1, 2):
         todo = []
@@ -154,6 +420,26 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
 
+    # Environment backfill: races whose result/payout are already
+    # complete are never refreshed above, so a stored JRA placeholder
+    # ("不明" weather/going from the list builder) would otherwise
+    # survive forever. Fill the ones the official fetcher can observe
+    # now and publish them with this run's payload.
+    environment_filled = _fill_missing_environment(
+        by_id, summary_by_id, started_ids, app._jra_fetch_environment,
+        int(os.getenv("ARVEXQ_RESULT_ENV_FILL_LIMIT", "12")))
+    for rid in environment_filled:
+        published.add(rid)
+
+    # Marks-consistency heal: the candidates were healed from the
+    # bundle copies above; register them for publication (the payload
+    # assembly swaps their entries in, with any fresher refreshed
+    # result transplanted).
+    marks_healed: set[str] = set(healed_by_id)
+    for rid in sorted(marks_healed):
+        published.add(rid)
+        print("MARKS_HEALED", rid)
+
     summaries = []
     for row in rows:
         z = copy.deepcopy(row)
@@ -192,10 +478,88 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             item["error"] = item["error"] or "payout still incomplete"
             payout_missing.append(item)
 
-    detail_payload = [
-        by_id[rid] for rid in sorted(published | repaired)
+    # === standing audit check: payout_combination_shape (begin) ===
+    # Nightly shape audit over every started race's stored payouts,
+    # run after the repair passes: each payout row's combination must
+    # match its bet type's arity/range and not repeat within the type
+    # (see arvexq.results.state.payout_combination_violations). Races
+    # still violating here could not be healed by this run's refresh
+    # (e.g. no official result token); they are also payout-incomplete
+    # via result_state, so they appear in payout_missing above and the
+    # run reports incomplete. Keep this block intact and named when
+    # the audit is restructured into named checks.
+    combination_violations: list[dict[str, Any]] = []
+    for rid in started_ids:
+        combination_violations.extend(payout_combination_violations(by_id.get(rid)))
+    # === standing audit check: payout_combination_shape (end) ===
+
+    # === standing audit: named checks (begin) ===
+    # The same independent named checks the workflow's final verify
+    # step runs (arvexq.results.audit), applied here to the post-repair
+    # bundle state so the repair report itself names every failure by
+    # check and race instead of only result_missing / payout_missing.
+    # save_read_back is not judged here (nothing has been saved yet);
+    # the workflow audit judges it against the D1 read-back.
+    from arvexq.results.audit import audit_detail, summarise
+
+    audit_failures: list[dict[str, Any]] = []
+    for rid in started_ids:
+        row = summary_by_id[rid]
+        audit_failures.extend(audit_detail(
+            by_id.get(rid),
+            expected_race_id=rid,
+            expected_identity={
+                "date": row.get("date") or "",
+                "track": row.get("track") or "",
+                "raceNumber": row.get("raceNumber") or row.get("raceNo") or "",
+            },
+            now=now, retry_state="in_repair_report"))
+    audit_by_check = summarise(audit_failures)
+    # === standing audit: named checks (end) ===
+
+    payload_by_id: dict[str, dict[str, Any]] = {
+        str(by_id[rid]["id"]): by_id[rid]
+        for rid in sorted(published | repaired)
         if isinstance(by_id.get(rid), dict) and by_id[rid].get("id")
-    ]
+    }
+    for rid, entry in healed_by_id.items():
+        merged = by_id.get(rid) or {}
+        merged_result = merged.get("result")
+        if isinstance(merged_result, dict) and merged_result != entry.get("result"):
+            entry["result"] = copy.deepcopy(merged_result)
+            for key in ("resultCname", "fieldSize"):
+                if merged.get(key) not in (None, "", 0):
+                    entry[key] = merged[key]
+        payload_by_id[rid] = entry
+    # Compact-tombstone shaping: for races whose stored detail is a
+    # nightly-compact tombstone, the seed step recorded the pristine
+    # pre-seed stub in a bundle sidecar. The protect layer admits
+    # only a result-only write over such a stub, so the payload entry
+    # becomes the stub itself with the refreshed result/payout fields
+    # overlaid — by construction nothing else can differ. The protect
+    # predicate is re-checked here (and again, authoritatively, by
+    # protect_detail at sync time); a sidecar entry that does not
+    # satisfy it is left unshaped on the normal path.
+    tombstone_shaped: list[str] = []
+    sidecar = Path(str(bundle_path) + ".tombstone-stubs.json")
+    if sidecar.exists():
+        from scripts.arvexq_protect_sync import _compact_tombstone_stub
+        stubs = (json.loads(sidecar.read_text(encoding="utf-8"))
+                 or {}).get("stubs") or {}
+        for rid in sorted(stubs):
+            entry = payload_by_id.get(rid)
+            stub = stubs[rid]
+            if not isinstance(entry, dict) or not isinstance(stub, dict):
+                continue
+            if not _compact_tombstone_stub(stub):
+                continue
+            shaped = copy.deepcopy(stub)
+            for key in ("result", "resultCname", "payouts"):
+                if key in entry:
+                    shaped[key] = copy.deepcopy(entry[key])
+            payload_by_id[rid] = shaped
+            tombstone_shaped.append(rid)
+    detail_payload = list(payload_by_id.values())
     payload = {
         "summaries": summaries,
         "details": detail_payload,
@@ -205,10 +569,19 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
             "result_repaired_count": len(repaired),
+            "marks_healed_count": len(marks_healed),
+            "environment_filled_count": len(environment_filled),
             "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
             "payout_missing_count": len(payout_missing),
+            "payout_combination_violation_count": len(combination_violations),
+            "audit_failure_count": len(audit_failures),
+            "audit_failures_by_check": {
+                name: bucket["failure_count"]
+                for name, bucket in audit_by_check.items()
+            },
             "result_detail_write_count": len(detail_payload),
+            "tombstone_shaped_count": len(tombstone_shaped),
             "result_repair_complete": not unresolved and not payout_missing,
             "result_repair_at": int(now.timestamp()),
         },
@@ -218,9 +591,15 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "started": len(started_ids),
         "pending_before": len(pending),
         "repaired": sorted(repaired),
+        "marks_healed": sorted(marks_healed),
+        "environment_filled": sorted(environment_filled),
         "published": sorted(published | repaired),
         "result_missing": unresolved,
         "payout_missing": payout_missing,
+        "payout_combination_violations": combination_violations,
+        "audit_failures": audit_failures,
+        "audit_by_check": audit_by_check,
+        "tombstone_shaped": tombstone_shaped,
         "detail_write_count": len(detail_payload),
     }
     _write_json(payload_path, payload)
@@ -240,6 +619,10 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         print("RESULT_MISSING", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     for item in payout_missing:
         print("PAYOUT_MISSING", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
+    for item in combination_violations:
+        print("PAYOUT_COMBINATION_VIOLATION", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
+    for item in audit_failures:
+        print("RESULT_AUDIT_FAILURE", json.dumps(item, ensure_ascii=False, separators=(",", ":")))
     return 0
 
 

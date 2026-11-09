@@ -112,5 +112,4 @@ def forecast(payload: dict[str, Any], calibration: dict[str, Any] | None = None)
             "status": "ranked-unvalidated" if valid else "insufficient-horse-evidence",
             "rows": rows, "pace": pace_scenarios(active),
             "calibrationStatus": "not-verified", "bets": [],
-            "betDecision": "見送り", "missingEvidence": [h.number for h, _, n in metrics if n == 0],
-            "videoStatus": "not-applied-unverified"}
+            "betDecision": "見送り", "missingEvidence": [h.number for h, _, n in metrics if n == 0]}

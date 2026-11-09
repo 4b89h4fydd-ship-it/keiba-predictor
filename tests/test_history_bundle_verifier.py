@@ -4,7 +4,7 @@ from scripts.arvexq_verify_history_bundle import verify_history
 
 
 def detail(rid,ranks,payouts=True,status='確定'):
-    return {'id':rid,'result':{'status':status,'finishers':[{'horseNumber':no,'finish':rank} for no,rank in enumerate(ranks,1)],'payouts':[{'type':'単勝','amount':100}] if payouts else []}}
+    return {'id':rid,'result':{'status':status,'finishers':[{'horseNumber':no,'finish':rank} for no,rank in enumerate(ranks,1)],'payouts':[{'type':'単勝','combination':'1','amount':100}] if payouts else []}}
 
 class HistoryVerificationTests(unittest.TestCase):
     def test_actual_failed_day_deadheat_rank_patterns(self):

@@ -4,14 +4,12 @@ import json
 import os
 import unittest
 from datetime import datetime, timedelta
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from arvexq.prediction.official_course_revision import (
     JST, official_event, meaningful_change, pre_off_change, latest_pre_off_marks,
 )
 from arvexq.ingest.official_course_feeds import fetch_course_events
-from scripts.arvexq_live_sync import apply_official_mark_revision
 from scripts.arvexq_protect_sync import protect_detail
 
 
@@ -80,33 +78,28 @@ class OfficialRevisionTests(unittest.TestCase):
         d["officialMarkRevisions"] = [{**valid, "officialCourseCondition": observation("稍重", "09:00", source="https://fake.local/")}]
         self.assertEqual(latest_pre_off_marks(d)["horses"][0]["mark"], "◎")
 
-    def test_live_sync_revises_once_and_preserves_original(self):
+    def test_protect_preserves_stored_official_chain(self):
+        # The live_sync revision generator is retired (stage 2, 2026-11-10:
+        # its morning-snapshot input has had no writer since the cutover),
+        # but a stored chain remains immutable evidence: protect restores
+        # it verbatim over any write that drops or empties it.
         baseline = race()
-        candidate = {**baseline, "condition": "稍重",
-                     "officialCourseCondition": observation("稍重", "09:00")}
-        returns = SimpleNamespace(returncode=0, stdout=json.dumps({"horses": [
-            {"horseNumber": 1, "mark": "○"},
-            {"horseNumber": 2, "mark": "◎"},
-            {"horseNumber": 3, "mark": "▲"},
-        ]}), stderr="")
-        now = datetime(2026, 10, 10, 9, 15, tzinfo=JST)
-        with patch("subprocess.run", return_value=returns) as mocked:
-            output, reason = apply_official_mark_revision(baseline, candidate, now)
-        mocked.assert_called_once()
-        self.assertIn("良→稍重", reason)
-        self.assertEqual(output["morningMarkSnapshot"]["horses"][0]["mark"], "◎")
-        self.assertEqual(output["officialMarkRevisions"][0]["horses"][1]["mark"], "◎")
-        self.assertEqual(protect_detail(output, {**candidate, "officialMarkRevisions": []})["officialMarkRevisions"],
-                         output["officialMarkRevisions"])
-        revised, reason = apply_official_mark_revision(output, output, now)
-        self.assertFalse(reason)
-        self.assertEqual(len(revised["officialMarkRevisions"]), 1)
-        post_off_candidate = {**race(), "condition": "稍重",
-                              "officialCourseCondition": observation("稍重", "09:00")}
-        after, reason = apply_official_mark_revision(baseline, post_off_candidate,
-            datetime(2026, 10, 10, 10, 1, tzinfo=JST))
-        self.assertFalse(reason)
-        self.assertIsNone(after.get("officialMarkRevisions"))
+        valid = {
+            "version": "arvexq-official-mark-revision-v1", "raceId": baseline["id"],
+            "raceDate": baseline["date"], "revisedAt": "2026-10-10T09:10:00+09:00",
+            "officialCourseCondition": observation("稍重", "09:00"),
+            "reason": "公式馬場状態変更", "horses": [
+                {"horseNumber": 1, "mark": "○"},
+                {"horseNumber": 2, "mark": "◎"},
+                {"horseNumber": 3, "mark": "▲"},
+            ],
+        }
+        baseline["officialMarkRevisions"] = [valid]
+        dropped = {k: v for k, v in baseline.items() if k != "officialMarkRevisions"}
+        self.assertEqual(protect_detail(baseline, dropped)["officialMarkRevisions"],
+                         [valid])
+        self.assertEqual(protect_detail(baseline, {**baseline, "officialMarkRevisions": []})["officialMarkRevisions"],
+                         [valid])
 
     def test_authorized_feed_poll_requires_connected_token(self):
         rows = [race()]

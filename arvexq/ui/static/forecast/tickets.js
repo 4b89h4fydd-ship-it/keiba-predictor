@@ -48,13 +48,46 @@
         Array.isArray(x.combo)&&x.combo.length>=2&&
         x.combo.every(function(no){return model.roster.some(function(h){return h.horseNumber===no})})
       }).slice(0,5);
+      var rosterNames={};
+      (model.roster||[]).forEach(function(h){rosterNames[h.horseNumber]=h.name||''});
+      var winEv=(model.ticketPlan.winExpectedValues||[]).filter(function(x){return x&&
+        Number.isFinite(Number(x.expectedValue))&&Number(x.expectedValue)>0&&
+        Number.isFinite(Number(x.odds))&&Number(x.odds)>=1&&
+        Number.isFinite(Number(x.winProbability))&&
+        model.roster.some(function(h){return h.horseNumber===x.horseNumber})
+      }).map(function(x){
+        return {horseNumber:x.horseNumber,name:rosterNames[x.horseNumber]||'',
+          winProbability:Number(x.winProbability),odds:Number(x.odds),
+          expectedValue:Number(x.expectedValue)};
+      });
+      var placeEv=(model.ticketPlan.placeExpectedValues||[]).filter(function(x){return x&&
+        Number.isFinite(Number(x.top3Probability))&&
+        Number.isFinite(Number(x.placeOddsLow))&&Number(x.placeOddsLow)>=1&&
+        Number.isFinite(Number(x.placeOddsHigh))&&Number(x.placeOddsHigh)>=Number(x.placeOddsLow)&&
+        Number.isFinite(Number(x.expectedValueLow))&&Number.isFinite(Number(x.expectedValueHigh))&&
+        model.roster.some(function(h){return h.horseNumber===x.horseNumber})
+      }).map(function(x){
+        return {horseNumber:x.horseNumber,name:rosterNames[x.horseNumber]||'',
+          top3Probability:Number(x.top3Probability),placeOddsLow:Number(x.placeOddsLow),
+          placeOddsHigh:Number(x.placeOddsHigh),expectedValueLow:Number(x.expectedValueLow),
+          expectedValueHigh:Number(x.expectedValueHigh)};
+      });
+      var combinedPicks=(model.ticketPlan.combinedPicks||[]).map(Number).filter(function(no){
+        return Number.isInteger(no)&&placeEv.some(function(x){return x.horseNumber===no});
+      });
       var plan={decision:options.length?'参考候補・購入推奨なし':'見送り',
         researchOnly:true,referenceOnly:true,notForPurchase:true,
+        raceId:race.id,raceDate:race.date,
         modelVersion:model.modelVersion,
         reason:String(model.ticketPlan.reason||'予想に必要な事前オッズが不足'),
+        winExpectedValues:winEv,
+        placeExpectedValues:placeEv,combinedPicks:combinedPicks,
+        // One shared note for the whole same-model group; the ticket
+        // frame prints it once under the group instead of stamping it
+        // on every item (user decision 2026-11-04).
+        itemGroupReason:'未校正の同一モデル。勝率・回収率の実測検証は未完了',
         referenceCapturedAt:model.capturedAt,items:options.map(function(x){
-          return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1,
-            reason:'未校正の同一モデル。勝率・回収率の実測検証は未完了'};
+          return {kind:x.kind,level:'参考候補',combos:[x.combo],points:1};
         }),referenceBudget:{points:options.length,totalYen:options.length*100}};
       latestPlan=plan;return plan;
     }

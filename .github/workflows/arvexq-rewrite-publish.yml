@@ -5,9 +5,44 @@ name: arvexq-rewrite-publish
 # Replaces the retired unified-preoff and prerace-freeze lanes.
 
 on:
+  push:
+    # Push is the trigger that demonstrably fires even while GitHub's
+    # scheduler is degraded (2026-11-04: no scheduled publish or sync
+    # completions after ~14:10 JST, while every push-triggered run
+    # fired). The place-EV upgrade lane dies quietly when this
+    # workflow starves, so any change to the publish script or the
+    # engine packages it runs also serves as a publish attempt for
+    # today + tomorrow. Publishing is idempotent and serialized by
+    # the concurrency group below.
+    branches: [main]
+    paths:
+      - scripts/arvexq_rewrite_publish.py
+      - arvexq/prediction/**
+      - arvexq/forecast/**
+      - .github/workflows/arvexq-rewrite-publish.yml
   schedule:
-    # JST 06:05 / 10:05 / 13:05 / 20:05
-    - cron: "05 21,1,4,11 * * *"
+    # Hourly :05, JST 06:05-20:05 (UTC 21:05 prev day - 11:05)
+    - cron: "05 0-11,21-23 * * *"
+    # Extra evening runs :35, JST 17:35-20:35 (UTC 08:35-11:35)
+    - cron: "35 8-11 * * *"
+  workflow_run:
+    # Redundant trigger: GitHub has dropped this workflow's scheduled
+    # runs for hours at a time (only 2 runs ever recorded; the last a
+    # schedule success at 2026-10-28 19:25 JST, while other
+    # workflows' schedules kept firing). Full Prefetch completes many
+    # times a day right after writing the facts this publish consumes,
+    # so follow every one of its completions instead of relying on
+    # the schedule alone. Runs with no date input (today + tomorrow
+    # JST), same as a schedule run.
+    # Realtime Sync completions are followed for the same reason:
+    # the place-EV upgrade can only fire after a sync lands full
+    # place coverage, official place odds stand only ~60-100 min
+    # before post, and the upgrade guard closes at post-60min — an
+    # hourly schedule alone structurally loses that race (2026-11-04
+    # morning: several mid-card races missed exactly this way).
+    workflows: ["ARVEXQ Full Prefetch", "ARVEXQ Realtime Sync"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       date:
@@ -17,6 +52,15 @@ on:
 
 permissions:
   contents: read
+
+# Serialize this workflow's own runs: a schedule run and a
+# workflow_run follow-up (or two follow-ups from back-to-back
+# prefetch completions) must never publish at the same moment.
+# Queued runs wait rather than being cancelled; the publish itself
+# is idempotent and skips races that have already started.
+concurrency:
+  group: arvexq-rewrite-publish
+  cancel-in-progress: false
 
 jobs:
   publish:

@@ -27,6 +27,45 @@ class StoredResultMergeTests(unittest.TestCase):
         self.assertEqual(detail["result"], previous)
         self.assertEqual(len(detail["horses"]), 1)
 
+    def test_shorter_clean_payouts_supersede_longer_broken(self):
+        # 2026-11-07 Fukushima 9R/11R shape: the parser defect stored a
+        # 13-row payout block (bogus zipped rows included) where the
+        # official truth has 12 rows. The anti-shrink guard must not
+        # preserve the corrupt block against a final, shape-clean set.
+        finishers = [{"finish": 1, "horseNumber": 7},
+                     {"finish": 2, "horseNumber": 14},
+                     {"finish": 3, "horseNumber": 3}]
+        broken = [{"type": "単勝", "combination": "7", "amount": 600},
+                  {"type": "ワイド", "combination": "110", "amount": 7490},
+                  {"type": "3連単", "combination": "2931", "amount": 10000}]
+        broken += [{"type": "複勝", "combination": "7", "amount": 100}] * 10
+        clean = [{"type": "単勝", "combination": "7", "amount": 600},
+                 {"type": "ワイド", "combination": "7-14", "amount": 7490},
+                 {"type": "3連単", "combination": "7-14-3", "amount": 10000}]
+        clean += [{"type": "複勝", "combination": str(n), "amount": 100}
+                  for n in (7, 14, 3, 1, 2, 4, 5, 6, 8)]
+        self.assertEqual(len(broken), 13)
+        self.assertEqual(len(clean), 12)
+        old = {"status": "確定", "finishers": finishers, "payouts": broken}
+        new = {"status": "確定", "finishers": finishers, "payouts": clean}
+        after = merge_result(old, new)
+        self.assertEqual(after["payouts"], clean)
+
+    def test_shorter_clean_payouts_do_not_supersede_valid(self):
+        # The guard still protects a valid stored block: a shorter
+        # shape-clean set from a final result does NOT replace it.
+        finishers = [{"finish": 1, "horseNumber": 7},
+                     {"finish": 2, "horseNumber": 14},
+                     {"finish": 3, "horseNumber": 3}]
+        valid = [{"type": "単勝", "combination": "7", "amount": 600},
+                 {"type": "馬連", "combination": "7-14", "amount": 420},
+                 {"type": "3連単", "combination": "7-14-3", "amount": 14560}]
+        shorter = valid[:2]
+        old = {"status": "確定", "finishers": finishers, "payouts": valid}
+        new = {"status": "確定", "finishers": finishers, "payouts": shorter}
+        after = merge_result(old, new)
+        self.assertEqual(after["payouts"], valid)
+
     def test_new_complete_payout_supersedes_partial(self):
         initial = {"status": "速報", "finishers": [{"horseNumber": 1, "finish": 1}],
                    "payouts": [{"type": "単勝", "amount": 120}]}
@@ -126,6 +165,86 @@ class OfficialNarResultParserTests(unittest.TestCase):
             actual = app._nar_official_result_fast(detail)
         self.assertIsNotNone(actual)
         self.assertEqual([x["last3FSeconds"] for x in actual["finishers"]], [37.4, 37.4, 37.4])
+
+
+class JraBrokenPayoutFallbackGateTests(unittest.TestCase):
+    """2026-11-08 Tokyo 7R-10R: complete finishers + shape-broken payouts
+    + no stored result token. The official route cannot repair the
+    payouts and the finishers-only gate kept the netkeiba fallback —
+    which carries valid payouts — from ever firing, so the repair lane
+    retried the races in payout_missing forever."""
+
+    @staticmethod
+    def _detail(payouts):
+        return {
+            "id": "jra-2026-11-08-東京-07", "date": "2026-11-08",
+            "startTime": "13:20", "track": "東京", "raceNumber": 7,
+            "fieldSize": 3, "netkeibaRaceId": "202605050207",
+            "horses": [{"horseNumber": n, "name": "競走馬" + str(n)}
+                       for n in (7, 14, 3)],
+            "result": {
+                "status": "確定", "source": "netkeiba結果",
+                "finishers": [{"finish": 1, "horseNumber": 7},
+                              {"finish": 2, "horseNumber": 14},
+                              {"finish": 3, "horseNumber": 3}],
+                "payouts": payouts,
+            },
+        }
+
+    @staticmethod
+    def _nk_result():
+        return {
+            "status": "確定", "source": "netkeiba結果",
+            "finishers": [{"finish": 1, "horseNumber": 7},
+                          {"finish": 2, "horseNumber": 14},
+                          {"finish": 3, "horseNumber": 3}],
+            "payouts": [{"type": "単勝", "combination": "7", "amount": 600},
+                        {"type": "馬連", "combination": "7-14", "amount": 420},
+                        {"type": "3連単", "combination": "7-14-3", "amount": 14560}],
+        }
+
+    def _refresh(self, detail, nk):
+        import copy as _copy
+        import app
+        from arvexq.results.state import payout_combination_violations
+        calls = {"nk": 0}
+
+        def fake_nk(d):
+            calls["nk"] += 1
+            return _copy.deepcopy(nk) if nk is not None else None
+
+        with patch.object(app, "_prepared_get_fresh",
+                          side_effect=lambda rid: _copy.deepcopy(detail)), \
+             patch.object(app, "_jra_find_cname", side_effect=lambda *a: ""), \
+             patch.object(app, "_netkeiba_current_result", side_effect=fake_nk), \
+             patch.object(app, "_store_fast_snapshot", side_effect=lambda d: None), \
+             patch.object(app, "_compact_display_snapshot", side_effect=lambda d: d):
+            out = app._refresh_result_fast(detail["id"])
+        return out, calls, payout_combination_violations
+
+    def test_shape_broken_payouts_trigger_fallback(self):
+        broken = [{"type": "馬連", "combination": "7", "amount": 420},
+                  {"type": "3連単", "combination": "7", "amount": 14560}]
+        out, calls, violations = self._refresh(self._detail(broken), self._nk_result())
+        self.assertEqual(calls["nk"], 1, "fallback must fire for shape-broken payouts")
+        self.assertEqual(violations(out), [])
+        combos = {(p["type"], p["combination"]) for p in out["result"]["payouts"]}
+        self.assertIn(("馬連", "7-14"), combos)
+        self.assertIn(("3連単", "7-14-3"), combos)
+
+    def test_missing_payouts_trigger_fallback(self):
+        out, calls, violations = self._refresh(self._detail([]), self._nk_result())
+        self.assertEqual(calls["nk"], 1, "fallback must fire when payouts are absent")
+        self.assertEqual(violations(out), [])
+        self.assertTrue(out["result"]["payouts"])
+
+    def test_valid_payouts_do_not_trigger_fallback(self):
+        valid = [{"type": "馬連", "combination": "7-14", "amount": 420},
+                 {"type": "3連単", "combination": "7-14-3", "amount": 14560}]
+        out, calls, _ = self._refresh(self._detail(valid), self._nk_result())
+        self.assertEqual(calls["nk"], 0,
+                         "complete finishers + valid payouts need no fallback fetch")
+        self.assertEqual(out["result"]["payouts"], valid)
 
 
 if __name__ == "__main__":

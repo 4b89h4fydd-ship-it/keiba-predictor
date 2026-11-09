@@ -23,7 +23,17 @@ def _racedb_snapshot_usable(detail:dict)->bool:
 
 def _merge_official_result(detail:dict,official:dict)->dict:
     if not official:return detail
-    for k in ("title","distance","surface","condition","weather","fieldSize","racePrize1","startTime","scheduledStartTime","resultCname"):
+    # Identity guard: an official block that names a different race
+    # (its date / track / race number disagree with the detail's) is
+    # never merged. A wrong-race result token once overwrote a race's
+    # title, distance, field size and finish order wholesale, and the
+    # merged block then read as final so nothing re-checked it
+    # (2026-11-08 Fukushima 7R carried Hanshin 2026-09-20 8R's result).
+    for key in ("date","track","raceNumber"):
+        mine=detail.get(key); theirs=official.get(key)
+        if mine not in (None,"",0) and theirs not in (None,"",0) and str(mine)!=str(theirs):
+            return detail
+    for k in ("title","distance","surface","condition","weather","racePrize1","startTime","scheduledStartTime","resultCname"):
         v=official.get(k)
         if v not in (None,"",0,"不明"):detail[k]=v
     if official.get("result"):detail["result"]=official["result"]
@@ -35,4 +45,12 @@ def _merge_official_result(detail:dict,official:dict)->dict:
             detail.setdefault("horses",[]).append(h);by_no[no]=h
         for k in ("frameNumber","name","sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange"):
             if f.get(k) not in (None,"",0):h[k]=f.get(k)
-    detail["fieldSize"]=int(detail.get("fieldSize") or len(detail.get("horses",[]) or []));return detail
+    # Field size never shrinks at merge time: the official parse
+    # derives it from the finisher rows it happened to read, so a
+    # partial (interim) table would otherwise overwrite the card's
+    # full field with its own row count (2026-11-08 Fukushima 9R:
+    # fieldSize 16 overwritten by a 5-row interim parse).
+    finishers=(official.get("result") or {}).get("finishers") or []
+    detail["fieldSize"]=max(int(detail.get("fieldSize") or 0),
+                            len(detail.get("horses",[]) or []),
+                            len(finishers));return detail

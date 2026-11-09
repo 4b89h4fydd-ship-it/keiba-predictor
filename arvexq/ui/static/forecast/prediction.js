@@ -4,6 +4,12 @@
   // Original sealed marks take priority. An existing model revision is clearly labelled provisional/retrospective.
   // All assistant-introduced probabilistic/provisional and post-off models are retired.
   var last={active:false,source:'',marks:[]};
+  // Race binding: the shared slot above holds the LAST built race's
+  // receipt. Record its owner here so every consumer of current() can
+  // refuse a receipt that belongs to a different race (the sibling of
+  // the 2026-11-03 ticket-frame mixup, where another race's plan
+  // rendered under the page race's heading).
+  var lastRaceId='',lastRaceDate='';
 
   function originalMarks(race){
     var tickets=root.ARVEXQProductionTickets;
@@ -116,6 +122,8 @@
     // Do not let the previous race's six-stage receipt leak into a race that
     // has no verified unified forecast.
     last={active:false,source:'',marks:[],scenarios:[],stages:[],pace:[],forecastText:'',modelVersion:'',uncalibrated:false,unavailable:true};
+    lastRaceId=race&&race.id!=null?String(race.id):'';
+    lastRaceDate=race&&race.date!=null?String(race.date):'';
     if(race&&race.id==='jra-2026-10-25-京都-11'){
       var verified=kikkaCandidateMarks(race),marks=verified&&verified.marks||{};
       var rows=(race.horses||[]).filter(function(h){return h&&Number(h.horseNumber)>0;}).map(function(h){
@@ -146,7 +154,7 @@
        unified.circuit===race.circuit&&unified.researchOnly===true&&
        unified.probabilitiesCalibrated===false&&
        Array.isArray(unified.roster)&&Array.isArray(unified.marks)&&
-       unified.roster.length>=3&&unified.roster.length===race.horses.length&&
+       unified.roster.length>=3&&Array.isArray(race.horses)&&
        /^[a-f0-9]{64}$/i.test(unified.receiptSha256||'')&&
        /^[a-f0-9]{64}$/i.test(unified.modelHash||'')&&
        String(unified.trainedThrough||'')<String(race.date||'')&&
@@ -158,24 +166,79 @@
         if(!Number.isInteger(n)||n<=0||roster[n])accepted=false;
         roster[n]=String(x.name||'');
       });
+      // Reconcile by identity, not by count: a scratched/withdrawn runner
+      // stays in race.horses but is absent from the published roster, and
+      // a roster frozen before a late scratch may still list one. Every
+      // roster number must be a real runner with a matching name, and
+      // every still-active runner must appear on the roster; phantom or
+      // missing active runners still reject the whole forecast.
+      var inactive=function(h){return !!(h&&(h.scratched===true||h.withdrawn===true||
+        /欠場|出走取消|取消|競走除外|除外/.test(String(h.status||''))));};
+      var horseByNo={},activeCount=0;
       (race.horses||[]).forEach(function(h){
         var n=Number(h&&h.horseNumber);
-        if(roster[n]!==String(h&&h.name||''))accepted=false;
+        if(!Number.isInteger(n)||n<=0||horseByNo[n]){accepted=false;return;}
+        horseByNo[n]=h;
+        if(!inactive(h))activeCount++;
       });
+      Object.keys(roster).forEach(function(k){
+        var h=horseByNo[k];
+        if(!h||roster[k]!==String(h.name||''))accepted=false;
+      });
+      Object.keys(horseByNo).forEach(function(k){
+        if(!inactive(horseByNo[k])&&!(k in roster))accepted=false;
+      });
+      if(activeCount<3)accepted=false;
       unified.marks.forEach(function(x){
         var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
         if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])accepted=false;
         seen[n]=true;markMap[n]=x;if(m==='◎')best++;
+      });
+      // 注 (attention) overlay: the combined win + place EV gate's
+      // qualifiers, carried on the mark entries themselves and on
+      // the ticket plan's combinedPicks (the single source, which
+      // also covers qualifiers holding no probability mark).
+      var attentionMap={};
+      unified.marks.forEach(function(x){
+        var n=Number(x&&x.horseNumber);
+        if(x&&x.attention===true&&Number.isInteger(n))attentionMap[n]=true;
+      });
+      if(unified.ticketPlan&&Array.isArray(unified.ticketPlan.combinedPicks)){
+        unified.ticketPlan.combinedPicks.forEach(function(v){
+          var n=Number(v);
+          if(Number.isInteger(n)&&n>0)attentionMap[n]=true;
+        });
+      }
+      var diagMap={};
+      if(Array.isArray(unified.diagnosis))unified.diagnosis.forEach(function(d){
+        var n=Number(d&&d.horseNumber);
+        if(Number.isInteger(n)&&roster[n]&&!diagMap[n])diagMap[n]=d;
       });
       if(accepted&&best===1){
         var unifiedStages=Array.isArray(unified.paceStages)?unified.paceStages:[],
             unifiedPlan=unifiedStages.length?{stages:unifiedStages}:null;
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
           var no=Number(h.horseNumber),obj=markMap[no]||{},mark=String(obj.markSymbol||'');
+          // All-runner diagnosis: the engine's ability score (0-1) on
+          // the diagnosis panel's 0-100 scale. The GRADE is assigned
+          // publish-side from the FINAL win probability (S>=20% /
+          // A>=12% / B>=7% / C>=3.5% / D below) and carried on the
+          // diagnosis entry; payloads stored before the field
+          // existed fall back to the same bands on the stored win
+          // probability — never to the ability score, whose banding
+          // contradicted the probability (a 9.2% runner graded S on
+          // ability points). Runners without a probability keep no
+          // grade and stay 未取得.
+          var dg=diagMap[no]||{},
+              score100=dg.abilityScore!=null&&Number.isFinite(Number(dg.abilityScore))?Math.round(Number(dg.abilityScore)*1000)/10:null,
+              grade=dg.grade!=null&&String(dg.grade)?String(dg.grade):(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?(Number(dg.winProbability)>=0.2?'S':(Number(dg.winProbability)>=0.12?'A':(Number(dg.winProbability)>=0.07?'B':(Number(dg.winProbability)>=0.035?'C':'D')))):'');
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
+            attentionMark:!!attentionMap[no],
             predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
-            p3Probability:null,overallGrade:'',coverage:0,
+            p3Probability:null,overallGrade:grade,coverage:0,
+            overallScoreExact:score100,
+            overallReasons:dg.reason?[String(dg.reason)]:[],
             forecastProbabilityRange:obj.winProbabilityRange||null,
             forecastTop3Range:obj.top3ProbabilityRange||null,forecastReason:obj.reason||''};
         });
@@ -242,6 +305,7 @@
   }
   function current(){
     return {active:last.active,source:last.source||'',unavailable:!!last.unavailable,
+      raceId:lastRaceId,raceDate:lastRaceDate,
       scenarios:(last.scenarios||[]).slice(),pace:(last.pace||[]).slice(),forecastText:last.forecastText||'',modelVersion:last.modelVersion||'',uncalibrated:!!last.uncalibrated,
       marks:last.marks.map(function(x){return Object.assign({},x)})};
   }

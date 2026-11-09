@@ -93,6 +93,16 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
         raise RuntimeError("invalid D1 response")
     for item in (data.get("detail"), data.get("race"), data):
         if isinstance(item, dict) and str(item.get("id") or "") == rid:
+            if _projection_tombstone(item):
+                # The projection stripped this race's forecast blocks
+                # because its stored status is not exactly "ready".
+                # The dedicated display view restores the blocks from
+                # the sealed pre-off archive server-side; read the
+                # stored state through it instead. Fail closed when
+                # even the display view cannot produce the forecast:
+                # protecting against a tombstone would write the
+                # tombstone into storage.
+                return _fetch_display_restored(base, rid)
             return item
     if data.get("ok") is False:
         raise RuntimeError("D1 returned failure")
@@ -102,6 +112,363 @@ def fetch_current(base: str, rid: str) -> dict[str, Any] | None:
     raise RuntimeError("D1 returned a mismatched race")
 
 
+def _fetch_display_restored(base: str, rid: str) -> dict[str, Any]:
+    """Read a tombstoned race's stored detail through the display view.
+
+    The worker's ?view=display route restores the forecast blocks
+    from the sealed pre-off archive before serving, so its detail is
+    the stored publication, not the projection tombstone. Any
+    failure — transport, shape, identity, or a detail that is still
+    tombstoned — fails closed: the caller must not protect a sync
+    write against state it cannot actually read.
+    """
+    url = (base.rstrip("/") + "/api/race/" + urllib.parse.quote(rid, safe="")
+           + "?view=display&sealguard=" + str(time.time_ns()))
+    req = urllib.request.Request(
+        url, headers={"accept": "application/json",
+                      "user-agent": "ARVEXQ-SealGuard/1"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as response:
+            display = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError(
+            "D1 seal-guard display restore failed closed: " + str(exc)) from exc
+    if not isinstance(display, dict):
+        raise RuntimeError("D1 display response must be object")
+    candidate = display.get("detail")
+    if not isinstance(candidate, dict):
+        raise RuntimeError("D1 display returned no verifiable detail")
+    if str(candidate.get("id") or "") != rid:
+        raise RuntimeError("D1 display returned mismatched race")
+    if _projection_tombstone(candidate):
+        if _compact_tombstone_stub(candidate):
+            # The display view faithfully returned the stored state:
+            # the nightly compact left this race as a stub in storage
+            # itself, so there is no forecast to restore. Return the
+            # stub so the caller judges the write against the real
+            # stored state; protect_detail re-checks the same
+            # predicate and admits only a result-only write over it.
+            return candidate
+        raise RuntimeError(
+            "D1 display view could not restore the tombstoned forecast: "
+            + rid)
+    return candidate
+
+
+def _marker_timestamp(value: Any) -> Any:
+    from datetime import datetime
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def _rewrite_marker_fresh(stored: Any, incoming: Any) -> bool:
+    """Whether an incoming rewritePublish marker may replace the stored one.
+
+    The publish lane (scripts/arvexq_rewrite_publish.py) is the marker's
+    only writer, and the marker is the ONLY canonical record of the
+    published forecast's post-processing (blendApplied lives nowhere
+    else; the lane's upgrade guards and freeze decision key on it).
+    A marker-carrying write is a genuine advance of the publication
+    only when one of these holds:
+
+    - there is no stored marker yet (first publication);
+    - the incoming marker belongs to a different model version than
+      the stored one (version succession across lanes; the caller's
+      own current-version check still gates acceptance);
+    - it IS the stored marker (idempotent re-send of the same
+      publication, e.g. a seeded detail round-tripping unchanged);
+    - it advances the chain: publishedAt does not move backwards
+      and, for a revision-stamped write, the revision links to the
+      stored marker — previousReceiptSha256 equals the stored
+      marker's receipt, revisionCount is exactly one higher, and
+      firstPublishedAt still points at a timestamp of the stored
+      publication (the lane stamps either the stored firstPublishedAt
+      or, on roster/lane re-issues, the stored publishedAt);
+    - over an UNREVISED stored marker, a revision-less write with a
+      strictly later publishedAt (fresh re-publication the freeze
+      lane does not recognise, e.g. over a retired version's marker
+      of the same version string).
+
+    Anything else — a prepared payload seeded before an upgrade being
+    re-applied (Depth A rollback), a fast-diagnosis snapshot's
+    lightweight preparedMeta (Depth B loss) — is stale and must not
+    replace the stored publication.
+    """
+    if not isinstance(stored, dict):
+        return True
+    if not isinstance(incoming, dict):
+        return False
+    if incoming == stored:
+        return True
+    if (incoming.get("modelVersion")
+            and incoming.get("modelVersion") != stored.get("modelVersion")):
+        return True
+    incoming_at = _marker_timestamp(incoming.get("publishedAt"))
+    stored_at = _marker_timestamp(stored.get("publishedAt"))
+    if incoming_at is None or stored_at is None or incoming_at < stored_at:
+        return False
+    revision = incoming.get("revision")
+    stored_revision = stored.get("revision")
+    if isinstance(revision, dict):
+        stored_count = (stored_revision.get("revisionCount")
+                        if isinstance(stored_revision, dict) else 0)
+        if not isinstance(stored_count, int) or isinstance(stored_count, bool):
+            stored_count = 0
+        stored_firsts = {stored.get("publishedAt")}
+        if stored.get("firstPublishedAt"):
+            stored_firsts.add(stored.get("firstPublishedAt"))
+        return (
+            revision.get("previousReceiptSha256") is not None
+            and revision.get("previousReceiptSha256")
+            == stored.get("receiptSha256")
+            and revision.get("revisionCount") == stored_count + 1
+            and incoming.get("firstPublishedAt") in stored_firsts)
+    if isinstance(stored_revision, dict):
+        # A revision-less marker never succeeds a revised publication.
+        return False
+    return incoming_at > stored_at
+
+
+_FORECAST_BLOCK_KEYS = ("predictionStatus", "predictionModelVersion",
+                        "prediction", "predictionMarks", "recommendedBets")
+_AUTHORIZED_MODEL_VERSIONS = frozenset((
+    "arvexq-stage64-product-v1", "arvexq-rewrite-v1-uncalibrated-prior",
+    "arvexq-rewrite-v2-elo-speed2", "arvexq-rewrite-v3-v9b"))
+_MARK_LABELS = ("◎", "○", "▲", "△", "☆")
+
+
+def _projection_tombstone(detail: dict[str, Any]) -> bool:
+    """Whether this read carries the API worker's projection tombstone.
+
+    The kraiz-api GET projection (publicRace / authorizedStage64)
+    honours only a stored detail whose top-level predictionStatus is
+    exactly "ready". Anything else is served as predictionStatus
+    "disabled" / predictionModelVersion "arvexq-prediction-removed"
+    with the prediction and predictionMarks blocks stripped. Those
+    two fields are the projection's values, not the stored detail's.
+    """
+    return (detail.get("predictionStatus") == "disabled"
+            and detail.get("predictionModelVersion")
+            == "arvexq-prediction-removed")
+
+
+_RESULT_ONLY_WRITE_KEYS = frozenset(("result", "resultCname", "payouts"))
+_FORECAST_CONTENT_KEYS = ("unifiedForecast", "prediction", "predictionMarks",
+                          "recommendedBets", "preoffStage64Archive")
+_MISSING = object()
+
+
+def _compact_tombstone_stub(detail: dict[str, Any]) -> bool:
+    """Whether this detail is a nightly-compact tombstone IN STORAGE.
+
+    The D1 nightly compact replaces a finished race's stored detail
+    with a summary stub and stamps it ``predictionStatus="disabled"``
+    / ``predictionModelVersion="arvexq-prediction-removed"`` — the
+    same stamps the worker's read projection puts on a tombstoned
+    read, but here the stored bytes themselves are the stub (the
+    compact envelope unpacks to the stub; the original detail is
+    gone).  The compact provenance (``compactedFrom``) plus the
+    absence of the card and of every forecast block distinguish it
+    from a projection tombstone of a live race, whose stored detail
+    still carries horses and whose read never carries the compact
+    markers.  A compact tombstone that kept a pre-off archive is NOT
+    matched here: the archive-restore path owns it, as before.
+    """
+    if not isinstance(detail, dict) or not _projection_tombstone(detail):
+        return False
+    if not detail.get("compactedFrom"):
+        return False
+    if detail.get("horses"):
+        return False
+    return not any(detail.get(key) for key in _FORECAST_CONTENT_KEYS)
+
+
+def _changed_keys(old: dict[str, Any], incoming: dict[str, Any]) -> set:
+    changed = set()
+    for key in set(old) | set(incoming):
+        if old.get(key, _MISSING) != incoming.get(key, _MISSING):
+            changed.add(key)
+    return changed
+
+
+def _compact_tombstone_result_write(old: dict[str, Any],
+                                    incoming: dict[str, Any]) -> bool:
+    """The single narrow exception to the tombstone fail-closed rule.
+
+    A result-only repair write over a compact tombstone: the stored
+    detail holds no forecast at all (no blocks, no archive), so there
+    is nothing to restore and nothing a write could destroy; the
+    write may change ONLY the result/payout fields.  Anything wider
+    is refused here and fails closed in the caller, exactly like
+    every other unverifiable tombstone.
+    """
+    if not _compact_tombstone_stub(old):
+        return False
+    return _changed_keys(old, incoming) <= _RESULT_ONLY_WRITE_KEYS
+
+
+def _authorized_forecast(detail: dict[str, Any]) -> bool:
+    """Python mirror of the worker's authorizedStage64 gate."""
+    prediction = detail.get("prediction")
+    if detail.get("predictionStatus") != "ready":
+        return False
+    if not isinstance(prediction, dict):
+        return False
+    if prediction.get("predictionStatus") != "ready":
+        return False
+    if prediction.get("productionEligible") is not True:
+        return False
+    if prediction.get("modelVersion") not in _AUTHORIZED_MODEL_VERSIONS:
+        return False
+    if prediction.get("raceId") != detail.get("id"):
+        return False
+    if prediction.get("date") != detail.get("date"):
+        return False
+    horses = detail.get("horses")
+    marks = detail.get("predictionMarks")
+    if not isinstance(horses, list) or not isinstance(marks, list):
+        return False
+    if len(marks) != 5:
+        return False
+    known = {h.get("horseNumber") for h in horses if isinstance(h, dict)}
+    used: set[Any] = set()
+    for index, row in enumerate(marks):
+        if not isinstance(row, dict) or row.get("mark") != _MARK_LABELS[index]:
+            return False
+        number = row.get("horseNumber")
+        if not isinstance(number, int) or isinstance(number, bool):
+            return False
+        if number not in known or number in used:
+            return False
+        used.add(number)
+    return True
+
+
+def _marks_map(entries: Any, *keys: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    if not isinstance(entries, list):
+        return out
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        label = next((entry.get(k) for k in keys if entry.get(k)), None)
+        if label:
+            out[str(label)] = entry.get("horseNumber")
+    return out
+
+
+def _assert_publish_marks_consistent(detail: dict[str, Any]) -> None:
+    """A publish write must carry ONE marks assignment.
+
+    The detail carries the marks twice (predictionMarks for the entry
+    list, unifiedForecast.marks for the race view). The blend-upgrade
+    reissues of 2026-11-07/08 stored details whose two blocks named
+    different horses (the first publication's predictionMarks beside
+    the reissue's unifiedForecast), so the app showed two different
+    ◎ for the same race. Both blocks derive from one forecast in the
+    publish lane, so a disagreement means the write was assembled
+    from two different publications: fail closed rather than store
+    it. Only the five labelled marks are compared; attention-only
+    overlay entries (empty mark) are not part of the assignment.
+    """
+    pm = _marks_map(detail.get("predictionMarks"), "mark")
+    uf = _marks_map((detail.get("unifiedForecast") or {}).get("marks"),
+                    "markSymbol", "mark")
+    if len(pm) == 5 and len(uf) == 5 and pm != uf:
+        raise RuntimeError(
+            "publish write carries inconsistent marks blocks "
+            "(predictionMarks vs unifiedForecast.marks) for "
+            + str(detail.get("id") or ""))
+
+
+def _archive_restored_detail(detail: dict[str, Any]) -> dict[str, Any] | None:
+    """Rebuild the stored view of a tombstoned read from its archive.
+
+    The sealed pre-off archive (preoffStage64Archive) inside the read
+    carries the publication's forecast blocks verbatim. It is trusted
+    only after the worker-equivalent verification: identity match
+    against the race, the full authorization gate over the archived
+    blocks with the race's current roster, and a bet list present.
+    """
+    archive = detail.get("preoffStage64Archive")
+    if not isinstance(archive, dict):
+        return None
+    if archive.get("raceId") != detail.get("id"):
+        return None
+    if archive.get("raceDate") != detail.get("date"):
+        return None
+    if not isinstance(archive.get("recommendedBets"), list):
+        return None
+    candidate = dict(archive)
+    candidate["id"] = detail.get("id")
+    candidate["date"] = detail.get("date")
+    candidate["horses"] = detail.get("horses")
+    if not _authorized_forecast(candidate):
+        return None
+    restored = copy.deepcopy(detail)
+    for key in _FORECAST_BLOCK_KEYS:
+        if key in archive:
+            restored[key] = copy.deepcopy(archive[key])
+    return restored
+
+
+_FORECAST_REVISION_VERSION = "arvexq-forecast-revision-v1"
+
+
+def _forecast_revision_digest(value: Any) -> str:
+    from hashlib import sha256
+    return sha256(json.dumps(
+        value, sort_keys=True, ensure_ascii=False, separators=(",", ":"),
+        allow_nan=False).encode()).hexdigest()
+
+
+def _latest_forecast_revision(detail: dict[str, Any]) -> dict[str, Any] | None:
+    revisions = detail.get("forecastRevisions") or []
+    current = detail.get("currentForecastRevisionId")
+    matches = [r for r in revisions
+               if isinstance(r, dict) and r.get("revisionId") == current
+               and r.get("version") == _FORECAST_REVISION_VERSION
+               and r.get("raceId") == detail.get("id")
+               and r.get("raceDate") == detail.get("date")]
+    if len(matches) != 1:
+        return None
+    revision = matches[0]
+    expected = _forecast_revision_digest(
+        {k: v for k, v in revision.items()
+         if k not in ("revisionId", "createdAt")})
+    return revision if expected == current else None
+
+
+def _preserve_forecast_revisions(previous: dict[str, Any],
+                                 incoming: dict[str, Any]) -> dict[str, Any]:
+    """Retain immutable revision history across writes; reject divergent chains.
+
+    Inlined verbatim from the retired arvexq.prediction.forecast_revisions
+    module: protect is the chain's last production reader, and its
+    accept/reject behaviour here is unchanged (stage-2 differential
+    corpus, 2026-11-10).
+    """
+    out = copy.deepcopy(incoming)
+    old = previous.get("forecastRevisions") or []
+    proposed = out.get("forecastRevisions") or []
+    if proposed[:len(old)] != old:
+        if proposed:
+            raise ValueError("forecast revision history prefix changed")
+        out["forecastRevisions"] = copy.deepcopy(old)
+        if previous.get("currentForecastRevisionId"):
+            out["currentForecastRevisionId"] = \
+                previous["currentForecastRevisionId"]
+    if (out.get("currentForecastRevisionId")
+            and _latest_forecast_revision(out) is None):
+        raise ValueError("current forecast revision pointer is invalid")
+    return out
+
+
 def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict[str, Any]:
     if FULL_PAYLOAD_KEY in incoming:
         # Archive protection must edit the real original, then recompress it.
@@ -109,27 +476,136 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         return pack_full(protect_detail(unpack_full(old) if isinstance(old, dict) else old, unpack_full(incoming)))
     if isinstance(old, dict) and FULL_PAYLOAD_KEY in old:
         old = unpack_full(old)
+    if isinstance(old, dict) and _projection_tombstone(old):
+        # Restoring forecast blocks FROM a tombstoned read would write
+        # the tombstone itself into storage: the projection's status
+        # values would replace the stored ones and the stripped blocks
+        # would be deleted from the incoming write. That is exactly
+        # how nine races lost their stored prediction blocks on
+        # 2026-11-05 after a projection-shaped write flipped their
+        # stored status. Restore the stored view from the sealed
+        # pre-off archive instead, or fail closed.
+        restored = _archive_restored_detail(old)
+        if restored is not None:
+            old = restored
+        elif not _compact_tombstone_result_write(old, incoming):
+            raise RuntimeError(
+                "stored forecast is tombstoned in the API projection "
+                "and carries no verified pre-off archive; failing "
+                "closed rather than restoring from the tombstone: "
+                + str(old.get("id") or ""))
+        # Otherwise the write is result-only over a compact tombstone
+        # that holds no forecast blocks at all: keep the stub as `old`.
+        # The generic protection below still restores every
+        # forecast-shaped key from it (the stub shares only the status
+        # stamps and text with the write) and the genuine-publish path
+        # can never trigger, because the write's status is not "ready".
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
-    from arvexq.prediction.forecast_revisions import preserve_revisions
-    out = preserve_revisions(old, out)
+    out = _preserve_forecast_revisions(old, out)
     # Forecast blocks are owned by the rewrite publish lane
     # (scripts/arvexq_rewrite_publish.py). Any other lane's write preserves
     # the stored forecast blocks verbatim and drops its own forecast fields;
-    # only an incoming detail carrying the lane's preparedMeta.rewritePublish
-    # marker may replace them. (This replaces the former first-receipt-wins
-    # rule that pinned forecasts to the retired learned-scenarios model.)
+    # only a genuine publish-lane write may replace them. (This replaces the
+    # former first-receipt-wins rule that pinned forecasts to the retired
+    # learned-scenarios model.)
+    #
+    # A genuine publish write is recognised by the lane's
+    # preparedMeta.rewritePublish marker AND the complete forecast block
+    # set: build_publish_detail always emits every block atomically. The
+    # marker alone is NOT sufficient — lanes seeded from a stored detail
+    # inherit preparedMeta (prefetch merges it by update), so a marker-only
+    # check let display-compacted details (which pass through
+    # arvexq.forecast.publication.public_race and lose the bet blocks)
+    # overwrite the published forecast, leaving the app with
+    # predictionStatus 'disabled' and no recommendedBets.
     from arvexq.prediction.unified_product import MODEL_VERSION as REWRITE_MODEL_VERSION
+    forecast_keys = ('unifiedForecast', 'prediction', 'predictionMarks',
+                     'recommendedBets', 'forecastText', 'predictionStatus',
+                     'predictionModelVersion', 'preRaceBet')
     marker = ((out.get('preparedMeta') or {}).get('rewritePublish') or {})
-    if marker.get('modelVersion') != REWRITE_MODEL_VERSION:
-        for key in ('unifiedForecast', 'prediction', 'predictionMarks',
-                    'recommendedBets', 'forecastText', 'predictionStatus',
-                    'predictionModelVersion', 'preRaceBet'):
+    stored_marker = (old.get('preparedMeta') or {}).get('rewritePublish')
+    # The marker check above is necessary but not sufficient: a detail
+    # seeded from a stored publication inherits the marker verbatim, so
+    # a stale seed re-applied after a revision (blend upgrade) carries
+    # a complete, current-version marker over an OLD forecast and used
+    # to roll the publication back to its first-published state. The
+    # write must also ADVANCE the marker chain (see
+    # _rewrite_marker_fresh). (2026-11-04: 13 races rolled back this
+    # way; 4 more lost the marker entirely to a lightweight
+    # preparedMeta overwrite — closed by the field merge below.)
+    # Completeness is judged against the blocks the STORED detail
+    # actually carries, not an absolute list: the stored product may
+    # itself lack a block (preRaceBet is stripped before storage on
+    # the current chain, so no stored detail carries it), and the
+    # lane's surgical re-issues (place-EV upgrade) are built from the
+    # stored detail and inherit that absence — reverting them for it
+    # made every place-EV upgrade fail its read-back on 2026-11-04.
+    # A write that DROPS a block the stored detail carries (the
+    # display-compaction case above) is still not a publish write.
+    # A genuine publish write also always carries the lane's own
+    # top-level status: build_publish_detail stamps predictionStatus
+    # "ready", and the surgical upgrades derive from a ready read.
+    # A write whose status reads "unified-reference-ready" passed
+    # through the Python delivery projection (public_race) on its way
+    # here — a display-compacted seed, not a publication. Letting it
+    # through as a publish write stores the projection's vocabulary
+    # in D1, where the worker projection then tombstones the race
+    # (2026-11-05 flip). Such writes go through the restore branch
+    # below, which keeps the stored status and blocks.
+    is_publish_write = (
+        marker.get('modelVersion') == REWRITE_MODEL_VERSION
+        and out.get('predictionStatus') == 'ready'
+        and all(key in out for key in forecast_keys if key in old)
+        and _rewrite_marker_fresh(stored_marker, marker))
+    if is_publish_write:
+        _assert_publish_marks_consistent(out)
+    if not is_publish_write:
+        for key in forecast_keys:
             if key in old:
                 out[key] = copy.deepcopy(old[key])
             else:
                 out.pop(key, None)
+        # preparedMeta is field-merged, never replaced wholesale: the
+        # incoming write stays the base (its own lane bookkeeping —
+        # live updates, prefetch epochs — still lands), but the
+        # rewritePublish marker is publish-lane property and is
+        # carried over from the stored detail. blendApplied and the
+        # revision chain exist only inside the marker, so losing it
+        # unfreezes the race and blocks every marker-keyed guard.
+        if isinstance(stored_marker, dict):
+            merged_meta = dict(out.get('preparedMeta') or {})
+            merged_meta['rewritePublish'] = copy.deepcopy(stored_marker)
+            out['preparedMeta'] = merged_meta
+    # The experimental 18-factor master sidecar belongs to the same
+    # pre-off rewrite publish lane as the forecast. Prefetch/live/result
+    # syncs often send thin details and must never erase its evidence,
+    # timestamp, or signature. Nor may they inject a forged candidate.
+    # The unified receipt and production marks are intentionally separate.
+    if not is_publish_write:
+        if 'masterAnalysis' in old:
+            out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
+        else:
+            out.pop('masterAnalysis', None)
+    elif 'masterAnalysis' in out:
+        from hashlib import sha256
+        sidecar = out['masterAnalysis']
+        if not isinstance(sidecar, dict) or sidecar.get('version') != 'master-18-factor-shadow-v1':
+            raise ValueError('invalid masterAnalysis publication identity')
+        digest = sidecar.get('contentSha256')
+        unsigned = {k: v for k, v in sidecar.items() if k != 'contentSha256'}
+        expected = sha256(json.dumps(
+            unsigned, sort_keys=True, separators=(',', ':'),
+            ensure_ascii=False).encode('utf-8')).hexdigest()
+        if (digest != expected or sidecar.get('capturedAt') !=
+                (out.get('prediction') or {}).get('capturedAt')):
+            raise ValueError('masterAnalysis signature or capture mismatch')
+    elif 'masterAnalysis' in old:
+        # A surgical publication may update only odds or a ticket
+        # formation; retaining the prior research seal is preferable
+        # to silently discarding the already captured comparison.
+        out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
     # Kyoto G1 emergency learned candidate is an immutable pre-off research
     # artifact. Later odds/results or a failed full-day prefetch may not erase
     # or forge it. Ignore a changed challenger from the same race entirely.
@@ -193,48 +669,18 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
                 out[key] = copy.deepcopy(frozen[key])
             else:
                 out.pop(key, None)
+    # Stored revision chains are preserved verbatim; a write that lacks
+    # them never erases them. The former append allowances are retired
+    # with their generators (stage 2, 2026-11-10): the official append
+    # required a morning snapshot no writer has produced since the
+    # 2026-10-28 cutover, the user-approved append is date-locked to
+    # 2026-10-09 by its enable switch, and no stored detail carries
+    # either chain (MotherDuck census 2026-11-10: 0 of 1,340 rows).
     previous_revisions = old.get("officialMarkRevisions")
     if isinstance(previous_revisions, list) and previous_revisions:
-        candidate = out.get("officialMarkRevisions")
-        allow_append = False
-        if isinstance(candidate, list) and len(candidate) > len(previous_revisions):
-            # Same immutable historical prefix, plus a newly authenticated
-            # pre-off revision justified by a real official source change.
-            from datetime import datetime
-            from arvexq.prediction.prerace_archive import JST
-            from arvexq.prediction.official_course_revision import pre_off_change
-            allow_append = (
-                candidate[:len(previous_revisions)] == previous_revisions
-                and len(candidate) == len(previous_revisions) + 1
-                and bool(pre_off_change(old, old.get("officialCourseCondition"),
-                                        out.get("officialCourseCondition"), datetime.now(JST)))
-            )
-        if not allow_append:
-            out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
-    # User-directed model revisions have a different trust origin from
-    # official condition revisions. Only one valid append to the original
-    # revision chain is allowed. Failed attempts never wipe earlier records.
-    previous_models = list(old.get("modelMarkRevisions") or [])
-    proposed_models = out.get("modelMarkRevisions")
-    allow_new_model = False
-    if isinstance(proposed_models, list) and len(proposed_models) == len(previous_models) + 1:
-        if proposed_models[:-1] == previous_models:
-            from datetime import datetime, timedelta
-            from arvexq.prediction.prerace_archive import JST, post_at
-            from arvexq.prediction.user_approved_model_revision import valid_revision, enabled
-            at_now = datetime.now(JST)
-            item = proposed_models[-1]
-            post = post_at(old)
-            if isinstance(item, dict) and valid_revision(old, item) and enabled(at_now):
-                submitted = datetime.fromisoformat(str(item["revisedAt"]).replace("Z", "+00:00"))
-                allow_new_model = (bool(post) and at_now < post and
-                                   not sealed_lock(old) and
-                                   not (isinstance(old.get("preRaceBet"), dict) and
-                                        old["preRaceBet"].get("fixedAt")) and
-                                   timedelta(0) <= at_now - submitted <= timedelta(minutes=8))
-    if allow_new_model:
-        out["modelMarkRevisions"] = copy.deepcopy(proposed_models)
-    elif previous_models:
+        out["officialMarkRevisions"] = copy.deepcopy(previous_revisions)
+    previous_models = old.get("modelMarkRevisions")
+    if isinstance(previous_models, list) and previous_models:
         out["modelMarkRevisions"] = copy.deepcopy(previous_models)
     else:
         out.pop("modelMarkRevisions", None)

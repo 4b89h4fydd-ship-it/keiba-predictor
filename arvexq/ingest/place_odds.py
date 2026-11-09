@@ -14,8 +14,13 @@ def place_odds(value):
     return {"placeOddsLow":low,"placeOddsHigh":high}
 
 def place_odds_pair(low,high):
-    a=place_odds(low)
-    b=place_odds(high)
+    # The official NAR page renders the range across two cells and the
+    # range separator travels with the low cell ("3.5-" | "7.8"), which
+    # place_odds alone must keep rejecting as an incomplete single
+    # value. Strip a dangling separator from either side here, where
+    # the two observed bounds are both present.
+    a=place_odds(re.sub(r"[-～〜~]\s*$","",str(low or "").strip()))
+    b=place_odds(re.sub(r"^\s*[-～〜~]","",str(high or "").strip()))
     if not a or not b:return None
     lo=a["placeOddsLow"];hi=b["placeOddsHigh"]
     return {"placeOddsLow":lo,"placeOddsHigh":hi} if hi>=lo else None

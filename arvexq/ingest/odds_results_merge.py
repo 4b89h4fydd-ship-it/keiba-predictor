@@ -30,6 +30,20 @@ def _merge_result_fields(detail:dict,result:dict)->dict:
         for k in ("winOdds","popularity","bodyWeight","bodyWeightChange"):
             if f.get(k) not in (None,""):h[k]=f.get(k)
         if f.get("winOdds"):h["oddsSource"]="netkeiba最終"
+        # The result parser is the only place this race's sectional facts
+        # (last 3F above all) are observed. Write the finisher's own
+        # performance back onto the horse record as its record of this race;
+        # until now those values lived only in the race-level result block
+        # and never reached any per-horse career record.
+        performance={}
+        for k in ("finish","timeSeconds","last3FSeconds","last3FRank","marginText","cornerPositions"):
+            if f.get(k) not in (None,""):performance[k]=f.get(k)
+        if performance:
+            performance["date"]=detail.get("date") or ""
+            performance["track"]=detail.get("track") or ""
+            performance["raceNumber"]=int(detail.get("raceNumber") or 0)
+            performance["source"]=(result or {}).get("source") or ""
+            h["raceResult"]=performance
     if any(f.get("winOdds") for f in fins):
         detail["oddsSource"]="netkeiba最終";detail["oddsType"]="単勝最終オッズ";detail["oddsUpdatedAt"]=datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%H:%M:%S")
     detail["fieldSize"]=int(detail.get("fieldSize") or len(hs))

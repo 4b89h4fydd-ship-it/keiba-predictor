@@ -142,6 +142,20 @@ def _jra_official_prior_result_adapter(namespace: dict[str, Any]):
             corners = row.get("cornerPositions")
             if isinstance(corners, list) and corners:
                 observed["cornerPositions"] = corners
+            # The same fetched result row publishes the frame and post
+            # position this horse started from in that race; copy them
+            # verbatim (the parser leaves frame 0 when unpublished).
+            frame = row.get("frameNumber")
+            if isinstance(frame, int) and 1 <= frame <= 8:
+                observed["frameNumber"] = frame
+            post = row.get("horseNumber")
+            if isinstance(post, int) and post >= 1:
+                observed["horseNumber"] = post
+            # The result page already fetched for margins also states the
+            # race-day weather; replace the profile placeholder with it.
+            weather = str(result.get("weather") or "").strip()
+            if weather and weather != "不明":
+                observed["weather"] = weather
             observed_runs.append(observed)
         output = {"recentRaces": observed_runs, "allPastRuns": observed_runs} if observed_runs else {}
         if fetch_errors:
@@ -211,13 +225,103 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
     if getter is None:
         return None
 
+    # Pages probed while resolving a missing race number are shared by every
+    # horse and run of the same card; never fetch one twice through this
+    # adapter, including pages that turned out to hold no usable result.
+    scan_cache: dict[tuple[str, str, int], Any] = {}
+
+    # Fetch failures (the getter raises when no result page could be
+    # fetched at all) seen by get_page, across every fetch() call on this
+    # adapter. fetch() compares the length before/after its own call.
+    fetch_errors: list[int] = []
+
+    def get_page(previous: dict[str, Any]):
+        """One official result page, with a single retry on fetch failure.
+
+        The result getter raises when no page could be fetched at all
+        (timeout, reset) and returns None for a fetched page without a
+        usable result. The scan below caches whatever it gets for the
+        rest of the run, so one transient failure used to poison every
+        horse sharing that day/venue page; retry a failed fetch once
+        after a short pause. A page that merely holds no usable result
+        is not retried.
+        """
+        import time
+        try:
+            return getter(previous)
+        except Exception:
+            fetch_errors.append(1)
+            time.sleep(0.5)
+        try:
+            return getter(previous)
+        except Exception:
+            fetch_errors.append(1)
+            return None
+
+    def scan_page(at: str, track: str, no: int, run: dict[str, Any],
+                  known_name: str):
+        key = (at, track, no)
+        if key not in scan_cache:
+            previous = {"date": at, "track": track, "raceNumber": no,
+                        "horses": [{"name": known_name,
+                                    "horseNumber": run.get("horseNumber") or 0}]}
+            scan_cache[key] = get_page(previous)
+        return scan_cache[key]
+
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         from arvexq.ingest.full_career import date_key, merge_career
+        errors_before = len(fetch_errors)
         target = date_key(race.get("date"))
         if not target:
             return {}
         known_name = str(horse.get("name") or "").strip()
         known_runs = merge_career(horse.get("allPastRuns"), horse.get("recentRaces"), target)
+
+        def verified_candidate(found: Any, run: dict[str, Any]):
+            """The finisher row of a candidate page, only when the page
+            provably is this start.
+
+            A primary career row that never recorded its race number may be
+            repaired only by a page whose own row for this horse agrees with
+            the facts the row already carries: a real finishing place (0 is
+            the unknown sentinel, never a placing) and/or the recorded time
+            (0.11s tolerance, the bound the JRA prior-result adapter uses).
+            A name match alone never authorises a fill.
+            """
+            if not isinstance(found, dict):
+                return None
+            matched = [f for f in (found.get("finishers") or [])
+                       if str(f.get("name") or "").strip() == known_name]
+            if len(matched) != 1:
+                return None
+            row = matched[0]
+            evidence = False
+            run_finish = run.get("finish")
+            if run_finish not in (None, "", 0, "0"):
+                try:
+                    if int(run_finish) != int(row.get("finish") or 0):
+                        return None
+                except (TypeError, ValueError):
+                    return None
+                evidence = True
+            run_time = run.get("timeSeconds")
+            if run_time not in (None, "", 0, "0"):
+                try:
+                    own = float(row.get("timeSeconds") or 0)
+                    if not own or abs(float(run_time) - own) > 0.11:
+                        return None
+                except (TypeError, ValueError):
+                    return None
+                evidence = True
+            run_post = run.get("horseNumber")
+            if run_post not in (None, "", 0) and row.get("horseNumber") not in (None, "", 0):
+                try:
+                    if int(run_post) != int(row.get("horseNumber")):
+                        return None
+                except (TypeError, ValueError):
+                    return None
+            return row if evidence else None
+
         fallback_sectional = None
         # The newest official race can have no times/row yet. Try the next
         # recorded starts within the same verified five-run window, not only
@@ -227,17 +331,34 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
                 continue
             at = date_key(run.get("date") or run.get("raceDate"))
             track = str(run.get("track") or "").strip()
-            no = int(run.get("raceNumber") or run.get("raceNo") or 0)
-            if not at or at >= target or not track or not 1 <= no <= 12:
+            try:
+                no = int(run.get("raceNumber") or run.get("raceNo") or 0)
+            except (TypeError, ValueError):
+                no = 0
+            if not at or at >= target or not track:
                 continue
             if (run.get("last3fSeconds") not in (None, "", 0)
                     and any(run.get(k) not in (None, "")
                             for k in ("marginSeconds", "timeBehindWinner"))):
                 continue
-            previous = {"date": at, "track": track, "raceNumber": no,
-                        "horses": [{"name": known_name,
-                                    "horseNumber": run.get("horseNumber") or 0}]}
-            found = getter(previous)
+            found = None
+            if 1 <= no <= 12:
+                previous = {"date": at, "track": track, "raceNumber": no,
+                            "horses": [{"name": known_name,
+                                        "horseNumber": run.get("horseNumber") or 0}]}
+                found = get_page(previous)
+            else:
+                # The primary row never recorded which race of the day this
+                # start was (the live-era card parsers omit raceNumber), so
+                # this fallback could never fire for it. Resolve the number
+                # by a verified scan of that day's official pages: a
+                # candidate counts only when its own finisher row for this
+                # horse agrees with the facts already on the row.
+                for candidate in range(1, 13):
+                    page = scan_page(at, track, candidate, run, known_name)
+                    if verified_candidate(page, run) is not None:
+                        found, no = page, candidate
+                        break
             if not isinstance(found, dict):
                 continue
             finishers = found.get("finishers") or []
@@ -264,6 +385,25 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             if seconds is not None and 15 <= float(seconds) <= 90:
                 observed["last3f"] = float(seconds)
                 observed["last3fSeconds"] = float(seconds)
+            # The RaceMarkTable row already fetched for this start carries
+            # the horse's published win odds (単勝 column); copy verbatim.
+            try:
+                win_odds = float(row.get("winOdds"))
+            except (TypeError, ValueError):
+                win_odds = 0.0
+            if win_odds >= 1.0:
+                observed["winOdds"] = win_odds
+            # The RaceMarkTable row likewise publishes the frame and post
+            # position this horse started from in that race; copy verbatim.
+            frame = row.get("frameNumber")
+            if isinstance(frame, int) and 1 <= frame <= 8:
+                observed["frameNumber"] = frame
+            post = row.get("horseNumber")
+            if isinstance(post, int) and post >= 1:
+                observed["horseNumber"] = post
+            result_weather = str(found.get("weather") or "").strip()
+            if result_weather and result_weather != "不明":
+                observed["weather"] = result_weather
             if row.get("marginText") not in (None, ""):
                 observed["marginText"] = row["marginText"]
             winner = next((x.get("timeSeconds") for x in finishers
@@ -271,6 +411,10 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
             own = row.get("timeSeconds")
             if winner and own and 0 <= float(own) - float(winner) <= 30:
                 observed["timeBehindWinner"] = round(float(own) - float(winner), 2)
+                # The same measured gap in seconds is what the CSV-era
+                # career rows carry as marginSeconds; fill both spellings
+                # so margin consumers see the completion.
+                observed["marginSeconds"] = observed["timeBehindWinner"]
             print("NAR_OFFICIAL_PRIOR_MATCH", at, track, no,
                   "winnerTime=", winner, "horseTime=", own,
                   "gap=", observed.get("timeBehindWinner"),
@@ -288,6 +432,13 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
         if fallback_sectional is not None:
             fallback_sectional["source"] = "NAR official historical results"
             return {"recentRaces": [fallback_sectional], "allPastRuns": [fallback_sectional]}
+        if len(fetch_errors) > errors_before:
+            # Nothing could be filled AND at least one result page was
+            # unreachable: surface the failure so the enrichment audit
+            # records this provider as failed instead of silently
+            # reporting an empty success.
+            raise RuntimeError(
+                "NAR official result pages unreachable during prior-result scan")
         return {}
 
     return fetch

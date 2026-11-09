@@ -11,12 +11,15 @@ function rankedRole(x,which){
  for(const k of keys){if(x&&x[k]!==undefined&&x[k]!==null&&Number.isFinite(Number(x[k])))return Math.max(0,Number(x[k]))}
  return null;
 }
-function hitCalibration(kind,points){
+function calibrationBucket(kind,points){
  const cal=global.ARVEXQTicketHitCalibration;
  if(!cal||cal.version!=='arvexq-empirical-ticket-hit-v1'||
-    cal.modelVersion!=='arvexq-true-run-pure-sectional-v2'||
+    cal.modelVersion!=='arvexq-rewrite-v3-v9b'||
     !/^20\d{2}-\d{2}-\d{2}$/.test(String(cal.asOfDate||'')))return null;
- const row=(cal.buckets||{})[String(kind)+'|'+String(points)];
+ return (cal.buckets||{})[String(kind)+'|'+String(points)]||null;
+}
+function hitCalibration(kind,points){
+ const row=calibrationBucket(kind,points);
  if(!row||row.qualified!==true||Number(row.sample)<30||
     Number(row.hitRate)<.80||Number(row.wilsonLower95)<.65)return null;
  return row;
@@ -31,7 +34,31 @@ function classify(r,p,strict){
 }
 // A public selected race must have a genuine, actionable morning recommendation.
 // Prediction quality alone is not a promise that a purchasable ticket exists.
+const LANE_SOURCE='arvexq-morning-production-lane-v1';
+function laneTicketKinds(plan){
+ // Lane-scoped contract: the plan was built by the production lane
+ // adapter from the stored ticket plan only, so it is recognised by
+ // its source tag plus the v9b model pin — never by a purchase
+ // decision, which the lane deliberately does not carry. Issued
+ // kinds and point counts are taken faithfully: no legacy 12-point
+ // cap, so a 36-point Formation B item stays a 36-point item.
+ // Qualification is NOT decided here; requireMorningTickets still
+ // gates on the measured calibration buckets alone.
+ if(!plan||plan.source!==LANE_SOURCE||
+    String(plan.modelVersion||'')!=='arvexq-rewrite-v3-v9b')return null;
+ const widths={'ワイド':2,'馬連':2,'馬単':2,'3連複':3,'3連単':3};
+ const valid=(plan.items||[]).filter(x=>x&&widths[x.kind]&&
+   ['本線','保険','3連単チャレンジ'].includes(x.level)&&
+   Array.isArray(x.combos)&&x.combos.length>=1&&
+   x.combos.every(c=>Array.isArray(c)&&c.length===widths[x.kind]&&
+      c.every(v=>Number.isInteger(Number(v))&&Number(v)>0)&&
+      new Set(c.map(Number)).size===c.length));
+ if(!valid.length||!valid.some(x=>x.level==='本線'))return [];
+ return [...new Set(valid.map(x=>x.kind))];
+}
 function ticketKinds(plan){
+ const lane=laneTicketKinds(plan);
+ if(lane!==null)return lane;
  if(!plan||!['購入候補','通常買い','強く買う'].includes(String(plan.decision||''))||
     !plan.betInputGate||plan.betInputGate.ready!==true)return [];
  const widths={'ワイド':2,'馬連':2,'馬単':2,'3連複':3,'3連単':3};
@@ -47,11 +74,20 @@ function requireMorningTickets(selection,plan){
  const kinds=ticketKinds(plan),main=(plan&&plan.items||[]).find(x=>x.level==='本線');
  const bucket=main&&hitCalibration(main.kind,(main.combos||[]).length);
  const selected=!!bucket&&kinds.includes(main.kind);
- return {...selection,selected,score:selected?Math.round(bucket.hitRate*100):0,
-   hitRate:selected?bucket.hitRate:null,hitRateSamples:selected?bucket.sample:0,
-   hitRateWilsonLower:selected?bucket.wilsonLower95:null,
-   primaryType:selected?'的中重視型':'',types:selected?['的中重視型']:[],
-   ticketKinds:kinds,reason:selected?('本線'+main.kind+'の実測的中率'+(bucket.hitRate*100).toFixed(1)+'%｜'+bucket.sample+'レース'):'本線買い目の的中率検証不足（厳選見送り）'};
+ if(selected)return {...selection,selected:true,
+   score:Math.round(bucket.hitRate*100),
+   hitRate:bucket.hitRate,hitRateSamples:bucket.sample,
+   hitRateWilsonLower:bucket.wilsonLower95,
+   primaryType:'的中重視型',types:['的中重視型'],ticketKinds:kinds,
+   reason:'本線'+main.kind+'の実測的中率'+(bucket.hitRate*100).toFixed(1)+'%｜'+bucket.sample+'レース'};
+ // Not selected: when the bucket exists but misses the bar, state the
+ // measured numbers so a rejection reads as evidence, not as a
+ // missing-contract failure.
+ const row=main&&calibrationBucket(main.kind,(main.combos||[]).length);
+ const reason=row?('本線'+main.kind+'の実測的中率'+(Number(row.hitRate)*100).toFixed(1)+'%｜'+row.sample+'レース（合格条件に未達・厳選見送り）'):'本線買い目の的中率検証不足（厳選見送り）';
+ return {...selection,selected:false,score:0,
+   hitRate:null,hitRateSamples:0,hitRateWilsonLower:null,
+   primaryType:'',types:[],ticketKinds:kinds,reason};
 }
 function hasMorningPlace(r,frozen){
  const pending=r&&r._arvexqMorningLaneCandidate;
@@ -84,5 +120,6 @@ function selectionDisplayStatus(m,r){
  return 'actionable';
 }
 global.ARVEXQMorningTicketLanes=Object.freeze({VERSION,NAMES,classify,
- ticketKinds,requireMorningTickets,hasMorningPlace,qualifyPlaceBet,selectionDisplayStatus});
+ ticketKinds,requireMorningTickets,hasMorningPlace,qualifyPlaceBet,selectionDisplayStatus,
+ calibrationBucket,hitCalibration});
 })(window);

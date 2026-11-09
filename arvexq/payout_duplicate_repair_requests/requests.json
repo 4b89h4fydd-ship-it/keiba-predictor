@@ -1,0 +1,7 @@
+{
+  "requested_by": "arvexq-payout-duplicate-fix-20261109",
+  "reason": "Round 4: only 2026-10-30 remains — its two census races (Kanazawa 01/08) are compact-tombstone stubs whose repair repaired cleanly in round 3 but could not sync: protect failed closed because the bundle-built payload diverged from the API display stub in odds metadata. Commit 48765392bd adds the display-based stub shaping step.",
+  "dates": [
+    "2026-10-30"
+  ]
+}

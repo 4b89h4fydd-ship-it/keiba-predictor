@@ -14,6 +14,15 @@ def date_key(value: Any) -> str:
     except (TypeError, ValueError):
         return ""
 
+def _fill_missing(saved_value: Any, name: str) -> bool:
+    if saved_value in (None, "", [], {}):
+        return True
+    # Producers that never observed the weather write the placeholder
+    # "不明"; it is not data, so a real observation may replace it. Every
+    # other field keeps strict fill-only semantics.
+    return name == "weather" and saved_value == "不明"
+
+
 def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, Any]]:
     end = date_key(cutoff)
     if not end:
@@ -53,7 +62,7 @@ def merge_career(existing: Any, incoming: Any, cutoff: str) -> list[dict[str, An
                   and (not saved.get("track") or saved.get("track") == item.get("track"))
                   and (not saved.get("raceNumber") or str(saved.get("raceNumber")) == str(item.get("raceNumber")))):
                 saved[name] = value
-            elif saved.get(name) in (None, "", [], {}) and value not in (None, "", [], {}):
+            elif _fill_missing(saved.get(name), name) and value not in (None, "", [], {}):
                 saved[name] = copy.deepcopy(value)
     return sorted(found.values(), key=lambda x: x["date"], reverse=True)
 

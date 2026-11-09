@@ -36,7 +36,7 @@ ARVEXQは「画面を開いた時に重い取得・分析をする」構成で�
 | `arvexq-sync.yml` | 5分ごと（JST 7:00〜23:59）、手動、関連コード更新 | 変動データだけを軽量更新 |
 | `arvexq-result-repair.yml` | Realtime Syncとずらして5分ごと、手動 | 発走済みで結果/払戻が未完のレースを古い順に補修 |
 | `arvexq-history-sync.yml` | 毎時17分、手動 | 直近7日の欠損を巡回補修 |
-| `arvexq-backtest.yml` | 毎日23:45 JST、手動 | 地方中心のv206バックテスト |
+| `arvexq-backtest.yml` | 手動のみ（定期実行は2026-11-09廃止） | 地方中心のv206研究バックテスト（本番v9bの検証ではない） |
 | `arvexq-jra-backtest.yml` | 手動 | 中央専用v208バックテスト |
 | `arvexq-validation.yml` | main向けPR、main更新、手動 | 構文、PWAビルド、同期不変条件、Workflow YAMLを検証 |
 

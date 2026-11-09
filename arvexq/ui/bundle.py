@@ -2,7 +2,7 @@
 from arvexq.ui.assets import read_asset
 
 HISTORY_SCRIPTS = ('deduplicate', 'temporal', 'view')
-FORECAST_SCRIPTS = ('prediction', 'marks', 'tickets', 'prediction_frame', 'mark_frame', 'ticket_frame')
+FORECAST_SCRIPTS = ('prediction', 'marks', 'tickets', 'prediction_frame', 'mark_frame', 'integrated_osusume', 'ticket_frame')
 
 def compose_app_script(main_script):
     return ('\n'.join(read_asset('history/'+name+'.js') for name in HISTORY_SCRIPTS)+'\n'+
