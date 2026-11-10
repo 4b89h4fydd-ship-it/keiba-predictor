@@ -104,6 +104,12 @@ class RankingChallengerSafety(unittest.TestCase):
         self.assertIsNone(_position({"cornerPositions": ""}))
         self.assertEqual(_position({"corner4": 2, "cornerPositions": "3-4"}), 2)
 
+    def test_position_ablation_removes_new_numbered_corners(self):
+        f = enrich_frozen_features({"history::all::w5::corner1_position::mean": 2,
+                                   "history::all::w5::corner3_position::mean": 3},
+                                  head="ability", mode="no-position", field_size=8)
+        self.assertEqual(f, {})
+
     def test_manifest_preserves_bounded_hypotheses(self):
         key = HISTORY_RELATIVE["form"]
         races = [{"rows": [{"features": {key: n/10, "static::prize": n*1000000}}
