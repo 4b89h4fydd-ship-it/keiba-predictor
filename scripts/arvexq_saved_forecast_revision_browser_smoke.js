@@ -34,11 +34,18 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
   assert.equal(await page.evaluate(()=>window.ARVEXQProductionPrediction.current().source),'learned-revision-retrospective');
   assert.match(await page.locator('#section-aimarks').innerText(),/事後再分析の参考印/);
-  for(const id of ['section-prediction','section-aimarks','section-bets'])assert.equal(await page.locator('#'+id).count(),1);
-  assert.equal(await page.locator('#section-aimarks').getAttribute('id'),'section-aimarks');
-  assert.equal(await page.locator('#section-bets .ai-bet-box .bet-item').count(),0);
-  assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
+  assert.equal(await page.locator('#section-aimarks').count(),1);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
+  // Current UI has independent entry / pace tabs and a dedicated bet subpage.
+  // Verify each real route instead of requiring all retired sections at once.
+  await page.locator('[data-panel="pace"]').click();
+  await page.waitForSelector('#section-pace');
+  await page.locator('[data-panel="bets"]').click();
+  await page.waitForSelector('.bet-detail-page-shell');
+  assert.equal(await page.locator('.bet-detail-page-shell .bet-item').count(),0);
+  assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
+  await page.locator('[data-action="close-race-subpage"]').first().click();
+  await page.waitForSelector('.racecard-row');
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
   console.log('SAVED_FORECAST_REVISION_MOBILE_BROWSER_PASS');
