@@ -147,7 +147,7 @@ jobs:
           node scripts/arvexq_bet_role_guide_smoke.js
           node scripts/arvexq_race_source_integrity_smoke.js
           node scripts/arvexq_empirical_selection_smoke.js
-          python -m unittest tests.test_empirical_ticket_calibration -v
+          python -m unittest tests.test_ticket_r24_upgrade_publish -v
           node scripts/arvexq_retired_ticket_ui_smoke.js
           node scripts/arvexq_retired_mark_freeze_smoke.js
           node scripts/arvexq_retired_selection_history_smoke.js
@@ -268,7 +268,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_past_performance.py' -v
           python -m unittest tests.test_unified_jra_nar_observed_authority -v
           python -m unittest tests.test_v9b_publish_adoption -v
-          python -m unittest discover -s tests -p 'test_empirical_ticket_calibration.py' -v
+          python -m unittest tests.test_ticket_r24_upgrade_publish -v
           python -m unittest discover -s tests -p 'test_full_career.py' -v
           python -m unittest discover -s tests -p 'test_career_readiness.py' -v
           python -m unittest discover -s tests -p 'test_career_transport.py' -v
@@ -292,7 +292,7 @@ jobs:
           bad=[x for x in forbidden if x in live or x in live_script]
           if bad:raise SystemExit('live lane contains heavy/legacy path: '+repr(bad))
 
-          required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: true','details=0','CLOUDFLARE_API_BASE']
+          required=['arvexq_live_sync.py','ARVEXQ_DATA_CORE: "0"','cancel-in-progress: false','details=0','CLOUDFLARE_API_BASE']
           missing=[x for x in required if x not in live]
           if missing:raise SystemExit('live workflow guard missing: '+repr(missing))
 
@@ -397,7 +397,7 @@ jobs:
           assert live._merge_result(old_final,flash)==old_final
           assert repair._merge_result(old_final,flash)==old_final
 
-          upgraded=repair._merge_detail(base,{'id':base['id'],'horses':[{'horseNumber':1}],'result':{'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','amount':500}]}})
+          upgraded=repair._merge_detail(base,{'id':base['id'],'horses':[{'horseNumber':1}],'result':{'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','combination':str(old_final['finishers'][0]['horseNumber']),'amount':500}]}})
           assert upgraded['horses'][0]['name']=='テスト馬' and upgraded['preRacePrediction']==base['preRacePrediction']
           assert upgraded['result']['status']=='確定'
 
@@ -441,7 +441,7 @@ jobs:
               prefetch._seed_snapshot=orig_seed
               prefetch.app._build_fast_diagnosis_snapshot=orig_build
 
-          complete=copy.deepcopy(base);complete['result']={'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','amount':500}]}
+          complete=copy.deepcopy(base);complete['result']={'status':'確定','finishers':old_final['finishers'],'payouts':[{'type':'単勝','combination':str(old_final['finishers'][0]['horseNumber']),'amount':500}]}
           assert history.card_complete(complete) and history.history_complete(complete)
           no_pay=copy.deepcopy(complete);no_pay['result']['payouts']=[]
           assert not history.history_complete(no_pay)
