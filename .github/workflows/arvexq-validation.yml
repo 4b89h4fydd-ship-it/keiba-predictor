@@ -53,6 +53,7 @@ jobs:
 
       - name: Official NAR cached ZIP integrity and historical cutoff
         run: |
+          python -m py_compile scripts/arvexq_prefetch.py arvexq/databanks/nar_official_csv.py
           python -m unittest tests.test_nar_official_csv tests.test_nar_official_archive_autoload -v
 
       - name: Temporal evaluation and research probability invariants
