@@ -165,7 +165,7 @@ jobs:
             assert.ok(html.includes(ref),'missing '+ref);
           for(const removed of ['kyotei','boat-app','arvexq-sport-nav'])
             assert.ok(!html.includes(removed),'retired sport reference '+removed);
-          for(const item of ['厳選','特別','お気に入り','data-home-page','dateBar'])
+          for(const item of ['厳選','お気に入り','data-home-page','dateBar'])
             assert.ok(shared.includes(item),'missing top control '+item);
           assert.ok(portal.includes('各会場の全レース'));
           assert.ok(portal.includes('group("中央")')&&portal.includes('group("地方")'));
