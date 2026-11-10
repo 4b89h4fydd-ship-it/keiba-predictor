@@ -110,6 +110,8 @@ class NarOfficialArchive:
             for filename, rows in rows_from_archive(path):
                 if "racelist" in filename:
                     for row in rows:
+                        if normalize(item(row, 0)) in ("帯広", "帯広ば"):
+                            continue
                         key = race_key(row)
                         if key[1] and key[2]:
                             previous = race_rows.get(key)
@@ -123,7 +125,9 @@ class NarOfficialArchive:
                                     for i in range(max(len(richer), len(other)))
                                 ]
                 if "horselist" in filename:
-                    horse_rows.extend(row for row in rows if race_key(row)[1])
+                    horse_rows.extend(row for row in rows
+                                      if race_key(row)[1]
+                                      and normalize(item(row, 0)) not in ("帯広", "帯広ば"))
         self.race_count = len(race_rows)
         self.by_name = defaultdict(list)
         # Repeated daily/monthly records may differ in completeness.
