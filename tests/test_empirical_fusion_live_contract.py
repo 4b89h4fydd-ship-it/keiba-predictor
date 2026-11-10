@@ -100,6 +100,46 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert src == saved
     assert output is not None, "complete preoff inputs must produce an output"
     assert output["modelVersion"] == VERSION
+    baseline = output["stages"]["pace"]["value"]["fourPhaseHistoricalBaseline"]
+    assert set(baseline) == {str(i) for i in range(1, 6)}
+    assert output["stages"]["pace"]["value"]["fourPhaseBaselineValidated"] is False
+    assert baseline["1"]["start"]["projectedRank"] is None
+    assert baseline["1"]["thirdCorner"]["projectedRank"] is None
+    assert baseline["1"]["straight"]["projectedRank"] == 1.0
+    assert output["predictionMarks"] == raw["predictionMarks"]
+    ability = output["stages"]["ability"]
+    assert ability["probabilityCalibrationVerified"] is False
+    assert ability["coverage"] == {
+        "activeRunners": 5, "withPastRuns": 5,
+        "withOpponentEvidence": 0, "withMarginEvidence": 0,
+        "withPedigree": 0, "withVerifiedTraining": 0,
+    }
+    assert set(ability["modelVersions"]) == set(METHODS)
+    assert set(ability["value"]) == {str(i) for i in range(1, 6)}
+    assert ability["value"]["1"]["pedigree"] == {
+        "sire": None, "dam": None, "damsire": None,
+        "observedFields": 0, "status": "unavailable"}
+    assert ability["value"]["1"]["training"]["status"] == "unverified-no-numeric-inference"
+    assert ability["value"]["1"]["staticPreoff"]["age"] is None
+    assert ability["value"]["1"]["staticPreoff"]["bodyWeight"] is None
+    assert ability["value"]["1"]["recentRuns"] == 1
+    assert ability["value"]["1"]["recentTop3Rate"] == 1.0
+    assert ability["value"]["1"]["fullCareerRuns"] == 1
+    assert ability["value"]["1"]["evaluationReady"] is False
+    assert ability["value"]["1"]["abilityScore"] is None
+    assert ability["value"]["1"]["abilityScoreStatus"] == "missing-validated-model-artifact"
+    assert "missing-validated-model-artifact" in ability["value"]["1"]["evaluationBlockers"]
+    assert "career-coverage-unverified" in ability["value"]["1"]["evaluationBlockers"]
+    assert "training-unverified" in ability["value"]["1"]["evaluationBlockers"]
+    assert ability["value"]["1"]["careerTop3Rate"] == 1.0
+    assert ability["value"]["1"]["careerPeakFinishQuality"] == 1.0
+    assert ability["value"]["1"]["careerConsistency"] is None
+    assert ability["value"]["1"]["classEvidenceRuns"] == 0
+    assert ability["value"]["1"]["sectionalEvidenceRuns"] == 0
+    assert ability["value"]["1"]["representativeComparable"]["finish"] == 1
+    assert ability["value"]["1"]["sameDistanceQuality"] == 1.0
+    assert ability["value"]["1"]["opponentLevelMean"] is None
+    assert ability["value"]["1"]["marginMean"] is None
     assert output["humanOverrideAllowed"] is False
     assert set(output["stages"]) == {
         "ability","runningStyle","pace","probability","marks","tickets"}
@@ -152,3 +192,43 @@ def test_no_stored_independent_evidence_means_no_fake_prediction():
     bet = capture_original_bet(lock["detail"], NOW)
     assert bet["decision"] == "見送り"
     assert bet["items"] == []
+
+
+def test_phase_one_pedigree_observation_does_not_change_marks():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0]["pedigree"] = {"sire": "父系テスト", "damsire": "母父テスト"}
+    updated = build_prediction(src, now=NOW)
+    assert updated is not None
+    assert updated["stages"]["ability"]["value"]["1"]["pedigree"] == {
+        "sire": "父系テスト", "dam": None, "damsire": "母父テスト",
+        "observedFields": 2, "status": "observed"}
+    assert updated["predictionMarks"] == original["predictionMarks"]
+
+
+def test_maternal_pedigree_is_evidence_not_imputed_score():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0]["pedigree"] = {"dam": "母系テスト"}
+    revised = build_prediction(src, now=NOW)
+    assert revised["stages"]["ability"]["value"]["1"]["pedigree"] == {
+        "sire": None, "dam": "母系テスト", "damsire": None,
+        "observedFields": 1, "status": "observed"}
+    assert revised["predictionMarks"] == original["predictionMarks"]
+
+
+def test_ability_static_race_day_observations_do_not_overwrite_predictions():
+    src = fixture()
+    original = build_prediction(src, now=NOW)
+    src["horses"][0].update({
+        "age": 4, "carriedWeight": 56.0, "bodyWeight": 480,
+        "bodyWeightChange": 4, "trainer": "厩舎テスト", "jockey": "騎手テスト",
+    })
+    updated = build_prediction(src, now=NOW)
+    static = updated["stages"]["ability"]["value"]["1"]["staticPreoff"]
+    assert static == {
+        "age": 4, "carriedWeight": 56.0, "bodyWeight": 480,
+        "bodyWeightChange": 4, "jockey": "騎手テスト", "trainer": "厩舎テスト",
+    }
+    assert updated["predictionMarks"] == original["predictionMarks"]
+    assert updated["recommendedBets"] == original["recommendedBets"]
