@@ -105,3 +105,26 @@ were not backfilled with guesses; class-based opponent level is a proxy,
 not measured opponent Elo. Per-race descriptive validation errors are added
 for winner rank, selected horse finish/popularity, track and field size;
 missing corner evidence prevents causal explanations about pace.
+
+## Completed error replay and checks
+
+Flight version4/run4 also succeeded (exit0), replaying the same development
+cohort to emit errors, without scoring the consumed test. Raw per-race errors
+and track/field-size slices: `ranking-validation-errors-20261110.json`.
+Distance metadata is joined by race_id from MotherDuck after prediction for
+reporting only, never as a post-hoc model input.
+
+Enhanced JRA Ability: 13+ runners 0/10 Top1 wins, winner Top3 1/10;
+8 or fewer runners3/4 wins. Tokyo3/6 wins, Kyoto2/9, Niigata0/5.
+Enhanced NAR Ability: Morioka3/3, Kanazawa1/3, Kochi1/1 wins. Its two
+missed winners ranked5 and3. ANA's six missed NAR winners ranked8,10,4,9,8,11:
+market-outperformance training did not rank the actual winners well on this
+validation day. These tiny slices motivate future hypotheses, not exclusions
+or causal claims about luck, jockeys or pace. No selection condition changes.
+
+43 local pytest tests plus4 subtests passed, including consumed-date exclusion,
+NaN-vs-zero, bounded-feature retention, ingested corner/closing aliases,
+numbered-corner ablation, frozen archive and production-boundary regressions.
+GitHub Actions research run42855476150 passed on code commit2988b04c;
+run42855283245 passed on a9215cd8. Remaining changes after that check only
+save error/metadata reports. No production deployment or live save test.
