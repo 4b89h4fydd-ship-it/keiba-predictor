@@ -10,9 +10,12 @@ import argparse
 from collections import defaultdict
 from datetime import date
 import json
-from math import isfinite, log2
+from math import isfinite
 from pathlib import Path
 from typing import Any
+
+from arvexq.prediction.mass_feature_selection import snapshot_feature_allowed
+from arvexq.research.ranking_feature_signals import MODES, enrich_frozen_features, history_coverage
 
 VERSION = "arvexq-ranking-ability-ana-v1"
 CIRCUITS = {"中央": "jra", "JRA": "jra", "jra": "jra",
@@ -42,7 +45,7 @@ def _features(row: dict[str, Any], head: str) -> dict[str, float]:
     features = {}
     for key, value in (row.get("features") or {}).items():
         name = str(key)
-        if name.startswith(FORBIDDEN_PREFIXES) or not name.startswith(ALLOWED_PREFIXES):
+        if name.startswith(FORBIDDEN_PREFIXES) or not name.startswith(ALLOWED_PREFIXES) or not snapshot_feature_allowed(name):
             continue
         if head == "ability" and (name.startswith("market::") or name.startswith("relative::market::")):
             continue
@@ -64,15 +67,15 @@ def _relevance(finish: int, popularity: int | None, head: str) -> int:
     return max(0, min(3, popularity - finish))
 
 
-def prepare_races(rows: list[dict[str, Any]], circuit: str, head: str) -> list[dict[str, Any]]:
+def prepare_races(rows: list[dict[str, Any]], circuit: str, head: str, *, mode: str = "baseline") -> list[dict[str, Any]]:
     """Produce complete, immutable race groups with sorted horse order.
 
     Fail closed on conflicting frozen hashes, dates, duplicate entries and
     incomplete podium labels. Missing market evidence excludes a whole ANA
     race, never just its individual horse (which would bias ranking groups).
     """
-    if circuit not in ("jra", "nar") or head not in HEADS:
-        raise ValueError("unsupported circuit/head")
+    if circuit not in ("jra", "nar") or head not in HEADS or mode not in MODES:
+        raise ValueError("unsupported circuit/head/mode")
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         if CIRCUITS.get(str(row.get("circuit") or "")) != circuit:
@@ -80,6 +83,8 @@ def prepare_races(rows: list[dict[str, Any]], circuit: str, head: str) -> list[d
         race_id = str(row.get("raceId") or "")
         if not race_id:
             raise ValueError("missing raceId")
+        if "帯広" in race_id or str(row.get("track") or "") == "帯広":
+            continue
         groups[race_id].append(row)
 
     output = []
@@ -105,8 +110,10 @@ def prepare_races(rows: list[dict[str, Any]], circuit: str, head: str) -> list[d
         for row in ordered:
             place = int(row["finish"])
             popularity = _rank_in_market(row)
+            frozen = _features(row, head)
+            features = enrich_frozen_features(frozen, head=head, mode=mode, field_size=len(ordered))
             ready.append({"horseNumber": int(row["horseNumber"]), "finish": place,
-                          "popularity": popularity, "features": _features(row, head),
+                          "popularity": popularity, "features": features,
                           "label": _relevance(place, popularity, head)})
         if not any(e["features"] for e in ready):
             continue
@@ -153,16 +160,8 @@ def make_matrix(races: list[dict[str, Any]], vectorizer: Any):
     return sparse, labels, group
 
 
-def _ndcg_at_3(relevances: list[int], order: list[int]) -> float:
-    """Rank-gain NDCG@3 using only stdlib; CI needs no research deps."""
-    def dcg(ranked):
-        return sum(((2 ** relevances[idx]) - 1) / log2(pos + 2)
-                   for pos, idx in enumerate(ranked[:3]))
-    ideal = dcg(sorted(range(len(relevances)), key=lambda i: -relevances[i]))
-    return dcg(order) / ideal if ideal else 0.0
-
-
 def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, Any]:
+    from sklearn.metrics import ndcg_score
     pos, win1, win3, podium1, ndcgs = 0, 0, 0, 0, []
     market_win1 = market_win3 = 0
     outperformance = 0
@@ -184,7 +183,7 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
                                                             entries[i]["horseNumber"]))
         market_win1 += int(market[0] == winner)
         market_win3 += int(winner in market[:3])
-        ndcgs.append(_ndcg_at_3([e["label"] for e in entries], order))
+        ndcgs.append(float(ndcg_score([[e["label"] for e in entries]], [list(scores)], k=3)))
     if pos != len(predictions):
         raise ValueError("unexpected prediction rows")
     count = len(races)
@@ -198,14 +197,94 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
             "roi": None}
 
 
+def _scorecards(races: list[dict[str, Any]], predictions: list[float]) -> list[dict[str, Any]]:
+    pos, cards = 0, []
+    for race in races:
+        entries = []
+        for runner in race["rows"]:
+            entries.append({"horseNumber": runner["horseNumber"], "finish": runner["finish"],
+                            "popularity": runner["popularity"], "label": runner["label"],
+                            "score": float(predictions[pos])})
+            pos += 1
+        cards.append({"raceId": race["raceId"], "date": race["date"], "rows": entries})
+    if pos != len(predictions):
+        raise ValueError("scorecard length mismatch")
+    return cards
+
+
+def _shared_cards(left: list[dict[str, Any]], right: list[dict[str, Any]]):
+    left_by = {r["raceId"]: r for r in left}
+    right_by = {r["raceId"]: r for r in right}
+    joined = []
+    for race_id in sorted(left_by.keys() & right_by.keys()):
+        a, b = left_by[race_id], right_by[race_id]
+        ar = {e["horseNumber"]: e for e in a["rows"]}
+        br = {e["horseNumber"]: e for e in b["rows"]}
+        if a["date"] != b["date"] or ar.keys() != br.keys() or any(
+                ar[n]["finish"] != br[n]["finish"] or ar[n]["popularity"] != br[n]["popularity"]
+                for n in ar):
+            raise ValueError(f"paired races disagree on frozen roster/outcomes: {race_id}")
+        joined.append((a, b))
+    return joined
+
+
+def _rank_pct(entries: list[dict[str, Any]]) -> dict[int, float]:
+    order = sorted(entries, key=lambda e: (-e["score"], e["horseNumber"]))
+    length = len(order)
+    return {e["horseNumber"]: 1.0 - i / max(1, length - 1) for i, e in enumerate(order)}
+
+
+def _blend_pair(pair, weight: float):
+    ability, ana = pair
+    ax, bx = _rank_pct(ability["rows"]), _rank_pct(ana["rows"])
+    entries = [{"horseNumber": e["horseNumber"], "finish": e["finish"],
+                "popularity": e["popularity"], "label": max(0, 4-e["finish"]),
+                "features": {}}
+               for e in ability["rows"]]
+    scores = [weight*ax[e["horseNumber"]] + (1-weight)*bx[e["horseNumber"]]
+              for e in ability["rows"]]
+    return {"raceId": ability["raceId"], "date": ability["date"], "rows": entries}, scores
+
+
+def _pair_metrics(pairs, weight: float) -> dict[str, Any]:
+    objects = [_blend_pair(pair, weight) for pair in pairs]
+    return metrics([obj[0] for obj in objects], [s for obj in objects for s in obj[1]])
+
+
+def paired_report(ability: dict[str, Any], ana: dict[str, Any]) -> dict[str, Any]:
+    """Same-race holdout. Tune blend ONLY on validation, never the test."""
+    if ability["trainThrough"] != ana["trainThrough"]:
+        raise ValueError("unmatched training period")
+    valid = _shared_cards(ability["validation"], ana["validation"])
+    test = _shared_cards(ability["test"], ana["test"])
+    if len(valid) < 2 or len(test) < 2:
+        return {"status": "insufficient-paired-races", "validationRaces": len(valid),
+                "testRaces": len(test), "productionEligible": False}
+    if max(v[0]["date"] for v in valid) >= min(t[0]["date"] for t in test):
+        raise ValueError("time order violation: paired validation overlaps holdout")
+    if ability["trainThrough"] >= min(v[0]["date"] for v in valid):
+        raise ValueError("training overlaps paired validation")
+    weights = (0.0, 0.25, 0.5, 0.75, 1.0)
+    # Tie-break toward Ability-only, the simpler model, to avoid noise-seeking.
+    candidates = [(_pair_metrics(valid, w), w) for w in weights]
+    best_m, best_w = max(candidates, key=lambda item: (item[0]["winHitAt1"],
+                                                       item[0]["winnerHitAt3"], item[1]))
+    return {"status": "evaluated-research-only", "productionEligible": False,
+            "validationRaces": len(valid), "testRaces": len(test),
+            "trainThrough": ability["trainThrough"], "blendAbilityWeight": best_w,
+            "validationMetrics": best_m, "ability": _pair_metrics(test, 1.0),
+            "ana": _pair_metrics(test, 0.0), "blended": _pair_metrics(test, best_w),
+            "v9b": None, "note": "V9b requires aligned frozen original predictions; ROI needs paid-out tickets."}
+
+
 def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
-              *, min_train_races: int = 40) -> dict[str, Any]:
+              *, min_train_races: int = 40, mode: str = "baseline") -> dict[str, Any]:
     """Train one isolated research head; do not load in production runtime."""
     import joblib
     import lightgbm as lgb
     from sklearn.feature_extraction import DictVectorizer
 
-    races = prepare_races(rows, circuit, head)
+    races = prepare_races(rows, circuit, head, mode=mode)
     blocks = split_races(races)
     if (len(blocks["train"]) < min_train_races or len(blocks["valid"]) < 2
             or len(blocks["test"]) < 2):
@@ -231,19 +310,27 @@ def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
     model.fit(x, y, group=group, eval_set=[(xv, yv)], eval_group=[gv], eval_at=[1, 3],
               callbacks=[lgb.early_stopping(25, verbose=False)])
     xt, _, _ = make_matrix(blocks["test"], v)
-    result = {"version": VERSION, "circuit": circuit, "head": head,
+    test_predictions = list(model.predict(xt))
+    valid_predictions = list(model.predict(xv))
+    result = {"version": VERSION, "circuit": circuit, "head": head, "featureMode": mode,
+              "experimentFeatureCoverage": history_coverage(races),
               "researchOnly": True, "productionEligible": False,
               "featureCount": len(v.feature_names_), "trainRaces": len(train),
               "validationRaces": len(blocks["valid"]), "testRaces": len(blocks["test"]),
               "trainThrough": max(r["date"] for r in train),
               "testFrom": min(r["date"] for r in blocks["test"]),
-              "metrics": metrics(blocks["test"], list(model.predict(xt))),
+              "metrics": metrics(blocks["test"], test_predictions),
               "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."}
-    dest = out / circuit / head
+    dest = out / ("" if mode == "baseline" else mode) / circuit / head
     dest.mkdir(parents=True, exist_ok=True)
     model.booster_.save_model(str(dest / "ranker.txt"))
     joblib.dump(v, dest / "vectorizer.joblib")
     (dest / "report.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    (dest / "holdout_scores.json").write_text(json.dumps({
+        "trainThrough": result["trainThrough"], "featureMode": mode,
+        "validation": _scorecards(blocks["valid"], valid_predictions),
+        "test": _scorecards(blocks["test"], test_predictions),
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     return result
 
 
@@ -252,18 +339,36 @@ def main() -> int:
     p.add_argument("frozen_jsonl", help="Output of export_mass_training_dataset.py")
     p.add_argument("output_dir")
     p.add_argument("--min-train-races", type=int, default=40)
+    p.add_argument("--mode", choices=MODES, default="baseline")
+    p.add_argument("--paired", action="store_true", help="Use the same race cohort to compare Ability/ANA/blend")
     args = p.parse_args()
     rows = [json.loads(line) for line in Path(args.frozen_jsonl).read_text(encoding="utf-8").splitlines() if line.strip()]
     reports = []
+    pair_reports = []
     for circuit in ("jra", "nar"):
+        circuit_rows = rows
+        if args.paired:
+            group_ids = {r["raceId"] for r in prepare_races(rows, circuit, "ability", mode=args.mode)} & \
+                        {r["raceId"] for r in prepare_races(rows, circuit, "ana", mode=args.mode)}
+            circuit_rows = [r for r in rows if r.get("raceId") in group_ids]
+        complete = True
         for head in HEADS:
             try:
-                reports.append(train_one(rows, circuit, head, Path(args.output_dir),
-                                         min_train_races=args.min_train_races))
+                reports.append(train_one(circuit_rows, circuit, head, Path(args.output_dir),
+                                         min_train_races=args.min_train_races, mode=args.mode))
             except ValueError as exc:
+                complete = False
                 reports.append({"circuit": circuit, "head": head, "status": "insufficient-data",
                                 "reason": str(exc), "productionEligible": False})
-    print(json.dumps({"version": VERSION, "productionChanged": False, "reports": reports},
+        if args.paired and complete:
+            root = Path(args.output_dir) / ("" if args.mode == "baseline" else args.mode) / circuit
+            ability = json.loads((root / "ability" / "holdout_scores.json").read_text(encoding="utf-8"))
+            ana = json.loads((root / "ana" / "holdout_scores.json").read_text(encoding="utf-8"))
+            result = paired_report(ability, ana)
+            (root / "paired_report.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+            pair_reports.append({"circuit": circuit, **result})
+    print(json.dumps({"version": VERSION, "featureMode": args.mode, "productionChanged": False,
+                      "reports": reports, "paired": pair_reports},
                      ensure_ascii=False, indent=2))
     return 0
 

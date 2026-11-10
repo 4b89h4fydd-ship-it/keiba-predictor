@@ -23,3 +23,38 @@ python -m unittest tests.test_ranking_challenger -v
 ```
 
 The CLI reports `insufficient-data` rather than training from too few sealed races. Minimum training count is 40 race groups **per circuit/head**, plus independent validation/test groups. Exports and models stay outside Git. This is an experimental lane and must not be promoted until unseen-date comparisons beat v9b on pre-registered rank/accuracy metrics and payout-backed, outlier-robust ROI, with confidence intervals. Avoid selecting thresholds on the test period.
+
+## Article feature hypothesis and paired holdout
+
+The ITmedia 2025-06-19 interview is treated as a hypothesis source, not as a reproducible edge or a verified model.
+
+The ranking challenger also supports four controlled feature experiments from **already sealed**, source-hashed pre-race mass features. The extra interactions never read outcomes and **Ability** continues to exclude current market observations:
+
+- `baseline`: original frozen inputs without research interactions
+- `enhanced`: past-form × opponent, past-position × speed/form, plus ANA-only differences between historical within-race percentile and pre-off market popularity
+- `no-position`: enhanced, but no positional evidence at all
+- `no-market-gap`: enhanced without the additional history-versus-market differences
+
+These operations do not create new underlying data. Missing corners, training data, horse gear, paddock observations, or private pundit odds are **not** filled with guesses.
+
+Use `--paired` to restrict both heads to the *identical* eligible race groups, choose the blend weight from the validation period only, and compare Ability, ANA and their blend on the same untouched holdout:
+
+```sh
+python -m pip install -r requirements-ranking-research.txt
+python scripts/export_motherduck_frozen_ranking.py /tmp/arvexq-frozen.jsonl
+for mode in baseline enhanced no-position no-market-gap; do
+  python -m arvexq.research.ranking_challenger \
+    /tmp/arvexq-frozen.jsonl /tmp/arvexq-ranking-output \
+    --mode "$mode" --paired
+done
+```
+
+The optional MotherDuck exporter is read-only and only uses `massFeatureArchive` with `originHashVerified=true` and fully settled `result` labels; it delegates gzip, SHA-256 and source-hash verification to the repository's existing decoder. Its credentials must be supplied through the MotherDuck/DuckDB environment. Do not log tokens, store compressed archives in Git, or treat synthetic tests as genuine race performance.
+
+Each research output contains isolated train/valid/test dates, feature coverage, head metrics, held-out per-race scores and a paired validation-selected blend comparison. Any comparison against **v9b** and any payout-backed **ROI** are explicitly unavailable (`null`) until the same-race immutable v9b publication and actual payoffs are joined. The research branch never writes D1, production forecasts or betting tickets.
+
+### Real-data availability, assessed 2026-11-11
+
+MotherDuck `my_db.arvexq_analytics.race_snapshots` held 1,418 saved races (through Nov 10). Of these, 181 had `massFeatureArchive` and an origin-verified envelope. Result-confirmed archives: **63 JRA races on 3 dates** and **114 NAR races on 8 dates** (177 combined). This is *eligibility before replaying the archive decoder and completeness filters*, not 177 proved usable training groups. It is insufficient to claim a robust out-of-sample improvement or an adopted commercial model. In particular, the recent Nov 4-10 races have no top-level `massFeatureArchive`.
+
+Gates for promotion remain: real SHA-checked extraction, enough forward dates by circuit, identical held-out races versus v9b, ◎ first/top3, winner-top3, NDCG@3, and settled ticket ROI (including largest-payout exclusion) with date-cluster uncertainty.
