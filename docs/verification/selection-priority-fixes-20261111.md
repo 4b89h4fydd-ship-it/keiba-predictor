@@ -74,3 +74,7 @@ node scripts/arvexq_selection_policy_smoke.js
 python scripts/arvexq_separate_targets.py --input <保存原本と公式結果のJSON> --output <診断JSON> --train-end 2026-11-06 --calibration-end 2026-11-07 --model-dir <候補出力先>
 python scripts/arvexq_selection_odds.py
 ```
+
+CIの個別workflowも削除済みテスト/旧writer参照から、現行のD1 hydrator・codec・v9b publisher契約へ移行した。
+デザイン検証はPRの正確なbase SHAとのCSS/既存画面関数の一致を検査し、既に古くなった固定ハッシュを新しいCSSへ付け替えて通す方式は取らない。
+静的JSの構文検査対象はbuild-version.txtから解決し、存在しない旧v330ファイルを参照しない。

@@ -19,7 +19,7 @@ const card=src.slice(src.indexOf('function racecardEntryRow('),src.indexOf('func
 assert(card.includes('rc-honmei-role'),'visible horse-name role must render');
 assert(card.includes('markRoleLabel(x)&&!scratch'),'scratch rows must never get role label beside name');
 const panel=src.slice(src.indexOf('function aiMarksPanel('),src.indexOf('function betPanel('));
-assert(panel.includes('ARVEXQMarkFrame.render()'),'dedicated empty frame');
+assert(panel.includes('ARVEXQMarkFrame.render(r)'),'dedicated empty frame');
 require('./test_support/production_ui.cjs').assertNoForecast({horses:[{horseNumber:1,mark:'◎',honmeiRole:'win-axis'}]});
 assert(!src.includes('axisScore:.45*stable'),'independent fixed-weight axis must be removed');
 console.log('VISIBLE_HONMEI_ROLES_OK');

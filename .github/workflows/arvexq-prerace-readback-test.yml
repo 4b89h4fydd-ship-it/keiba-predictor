@@ -3,8 +3,8 @@ name: ARVEXQ Preoff D1 History Readback
   pull_request:
     branches: [main]
     paths:
-      - scripts/arvexq_freeze_predictions.py
-      - tests/test_preoff_d1_display_history.py
+      - scripts/arvexq_rewrite_publish.py
+      - tests/test_d1_display_readback.py
       - .github/workflows/arvexq-prerace-readback-test.yml
   workflow_dispatch:
 permissions:
@@ -19,4 +19,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -q pytest
-      - run: PYTHONPATH=. python -m pytest -q tests/test_preoff_d1_display_history.py
+      - run: PYTHONPATH=. python -m pytest -q tests/test_d1_display_readback.py

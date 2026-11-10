@@ -34,7 +34,9 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0);
   for(const id of ['section-prediction','section-aimarks','section-bets'])assert.equal(await page.locator('#'+id).count(),1);
   assert.equal(await page.locator('#section-aimarks').getAttribute('id'),'section-aimarks');
-  assert.equal(await page.locator('#section-bets .ai-bet-box .bet-item').count(),0);
+  // The sealed original ticket stays visible; the retrospective revision cannot add tickets.
+  assert.equal(await page.locator('#section-bets .ai-bet-box .bet-item').count(),detail.preRaceBet.items.length);
+  assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
