@@ -177,3 +177,36 @@ def test_no_past_runs_marked_incomplete_not_fabricated():
     rec = provisional_capture(row, now=NOW)
     assert rec["horsesWithPastRuns"] == 0
     assert rec["historyComplete"] is False
+
+
+def test_default_has_no_silent_race_cap_and_explicit_cap_is_audited():
+    fields=[]
+    for n in range(15):
+        r=detail();r['id'] += '-'+str(n);fields.append(r)
+    def fetch(url):
+        if '/api/day?' in url:return {'races':[{'id':r['id'],'date':r['date'],'startTime':r['startTime']} for r in fields]}
+        from urllib.parse import unquote
+        return {'detail':next(r for r in fields if r['id']==unquote(url.split('/api/race/')[1].split('?')[0]))}
+    full=collect(now=NOW,fetch=fetch)
+    assert full['captured']==15 and full['dueTotal']==15
+    limited=collect(now=NOW,fetch=fetch,max_races=2)
+    assert len(limited['deferredRaceIds'])==13
+    assert limited['dueTotal']==15
+
+
+def test_actual_clock_is_rechecked_after_network(monkeypatch):
+    import scripts.arvexq_collect_provisional_preoff as module
+    class Clock(datetime):
+        times=iter([NOW,NOW+timedelta(minutes=30)])
+        @classmethod
+        def now(cls,tz=None):return next(cls.times)
+    monkeypatch.setattr(module,'datetime',Clock)
+    row=detail()
+    result=collect(fetch=lambda url: {'races':[row]} if '/api/day?' in url else {'detail':row})
+    assert result['captured']==0
+    assert 'post time already passed' in result['failures'][0]['reason']
+
+
+def test_direct_banei_capture_is_refused():
+    r=detail();r['track']='帯広ば'
+    with pytest.raises(ValueError,match='banei'):provisional_capture(r,now=NOW)
