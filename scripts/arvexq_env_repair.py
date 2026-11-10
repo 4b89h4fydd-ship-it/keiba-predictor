@@ -45,17 +45,6 @@ ACCESS_S = "https://www.jra.go.jp/JRADB/accessS.html"
 _SRL_RE = re.compile(r"pw01srl(?:00|01|10)\d{18}(?:/|%2F)[0-9A-Fa-f]{2}", re.I)
 UNKNOWN = (None, "", "不明")
 
-# One-time, user-approved exception (Nonaka decision, 2026-11-10):
-# these six 2026-10-31 Kyoto races are archive-less compact
-# tombstones whose environment write protect_sync admits under the
-# matching id-locked exception in scripts/arvexq_protect_sync.py
-# (_ENV_TOMBSTONE_EXCEPTION_IDS). Every other tombstone keeps being
-# skipped below. Removed again once the repair has landed.
-_ENV_TOMBSTONE_EXCEPTION_IDS = frozenset((
-    "jra-2026-10-31-京都-01", "jra-2026-10-31-京都-02",
-    "jra-2026-10-31-京都-03", "jra-2026-10-31-京都-04",
-    "jra-2026-10-31-京都-07", "jra-2026-10-31-京都-08"))
-
 
 class _Aborted(Exception):
     """Official fetch drew HTTP 403/429: stop the whole run."""
@@ -266,8 +255,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str) -> int:
                            or row.get("condition") in UNKNOWN)
         if not _is_target(detail) and not summary_unknown:
             continue
-        if _is_compact_tombstone(detail) \
-                and rid not in _ENV_TOMBSTONE_EXCEPTION_IDS:
+        if _is_compact_tombstone(detail):
             skipped.append({
                 "race_id": rid,
                 "reason": "compact tombstone: protect fail-closes "

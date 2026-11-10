@@ -312,36 +312,6 @@ def _compact_tombstone_result_write(old: dict[str, Any],
     return _changed_keys(old, incoming) <= _RESULT_ONLY_WRITE_KEYS
 
 
-# One-time, user-approved exception (Nonaka decision, 2026-11-10):
-# the six 2026-10-31 Kyoto compact tombstones below may receive an
-# environment-only write (weather / condition / environmentMeta)
-# through the JRA environment history-repair lane. The official
-# values exist (official-data hunt, 2026-11-10); the stored stubs
-# hold no forecast at all, so there is nothing to restore and
-# nothing a write could destroy. The exception is locked to these
-# six race ids AND to the environment keys, and it is removed again
-# once the repair has landed and been verified.
-_ENV_WRITE_KEYS = frozenset(("weather", "condition", "environmentMeta"))
-_ENV_TOMBSTONE_EXCEPTION_IDS = frozenset((
-    "jra-2026-10-31-京都-01", "jra-2026-10-31-京都-02",
-    "jra-2026-10-31-京都-03", "jra-2026-10-31-京都-04",
-    "jra-2026-10-31-京都-07", "jra-2026-10-31-京都-08"))
-
-
-def _compact_tombstone_env_write(old: dict[str, Any],
-                                 incoming: dict[str, Any]) -> bool:
-    """Environment-only write over one of the six approved compact
-    tombstones (see _ENV_TOMBSTONE_EXCEPTION_IDS). Any other race,
-    or any change beyond the environment keys, stays refused here
-    and fails closed in the caller."""
-    if not _compact_tombstone_stub(old):
-        return False
-    if str(old.get("id") or "") not in _ENV_TOMBSTONE_EXCEPTION_IDS:
-        return False
-    changed = _changed_keys(old, incoming)
-    return bool(changed) and changed <= _ENV_WRITE_KEYS
-
-
 def _authorized_forecast(detail: dict[str, Any]) -> bool:
     """Python mirror of the worker's authorizedStage64 gate."""
     prediction = detail.get("prediction")
@@ -518,17 +488,14 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         restored = _archive_restored_detail(old)
         if restored is not None:
             old = restored
-        elif not (_compact_tombstone_result_write(old, incoming)
-                  or _compact_tombstone_env_write(old, incoming)):
+        elif not _compact_tombstone_result_write(old, incoming):
             raise RuntimeError(
                 "stored forecast is tombstoned in the API projection "
                 "and carries no verified pre-off archive; failing "
                 "closed rather than restoring from the tombstone: "
                 + str(old.get("id") or ""))
-        # Otherwise the write is result-only (or, for the six
-        # user-approved 2026-10-31 Kyoto races, environment-only)
-        # over a compact tombstone that holds no forecast blocks at
-        # all: keep the stub as `old`.
+        # Otherwise the write is result-only over a compact tombstone
+        # that holds no forecast blocks at all: keep the stub as `old`.
         # The generic protection below still restores every
         # forecast-shaped key from it (the stub shares only the status
         # stamps and text with the write) and the genuine-publish path
