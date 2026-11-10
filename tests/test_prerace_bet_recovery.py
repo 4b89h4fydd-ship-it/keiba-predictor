@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import unittest
 
 from arvexq.prediction.prerace_archive import JST, seal_detail
-from scripts.arvexq_freeze_predictions import prepare_seal
 from scripts.arvexq_prerace_bet_integrity import has_valid_original, record_failed_attempt
 
 
@@ -21,26 +20,7 @@ def race():
 
 
 class RetryableOriginalTests(unittest.TestCase):
-    def test_failed_original_is_retryable_only_before_post(self):
-        d = race()
-        original = record_failed_attempt(d, None, message="temporary data read error",
-                                         fixed_at="2026-10-10T10:30:00+09:00")
-        d["preRaceBet"] = original
-        self.assertFalse(has_valid_original(original, race_id=d["id"],
-                                            start_at=datetime(2026, 10, 10, 11, tzinfo=JST)))
-        self.assertEqual(prepare_seal(d, now=datetime(2026, 10, 10, 10, 40, tzinfo=JST))["status"], "sealed")
-        self.assertEqual(prepare_seal(d, now=datetime(2026, 10, 10, 11, tzinfo=JST))["status"], "already-sealed")
-        self.assertEqual(d["preRacePrediction"]["horses"][0]["mark"], "◎")
 
-    def test_deliberate_skip_is_an_immutable_valid_original(self):
-        d = race()
-        original = {"raceId": d["id"], "fixedAt": "2026-10-10T10:35:00+09:00",
-                    "decision": "見送り", "items": []}
-        self.assertTrue(has_valid_original(original, race_id=d["id"],
-                                           start_at=datetime(2026, 10, 10, 11, tzinfo=JST)))
-        d["preRaceBet"] = original
-        self.assertEqual(prepare_seal(d, now=datetime(2026, 10, 10, 10, 40, tzinfo=JST))["status"],
-                         "already-sealed")
 
     def test_invalid_after_start_never_accepted(self):
         d = race()

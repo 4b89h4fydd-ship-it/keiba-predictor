@@ -376,6 +376,10 @@ print(f"Files: {len(list(DIST.rglob('*')))}")
 
 # Daily pre-off selection archives are content-addressed by race date. Publish
 # exact immutable JSON files without altering their race membership on refresh.
+purchase_dir = STATIC / "selection-decisions"
+if purchase_dir.is_dir():
+    shutil.copytree(purchase_dir, DIST / "selection-decisions")
+
 morning_dir = STATIC / "morning-picks"
 if morning_dir.is_dir():
     target_dir = DIST / "morning-picks"

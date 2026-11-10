@@ -9,7 +9,7 @@ function take(name){
   assert(a>=0&&b>a,'missing '+name);
   return src.slice(a,b+2);
 }
-const code=['morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
+const code=['legacyMorningPickOf','morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
   .map(take).join('\n')+'\nreturn {morningPickReady,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
@@ -57,3 +57,12 @@ assert.equal(api.morningPickReady(),false);
 assert.equal(api.selectedRaceCandidates().length,0);
 assert.equal(api.specialForecastRaceCandidates().length,0);
 console.log('MORNING_PICK_IMMUTABLE_AND_NO_LATE_ADDITION_PASS');
+
+// Purchase decisions must not erase the separate main/graded-race membership.
+state.date='2026-11-11';
+state.races=[{id:'future-special',date:state.date,circuit:'地方',track:'川崎',raceNumber:11,
+  startTime:'20:00',morningPickVersion:'v1',morningPickFixedAt:'2026-11-11T06:30:00+09:00',
+  morningSelected:true,morningSpecial:true,morningSelectionModelVersion:'arvexq-rank-selection-v1'}];
+assert.equal(api.selectedRaceCandidates().length,0,'legacy rank-only archive cannot select future purchases');
+assert.equal(api.specialForecastRaceCandidates().length,1,'special membership survives missing purchase proof');
+console.log('SPECIAL_FORECAST_INDEPENDENT_OF_NEW_PURCHASE_GATE_PASS');

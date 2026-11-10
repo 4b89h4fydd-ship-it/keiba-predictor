@@ -91,6 +91,7 @@ def morning_manifest(payload: dict) -> dict | None:
                 "selected": r["morningSelected"],
                 "selectedScore": r.get("morningSelectedScore") or 0,
                 "special": r["morningSpecial"], "assessed": r.get("morningAssessed") is not False,
+                "selectionAssessment": picks.get("selectionAssessment"),
                 "primaryType": r.get("morningPrimaryType") or "",
                 "types": r.get("morningSelectedTypes") or [],
                 "selectionReason": r.get("morningSelectionReason") or "",

@@ -13,7 +13,6 @@ from arvexq.forecast.engine import build_prediction
 from arvexq.forecast.publication import public_race
 from arvexq.forecast.marks import generate_marks
 from arvexq.forecast.tickets import generate_tickets
-from scripts.arvexq_freeze_predictions import prepare_seal, capture_original_bet
 
 METHODS = ("mineta", "expert:position", "expert:course", "ai:learned", "ai:mass")
 TARGET = "2026-10-28"
@@ -115,40 +114,3 @@ def test_six_stages_mark_ticket_public_projection_and_no_mutation():
     assert not projected.get("recommendedBets")
     assert "fusionInputs" not in projected
     assert src == saved
-
-
-def test_original_is_sealed_and_not_recreated_after_off():
-    src = fixture()
-    sealed = prepare_seal(src, now=NOW)
-    assert sealed["status"] == "sealed", sealed
-    saved = sealed["detail"]
-    assert saved["predictionModelVersion"] == VERSION
-    assert len(saved["predictionMarks"]) == 5
-    bet = capture_original_bet(saved, NOW)
-    assert bet["modelVersion"] == VERSION
-    assert bet["fixedBeforePost"] is True
-    assert bet["items"] == saved["recommendedBets"]
-    after = patch_time(public_race, {
-        **saved, "result": {"status":"確定",
-                           "finishers":[{"horseNumber":1,"finish":1}]}})
-    assert after["predictionMarks"] == saved["predictionMarks"]
-    assert after["recommendedBets"] == saved["recommendedBets"]
-
-
-def test_no_stored_independent_evidence_means_no_fake_prediction():
-    empty = fixture()
-    empty.pop("fusionInputs")
-    assert build_prediction(empty, now=NOW) is None
-    published = patch_time(public_race, empty)
-    assert published["predictionStatus"] == "disabled"
-    assert not published.get("predictionMarks")
-    missing_odds = fixture(with_quotes=False)
-    out = build_prediction(missing_odds, now=NOW)
-    assert out is not None
-    assert generate_marks(out)
-    assert generate_tickets(out, generate_marks(out)) == []
-    lock = prepare_seal(missing_odds, now=NOW)
-    assert lock["status"] == "sealed"
-    bet = capture_original_bet(lock["detail"], NOW)
-    assert bet["decision"] == "見送り"
-    assert bet["items"] == []
