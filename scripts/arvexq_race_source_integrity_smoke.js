@@ -67,14 +67,14 @@ const renderRunner=new Function(
   'isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
-  'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark',
+  'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark','v25AddedHtml','v26CellHtml','racecardMarkCellHtml',
   src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),
   ()=>480, ()=>3, ()=>0, ()=>57, x=>String(x??''),
   ()=>'<span>3.2</span>',x=>String(x||'—'),()=>'',()=>'',
-  markRoleLabel,visiblePredictionMark
+  markRoleLabel,visiblePredictionMark,()=>'',()=>'',x=>String(visiblePredictionMark(x)||'—')
 );
 const runnerHtml=renderRunner({id:'test'},{
   horseNumber:7,name:'サンプル号',frameNumber:4,sex:'牡',age:4,jockey:'騎手'
@@ -93,7 +93,7 @@ const root={};new Function('window',home)(root);
 const actions=root.ARVEXQUnifiedHome.buttons();
 assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,0,'no selected or special alert without a real race');
 const counted=root.ARVEXQUnifiedHome.buttons('horse',{selected:{central:1,local:0},special:{central:0,local:1}});
-assert.equal((counted.match(/class="arv-unified-alert"/g)||[]).length,2,'selected and special need ! when each has at least one race');
+assert.equal((counted.match(/class="arv-unified-alert"/g)||[]).length,1,'current selected action needs !; the special lane has no separate home action');
 assert.match(style,/arv-unified-alert/);
 
 // Regression against legacy D1 list and device cache resurrecting excluded Banei.

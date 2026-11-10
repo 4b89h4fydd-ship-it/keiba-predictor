@@ -32,11 +32,11 @@ assert.equal(visiblePredictionMark({...x,markFrozen:true,preOffAxisCandidate:fal
 const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight','esc',
   'markRoleLabel','visiblePredictionMark','honmeiA11yText','racecardMarkDisplay',
-  'racecardOddsHtml','carriedWeightText',
+  'racecardOddsHtml','carriedWeightText','v25AddedHtml','v26CellHtml','racecardMarkCellHtml',
   span('racecardEntryRow','morningSavedMarkRows')+'return racecardEntryRow')(
   isScratchHorse,(n,d=0)=>Number(n)||d,(_,h)=>h.name,(v,a,b)=>Math.max(a,Math.min(b,v)),
   ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
-  m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg');
+  m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg',()=> '',()=>'',x=>String(visiblePredictionMark(x)||'—'));
 const html=render({},horse,x);
 assert.match(html,/class="rc-mark-box rc-ai-mark" data-ai-mark=""/);
 assert.match(html,/<span class="rc-mark-main">—<\/span>/);
@@ -48,8 +48,8 @@ assert.match(off,/<span class="rc-mark-main">—<\/span>/);
 const scratch=render({},{...horse,scratched:true},{...x,horse:{...horse,scratched:true}});
 assert.doesNotMatch(scratch,/data-ai-mark="◎"/);
 for(const target of [
-  "racecardMarkDisplay(visiblePredictionMark(x))",
-  "window.ARVEXQMarkFrame.render()",
+  "racecardMarkCellHtml(x)",
+  "window.ARVEXQMarkFrame.render(r)",
   "data-ai-mark=\"'+esc(visiblePredictionMark(x))",
 ])assert(src.includes(target),'display authority missing '+target);
 console.log('UNIFIED_VISIBLE_HONMEI_OK no_independent_axis_promotion existing_marks_untouched frozen_immutable');

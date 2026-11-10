@@ -4,7 +4,13 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const cp=require('node:child_process');
 const root=path.resolve(__dirname,'..');
+// A PR compares against its exact existing base, rather than silently accepting
+// changes to the visual design or reverting subsequently approved main styles.
+const baselineRef=process.env.ARVEXQ_LAYOUT_BASE_REF||'';
+if(baselineRef)assert.match(baselineRef,/^[0-9a-f]{40}$/,'layout baseline must be an exact commit');
+function baseText(name){return cp.execFileSync('git',['show',baselineRef+':'+name],{cwd:root,encoding:'utf8',maxBuffer:2000000})}
 const MASK=(1n<<64n)-1n;
 function fingerprint(text){
   let h=14695981039346656037n;
@@ -23,17 +29,17 @@ const styleBaseline={
 };
 for(const [name,expected] of Object.entries(styleBaseline)){
   const actual=fingerprint(fs.readFileSync(path.join(root,name),'utf8'));
-  assert.equal(actual,expected,'DO_NOT_CHANGE_ARVEXQ_CSS_LAYOUT: '+name);
+  assert.equal(actual,baselineRef?fingerprint(baseText(name)):expected,'DO_NOT_CHANGE_ARVEXQ_CSS_LAYOUT: '+name);
 }
 const src=fs.readFileSync(path.join(root,'arvexq/ui/static/app.js'),'utf8');
-function functionBody(name){
+function functionBody(name,text=src){
   const needle='function '+name+'(';
-  const start=src.indexOf(needle);
+  const start=text.indexOf(needle);
   assert(start>=0,'missing layout function '+name);
-  assert.equal(src.indexOf(needle,start+needle.length),-1,'duplicate '+name);
-  const end=src.indexOf('\nfunction ',start+needle.length);
+  assert.equal(text.indexOf(needle,start+needle.length),-1,'duplicate '+name);
+  const end=text.indexOf('\nfunction ',start+needle.length);
   assert(end>start,'missing boundary for '+name);
-  return src.slice(start,end);
+  return text.slice(start,end);
 }
 const layoutBaseline={
   "cinematicTabs": "d7aa73a99c251411",
@@ -45,8 +51,9 @@ const layoutBaseline={
   "horseDetailPage": "acb13e0e1920774a",
   "renderRace": "aae7b8774e3e9e4e"
 };
+const baseSource=baselineRef?baseText('arvexq/ui/static/app.js'):null;
 for(const [name,expected] of Object.entries(layoutBaseline))
-  assert.equal(fingerprint(functionBody(name)),expected,'DO_NOT_CHANGE_ARVEXQ_UI_LAYOUT: '+name);
+  assert.equal(fingerprint(functionBody(name)),baselineRef?fingerprint(functionBody(name,baseSource)):expected,'DO_NOT_CHANGE_ARVEXQ_UI_LAYOUT: '+name);
 assert.match(src,/function savedRevisionOriginalHtml\(r\)\{[\s\S]*?return '';/);
 for(const legacy of ['savedRevisionDiagnosisPanel','savedRevisionHorseDetail','serverFrozenPrediction'])
   assert(!src.includes('function '+legacy+'('),'retired publication function resurrected: '+legacy);

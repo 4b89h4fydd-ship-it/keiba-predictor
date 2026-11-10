@@ -12,6 +12,7 @@ jobs:
       ARVEXQ_DATA_CORE: '0'
       ARVEXQ_BOOTSTRAP_WARM: '0'
       RACEDB_AUTO_UPDATE: '0'
+      ARVEXQ_LAYOUT_BASE_REF: ${{ github.event.pull_request.base.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,7 +68,9 @@ jobs:
           python -m pytest -q tests/test_stage64_product_forecast.py
           node scripts/arvexq_stage64_pace_contract_smoke.cjs
       - name: Lock approved ARVEXQ visual layout while retiring former prediction UI
-        run: node scripts/arvexq_design_freeze_smoke.cjs
+        run: |
+          git fetch --no-tags --depth=1 origin "$ARVEXQ_LAYOUT_BASE_REF"
+          node scripts/arvexq_design_freeze_smoke.cjs
       - name: Independent historical deduplication, temporal isolation and display
         run: node scripts/arvexq_history_independence_smoke.cjs
       - name: Validate honest progress without treating incomplete inventory as complete
@@ -75,5 +78,5 @@ jobs:
       - name: Static PWA includes independent modules
         run: |
           python build_static.py
-          node --check dist/app-v330.js
+          node --check "dist/app-$(cat dist/build-version.txt).js"
 

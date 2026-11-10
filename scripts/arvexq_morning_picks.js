@@ -132,6 +132,7 @@ for(const r of rows){
     selected:selectionById.has(String(r.id)),
     selectedScore:Number(selectionById.get(String(r.id))?.score)||0,
     special:specials.has(String(r.id)),assessed:assessed.some(z=>String(z.id)===String(r.id)),
+    selectionAssessment:day>='2026-11-11'?window.ARVEXQMorningRankSelection.assess(details.get(String(r.id))||{}):null,
     primaryType:String(selectionById.get(String(r.id))?.primaryType||''),
     types:Array.isArray(selectionById.get(String(r.id))?.types)?selectionById.get(String(r.id)).types.slice():[],
     selectionReason:String(selectionById.get(String(r.id))?.reason||''),

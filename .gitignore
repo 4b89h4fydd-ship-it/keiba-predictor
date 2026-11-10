@@ -41,6 +41,7 @@ jra-seed/
 ranker-v*.json
 ranker-v*.log
 research-output/
+/var/selection/
 
 # OS / editor
 .DS_Store

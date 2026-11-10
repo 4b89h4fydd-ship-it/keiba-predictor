@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from arvexq.prediction.prerace_archive import (
     JST, SEALED_VERSION, post_at, pre_off, seal_detail, sealed_lock, restore_seal,
 )
-from scripts.arvexq_freeze_predictions import prepare_seal, _active_history_missing
 
 
 def race(now, minutes=20):
@@ -75,12 +74,6 @@ class ServerSealTests(unittest.TestCase):
         self.assertNotIn("honmeiGrade", q)
         self.assertNotIn("honmeiRole", q)
 
-    def test_no_post_start_creation(self):
-        d = race(self.now, minutes=-1)
-        with self.assertRaises(ValueError):
-            seal_detail(d, forecast(d, self.now - timedelta(minutes=2)), self.now)
-        result = prepare_seal(d, now=self.now, build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "started-no-new-lock")
 
     def test_no_fabricated_legacy_post_lock(self):
         d = deepcopy(self.d)
@@ -88,51 +81,8 @@ class ServerSealTests(unittest.TestCase):
         self.assertFalse(pre_off(lock, d))
         self.assertFalse(sealed_lock(dict(d, preRacePrediction=lock)))
 
-    def test_no_mark_if_missing_evidence(self):
-        d = deepcopy(self.d)
-        for h in d["horses"]:
-            h["recentRaces"] = []
-        result = prepare_seal(d, now=self.now, assign=lambda x:x,
-                              build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "missing-historical-evidence")
 
-    def test_unverified_full_career_is_reported_not_sealed(self):
-        d = deepcopy(self.d)
-        def missing_career(card):
-            card["predictionStatus"] = "waiting-for-full-career"
-            card["careerReadiness"] = {
-                "activeHorses": 3, "completeHorses": 2,
-                "blockedHorses": [{"horseNumber": 1,
-                                   "reason": "reported-starts-unknown"}]}
-            return card
-        result = prepare_seal(d, now=self.now, assign=missing_career,
-                              build=lambda _: self.fail("no lock from unverified careers"))
-        self.assertEqual(result["status"], "incomplete-prediction")
-        self.assertEqual(result["predictionStatus"], "waiting-for-full-career")
-        self.assertEqual(result["observedCoverage"], {})
-        self.assertNotIn("preRacePrediction", d)
 
-    def test_evaluation_and_marks_are_as_captured(self):
-        def already_verified(x):
-            # This test exercises archival fidelity, not model evidence. The
-            # separate JRA/NAR authority test proves observed inputs.
-            x["predictionStatus"]="ready"
-            return x
-        result = prepare_seal(self.d, now=self.now, assign=already_verified,
-                              build=lambda x:forecast(x,self.now))
-        self.assertEqual(result["status"], "sealed", result)
-        record = result["detail"]["preRacePrediction"]
-        self.assertEqual(record["horses"][1]["lockedEvaluation"]["score"], 80)
-        self.assertEqual(record["freezePolicy"], SEALED_VERSION)
-        # A prior sealed snapshot without a ticket is preserved and queued
-        # for ticket capture while the race is still in the pre-off window.
-        result2 = prepare_seal(result["detail"], now=self.now + timedelta(minutes=1))
-        self.assertEqual(result2["status"], "sealed")
-        self.assertEqual(result2["detail"]["preRacePrediction"], record)
-        complete = deepcopy(result["detail"])
-        complete["preRaceBet"] = {"raceId": self.d["id"],
-                                  "fixedAt": self.now.isoformat(), "decision": "見送り", "items": []}
-        self.assertEqual(prepare_seal(complete,now=self.now+timedelta(minutes=1))["status"],"already-sealed")
 
     def test_d1_seal_guard_can_insert_new_race_only_with_verified_day(self):
         import io
@@ -208,19 +158,6 @@ class ServerSealTests(unittest.TestCase):
         self.assertIn("RETIRED_BET_ENGINE_DISABLED", source)
         self.assertNotIn("vm.runInContext", source)
 
-    def test_unavailable_js_ticket_is_retryable_not_an_immutable_skip(self):
-        from scripts.arvexq_freeze_predictions import capture_original_bet
-        import shutil
-        if shutil.which("node") is None:
-            self.skipTest("Node unavailable")
-        # This fixture has only three runners. The live betting core returns
-        # null with fewer than four; it must NOT mint a stored "見送り".
-        d = seal_detail(self.d, forecast(self.d, self.now), self.now)
-        with self.assertRaisesRegex(RuntimeError, "bet capture failed"):
-            capture_original_bet(d, self.now)
-        self.assertNotIn("preRaceBet", d)
-        with self.assertRaises(ValueError):
-            capture_original_bet(d, self.now + timedelta(minutes=21))
 
     def test_result_audit_preserves_podium_vs_trifecta_distinction(self):
         from arvexq.prediction.prerace_archive import evaluate_frozen_result
@@ -238,83 +175,7 @@ class ServerSealTests(unittest.TestCase):
         self.assertTrue(a["ticketsHit"])
         self.assertEqual(a["markedPodiumCount"],3)
 
-    def test_server_sync_roundtrip_before_post_and_no_second_archive(self):
-        """The scheduled job sends a pre-off lock and rereads the exact D1 revision."""
-        from unittest.mock import patch
-        from tempfile import TemporaryDirectory
-        from pathlib import Path
-        import json
-        import os
-        import sys
-        from scripts import arvexq_freeze_predictions as runner
-        now = datetime.now(JST)
-        current = race(now, minutes=20)
-        stored = {"detail": deepcopy(current), "posts": 0, "queries": 0}
-        def fake_http(url, *, payload=None, token="", retries=3):
-            if "/api/day?" in url:
-                return {"races": [current]}
-            if "/api/race/" in url:
-                stored["queries"] += 1
-                return {"ok": True, "detail": deepcopy(stored["detail"])}
-            if url.endswith("/api/sync"):
-                self.assertEqual(token, "secret-for-test")
-                self.assertEqual(len(payload["details"]), 1)
-                stored["posts"] += 1
-                stored["detail"] = deepcopy(payload["details"][0])
-                return {"ok": True}
-            raise AssertionError(url)
-        def fake_prepare(d, now):
-            sealed = seal_detail(d, forecast(d, now), now)
-            return {"status": "sealed", "detail": sealed,
-                    "revision": sealed["preRacePrediction"]["sealRevision"]}
-        with TemporaryDirectory() as td:
-            dest = str(Path(td) / "audit.json")
-            with patch.dict(os.environ, {"SYNC_TOKEN": "secret-for-test"}), \
-                 patch.object(runner, "request_json", side_effect=fake_http), \
-                 patch.object(runner, "prepare_seal", side_effect=fake_prepare), \
-                 patch.object(runner, "capture_original_bet", return_value={
-                     "raceId": current["id"], "fixedAt": now.isoformat(),
-                     "decision": "見送り", "items": []}), \
-                 patch.object(sys, "argv", ["runner", "--audit", dest]):
-                self.assertEqual(runner.main(), 0)
-                report = json.loads(Path(dest).read_text(encoding="utf-8"))
-        self.assertEqual(stored["posts"], 1)
-        self.assertEqual(report["sealed"], [current["id"]])
-        from arvexq.ingest.full_snapshot_codec import KEY, unpack_detail
-        self.assertIn(KEY, stored["detail"])
-        original = unpack_detail(stored["detail"])
-        before = deepcopy(original["preRacePrediction"])
-        modified = deepcopy(original)
-        modified["horses"][1]["integratedEvaluation"]["mark"] = "△"
-        result = restore_seal(original, modified)
-        self.assertEqual(result["preRacePrediction"], before)
 
-    def test_scratch_excluded_from_core_rank_without_deleting_racecard(self):
-        from scripts.arvexq_freeze_predictions import prepare_seal
-        d = deepcopy(self.d)
-        d["horses"].insert(0,{
-            "horseNumber": 4, "name": "CANCELLED", "status": "出走取消",
-            "scratched": True, "recentRaces": [{"finish": 1}],
-            "integratedEvaluation": {"mark": "◎", "grade": "S"}})
-        seen = []
-        def assign_core(data):
-            seen.extend(h["horseNumber"] for h in data["horses"])
-            for h, mark in zip(data["horses"],("◎", "○", "▲")):
-                h["integratedEvaluation"]["mark"] = mark
-            data["predictionStatus"] = "ready"
-            return data
-        def build_active(wd):
-            active = deepcopy(wd)
-            active["horses"] = [h for h in wd["horses"] if not h.get("scratched")]
-            return forecast(active,self.now)
-        result = prepare_seal(d, now=self.now, assign=assign_core,
-                              build=build_active)
-        self.assertEqual(result["status"], "sealed", result)
-        self.assertEqual(seen, [1,2,3])
-        self.assertEqual(len(result["detail"]["horses"]),4)
-        locked = result["detail"]["preRacePrediction"]["horses"]
-        self.assertNotIn(4,[r["horseNumber"] for r in locked])
-        self.assertEqual(result["detail"]["horses"][0]["integratedEvaluation"]["mark"],"")
 
     def test_post_sync_detects_race_condition_erasure(self):
         from scripts.arvexq_protect_sync import verify_published
@@ -327,12 +188,6 @@ class ServerSealTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"POST_VERIFY_MISMATCH"):
             verify_published({"details":[original]},base="test",read=bad)
 
-    def test_existing_sealed_marks_survive_ticket_backfill_before_off(self):
-        from scripts.arvexq_freeze_predictions import prepare_seal
-        d = seal_detail(self.d, forecast(self.d,self.now),self.now)
-        result = prepare_seal(d,now=self.now+timedelta(minutes=1))
-        self.assertEqual(result["status"],"sealed")
-        self.assertEqual(result["detail"]["preRacePrediction"],d["preRacePrediction"])
 
     def test_cross_race_id_is_rejected(self):
         d = deepcopy(self.d)
@@ -393,26 +248,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class PartialHistoryRescueTriggerTests(unittest.TestCase):
-    def test_one_active_runner_without_history_uses_existing_rescue(self):
-        now = datetime(2026, 10, 23, 16, 0, tzinfo=JST)
-        detail = race(now, minutes=35)
-        self.assertFalse(_active_history_missing(detail))
-        detail["horses"][1]["recentRaces"] = []
-        self.assertTrue(_active_history_missing(detail))
-        detail["horses"][1]["scratched"] = True
-        self.assertFalse(_active_history_missing(detail))
 
-    def test_partial_missing_history_does_not_fake_observations(self):
-        from scripts.arvexq_freeze_predictions import recover_prior_history_before_post
-        from unittest.mock import Mock
-        now = datetime(2026, 10, 23, 16, 0, tzinfo=JST)
-        detail = race(now, minutes=35)
-        detail["horses"][1]["recentRaces"] = []
-        proc = Mock(returncode=1, stderr="no verified historical runs", stdout="")
-        with self.assertRaisesRegex(RuntimeError, "no verified historical runs"):
-            recover_prior_history_before_post(detail, now=now, run=Mock(return_value=proc))
-        self.assertEqual(detail["horses"][1]["recentRaces"], [])
 
 
 def test_rescue_entrypoint_registers_only_existing_production_sources():

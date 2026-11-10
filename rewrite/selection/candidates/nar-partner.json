@@ -1,0 +1,41 @@
+{
+  "version": "separate-targets-research-v1",
+  "target": "partner",
+  "segment": "nar",
+  "features": [
+    "ability",
+    "ability_relative",
+    "win_logit",
+    "win_rank",
+    "field_size"
+  ],
+  "mean": [
+    0.4989930416068867,
+    2.7476825214898064e-18,
+    -2.762224320362189,
+    0.5,
+    0.6017057229395824
+  ],
+  "scale": [
+    0.24181427988413945,
+    0.23387520319567082,
+    1.1804584931957063,
+    0.3175335117890629,
+    0.09131432498546739
+  ],
+  "weights": [
+    -1.566580612942676,
+    0.1296756233762967,
+    0.1460997217249828,
+    0.18567620746354827,
+    -0.24574269490469766,
+    -0.11254891719660683
+  ],
+  "l2": 0.1,
+  "iterations": 400,
+  "trainedThrough": "2026-11-06",
+  "trainingRaces": 132,
+  "trainingSha256": "23ed272da172bff7de32e5782fcec27490d180ef51685ced22ddf6f32c059afe",
+  "status": "research-only-not-approved",
+  "artifactSha256": "28f8336702c034d259761e89ea48decc64b110d23ab383fdd49e74bd46711283"
+}

@@ -65,7 +65,7 @@ assert.ok(home.liveModel('horse',rows,day,at('23:59')).some(r=>r.status==='elaps
 assert.notEqual(home.liveSignature('horse',rows,day,at('09:59')),
                 home.liveSignature('horse',rows,day,at('10:01')));
 assert.match(home.buttons('horse'),/data-home-page="selected"/);
-assert.match(home.buttons('horse'),/data-home-page="special"/);
+assert.match(home.buttons('horse'),/data-home-page="favorites"/);
 assert.doesNotMatch(home.buttons('horse'),/data-home-page="ai-stats"/);
 assert.doesNotMatch(source,/kyotei|boat|競艇/i);
 const ui=fs.readFileSync('arvexq/ui/static/app.js','utf8');
@@ -102,8 +102,8 @@ for(const token of [
   '.smart-race-row[data-race-state="running"]',
   '.arv-favorite-home-open[data-race-state="soon"]'
 ])assert.ok(visual.includes(token),'Missing shared horizontal race visual: '+token);
-assert.ok(!visual.includes('grid-template-columns:repeat(3,minmax(0,1fr))!important'),
-  'Old 3-column override must be removed');
+assert.ok(!/\.arv-all-races\s*\{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/.test(visual),
+  'Race grid must not regress to three columns; home action buttons are independent');
 assert.ok(visual.includes('height:49px!important'),'Race buttons must match compact reference height');
 assert.ok(visual.includes('.smart-home .arv-all-venue{') &&
   visual.includes('background:transparent!important;border:0!important;box-shadow:none!important'),

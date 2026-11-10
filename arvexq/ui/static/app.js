@@ -2056,12 +2056,12 @@ function computeMorningRankCandidates(circuit){
   var judged=window.ARVEXQMorningRankSelection.judge(d,r,v26);
   if(!judged)return;
   var forecast=window.ARVEXQMorningProductionLane.forecast(d),
-      plan=window.ARVEXQMorningProductionLane.plan(d);
+      plan=judged.plan||window.ARVEXQMorningProductionLane.plan(d);
   if(!forecast||!plan)return;
   var kinds=window.ARVEXQMorningTicketLanes&&window.ARVEXQMorningTicketLanes.ticketKinds?
     window.ARVEXQMorningTicketLanes.ticketKinds(plan):[];
-  var selection={selected:true,score:0,primaryType:'',types:[],
-    ticketKinds:kinds,modelVersion:window.ARVEXQMorningRankSelection.MODEL_VERSION,
+  var selection={selected:true,score:0,primaryType:judged.primaryType||'',types:judged.primaryType?[judged.primaryType]:[],
+    ticketKinds:kinds,modelVersion:judged.modelVersion||window.ARVEXQMorningRankSelection.MODEL_VERSION,
     hitRate:null,hitRateSamples:0,hitRateWilsonLower:null,
     reason:judged.reason,systems:judged.systems.slice(),
     prodPick:judged.prod,v26Pick:judged.v26,favourite:judged.favourite};
@@ -2073,6 +2073,21 @@ function computeMorningRankCandidates(circuit){
  return out.sort(function(a,b){return raceChronologicalCompare(a.race,b.race)})
 }
 function morningPickOf(r){
+  if(!r)return null;
+  var old=legacyMorningPickOf(r);
+  if(String(r.date||state.date||'')<'2026-11-11')return old;
+  var pending=old?Object.assign({},old,{selected:false,selectionModelVersion:'arvexq-ticket-selection-v2'}):null;
+  var archive=state.selectionArchive,entry=archive&&archive.date===state.date&&archive.races&&archive.races[String(r.id)];
+  if(!entry||!entry.detail||!entry.evaluation||!window.ARVEXQMorningRankSelection)return pending;
+  var proof=Object.assign({},entry.detail,{selectionDecision:entry.evaluation}),judged=window.ARVEXQMorningRankSelection.assess(proof);
+  if(judged.status!=='selected')return pending;
+  return Object.assign({},old||{},{version:'v1',fixedAt:entry.evaluation.decidedAt,selected:true,assessed:true,
+    scope:Object.keys(archive.races).length,selectionModelVersion:'arvexq-ticket-selection-v2',
+    systems:['prod'],prodPick:entry.prodPick,v26Pick:null,ticketKinds:['ワイド'],
+    primaryType:'的中重視型',types:['的中重視型'],ticketEvidence:entry.ticketEvidence,
+    selectionReason:'同一本番予想・実ワイドオッズ・券種別の検証済み購入条件'});
+}
+function legacyMorningPickOf(r){
   if(!r)return null;
   var v=r.volatility&&r.volatility.morningPicks,
       e=r.environmentMeta&&r.environmentMeta.morningPicks,
@@ -2099,7 +2114,7 @@ function morningPublicStatus(r){
   // Rank-rule selections (2026-11-07 rule change): the decision is the
   // frozen popularity-rank record; the ticket evidence is verified as
   // the integrity record of the stored forecast, exactly as before.
-  if(m&&String(m.selectionModelVersion||'')==='arvexq-rank-selection-v1'){
+  if(m&&['arvexq-rank-selection-v1','arvexq-ticket-selection-v2'].includes(String(m.selectionModelVersion||''))){
     if(m.selected!==true)return 'not-selected';
     var systems=Array.isArray(m.systems)?m.systems:(Array.isArray(m.selectionSystems)?m.selectionSystems:[]),
         prodPick=m.prodPick||m.selectionProdPick||null,
@@ -2132,7 +2147,7 @@ function selectedRaceCandidates(circuit){
   return (state.races||[]).filter(function(r){
     var m=morningPickOf(r);
     if(!(r&&r.id&&m&&morningPublicStatus(r)==='actionable'))return false;
-    if(String(m.selectionModelVersion||'')==='arvexq-rank-selection-v1')
+    if(['arvexq-rank-selection-v1','arvexq-ticket-selection-v2'].includes(String(m.selectionModelVersion||'')))
       return !circuit||String(r.circuit||'')===String(circuit);
     return String(m.selectionModelVersion||'')==='arvexq-empirical-ticket-hit-v1'&&
       String(m.primaryType||'')==='的中重視型'&&Array.isArray(m.types)&&m.types.includes('的中重視型')&&
@@ -2175,6 +2190,11 @@ function fixedPickLoadStatus(circuit){
   return{expected:rows.length,loaded:loaded,complete:rows.length?loaded>=rows.length:selectedRaceLoadStatus().complete,partial:loaded>0}
 }
 function fixedPickEmpty(kind,circuit){
+  if(String(state.date||'')>='2026-11-11'){
+    var rows=(state.races||[]).filter(function(r){return !circuit||String(r.circuit||'')===String(circuit)}),archive=state.selectionArchive,
+        decisions=archive&&archive.date===state.date&&archive.races||{},missed=rows.filter(function(r){return decisions[r.id]&&decisions[r.id].evaluation&&decisions[r.id].evaluation.status==='not-selected'}).length;
+    return '<div class="fixed-pick-empty"><b>'+(missed===rows.length&&rows.length?'本日の厳選はありません':'厳選の購入条件を確認中')+'</b><small>'+(missed?('条件を満たさず見送り '+missed+'レース。'):'')+'検証結果・実オッズが未確認のレースは購入推奨に含めません。全レースの予想は閲覧できます。</small></div>';
+  }
   if(!morningPickReady())return '<div class="fixed-pick-empty"><b>朝の選定未確定</b><small>全レースを朝に一度だけ判定。発走後に選定を追加しません。</small></div>';
   var st=fixedPickLoadStatus(circuit),label='厳選判定';
   // Missing late detail data must not change the already published morning list.
@@ -2209,7 +2229,7 @@ function selectedRaceBetPreview(r){
 }
 function smartSelectedRaces(forceOpen){
   var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=forceOpen?true:!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>朝固定・本番◎（地方はv26◎も）が4番人気以下のレース</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
+  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>保存買い目・実オッズ・券種別の検証結果で判定</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function computeMorningSpecialRaceCandidates(){
  if(!window.ARVEXQSpecialSelection)throw Error('special selection module missing');
@@ -2360,14 +2380,14 @@ function homeCircuitChooser(title,kind){
     buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(status?'<small class="arv-pick-count-pending">'+status+'</small>':'')+'</span><strong>›</strong></button>'
   });
   var emptyNote=(kind==='selected'&&!loading&&!pending&&(counts.central+counts.local)===0)?
-    '<div class="fixed-pick-empty"><b>本日の厳選はありません</b><small>朝の固定判定で、本番◎（地方はv26◎も）の単勝人気順位が4位以降になったレースがありませんでした。</small></div>':'';
+    fixedPickEmpty('selected',null):'';
   return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+emptyNote+
     '</section>'
 }
 function selectedCircuitPage(circuit){
   var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return rankPickRowHtml(z,'fixed-pick-row arv-direct-pick-row')||'<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選')+(t.noAxis?'｜軸なし・相手上位評価':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
   var rankDay=picks.some(function(z){return String(z.selection&&z.selection.modelVersion||'')==='arvexq-rank-selection-v1'}),
-      headNote=rankDay?'本番◎（地方はv26◎も）の単勝人気順位が4位以降｜朝固定':'発走前の印・馬番入り買い目を保存確認';
+      headNote=rankDay?'旧人気条件による朝の固定記録':'発走前の印・馬番入り買い目を保存確認';
 
   return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>'+esc(headNote)+'</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'
 }
@@ -3701,6 +3721,13 @@ function load(force){
   }
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
+  if(state.selectionArchive&&state.selectionArchive.date!==d)state.selectionArchive=null;
+  if(String(d)>='2026-11-11')fetch('/selection-decisions/'+encodeURIComponent(d)+'.json?t='+seq,{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null}).then(function(payload){
+      if(seq!==state.requestSeq||state.date!==d||!payload||payload.version!=='arvexq-ticket-selection-v2'||
+         payload.date!==d||!payload.races||Array.isArray(payload.races))return;
+      state.selectionArchive=payload;render();
+    }).catch(function(){/* A missing purchase record is not a failed prediction. */});
   // v26 shadow-lane marks: a dated static archive holding a read-only
   // copy of the v26 multi-eye lane's sealed marks, display-only and
   // independent of the production forecast. A missing file (no v26
