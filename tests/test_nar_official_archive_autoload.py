@@ -77,6 +77,24 @@ class CachedOfficialArchiveTests(unittest.TestCase):
                 [],
             )
 
+    def test_crc_corruption_is_skipped_but_another_month_remains_usable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / "nar" / "archives"
+            cache.mkdir(parents=True)
+            valid = _archive(cache, "202610", "20261004")
+            corrupted = cache / "202611_race.zip"
+            with zipfile.ZipFile(corrupted, "w", zipfile.ZIP_STORED) as archive:
+                archive.writestr("racelist.csv", b"RACE_CSV_PAYLOAD")
+                archive.writestr("horselist.csv", b"HORSE_CSV_PAYLOAD")
+            data = corrupted.read_bytes()
+            corrupted.write_bytes(data.replace(b"RACE_CSV_PAYLOAD", b"XACE_CSV_PAYLOAD", 1))
+            self.assertEqual(
+                discover_cached_nar_month_archives(root, "2026-11-11"),
+                [valid],
+                "A CRC-broken monthly ZIP must not disable healthy cached months",
+            )
+
     def test_discovered_archive_becomes_real_past_run_source(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
