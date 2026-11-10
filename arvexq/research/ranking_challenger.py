@@ -10,7 +10,7 @@ import argparse
 from collections import defaultdict
 from datetime import date
 import json
-from math import isfinite
+from math import isfinite, log2
 from pathlib import Path
 from typing import Any
 
@@ -153,8 +153,16 @@ def make_matrix(races: list[dict[str, Any]], vectorizer: Any):
     return sparse, labels, group
 
 
+def _ndcg_at_3(relevances: list[int], order: list[int]) -> float:
+    """Rank-gain NDCG@3 using only stdlib; CI needs no research deps."""
+    def dcg(ranked):
+        return sum(((2 ** relevances[idx]) - 1) / log2(pos + 2)
+                   for pos, idx in enumerate(ranked[:3]))
+    ideal = dcg(sorted(range(len(relevances)), key=lambda i: -relevances[i]))
+    return dcg(order) / ideal if ideal else 0.0
+
+
 def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, Any]:
-    from sklearn.metrics import ndcg_score
     pos, win1, win3, podium1, ndcgs = 0, 0, 0, 0, []
     market_win1 = market_win3 = 0
     outperformance = 0
@@ -176,7 +184,7 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
                                                             entries[i]["horseNumber"]))
         market_win1 += int(market[0] == winner)
         market_win3 += int(winner in market[:3])
-        ndcgs.append(float(ndcg_score([[e["label"] for e in entries]], [list(scores)], k=3)))
+        ndcgs.append(_ndcg_at_3([e["label"] for e in entries], order))
     if pos != len(predictions):
         raise ValueError("unexpected prediction rows")
     count = len(races)
