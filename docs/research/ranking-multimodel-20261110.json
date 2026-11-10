@@ -2913,5 +2913,7 @@
       "name": "podium",
       "lightgbmLambdaMARTAlias": false
     }
-  ]
+  ],
+  "eligibilityStatus": "superseded-by-complete-roster-audit",
+  "supersededBy": "ranking-complete-roster-20261110.json"
 }

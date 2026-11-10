@@ -78,7 +78,11 @@ def date_bootstrap(paired, seed=20261110, samples=2000):
     """Paired scalar differences clustered on day; no inference from one day."""
     grouped = defaultdict(list)
     for r in paired:grouped[r['date']].append(r['new']-r['baseline'])
-    if len(grouped)<2:return {'status':'insufficient-dates','days':len(grouped),'ci95':None}
+    if len(grouped)<2:
+        diffs=[x for v in grouped.values() for x in v]
+        return {'status':'insufficient-dates','days':len(grouped),'races':len(paired),
+                'meanDifference':sum(diffs)/len(diffs) if diffs else None,
+                'wins':sum(x>0 for x in diffs),'losses':sum(x<0 for x in diffs),'ci95':None}
     days = sorted(grouped); rng=random.Random(seed); values=[]
     for _ in range(samples):
         draw=[x for _ in days for x in grouped[rng.choice(days)]]

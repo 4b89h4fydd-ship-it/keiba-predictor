@@ -966,5 +966,61 @@
       "name": "podium",
       "lightgbmLambdaMARTAlias": false
     }
-  ]
+  ],
+  "pairedAbilityComparisons": {
+    "ability": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "ana": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": -0.75,
+      "wins": 0,
+      "losses": 3,
+      "ci95": null
+    },
+    "pointwise": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "xgboost": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "winner": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": -0.25,
+      "wins": 0,
+      "losses": 1,
+      "ci95": null
+    },
+    "podium": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    }
+  }
 }
