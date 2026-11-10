@@ -111,7 +111,7 @@ def main():
             return r["id"],detail,collect_detail(detail)
         except Exception as exc:return r["id"],None,([], [f"fetch:{type(exc).__name__}:{exc}"])
     Path(args.store).parent.mkdir(parents=True,exist_ok=True)
-    db=open_store(args.store); report={"date":args.date,"races":len(races),"records":0,"errors":{}}
+    db=open_store(args.store); report={"date":args.date,"races":len(races),"records":0,"errors":{},"purchaseAssessments":{}}
     db.executescript('''CREATE TABLE IF NOT EXISTS purchase_decisions (race_id TEXT PRIMARY KEY, body TEXT NOT NULL);
         CREATE TRIGGER IF NOT EXISTS decision_no_update BEFORE UPDATE ON purchase_decisions
         BEGIN SELECT RAISE(ABORT,'append-only purchase decision'); END;
@@ -147,6 +147,7 @@ def main():
                     if 15<=minutes<=20:
                         wide=next((r for r in records if r['kind']=='wide'),None)
                         e=evaluate(detail,wide,outcomes=distribution(base),validation=validation,decided_at=at.isoformat())
+                        report['purchaseAssessments'][rid]=e
                         # Explicitly unassessed decisions are recorded for diagnosis,
                         # never promoted or mislabeled as losing / not-selected races.
                         if e['status'] in ('selected','not-selected'):
