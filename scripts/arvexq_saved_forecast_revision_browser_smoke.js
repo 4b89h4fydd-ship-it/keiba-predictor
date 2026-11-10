@@ -45,6 +45,8 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.equal(await page.locator('.bet-detail-page-shell .bet-item').count(),0);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
   await page.locator('[data-action="close-race-subpage"]').first().click();
+  await page.waitForSelector('#section-pace');
+  await page.locator('[data-panel="entry"]').click();
   await page.waitForSelector('.racecard-row');
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
