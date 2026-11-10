@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install independent ranking research dependencies
-        run: python -m pip install -r requirements-ranking-research.txt
+        run: python -m pip install -r requirements-ranking-research.txt pytest==9.2.0
       - name: Compile isolated research code
         run: python -m py_compile arvexq/research/ranking_feature_signals.py arvexq/research/ranking_challenger.py scripts/export_motherduck_frozen_ranking.py
       - name: Run leakage / ranking / paired holdout tests
@@ -37,4 +37,4 @@ jobs:
           python -m unittest discover -s tests -p 'test_ranking_challenger.py' -v
           python -m unittest discover -s tests -p 'test_motherduck_ranking_export.py' -v
           python -m unittest discover -s tests -p 'test_ranking_benchmark.py' -v
-          python -m unittest discover -s tests -p 'test_provisional_preoff_collector.py' -v
+          python -m pytest tests/test_provisional_preoff_collector.py -q
