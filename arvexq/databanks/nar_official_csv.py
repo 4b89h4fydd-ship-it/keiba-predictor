@@ -246,6 +246,48 @@ class NarOfficialArchive:
         return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
 
 
+
+def discover_cached_nar_month_archives(data_root, target_date, months=3):
+    """Use only verified local monthly ZIPs already downloaded by NarSync.
+
+    This helper never issues an HTTP request. The target race date prevents
+    future-month data from being used in historical pre-race replays.
+    """
+    try:
+        target = datetime.strptime(str(target_date), "%Y-%m-%d")
+        count = max(1, min(12, int(months)))
+    except (TypeError, ValueError):
+        return []
+    directory = Path(data_root) / "nar" / "archives"
+    if not directory.is_dir():
+        return []
+
+    target_month = target.year * 12 + target.month
+    selected = []
+    for path in directory.glob("*_race.zip"):
+        match = re.fullmatch(r"(\d{4})(0[1-9]|1[0-2])_race\.zip", path.name)
+        if not match:
+            continue
+        month = int(match.group(1)) * 12 + int(match.group(2))
+        if month > target_month or month <= target_month - count:
+            continue
+        try:
+            if not path.is_file() or not 0 < path.stat().st_size <= 150_000_000:
+                continue
+            with zipfile.ZipFile(path) as archive:
+                members = [info for info in archive.infolist() if not info.is_dir()]
+                if len(members) > 25 or any(info.file_size > 75_000_000 for info in members):
+                    continue
+                names = [Path(info.filename).name.lower() for info in members]
+                if not any(name.endswith("racelist.csv") for name in names):
+                    continue
+                if not any(name.endswith("horselist.csv") for name in names):
+                    continue
+        except (OSError, ValueError, zipfile.BadZipFile, zipfile.LargeZipFile):
+            continue
+        selected.append(path)
+    return sorted(selected, key=lambda path: path.name)
+
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
     if paths is None:
         env = os.getenv("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "")
