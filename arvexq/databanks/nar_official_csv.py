@@ -276,7 +276,13 @@ def discover_cached_nar_month_archives(data_root, target_date, months=3):
                 continue
             with zipfile.ZipFile(path) as archive:
                 members = [info for info in archive.infolist() if not info.is_dir()]
-                if len(members) > 25 or any(info.file_size > 75_000_000 for info in members):
+                if (len(members) > 25
+                        or any(info.file_size > 75_000_000 for info in members)
+                        or sum(info.file_size for info in members) > 150_000_000):
+                    continue
+                # Reject files with an intact ZIP index but corrupt CSV payloads
+                # before they can disable the entire official history adapter.
+                if archive.testzip() is not None:
                     continue
                 names = [Path(info.filename).name.lower() for info in members]
                 if not any(name.endswith("racelist.csv") for name in names):
