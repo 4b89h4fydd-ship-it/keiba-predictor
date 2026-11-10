@@ -51,6 +51,10 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -q -r requirements.txt pytest==9.1.1
 
+      - name: Official NAR cached ZIP integrity and historical cutoff
+        run: |
+          python -m unittest tests.test_nar_official_csv tests.test_nar_official_archive_autoload -v
+
       - name: Temporal evaluation and research probability invariants
         run: |
           python -m unittest discover -s tests -p 'test_mass_temporal_split.py' -v
