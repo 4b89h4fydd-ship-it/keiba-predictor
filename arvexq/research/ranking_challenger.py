@@ -10,7 +10,7 @@ import argparse
 from collections import defaultdict
 from datetime import date
 import json
-from math import isfinite
+from math import isfinite, log2
 from pathlib import Path
 from typing import Any
 
@@ -160,8 +160,31 @@ def make_matrix(races: list[dict[str, Any]], vectorizer: Any):
     return sparse, labels, group
 
 
+def _ndcg_at_3(relevances: list[int], scores: list[float]) -> float:
+    """Linear-gain NDCG@3, matching sklearn including average-over-ties."""
+    if len(relevances) != len(scores):
+        raise ValueError("NDCG labels/scores mismatch")
+    if not relevances:
+        return 0.0
+    k = min(3, len(relevances))
+    discounts = [1.0 / log2(i + 2) for i in range(k)]
+    ideal = sum(float(label) * discounts[i] for i, label
+                in enumerate(sorted(relevances, reverse=True)[:k]))
+    if ideal <= 0:
+        return 0.0
+    order = sorted(range(len(scores)), key=lambda i: -float(scores[i]))
+    gain, i = 0.0, 0
+    while i < len(order) and i < k:
+        j = i + 1
+        while j < len(order) and scores[order[j]] == scores[order[i]]:
+            j += 1
+        average = sum(float(relevances[order[t]]) for t in range(i, j)) / (j - i)
+        gain += sum(average * discounts[t] for t in range(i, min(j, k)))
+        i = j
+    return gain / ideal
+
+
 def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, Any]:
-    from sklearn.metrics import ndcg_score
     pos, win1, win3, podium1, ndcgs = 0, 0, 0, 0, []
     market_win1 = market_win3 = 0
     outperformance = 0
@@ -183,7 +206,7 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
                                                             entries[i]["horseNumber"]))
         market_win1 += int(market[0] == winner)
         market_win3 += int(winner in market[:3])
-        ndcgs.append(float(ndcg_score([[e["label"] for e in entries]], [list(scores)], k=3)))
+        ndcgs.append(_ndcg_at_3([e["label"] for e in entries], list(scores)))
     if pos != len(predictions):
         raise ValueError("unexpected prediction rows")
     count = len(races)
