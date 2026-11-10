@@ -205,6 +205,58 @@ class CompactTombstoneExceptionTests(TestCase):
             protect_detail(deepcopy(old), deepcopy(incoming))
 
 
+class OneTimeEnvTombstoneExceptionTests(TestCase):
+    """One-time env exception for the six user-approved 2026-10-31
+    Kyoto tombstones (Nonaka decision, 2026-11-10): an
+    environment-only write (weather / condition / environmentMeta)
+    is admitted for exactly those ids; every other tombstone and
+    every wider write stays refused. This class is removed together
+    with the exception once the repair has landed."""
+
+    def _env_write(self, stub: dict) -> dict:
+        out = deepcopy(stub)
+        out["weather"] = "晴"
+        out["condition"] = "良"
+        out["environmentMeta"] = {"source": "JRA公式結果",
+                                  "raceId": stub["id"]}
+        return out
+
+    def test_env_only_write_over_approved_tombstone_passes(self):
+        old = _stub()
+        incoming = self._env_write(old)
+        out = protect_detail(deepcopy(old), deepcopy(incoming))
+        self.assertEqual(out["weather"], "晴")
+        self.assertEqual(out["condition"], "良")
+        # The tombstone stamps and every other field stay the stub.
+        self.assertEqual(out["predictionStatus"], "disabled")
+        self.assertEqual(out["predictionModelVersion"],
+                         "arvexq-prediction-removed")
+        self.assertEqual(out["result"], old["result"])
+        self.assertNotIn("unifiedForecast", out)
+        self.assertNotIn("predictionMarks", out)
+
+    def test_env_write_over_unapproved_tombstone_is_refused(self):
+        old = _stub()
+        old["id"] = "jra-2026-10-31-東京-01"
+        incoming = self._env_write(old)
+        with self.assertRaises(RuntimeError):
+            protect_detail(deepcopy(old), deepcopy(incoming))
+
+    def test_env_write_touching_another_field_is_refused(self):
+        old = _stub()
+        incoming = self._env_write(old)
+        incoming["raceName"] = "書き換え"
+        with self.assertRaises(RuntimeError):
+            protect_detail(deepcopy(old), deepcopy(incoming))
+
+    def test_env_write_cannot_change_the_tombstone_stamps(self):
+        old = _stub()
+        incoming = self._env_write(old)
+        incoming["predictionStatus"] = "ready"
+        with self.assertRaises(RuntimeError):
+            protect_detail(deepcopy(old), deepcopy(incoming))
+
+
 class _FakeResponse(io.BytesIO):
     def __enter__(self):
         return self
