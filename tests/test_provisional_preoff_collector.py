@@ -199,7 +199,7 @@ def test_actual_clock_is_rechecked_after_network(monkeypatch):
     class Clock(datetime):
         times=iter([NOW,NOW+timedelta(minutes=30)])
         @classmethod
-        def now(cls,tz=None):return next(cls.times)
+        def now(cls,tz=None):return cls.fromtimestamp(next(cls.times).timestamp(),tz=JST)
     monkeypatch.setattr(module,'datetime',Clock)
     row=detail()
     result=collect(fetch=lambda url: {'races':[row]} if '/api/day?' in url else {'detail':row})
