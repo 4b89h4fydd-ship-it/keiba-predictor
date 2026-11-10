@@ -84,6 +84,16 @@ class RankingChallengerSafety(unittest.TestCase):
             from sklearn.metrics import ndcg_score
             self.assertAlmostEqual(estimate, float(ndcg_score([values], [scores], k=3)), places=10)
 
+    def test_common_ndcg_does_not_depend_on_head_labels(self):
+        rows = sample("2026-10-01")
+        for row in rows:
+            row["features"]["market::popularity"] = 7-row["horseNumber"]
+        a = prepare_races(rows, "jra", "ability")
+        b = prepare_races(rows, "jra", "ana")
+        scores = [6, 5, 4, 3, 2, 1]
+        self.assertEqual(metrics(a, scores)["ndcgAt3"], metrics(b, scores)["ndcgAt3"])
+        self.assertEqual(metrics(b, scores)["winnerHitAt5"], 1)
+
     def test_rank_metrics_market_baseline(self):
         race = prepare_races(sample("2026-10-01"), "jra", "ability")
         m = metrics(race, [6, 5, 4, 3, 2, 1])

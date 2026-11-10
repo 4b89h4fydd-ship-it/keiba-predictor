@@ -185,7 +185,7 @@ def _ndcg_at_3(relevances: list[int], scores: list[float]) -> float:
 
 
 def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, Any]:
-    pos, win1, win3, podium1, ndcgs = 0, 0, 0, 0, []
+    pos, win1, win3, win5, podium1, ndcgs = 0, 0, 0, 0, 0, []
     market_win1 = market_win3 = 0
     outperformance = 0
     for race in races:
@@ -198,6 +198,7 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
         winner = next(i for i, e in enumerate(entries) if e["finish"] == 1)
         win1 += int(order[0] == winner)
         win3 += int(winner in order[:3])
+        win5 += int(winner in order[:5])
         podium1 += int(entries[order[0]]["finish"] <= 3)
         first = entries[order[0]]
         outperformance += int(first["popularity"] is not None and first["finish"] <= 3
@@ -206,12 +207,13 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
                                                             entries[i]["horseNumber"]))
         market_win1 += int(market[0] == winner)
         market_win3 += int(winner in market[:3])
-        ndcgs.append(_ndcg_at_3([e["label"] for e in entries], list(scores)))
+        ndcgs.append(_ndcg_at_3([max(0, 4-e["finish"]) for e in entries], list(scores)))
     if pos != len(predictions):
         raise ValueError("unexpected prediction rows")
     count = len(races)
     return {"races": count, "winHitAt1": round(win1/count, 4) if count else None,
             "winnerHitAt3": round(win3/count, 4) if count else None,
+            "winnerHitAt5": round(win5/count, 4) if count else None,
             "top1PodiumRate": round(podium1/count, 4) if count else None,
             "outperformMarketAndPodiumAt1": round(outperformance/count, 4) if count else None,
             "ndcgAt3": round(sum(ndcgs)/count, 4) if count else None,
@@ -329,7 +331,7 @@ def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
         raise ValueError("ranking objective has no graded labels in train/validation")
     model = lgb.LGBMRanker(objective="lambdarank", metric="ndcg", n_estimators=200,
                           learning_rate=.03, num_leaves=15, min_child_samples=10,
-                          label_gain=[0, 1, 3, 7], random_state=20261111, verbosity=-1)
+                          label_gain=[0, 1, 3, 7], random_state=20261111, n_jobs=2, verbosity=-1)
     model.fit(x, y, group=group, eval_set=[(xv, yv)], eval_group=[gv], eval_at=[1, 3],
               callbacks=[lgb.early_stopping(25, verbose=False)])
     xt, _, _ = make_matrix(blocks["test"], v)
