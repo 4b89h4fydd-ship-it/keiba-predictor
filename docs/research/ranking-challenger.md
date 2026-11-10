@@ -53,8 +53,30 @@ The optional MotherDuck exporter is read-only and only uses `massFeatureArchive`
 
 Each research output contains isolated train/valid/test dates, feature coverage, head metrics, held-out per-race scores and a paired validation-selected blend comparison. Any comparison against **v9b** and any payout-backed **ROI** are explicitly unavailable (`null`) until the same-race immutable v9b publication and actual payoffs are joined. The research branch never writes D1, production forecasts or betting tickets.
 
-### Real-data availability, assessed 2026-11-11
+### Real-data availability, assessed 2026-11-10
 
 MotherDuck `my_db.arvexq_analytics.race_snapshots` held 1,418 saved races (through Nov 10). Of these, 181 had `massFeatureArchive` and an origin-verified envelope. Result-confirmed archives: **63 JRA races on 3 dates** and **114 NAR races on 8 dates** (177 combined). This is *eligibility before replaying the archive decoder and completeness filters*, not 177 proved usable training groups. It is insufficient to claim a robust out-of-sample improvement or an adopted commercial model. In particular, the recent Nov 4-10 races have no top-level `massFeatureArchive`.
 
 Gates for promotion remain: real SHA-checked extraction, enough forward dates by circuit, identical held-out races versus v9b, ◎ first/top3, winner-top3, NDCG@3, and settled ticket ROI (including largest-payout exclusion) with date-cluster uncertainty.
+
+### Additional article audit (2026-11-10)
+
+Reviewed https://yokokenkeiba.com/keiba-ai-tsukurikata/ and
+https://www.issoh.co.jp/tech/details/2321/ alongside the original references.
+Their reported results (including synthetic examples) are not ARVEXQ results.
+Adopt the methodological checks: deterministic horse-number tie breaks rather
+than result order; actual settled payouts rather than average odds; explicit
+availability times; identical cohorts for ablations. Do not adopt either
+article's profit claims or copy example code into production.
+
+The common `ndcgAt3` now always uses finishing relevance (3/2/1/0), including
+ANA evaluation. Previously ANA's task labels changed the meaning of this metric
+across heads. ANA training labels remain market-outperformance relevance.
+`winnerHitAt5` is also reported. Neither metric is a probability or ROI.
+
+A matching archive hash proves integrity, not pre-off capture time. Existing
+snapshots do not themselves contain a capture timestamp. Promotion additionally
+requires independently verified publication/capture evidence, explicit flat /
+newcomer / jump segmentation, calibrated probabilities and aligned frozen v9b
+predictions and R24 settled tickets. Until these gates pass, results remain
+exploratory and production must remain unchanged.
