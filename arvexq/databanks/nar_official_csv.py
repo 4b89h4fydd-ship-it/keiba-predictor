@@ -110,6 +110,8 @@ class NarOfficialArchive:
             for filename, rows in rows_from_archive(path):
                 if "racelist" in filename:
                     for row in rows:
+                        if normalize(item(row, 0)) in ("帯広", "帯広ば"):
+                            continue
                         key = race_key(row)
                         if key[1] and key[2]:
                             previous = race_rows.get(key)
@@ -123,7 +125,9 @@ class NarOfficialArchive:
                                     for i in range(max(len(richer), len(other)))
                                 ]
                 if "horselist" in filename:
-                    horse_rows.extend(row for row in rows if race_key(row)[1])
+                    horse_rows.extend(row for row in rows
+                                      if race_key(row)[1]
+                                      and normalize(item(row, 0)) not in ("帯広", "帯広ば"))
         self.race_count = len(race_rows)
         self.by_name = defaultdict(list)
         # Repeated daily/monthly records may differ in completeness.
@@ -245,6 +249,54 @@ class NarOfficialArchive:
         # The UI may request five rows, but full observed history is retained.
         return {"recentRaces": matched[:5], "allPastRuns": matched} if matched else {}
 
+
+
+def discover_cached_nar_month_archives(data_root, target_date, months=3):
+    """Use only verified local monthly ZIPs already downloaded by NarSync.
+
+    This helper never issues an HTTP request. The target race date prevents
+    future-month data from being used in historical pre-race replays.
+    """
+    try:
+        target = datetime.strptime(str(target_date), "%Y-%m-%d")
+        count = max(1, min(12, int(months)))
+    except (TypeError, ValueError):
+        return []
+    directory = Path(data_root) / "nar" / "archives"
+    if not directory.is_dir():
+        return []
+
+    target_month = target.year * 12 + target.month
+    selected = []
+    for path in directory.glob("*_race.zip"):
+        match = re.fullmatch(r"(\d{4})(0[1-9]|1[0-2])_race\.zip", path.name)
+        if not match:
+            continue
+        month = int(match.group(1)) * 12 + int(match.group(2))
+        if month > target_month or month <= target_month - count:
+            continue
+        try:
+            if not path.is_file() or not 0 < path.stat().st_size <= 150_000_000:
+                continue
+            with zipfile.ZipFile(path) as archive:
+                members = [info for info in archive.infolist() if not info.is_dir()]
+                if (len(members) > 25
+                        or any(info.file_size > 75_000_000 for info in members)
+                        or sum(info.file_size for info in members) > 150_000_000):
+                    continue
+                # Reject files with an intact ZIP index but corrupt CSV payloads
+                # before they can disable the entire official history adapter.
+                if archive.testzip() is not None:
+                    continue
+                names = [Path(info.filename).name.lower() for info in members]
+                if not any(name.endswith("racelist.csv") for name in names):
+                    continue
+                if not any(name.endswith("horselist.csv") for name in names):
+                    continue
+        except (OSError, ValueError, zipfile.BadZipFile, zipfile.LargeZipFile):
+            continue
+        selected.append(path)
+    return sorted(selected, key=lambda path: path.name)
 
 def register_nar_official_archive(registry: DataBankRegistry, paths=None):
     if paths is None:

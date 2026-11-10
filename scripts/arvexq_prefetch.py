@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -31,7 +32,9 @@ from arvexq.prediction.observed_model import model_version
 from arvexq.prediction.race_intelligence import attach_evidence
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
-from arvexq.databanks.nar_official_csv import register_nar_official_archive
+from arvexq.databanks.nar_official_csv import (
+    register_nar_official_archive, discover_cached_nar_month_archives,
+)
 from arvexq.databanks.registry import registry as source_registry
 
 JST = timezone(timedelta(hours=9))
@@ -607,13 +610,38 @@ def main() -> int:
         # Analysis does not register data providers or discover racecards.
         return prepare(args.bundle, args.payload, args.report,
                        args.workers, args.analysis_workers, phase="analyze")
+    # Reuse the official monthly ZIPs downloaded by the existing NarSync
+    # bootstrap. No second fetcher or paid data subscription is introduced.
     try:
-        official = register_nar_official_archive(source_registry)
+        bundle_data = json.loads(Path(args.bundle).read_text(encoding="utf-8"))
+        target_date = str(bundle_data.get("date") or "")
+        if not target_date:
+            dates = {str(row.get("date")) for row in bundle_data.get("races", [])
+                     if isinstance(row, dict) and row.get("date")}
+            if len(dates) == 1:
+                target_date = next(iter(dates))
+    except (OSError, ValueError, AttributeError, TypeError) as exc:
+        target_date = ""
+        print("NAR_OFFICIAL_CSV_DATE_WARN", type(exc).__name__, str(exc))
+    explicit = [path for path in
+                os.getenv("ARVEXQ_NAR_OFFICIAL_CSV_ARCHIVES", "").split(os.pathsep)
+                if path]
+    cached = discover_cached_nar_month_archives(
+        os.getenv("KEIBA_DATA_DIR", "/tmp/keiba_data"),
+        target_date,
+        months=os.getenv("ARVEXQ_NAR_OFFICIAL_AUTO_MONTHS", "3"),
+    )
+    print("NAR_OFFICIAL_CSV_DISCOVERY", "target=", target_date or "unknown",
+          "cached_months=", len(cached), "explicit_paths=", len(explicit))
+    try:
+        # Explicitly supplied archives remain supported, with duplicates removed.
+        paths = list(dict.fromkeys([*explicit, *(str(path) for path in cached)]))
+        official = register_nar_official_archive(source_registry, paths=paths)
         if official:
             print("NAR_OFFICIAL_CSV_LOADED", "races=", official.race_count,
                   "horses=", sum(len(v) for v in official.by_name.values()))
-    except (OSError, ValueError, KeyError) as exc:
-        # A corrupt/missing monthly ZIP does not block the race card or other sources.
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile) as exc:
+        # A corrupt/missing ZIP must not block the race card or other sources.
         print("NAR_OFFICIAL_CSV_WARN", type(exc).__name__, str(exc))
     return prepare(
         args.bundle,

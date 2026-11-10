@@ -87,4 +87,14 @@ python build_static.py
 
 中央はJRA公式/外部競馬情報サイト、地方はNAR公式/外部競馬情報サイトを組み合わせて取得します。HTMLや配信仕様が変わると取得が壊れる可能性があるため、障害調査は `docs/audits/` に日付入りで残します。
 
+地方の公式月次ZIPは既存の `NarSync` が取得します。Full Prefetchでは、保存済みの
+`$KEIBA_DATA_DIR/nar/archives/YYYYMM_race.zip` のうち対象レース月までの直近3か月
+（`ARVEXQ_NAR_OFFICIAL_AUTO_MONTHS` で1〜12か月に変更可）を、
+ZIP構造・CSVファイル名・CRCを検査してから、追加の過去走情報源として読み込みます。
+この追加読込は**新たなHTTPアクセス・有料契約を発生させません**。
+存在しない・破損したZIPは飛ばし、既存のNAR取得経路をそのまま使います。
+対象日以降の走歴や帯広ばんえいは混入させません。
+取込状況はFull Prefetchログの `NAR_OFFICIAL_CSV_DISCOVERY` / `NAR_OFFICIAL_CSV_LOADED`
+で確認できます。自動取得・販売目的でのデータ利用権限は別途確認が必要です。
+
 現行の監査一覧は `docs/audits/README.md` を参照してください。
