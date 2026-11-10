@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'arvexq/research/ranking_*.py'
+      - 'arvexq/prediction/mass_feature_factory.py'
+      - 'scripts/audit_saved_ranking_features.py'
       - 'tests/test_ranking_challenger.py'
       - 'tests/test_motherduck_ranking_export.py'
       - 'scripts/export_motherduck_frozen_ranking.py'

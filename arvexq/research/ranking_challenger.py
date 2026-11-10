@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from arvexq.prediction.mass_feature_selection import snapshot_feature_allowed
-from arvexq.research.ranking_feature_signals import MODES, enrich_frozen_features, history_coverage
+from arvexq.research.ranking_feature_signals import MODES, enrich_frozen_features, history_coverage, HISTORY_RELATIVE
 
 VERSION = "arvexq-ranking-ability-ana-v1"
 CIRCUITS = {"中央": "jra", "JRA": "jra", "jra": "jra",
@@ -148,13 +148,26 @@ def feature_manifest(train: list[dict[str, Any]], limit: int = 1000) -> list[str
         mean = sum(observed) / len(observed)
         variance = sum((x - mean)**2 for x in observed) / len(observed)
         if variance > 1e-12:
-            qualified.append((len(observed) / total * variance**.5, key))
+            qualified.append((len(observed) / total, key))
     qualified.sort(key=lambda pair: (-pair[0], pair[1]))
-    return [key for _, key in qualified[:limit]]
+    # Reserve the predeclared hypotheses before the generic cap. Otherwise
+    # raw clocks/prizes crowd out bounded percentiles and interactions.
+    reserved = [key for _, key in qualified
+                if key in HISTORY_RELATIVE.values() or key.startswith("research::")]
+    rest = [key for _, key in qualified if key not in set(reserved)]
+    return (reserved + rest)[:limit]
 
 
 def make_matrix(races: list[dict[str, Any]], vectorizer: Any):
-    sparse = vectorizer.transform([e["features"] for race in races for e in race["rows"]])
+    import numpy as np
+    entries = [e for race in races for e in race["rows"]]
+    # DictVectorizer's implicit zero confounds missing evidence with observed 0.
+    sparse = np.full((len(entries), len(vectorizer.feature_names_)), np.nan)
+    for i, entry in enumerate(entries):
+        for key, value in entry["features"].items():
+            j = vectorizer.vocabulary_.get(key)
+            if j is not None:
+                sparse[i, j] = value
     labels = [e["label"] for race in races for e in race["rows"]]
     group = [len(race["rows"]) for race in races]
     return sparse, labels, group
@@ -220,6 +233,24 @@ def metrics(races: list[dict[str, Any]], predictions: list[float]) -> dict[str, 
             "marketBaselineWinAt1": round(market_win1/count, 4) if count else None,
             "marketBaselineWinnerAt3": round(market_win3/count, 4) if count else None,
             "roi": None}
+
+
+def error_diagnostics(races, predictions):
+    """Descriptive validation slices, never causal explanations or promotion gates."""
+    output = []
+    pos = 0
+    for race in races:
+        entries = race["rows"]
+        scores = predictions[pos:pos+len(entries)]
+        pos += len(entries)
+        order = sorted(range(len(entries)), key=lambda i: (-scores[i], entries[i]["horseNumber"]))
+        winner = next(i for i,e in enumerate(entries) if e["finish"] == 1)
+        first = entries[order[0]]
+        output.append({"raceId": race["raceId"], "date": race["date"],
+                       "track": race["raceId"].split("-")[-2], "fieldSize": len(entries),
+                       "winnerRank": order.index(winner)+1,
+                       "top1Finish": first["finish"], "top1Popularity": first["popularity"]})
+    return output
 
 
 def _scorecards(races: list[dict[str, Any]], predictions: list[float]) -> list[dict[str, Any]]:
@@ -303,7 +334,7 @@ def paired_report(ability: dict[str, Any], ana: dict[str, Any]) -> dict[str, Any
 
 
 def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
-              *, min_train_races: int = 40, mode: str = "baseline") -> dict[str, Any]:
+              *, min_train_races: int = 40, mode: str = "baseline", development_only: bool = False) -> dict[str, Any]:
     """Train one isolated research head; do not load in production runtime."""
     import joblib
     import lightgbm as lgb
@@ -311,13 +342,19 @@ def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
 
     races = prepare_races(rows, circuit, head, mode=mode)
     blocks = split_races(races)
+    if development_only:
+        races = [r for r in races if r["date"] <= "2026-10-25"]
+        last = max((r["date"] for r in races), default="")
+        blocks = {"train": [r for r in races if r["date"] < last],
+                  "valid": [r for r in races if r["date"] == last], "test": []}
     if (len(blocks["train"]) < min_train_races or len(blocks["valid"]) < 2
-            or len(blocks["test"]) < 2):
+            or (not development_only and len(blocks["test"]) < 2)):
         raise ValueError(f"insufficient independent frozen races for {circuit}/{head}")
     train = blocks["train"]
     features = feature_manifest(train)
     if not features:
         raise ValueError("no varying pre-race training features")
+    input_coverage = history_coverage(races)
     allowed = set(features)
     for block in blocks.values():
         for race in block:
@@ -334,16 +371,22 @@ def train_one(rows: list[dict[str, Any]], circuit: str, head: str, out: Path,
                           label_gain=[0, 1, 3, 7], random_state=20261111, n_jobs=2, verbosity=-1)
     model.fit(x, y, group=group, eval_set=[(xv, yv)], eval_group=[gv], eval_at=[1, 3],
               callbacks=[lgb.early_stopping(25, verbose=False)])
-    xt, _, _ = make_matrix(blocks["test"], v)
-    test_predictions = list(model.predict(xt))
+    test_predictions = []
+    if blocks["test"]:
+        xt, _, _ = make_matrix(blocks["test"], v)
+        test_predictions = list(model.predict(xt))
     valid_predictions = list(model.predict(xv))
     result = {"version": VERSION, "circuit": circuit, "head": head, "featureMode": mode,
-              "experimentFeatureCoverage": history_coverage(races),
+              "experimentFeatureCoverage": input_coverage,
+              "selectedFeatureCoverage": history_coverage(races),
               "researchOnly": True, "productionEligible": False,
               "featureCount": len(v.feature_names_), "trainRaces": len(train),
               "validationRaces": len(blocks["valid"]), "testRaces": len(blocks["test"]),
               "trainThrough": max(r["date"] for r in train),
-              "testFrom": min(r["date"] for r in blocks["test"]),
+              "developmentOnly": development_only,
+              "testFrom": min((r["date"] for r in blocks["test"]), default=None),
+              "validationMetrics": metrics(blocks["valid"], valid_predictions),
+              "validationErrors": error_diagnostics(blocks["valid"], valid_predictions),
               "metrics": metrics(blocks["test"], test_predictions),
               "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."}
     dest = out / ("" if mode == "baseline" else mode) / circuit / head
@@ -365,6 +408,7 @@ def main() -> int:
     p.add_argument("output_dir")
     p.add_argument("--min-train-races", type=int, default=40)
     p.add_argument("--mode", choices=MODES, default="baseline")
+    p.add_argument("--development-only", action="store_true", help="Train/validate through Oct25; never reuse consumed Oct26-27 test")
     p.add_argument("--paired", action="store_true", help="Use the same race cohort to compare Ability/ANA/blend")
     args = p.parse_args()
     rows = [json.loads(line) for line in Path(args.frozen_jsonl).read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -380,12 +424,12 @@ def main() -> int:
         for head in HEADS:
             try:
                 reports.append(train_one(circuit_rows, circuit, head, Path(args.output_dir),
-                                         min_train_races=args.min_train_races, mode=args.mode))
+                                         min_train_races=args.min_train_races, mode=args.mode, development_only=args.development_only))
             except ValueError as exc:
                 complete = False
                 reports.append({"circuit": circuit, "head": head, "status": "insufficient-data",
                                 "reason": str(exc), "productionEligible": False})
-        if args.paired and complete:
+        if args.paired and complete and not args.development_only:
             root = Path(args.output_dir) / ("" if args.mode == "baseline" else args.mode) / circuit
             ability = json.loads((root / "ability" / "holdout_scores.json").read_text(encoding="utf-8"))
             ana = json.loads((root / "ana" / "holdout_scores.json").read_text(encoding="utf-8"))
