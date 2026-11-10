@@ -113,6 +113,15 @@ def provisional_capture(detail, *, now):
     history_count = sum(bool(h.get("recentRaces") or h.get("allPastRuns"))
                         for h in active)
     record = {
+        # Comparator data stays OUTSIDE model inputs; capture provenance is
+        # explicit and still provisional, never retrospectively certified.
+        "baselinePublication": {k: deepcopy(detail.get(k)) for k in
+            ("predictionModelVersion", "predictionMarks", "recommendedBets", "unifiedForecast")},
+        "marketObservedAtEpoch": int(now.timestamp()),
+        "oddsSourceUpdatedAt": detail.get("oddsUpdatedAt"),
+        "sourceProvenance": {"endpointFamily": "existing-cloudflare-race-api",
+                             "observedAtEpoch": int(now.timestamp()),
+                             "independentAttestation": False},
         "horsesWithPastRuns": history_count,
         "historyComplete": history_count == len(active),
         "version": VERSION, "eligibility": "provisional-not-officially-attested",
