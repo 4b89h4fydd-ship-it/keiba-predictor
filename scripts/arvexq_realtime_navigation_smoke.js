@@ -118,7 +118,7 @@ async function verify(kind,name){
     assert.ok(paper[k]&&dark(paper[k].foreground),'Unreadable pale text on paper: '+k+' '+JSON.stringify(paper[k]));
     assert.equal(paper[k].opacity,'1','Transparent/washed-out text: '+k);
   }
-  assert.deepEqual(result.actions,['厳選','特別','お気に入り']);
+  assert.deepEqual(result.actions,['厳選','お気に入り']);
   assert.equal(result.fullGrid,24);assert.equal(result.booked,3);
   assert.equal(result.firstNext,1);assert.equal(result.nextAfter,2);
   assert.equal(result.firstState,'elapsed');assert.equal(result.firstText,'結果待ち');
@@ -133,7 +133,7 @@ async function verify(kind,name){
   assert.equal(result.arrowContent,'none','Top tiles show their race-status label, not the retired arrow');
   assert.equal(result.navOnHome,0);assert.equal(result.realtime,0);
   assert.equal(result.alerts,0,'no alerts when zero selected/special races');
-  assert.equal(result.positiveAlerts,2,'both alerts visible when races are selected');
+  assert.equal(result.positiveAlerts,1,'the current selected action shows its alert when selected races exist');
   assert.equal(errors.filter(e=>/ReferenceError|SyntaxError/.test(e)).length,0,errors.join('; '));
   console.log('HORSE_12R_IPHONE_GRID_OK',name);
  }finally{await browser.close()}
