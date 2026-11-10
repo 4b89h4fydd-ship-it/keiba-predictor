@@ -7,7 +7,7 @@ from pathlib import Path
 from arvexq.research.ranking_feature_signals import enrich_frozen_features, history_coverage, HISTORY_RELATIVE
 
 from arvexq.research.ranking_challenger import (
-    _features, _relevance, feature_manifest, metrics, prepare_races, split_races, train_one, paired_report,
+    _features, _relevance, feature_manifest, metrics, prepare_races, split_races, train_one, paired_report, _ndcg_at_3,
 )
 
 
@@ -74,6 +74,15 @@ class RankingChallengerSafety(unittest.TestCase):
         rows = sample("2026-10-01", "中央") + sample("2026-10-01", "地方")
         self.assertEqual(len(prepare_races(rows, "jra", "ability")), 1)
         self.assertEqual(len(prepare_races(rows, "nar", "ability")), 1)
+
+    def test_ndcg_matches_sklearn_ties_when_available(self):
+        values = [3, 0, 2, 1, 0]
+        scores = [0.9, 0.8, 0.8, 0.2, 0.1]
+        estimate = _ndcg_at_3(values, scores)
+        self.assertGreater(estimate, 0)
+        if importlib.util.find_spec("sklearn"):
+            from sklearn.metrics import ndcg_score
+            self.assertAlmostEqual(estimate, float(ndcg_score([values], [scores], k=3)), places=10)
 
     def test_rank_metrics_market_baseline(self):
         race = prepare_races(sample("2026-10-01"), "jra", "ability")
