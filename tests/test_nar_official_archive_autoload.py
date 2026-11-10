@@ -21,13 +21,13 @@ def _csv_bytes(rows):
     return buf.getvalue().encode("cp932")
 
 
-def _archive(directory, month, race_date, complete=True):
+def _archive(directory, month, race_date, complete=True, track="大井"):
     path = directory / f"{month}_race.zip"
     race = [""] * 66
-    race[0:3] = ["大井", race_date, "4"]
+    race[0:3] = [track, race_date, "4"]
     race[23], race[26] = "1400", "12"
     horse = [""] * 36
-    horse[0:3] = ["大井", race_date, "4"]
+    horse[0:3] = [track, race_date, "4"]
     horse[3], horse[5], horse[6] = "1", "1", "公式検証馬"
     horse[10], horse[31], horse[32] = "20180310", "1", "1230"
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -94,6 +94,22 @@ class CachedOfficialArchiveTests(unittest.TestCase):
                 [valid],
                 "A CRC-broken monthly ZIP must not disable healthy cached months",
             )
+
+    def test_banei_obihiro_is_never_registered_as_past_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / "nar" / "archives"
+            cache.mkdir(parents=True)
+            _archive(cache, "202609", "20260907", track="帯広ば")
+            _archive(cache, "202610", "20261004")
+            archives = discover_cached_nar_month_archives(root, "2026-11-11")
+            index = register_nar_official_archive(DataBankRegistry(), paths=archives)
+            self.assertEqual(index.race_count, 1)
+            history = index.horse_history(
+                {"name": "公式検証馬", "birthDate": "2018-03-10"},
+                {"date": "2026-11-11"},
+            )
+            self.assertEqual([r["track"] for r in history["allPastRuns"]], ["大井"])
 
     def test_discovered_archive_becomes_real_past_run_source(self):
         with tempfile.TemporaryDirectory() as directory:
