@@ -1,4 +1,4 @@
-/* Production and local iPhone-class pull gesture regression for horse racing. */
+/* Verify retired pull gestures stay inactive and the current reload button fetches fresh data. */
 const {chromium,webkit,devices}=require('playwright');
 const assert=require('node:assert/strict');
 const base=(process.env.ARVEXQ_BASE_URL||'http://127.0.0.1:8788').replace(/\/$/,'');
@@ -39,29 +39,34 @@ async function check(browserType,browserName){
   try{
     const page=await browser.newPage({...devices['iPhone 15 Pro'],locale:'ja-JP'});
     for(const pagePath of ['', 'keiba']){
-      const errors=[];
-      page.on('pageerror',e=>errors.push(String(e)));
+      const errors=[],morningRequests=[];
+      const onError=e=>errors.push(String(e));
+      const onRequest=request=>{
+        const u=new URL(request.url());
+        if(u.pathname.startsWith('/morning-picks/'))morningRequests.push(Number(u.searchParams.get('t'))||0);
+      };
+      page.on('pageerror',onError);page.on('request',onRequest);
       await page.goto(base+'/'+pagePath+'/?pull-smoke='+Date.now(),{waitUntil:'domcontentloaded',timeout:50000});
       await page.locator('.arv-unified-hero').waitFor({state:'visible',timeout:45000});
-      await page.waitForFunction(()=>window.ARVEXQPullRefresh&&document.querySelector('#arvexq-pull-refresh'),{timeout:15000});
-      const first=await swipe(page);
-      assert.equal(first.after,first.before+1,browserName+' '+pagePath+' first swipe not dispatched');
-      assert.equal(first.label,'更新中…',browserName+' '+pagePath+' indicator not active');
-      await page.waitForFunction(()=>{
-        const el=document.querySelector('#arvexq-pull-refresh');
-        return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
-      },null,{timeout:25000});
-      const second=await swipe(page);
-      // Evaluate each gesture within its own active document; a PWA navigation may reset its counter.
-      assert.equal(second.after,second.before+1,browserName+' '+pagePath+' second swipe not dispatched');
-      await page.waitForFunction(()=>{
-        const el=document.querySelector('#arvexq-pull-refresh');
-        return !!el&&!el.classList.contains('refreshing')&&el.querySelector('b')?.textContent==='下に引いて更新';
-      },null,{timeout:25000});
-      assert.equal(await page.locator('#arvexq-pull-refresh').count(),1,'duplicate refresh indicator');
+      await page.waitForFunction(()=>window.ARVEXQPullRefresh,null,{timeout:15000});
+      assert.equal(await page.locator('#arvexq-pull-refresh').count(),0,'retired gesture indicator must not be mounted');
+      for(let attempt=0;attempt<2;attempt++){
+        const gesture=await swipe(page);
+        assert.equal(gesture.after,gesture.before,browserName+' '+pagePath+' retired swipe must not trigger refresh');
+        assert.equal(await page.locator('#arvexq-pull-refresh').count(),0);
+      }
+      const priorSequence=Math.max(0,...morningRequests);
+      const freshRequest=page.waitForRequest(request=>{
+        const u=new URL(request.url());
+        return u.pathname.startsWith('/morning-picks/')&&Number(u.searchParams.get('t'))>priorSequence;
+      },{timeout:15000});
+      await page.locator('[data-action="reload-all"]').click();
+      await freshRequest;
+      await page.locator('.arv-unified-hero').waitFor({state:'visible',timeout:15000});
+      assert.equal(await page.locator('#arvexq-pull-refresh').count(),0);
       assert.equal(errors.filter(e=>/ReferenceError|SyntaxError|not a function/.test(e)).length,0,errors.join('; '));
-
-      console.log('HORSE_PULL_REFRESH_OK',browserName,pagePath||'root',second.after);
+      console.log('HORSE_RETIRED_PULL_AND_EXPLICIT_RELOAD_OK',browserName,pagePath||'root');
+      page.off('pageerror',onError);page.off('request',onRequest);
     }
     await page.close();
   }finally{await browser.close()}
