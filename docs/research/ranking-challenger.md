@@ -80,3 +80,51 @@ requires independently verified publication/capture evidence, explicit flat /
 newcomer / jump segmentation, calibrated probabilities and aligned frozen v9b
 predictions and R24 settled tickets. Until these gates pass, results remain
 exploratory and production must remain unchanged.
+
+### Executed real-data result and non-adoption decision
+
+Flight `521f0ebb-f721-4818-89f2-d60bc6ec8b8b`, version 2, run 2 completed
+successfully (exit 0) on 2026-11-10. Run 1 was cancelled after export and
+restarted with two LightGBM threads; no parameters were selected from its test
+results. The source is retained in the Flight. Reports are in
+`ranking-real-run-20261110.json`; no horse archives or credentials are committed.
+
+- SHA-checked restoration: 177 races / 1,914 horses, JRA 63, NAR 114;
+  archive dates 2026-10-15 through 2026-10-27.
+- Paired NAR eligibility: 61 races / 633 horses; train 48 (through Oct 24),
+  validation 7 (Oct 25), test 6 (Oct 26–27). JRA failed the existing minimum
+  training gate; the minimum was not lowered.
+- Four predeclared modes all completed. All yielded identical results:
+  Ability top1 win 1/6, top1 podium 4/6, winner top3 3/6, top5 4/6,
+  raw-score finishing NDCG@3 0.4558; ANA 1/6, 3/6, 3/6, 5/6,
+  raw-score finishing NDCG@3 0.4119. Market top1 won 3/6.
+- Validation chose Ability weight 1.0 in every mode. No beneficial ANA blend.
+- Five exact history interaction keys had 0/633 coverage. Therefore the
+  ablation is operationally executed but is NOT evidence that the underlying
+  historical concepts are ineffective. Investigate vocabulary/availability
+  before another experiment; do not infer missing values.
+- Paired rank-percentile reports break score ties by horse number, so their
+  ANA NDCG (0.4383) differs from raw-score tie-averaged NDCG (0.4119).
+  Use raw-score head metrics for the table; preserve this limitation.
+- Archived preRacePrediction modelVersion: stage64 85, empirical-fusion 6,
+  missing 86; none identifies v9b. Only 89/177 have positive minutesToPostAtSeal.
+  Presence of a payout object alone does not prove ticket replay eligibility.
+
+No v9b comparison, calibrated LogLoss/Brier/ECE, ticket ROI, largest-payout
+exclusion, R24 strategy comparison, drawdown, date-bootstrap inference or
+selection-threshold improvement is claimed. Two test dates cannot establish
+robust improvement. Newcomer/jump segmentation and independent feature capture
+times remain unverified. These results are exploratory, not a valid promotion
+benchmark. The inspected Oct 26–27 holdout is consumed for future model changes;
+reserve a new unseen period for any final test.
+
+Do not adopt: accuracy did not beat even the market baseline; comparator,
+probability, timing and betting gates are unmet. Keep v9b/R24 and existing
+selection conditions. No production API/D1/UI writes were made. Live display,
+save-path and deployment verification remain unexecuted. Runtime status exposed
+no Cloudflare/D1 credentials, so their availability has not been established.
+
+Verification: 32 pytest tests plus 4 subtests passed (research ranking/export,
+archive integrity/legacy guards, retired ranker and production boundaries),
+py_compile and git diff --check passed. PR #513 was merged concurrently as
+fee9449f; this follow-up rebases only the new changes onto that main.
