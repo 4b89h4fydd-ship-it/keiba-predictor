@@ -1,0 +1,4 @@
+# Offline research only; do not install in production PWA/Worker.
+lightgbm>=4.3,<5
+scikit-learn>=1.4,<2
+joblib>=1.3,<2
