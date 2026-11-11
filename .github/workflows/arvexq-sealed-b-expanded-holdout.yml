@@ -1,0 +1,61 @@
+name: ARVEXQ Extended Sealed B Holdout
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/arvexq-sealed-b-expanded-holdout.yml
+      - scripts/arvexq_sealed_b_real_holdout.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-two-to-three-week-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 34
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Use read-only historical D1 observations
+        run: |
+          mkdir -p expanded-sealed-days
+          START=$(TZ=Asia/Tokyo date -d '21 days ago' +%F)
+          END_EXCLUSIVE=$(TZ=Asia/Tokyo date +%F)
+          DAY="$START"
+          while [ "$DAY" != "$END_EXCLUSIVE" ]; do
+            echo "SEALED_B_HISTORY_DAY $DAY"
+            python scripts/arvexq_fetch_d1_bundle.py \
+              --api-base https://kraiz-api.4b89h4fydd.workers.dev \
+              --date "$DAY" --out "expanded-sealed-days/$DAY.json" \
+              --report "expanded-sealed-days/$DAY-report.json" \
+              --workers 5 --retries 2 --timeout 18 \
+              --allow-empty-day --allow-missing-details
+            DAY=$(date -d "$DAY + 1 day" +%F)
+          done
+      - name: Train earlier dates and evaluate fully later days
+        run: |
+          PYTHONPATH=. python scripts/arvexq_sealed_b_real_holdout.py \
+            --in-dir expanded-sealed-days --out expanded-b-real-holdout.json --epochs 25
+          python - <<'PY'
+          import json
+          r=json.load(open('expanded-b-real-holdout.json'))
+          print("EXPANDED_B_PROVENANCE", "input",r["totalInputRaces"],
+                "authentic_sealed",r["eligibleSealedRaces"])
+          assert r["productionEligible"] is False
+          assert r["claim80PercentAchieved"] is False
+          assert r["totalInputRaces"] > 0
+          for circuit,part in r["byCircuitAndFamily"].items():
+              print("EXPANDED_B_CIRCUIT",circuit,
+                    "date_count",part["days"],"split",part["split"],
+                    "status",part["status"],"test",part.get("test",{}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arvexq-b-expanded-${{ github.run_id }}
+          path: |
+            expanded-b-real-holdout.json
+            expanded-sealed-days/*-report.json
+          retention-days: 30
+          if-no-files-found: warn
