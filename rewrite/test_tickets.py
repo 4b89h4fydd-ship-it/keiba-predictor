@@ -3,7 +3,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-from rewrite.analysis.forecast import forecast_race
+from rewrite.analysis.forecast import RaceForecast, RunnerForecast, forecast_race
 from rewrite.analysis.tickets import (
     TicketPolicy, formation_b_selections, formation_r24_selections,
     generate_tickets, mark_order,
@@ -49,6 +49,28 @@ class TicketTests(unittest.TestCase):
             self.assertLessEqual(count, policy.max_points[kind])
         for t in plan.probability_tickets:
             self.assertGreater(t.probability, 0)
+
+    def test_candidate_pool_tie_break_matches_marks_order(self):
+        # Runners 4 and 6 tie on (rounded) win probability at the
+        # wide-pool boundary. The marks layer ranks by top-3
+        # probability next, so #6 (△, higher top-3) must take the
+        # last pool slot, not #4 (☆) by horse-number order alone.
+        def runner(number, p_win, p_top3, mark=""):
+            return RunnerForecast(
+                number=number, name=None, ability_score=None,
+                strength=p_win, pace_adjustment=1.0, pace_reasons=(),
+                p_win=p_win, p_top2=p_top3, p_top3=p_top3,
+                mark=mark, status="ok")
+        forecast = RaceForecast("tie-test", 3.0, "test", (
+            runner(1, 0.30, 0.60, "◎"), runner(2, 0.20, 0.50, "○"),
+            runner(3, 0.15, 0.45, "▲"), runner(4, 0.10, 0.20, "☆"),
+            runner(5, 0.05, 0.15), runner(6, 0.10, 0.40, "△"),
+        ), "ok")
+        plan = generate_tickets(forecast, {}, calibration_validated=False)
+        wide = {t.selection for t in plan.probability_tickets
+                if t.kind == "wide"}
+        self.assertIn((1, 6), wide)
+        self.assertNotIn((1, 4), wide)
 
     def test_ev_suppressed_until_calibration_validated(self):
         plan = generate_tickets(self.forecast, self.odds, calibration_validated=False)
