@@ -1,0 +1,1512 @@
+{
+  "flightId": "521f0ebb-f721-4818-89f2-d60bc6ec8b8b",
+  "run": 3,
+  "status": "SUCCEEDED",
+  "unseenTestRaces": 0,
+  "reports": [
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "featureMode": "baseline",
+      "productionChanged": false,
+      "reports": [
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ability",
+          "featureMode": "baseline",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.3,
+            "winnerHitAt3": 0.5,
+            "winnerHitAt5": 0.6,
+            "top1PodiumRate": 0.65,
+            "outperformMarketAndPodiumAt1": 0.3,
+            "ndcgAt3": 0.4219,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ana",
+          "featureMode": "baseline",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.2,
+            "winnerHitAt3": 0.25,
+            "winnerHitAt5": 0.4,
+            "top1PodiumRate": 0.3,
+            "outperformMarketAndPodiumAt1": 0.25,
+            "ndcgAt3": 0.2845,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ability",
+          "featureMode": "baseline",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.7143,
+            "winnerHitAt3": 0.8571,
+            "winnerHitAt5": 1,
+            "top1PodiumRate": 0.8571,
+            "outperformMarketAndPodiumAt1": 0.1429,
+            "ndcgAt3": 0.5818,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ana",
+          "featureMode": "baseline",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.1429,
+            "winnerHitAt3": 0.1429,
+            "winnerHitAt5": 0.2857,
+            "top1PodiumRate": 0.5714,
+            "outperformMarketAndPodiumAt1": 0.5714,
+            "ndcgAt3": 0.2794,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        }
+      ],
+      "paired": []
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "featureMode": "enhanced",
+      "productionChanged": false,
+      "reports": [
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ability",
+          "featureMode": "enhanced",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.25,
+            "winnerHitAt3": 0.45,
+            "winnerHitAt5": 0.6,
+            "top1PodiumRate": 0.65,
+            "outperformMarketAndPodiumAt1": 0.25,
+            "ndcgAt3": 0.4404,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ana",
+          "featureMode": "enhanced",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.15,
+            "winnerHitAt3": 0.35,
+            "winnerHitAt5": 0.55,
+            "top1PodiumRate": 0.35,
+            "outperformMarketAndPodiumAt1": 0.35,
+            "ndcgAt3": 0.3094,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ability",
+          "featureMode": "enhanced",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.7143,
+            "winnerHitAt3": 0.8571,
+            "winnerHitAt5": 1,
+            "top1PodiumRate": 1,
+            "outperformMarketAndPodiumAt1": 0.1429,
+            "ndcgAt3": 0.7096,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ana",
+          "featureMode": "enhanced",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.1429,
+            "winnerHitAt3": 0.1429,
+            "winnerHitAt5": 0.2857,
+            "top1PodiumRate": 0.5714,
+            "outperformMarketAndPodiumAt1": 0.5714,
+            "ndcgAt3": 0.2794,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        }
+      ],
+      "paired": []
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "featureMode": "no-position",
+      "productionChanged": false,
+      "reports": [
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ability",
+          "featureMode": "no-position",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.25,
+            "winnerHitAt3": 0.45,
+            "winnerHitAt5": 0.6,
+            "top1PodiumRate": 0.65,
+            "outperformMarketAndPodiumAt1": 0.25,
+            "ndcgAt3": 0.4404,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ana",
+          "featureMode": "no-position",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.15,
+            "winnerHitAt3": 0.35,
+            "winnerHitAt5": 0.55,
+            "top1PodiumRate": 0.35,
+            "outperformMarketAndPodiumAt1": 0.35,
+            "ndcgAt3": 0.3094,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ability",
+          "featureMode": "no-position",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.7143,
+            "winnerHitAt3": 0.8571,
+            "winnerHitAt5": 1,
+            "top1PodiumRate": 1,
+            "outperformMarketAndPodiumAt1": 0.1429,
+            "ndcgAt3": 0.7096,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ana",
+          "featureMode": "no-position",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.1429,
+            "winnerHitAt3": 0.1429,
+            "winnerHitAt5": 0.2857,
+            "top1PodiumRate": 0.5714,
+            "outperformMarketAndPodiumAt1": 0.5714,
+            "ndcgAt3": 0.2794,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        }
+      ],
+      "paired": []
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "featureMode": "no-market-gap",
+      "productionChanged": false,
+      "reports": [
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ability",
+          "featureMode": "no-market-gap",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.25,
+            "winnerHitAt3": 0.45,
+            "winnerHitAt5": 0.6,
+            "top1PodiumRate": 0.65,
+            "outperformMarketAndPodiumAt1": 0.25,
+            "ndcgAt3": 0.4404,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "jra",
+          "head": "ana",
+          "featureMode": "no-market-gap",
+          "experimentFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 61,
+            "horses": 738,
+            "availability": {
+              "form": {
+                "observed": 738,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 735,
+                "fraction": 0.9959
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 41,
+          "validationRaces": 20,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 20,
+            "winHitAt1": 0.25,
+            "winnerHitAt3": 0.3,
+            "winnerHitAt5": 0.5,
+            "top1PodiumRate": 0.4,
+            "outperformMarketAndPodiumAt1": 0.4,
+            "ndcgAt3": 0.3274,
+            "marketBaselineWinAt1": 0.25,
+            "marketBaselineWinnerAt3": 0.6,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ability",
+          "featureMode": "no-market-gap",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.7143,
+            "winnerHitAt3": 0.8571,
+            "winnerHitAt5": 1,
+            "top1PodiumRate": 1,
+            "outperformMarketAndPodiumAt1": 0.1429,
+            "ndcgAt3": 0.7096,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        },
+        {
+          "version": "arvexq-ranking-ability-ana-v1",
+          "circuit": "nar",
+          "head": "ana",
+          "featureMode": "no-market-gap",
+          "experimentFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "selectedFeatureCoverage": {
+            "races": 55,
+            "horses": 576,
+            "availability": {
+              "form": {
+                "observed": 576,
+                "fraction": 1
+              },
+              "position": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "opponent": {
+                "observed": 167,
+                "fraction": 0.2899
+              },
+              "speed": {
+                "observed": 0,
+                "fraction": 0
+              },
+              "late_speed": {
+                "observed": 0,
+                "fraction": 0
+              }
+            }
+          },
+          "researchOnly": true,
+          "productionEligible": false,
+          "featureCount": 1000,
+          "trainRaces": 48,
+          "validationRaces": 7,
+          "testRaces": 0,
+          "trainThrough": "2026-10-24",
+          "developmentOnly": true,
+          "testFrom": null,
+          "validationMetrics": {
+            "races": 7,
+            "winHitAt1": 0.1429,
+            "winnerHitAt3": 0.1429,
+            "winnerHitAt5": 0.2857,
+            "top1PodiumRate": 0.5714,
+            "outperformMarketAndPodiumAt1": 0.5714,
+            "ndcgAt3": 0.2794,
+            "marketBaselineWinAt1": 0.5714,
+            "marketBaselineWinnerAt3": 1,
+            "roi": null
+          },
+          "metrics": {
+            "races": 0,
+            "winHitAt1": null,
+            "winnerHitAt3": null,
+            "winnerHitAt5": null,
+            "top1PodiumRate": null,
+            "outperformMarketAndPodiumAt1": null,
+            "ndcgAt3": null,
+            "marketBaselineWinAt1": null,
+            "marketBaselineWinnerAt3": null,
+            "roi": null
+          },
+          "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts."
+        }
+      ],
+      "paired": []
+    }
+  ]
+}

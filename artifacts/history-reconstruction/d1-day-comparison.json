@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-10",
+  "method": "GET only",
+  "http_status": 200,
+  "d1_races": 59,
+  "motherduck_races": 59,
+  "missing_in_motherduck": [],
+  "not_in_d1_day": [],
+  "warning": "One day only; not a complete D1 historical inventory."
+}

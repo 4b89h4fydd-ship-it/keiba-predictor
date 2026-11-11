@@ -1,0 +1,42 @@
+{
+  "motherduck": {
+    "storedRaces": 1418,
+    "archivedRaces": 181,
+    "settledArchivedRaces": 177,
+    "settledArchivedHorses": 1914
+  },
+  "localStatic": {
+    "manifestEntries": 1803,
+    "centralEntries": 300,
+    "centralDays": 10,
+    "narEntries": 1503,
+    "narDays": 32,
+    "matrixOrArchiveEntries": 388,
+    "invalidOriginHash": 68,
+    "noSettledLabels": 274,
+    "originValidLabelledCandidates": 10,
+    "candidateHorses": 118,
+    "centralCandidateDays": [
+      "2026-10-17"
+    ],
+    "narCandidateDays": [
+      "2026-10-10"
+    ],
+    "captureTimesAuthenticated": false
+  },
+  "d1PublicRead": {
+    "date": "2026-11-08",
+    "activeRaces": 71,
+    "details": 71,
+    "missingDetails": 0,
+    "retiredBaneiExcluded": 12,
+    "sealedMassFeatures": 0,
+    "sealedPreRacePredictions": 0
+  },
+  "localSqliteRaceCounts": {
+    "racedb": 0,
+    "prepared": 0,
+    "central": 0,
+    "nar": 0
+  }
+}

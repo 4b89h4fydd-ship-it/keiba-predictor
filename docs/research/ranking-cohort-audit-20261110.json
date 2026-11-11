@@ -1,0 +1,40 @@
+{
+  "flightId": "521f0ebb-f721-4818-89f2-d60bc6ec8b8b",
+  "version": 9,
+  "run": 7,
+  "status": "SUCCEEDED",
+  "cohorts": [
+    {
+      "circuit": "jra",
+      "races": 53,
+      "horses": 671,
+      "train": 36,
+      "valid": 17,
+      "trainDays": [
+        "2026-10-17",
+        "2026-10-24"
+      ],
+      "validDays": [
+        "2026-10-25"
+      ],
+      "trainingRaceDeficit": 4
+    },
+    {
+      "circuit": "nar",
+      "races": 48,
+      "horses": 513,
+      "train": 44,
+      "valid": 4,
+      "trainDays": [
+        "2026-10-15",
+        "2026-10-17",
+        "2026-10-23",
+        "2026-10-24"
+      ],
+      "validDays": [
+        "2026-10-25"
+      ],
+      "trainingRaceDeficit": 0
+    }
+  ]
+}

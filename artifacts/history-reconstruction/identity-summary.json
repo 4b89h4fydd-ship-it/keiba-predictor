@@ -1,0 +1,63 @@
+{
+  "success": true,
+  "columns": [
+    "buckets",
+    "conflicting_entries",
+    "dataset_id",
+    "identity_entries",
+    "independent_race_identities",
+    "issues",
+    "legacy_json_unique",
+    "linked_observations",
+    "newly_acquired_races",
+    "observations",
+    "reasons",
+    "repeated_identity_observations",
+    "snapshots",
+    "tied_races",
+    "unresolved_observations",
+    "version",
+    "warning"
+  ],
+  "columnTypes": [
+    "VARCHAR",
+    "BIGINT",
+    "VARCHAR",
+    "BIGINT",
+    "BIGINT",
+    "VARCHAR",
+    "BIGINT",
+    "BIGINT",
+    "BIGINT",
+    "BIGINT",
+    "VARCHAR",
+    "BIGINT",
+    "BIGINT",
+    "BIGINT",
+    "BIGINT",
+    "VARCHAR",
+    "VARCHAR"
+  ],
+  "rows": [
+    [
+      "{\"C\":886,\"D\":390,\"E\":106,\"F\":36}",
+      "0",
+      "3beb208181c84aca810f658dc40f3384e069e2643e182234ecb5dae307a8cec4",
+      "94131",
+      "14358",
+      "{\"invalid_competition_ranks\":390,\"roster_mismatch\":488,\"unresolved_nonfinish_status\":15}",
+      "219057",
+      "126963",
+      "0",
+      "268669",
+      "{\"missing_race_number\":121294,\"missing_stable_horse_id\":30790,\"missing_track\":126,\"unverified_race_id_namespace\":141678}",
+      "32832",
+      "1418",
+      "15",
+      "141706",
+      "identity-ledger-v1",
+      "Partial histories are not complete race rosters. C is not A. No new sealed holdout."
+    ]
+  ],
+  "rowCount": 1
+}

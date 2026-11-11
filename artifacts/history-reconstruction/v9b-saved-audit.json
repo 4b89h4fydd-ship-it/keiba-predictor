@@ -1,0 +1,162 @@
+{
+  "counts": {
+    "no-saved-v9b-publication": 1015,
+    "banei": 36,
+    "receipt-mismatch": 256,
+    "eligible": 97,
+    "incomplete-or-duplicate-roster": 7,
+    "unsettled": 7
+  },
+  "summaries": {
+    "中央": {
+      "races": 10,
+      "days": 1,
+      "metrics": {
+        "top1Win": 0.5,
+        "top1Podium": 0.7,
+        "winnerTop3": 0.7,
+        "winnerTop5": 0.7,
+        "mrr": 0.6154761904761905,
+        "ndcg3": 0.6011414153592697,
+        "logLoss": 2.2062882147289145,
+        "brier": 0.8374456938515165
+      }
+    },
+    "地方": {
+      "races": 87,
+      "days": 7,
+      "metrics": {
+        "top1Win": 0.40229885057471265,
+        "top1Podium": 0.6666666666666666,
+        "winnerTop3": 0.6781609195402298,
+        "winnerTop5": 0.8275862068965517,
+        "mrr": 0.5830049261083744,
+        "ndcg3": 0.5846615562458445,
+        "logLoss": 1.7831135269620797,
+        "brier": 0.7555748818936121
+      }
+    }
+  },
+  "marketComparison": {
+    "中央": {
+      "races": 7,
+      "days": 1,
+      "resamples": 2000,
+      "paired": {
+        "top1Win": {
+          "v9bMinusMarket": 0,
+          "dayCluster95": null
+        },
+        "top1Podium": {
+          "v9bMinusMarket": 0,
+          "dayCluster95": null
+        },
+        "winnerTop3": {
+          "v9bMinusMarket": 0,
+          "dayCluster95": null
+        },
+        "winnerTop5": {
+          "v9bMinusMarket": -0.14285714285714285,
+          "dayCluster95": null
+        },
+        "mrr": {
+          "v9bMinusMarket": 0.02074829931972789,
+          "dayCluster95": null
+        },
+        "ndcg3": {
+          "v9bMinusMarket": -0.015209235392371392,
+          "dayCluster95": null
+        },
+        "logLoss": {
+          "v9bMinusMarket": -0.2104887344542326,
+          "dayCluster95": null
+        },
+        "brier": {
+          "v9bMinusMarket": -0.05259884860109618,
+          "dayCluster95": null
+        }
+      },
+      "marketSource": "same-receipt ticketPlan.winExpectedValues; normalized inverse odds"
+    },
+    "地方": {
+      "races": 87,
+      "days": 7,
+      "resamples": 2000,
+      "paired": {
+        "top1Win": {
+          "v9bMinusMarket": 0,
+          "dayCluster95": [
+            -0.042105263157894736,
+            0.057692307692307696
+          ]
+        },
+        "top1Podium": {
+          "v9bMinusMarket": 0.022988505747126436,
+          "dayCluster95": [
+            -0.056179775280898875,
+            0.07547169811320754
+          ]
+        },
+        "winnerTop3": {
+          "v9bMinusMarket": 0,
+          "dayCluster95": [
+            -0.06,
+            0.1590909090909091
+          ]
+        },
+        "winnerTop5": {
+          "v9bMinusMarket": -0.022988505747126436,
+          "dayCluster95": [
+            -0.06,
+            0.03225806451612903
+          ]
+        },
+        "mrr": {
+          "v9bMinusMarket": 0.010093546300442851,
+          "dayCluster95": [
+            -0.018737076211303015,
+            0.055237439328348424
+          ]
+        },
+        "ndcg3": {
+          "v9bMinusMarket": 0.016941830611266286,
+          "dayCluster95": [
+            -0.015222523667450794,
+            0.07656565347388707
+          ]
+        },
+        "logLoss": {
+          "v9bMinusMarket": -0.011217740459771815,
+          "dayCluster95": [
+            -0.06080998964468317,
+            0.058071636238470614
+          ]
+        },
+        "brier": {
+          "v9bMinusMarket": 0.0020502959969146838,
+          "dayCluster95": [
+            -0.016100248840094176,
+            0.025736529859699493
+          ]
+        }
+      },
+      "marketSource": "same-receipt ticketPlan.winExpectedValues; normalized inverse odds"
+    }
+  },
+  "jra13Plus": {
+    "races": 6,
+    "days": 1,
+    "metrics": {
+      "top1Win": 0.5,
+      "top1Podium": 0.6666666666666666,
+      "winnerTop3": 0.6666666666666666,
+      "winnerTop5": 0.6666666666666666,
+      "mrr": 0.6091269841269841,
+      "ndcg3": 0.5578787872378113,
+      "logLoss": 2.388203654537829,
+      "brier": 0.821331083283436
+    }
+  },
+  "sourceManifestSha": "b50ca83cc2552f3cdc73baa2f4a2937b67936cfb70492d35ce479a2fd6e980af",
+  "codeSha": "2db2feca5f5b3f482ec9a7b298c0e7d16c1ea0f1de16504f829e55438c2b21b6"
+}

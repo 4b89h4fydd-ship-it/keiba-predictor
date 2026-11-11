@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+import unicodedata
 from dataclasses import dataclass
 from math import sqrt
 from statistics import median
@@ -7,7 +9,7 @@ from typing import Any, Callable, Iterable
 
 from arvexq.prediction.jra_class_evidence import class_ordinal
 
-FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v2-temporal-and-speed-separation"
+FEATURE_SCHEMA_VERSION = "arvexq-mass-features-v4-native-class-categories"
 
 # This module is intentionally isolated from factor_model.py/final_marks.py.
 # It generates only pre-race features. It does not read the current race result,
@@ -101,7 +103,7 @@ def _finish_quality(run: dict[str, Any]) -> float | None:
     if fin is None or fin <= 0:
         return None
     if field is None or field < 2:
-        field = max(2.0, fin)
+        return None
     if fin > field:
         return None
     return _clamp(1.0 - (fin - 1.0) / (field - 1.0), 0.0, 1.0)
@@ -126,7 +128,7 @@ def _late_speed(run: dict[str, Any]) -> float | None:
     direct = _f(run.get("last3FPercentile"))
     if direct is not None:
         return max(0.0, min(1.0, direct))
-    rank = _f(run.get("last3FRank"))
+    rank = _f(run.get("last3FRank", run.get("last3fRank")))
     field = _f(run.get("fieldSize"))
     if rank is not None and field is not None and field >= 2 and 1 <= rank <= field:
         return max(0.0, min(1.0, 1.0 - (rank - 1.0) / (field - 1.0)))
@@ -147,7 +149,32 @@ def _position(run: dict[str, Any]) -> float | None:
         value = _f(run.get(key))
         if value is not None and value > 0:
             return value
+    raw = run.get("cornerPositions")
+    if isinstance(raw, str):
+        # Ingestion stores passing order as e.g. "2-3-4".
+        values = re.split(r"[-,、\s]+", raw.strip())
+    elif isinstance(raw, list):
+        values = raw
+    else:
+        values = []
+    if values:
+        value = _f(values[-1])
+        if value is not None and value > 0:
+            return value
     return None
+
+
+def _corner_at(run: dict[str, Any], corner: int) -> float | None:
+    direct = _f(run.get(f"corner{corner}"))
+    if direct is not None and direct > 0:
+        return direct
+    raw = run.get("cornerPositions")
+    values = re.split(r"[-,、\s]+", raw.strip()) if isinstance(raw, str) else raw
+    # Only a full four-corner record identifies numbered corners unambiguously.
+    if not isinstance(values, list) or len(values) != 4:
+        return None
+    value = _f(values[corner-1])
+    return value if value is not None and value > 0 else None
 
 
 def _position_quality(run: dict[str, Any]) -> float | None:
@@ -156,7 +183,7 @@ def _position_quality(run: dict[str, Any]) -> float | None:
     if pos is None or pos <= 0:
         return None
     if field is None or field < 2:
-        field = max(2.0, pos)
+        return None
     return _clamp(1.0 - (pos - 1.0) / (field - 1.0), 0.0, 1.0)
 
 
@@ -216,9 +243,12 @@ RUN_METRICS: dict[str, Callable[[dict[str, Any]], float | None]] = {
     "early_speed": _early_speed,
     "late_speed": _late_speed,
     "position_quality": _position_quality,
+    "corner1_position": lambda r: _corner_at(r, 1),
+    "corner3_position": lambda r: _corner_at(r, 3),
     "opponent_level": _opponent_level,
     "prize": _prize,
     "margin": _margin,
+    "margin_seconds": lambda r: _f(r.get("marginSeconds", r.get("timeBehindWinner"))),
     "carried_weight": _carried_weight,
     "body_weight": _body_weight,
     "distance": _distance,
@@ -409,6 +439,16 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
     ctx = _race_context(race)
     runs = _runs(horse, str(race.get("date") or ""))
     features = _static_features(horse, race)
+    # Preserve explicit native historical classes without inventing a universal
+    # NAR/JRA strength scale. Never infer a missing class from the target result.
+    for run in runs[:5]:
+        raw_class = run.get("class") or run.get("raceClass")
+        if raw_class is None or not str(raw_class).strip():
+            continue
+        native = unicodedata.normalize("NFKC", str(raw_class)).strip()
+        track = str(run.get("track") or "unknown")
+        key = f"category::past_class::{track}::{native}"
+        features[key] = features.get(key, 0.0) + 1.0
     subsets = _filter_sets(runs, ctx)
 
     for subset_name, subset in subsets.items():

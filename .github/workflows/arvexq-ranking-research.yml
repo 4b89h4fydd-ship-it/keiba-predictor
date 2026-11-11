@@ -4,9 +4,18 @@ on:
   pull_request:
     paths:
       - 'arvexq/research/ranking_*.py'
+      - 'arvexq/prediction/mass_feature_factory.py'
+      - 'scripts/audit_saved_ranking_features.py'
+      - 'scripts/arvexq_collect_provisional_preoff.py'
       - 'tests/test_ranking_challenger.py'
+      - 'tests/test_ranking_benchmark.py'
+      - 'tests/test_provisional_preoff_collector.py'
       - 'tests/test_motherduck_ranking_export.py'
       - 'scripts/export_motherduck_frozen_ranking.py'
+      - 'scripts/arvexq_history_reconstruct.py'
+      - 'tests/test_history_reconstruct.py'
+      - 'scripts/arvexq_v9b_saved_audit.py'
+      - 'tests/test_v9b_saved_audit.py'
       - 'requirements-ranking-research.txt'
       - '.github/workflows/arvexq-ranking-research.yml'
   workflow_dispatch:
@@ -22,12 +31,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - name: Install independent ranking research dependencies
-        run: python -m pip install -r requirements-ranking-research.txt
+        run: python -m pip install -r requirements-ranking-research.txt pytest==9.2.0
       - name: Compile isolated research code
         run: python -m py_compile arvexq/research/ranking_feature_signals.py arvexq/research/ranking_challenger.py scripts/export_motherduck_frozen_ranking.py
       - name: Run leakage / ranking / paired holdout tests
         run: |
+          python -m unittest discover -s tests -p 'test_v9b_saved_audit.py' -v
+          python -m unittest discover -s tests -p 'test_history_reconstruct.py' -v
           python -m unittest discover -s tests -p 'test_ranking_challenger.py' -v
           python -m unittest discover -s tests -p 'test_motherduck_ranking_export.py' -v
+          python -m unittest discover -s tests -p 'test_ranking_benchmark.py' -v
+          python -m pytest tests/test_provisional_preoff_collector.py -q

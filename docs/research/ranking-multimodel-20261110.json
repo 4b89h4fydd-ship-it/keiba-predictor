@@ -1,0 +1,2919 @@
+{
+  "run": 5,
+  "flightId": "521f0ebb-f721-4818-89f2-d60bc6ec8b8b",
+  "status": "SUCCEEDED",
+  "developmentOnly": true,
+  "opponentAudit": {
+    "counts": {
+      "historicalRows": 10289,
+      "explicitOpponent": 0,
+      "explicitClass": 4617,
+      "titlePresent": 10213,
+      "jraParserRecognizesTitle": 2408
+    },
+    "unrecognizedTitles": [
+      [
+        "C2一",
+        91
+      ],
+      [
+        "",
+        76
+      ],
+      [
+        "C2二",
+        58
+      ],
+      [
+        "C1",
+        56
+      ],
+      [
+        "C3一",
+        51
+      ],
+      [
+        "C2",
+        45
+      ],
+      [
+        "Ｃ２一４歳以上",
+        43
+      ],
+      [
+        "ファイナルレース(C3)",
+        36
+      ],
+      [
+        "３歳－２",
+        36
+      ],
+      [
+        "３歳－３",
+        35
+      ],
+      [
+        "２歳",
+        35
+      ],
+      [
+        "B2",
+        34
+      ],
+      [
+        "Ｃ３一４歳以上",
+        32
+      ],
+      [
+        "C3",
+        32
+      ],
+      [
+        "C3二",
+        32
+      ]
+    ]
+  },
+  "reports": [
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 4.216,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.3,
+        "winnerHitAt2": 0.35,
+        "mrr": 0.4463,
+        "ndcgAt1": 0.4833,
+        "ndcgAt5": 0.5213,
+        "podiumCountAt3": 1.05,
+        "podiumRecallAt3": 0.35,
+        "podiumCountAt5": 1.8,
+        "winnerHitAt3": 0.5,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.65,
+        "outperformMarketAndPodiumAt1": 0.3,
+        "ndcgAt3": 0.4219,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 3,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 6,
+          "top1Finish": 3,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 3,
+          "top1Finish": 9,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 3,
+          "top1Finish": 4,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 11,
+          "top1Finish": 4,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 10,
+          "top1Finish": 10,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 8,
+          "top1Finish": 4,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 5,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 8,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 4,
+          "top1Finish": 3,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 10
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 8,
+          "top1Finish": 2,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 7,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 10,
+          "top1Finish": 2,
+          "top1Popularity": 4
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 44076,
+      "name": "ability",
+      "lightgbmLambdaMARTAlias": true
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ana",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 3.944,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.2,
+        "winnerHitAt2": 0.25,
+        "mrr": 0.3268,
+        "ndcgAt1": 0.2333,
+        "ndcgAt5": 0.3582,
+        "podiumCountAt3": 0.9,
+        "podiumRecallAt3": 0.3,
+        "podiumCountAt5": 1.35,
+        "winnerHitAt3": 0.25,
+        "winnerHitAt5": 0.4,
+        "top1PodiumRate": 0.3,
+        "outperformMarketAndPodiumAt1": 0.25,
+        "ndcgAt3": 0.2845,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 5,
+          "top1Finish": 5,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 4,
+          "top1Finish": 4,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 10,
+          "top1Finish": 12,
+          "top1Popularity": 9
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 8,
+          "top1Finish": 9,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 5,
+          "top1Finish": 8,
+          "top1Popularity": 6
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 7,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 11,
+          "top1Finish": 3,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 16,
+          "top1Finish": 11,
+          "top1Popularity": 15
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 9,
+          "top1Finish": 8,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 6,
+          "top1Finish": 7,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 8
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 2,
+          "top1Finish": 5,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 7,
+          "top1Finish": 3,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 10,
+          "top1Finish": 4,
+          "top1Popularity": 6
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 11,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 7,
+          "top1Finish": 9,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 9,
+          "top1Finish": 9,
+          "top1Popularity": 7
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 33176,
+      "name": "ana",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "pointwise",
+      "target": "graded",
+      "elapsedSeconds": 4.349,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.4,
+        "winnerHitAt2": 0.45,
+        "mrr": 0.5097,
+        "ndcgAt1": 0.55,
+        "ndcgAt5": 0.5541,
+        "podiumCountAt3": 1.25,
+        "podiumRecallAt3": 0.4167,
+        "podiumCountAt5": 1.85,
+        "winnerHitAt3": 0.5,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.7,
+        "outperformMarketAndPodiumAt1": 0.2,
+        "ndcgAt3": 0.4719,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 4,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 9,
+          "top1Finish": 3,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 4,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 12,
+          "top1Finish": 9,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 17,
+          "top1Finish": 6,
+          "top1Popularity": 10
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 7,
+          "top1Finish": 4,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 3,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 10,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 4,
+          "top1Finish": 3,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 9,
+          "top1Finish": 6,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 7,
+          "top1Finish": 9,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 9,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 94496,
+      "name": "pointwise",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "xgboost",
+      "target": "graded",
+      "elapsedSeconds": 4.352,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.35,
+        "winnerHitAt2": 0.5,
+        "mrr": 0.5011,
+        "ndcgAt1": 0.4417,
+        "ndcgAt5": 0.5357,
+        "podiumCountAt3": 1.25,
+        "podiumRecallAt3": 0.4167,
+        "podiumCountAt5": 1.8,
+        "winnerHitAt3": 0.55,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.6,
+        "outperformMarketAndPodiumAt1": 0.2,
+        "ndcgAt3": 0.4596,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 2,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 9,
+          "top1Finish": 3,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 2,
+          "top1Finish": 11,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 7,
+          "top1Finish": 4,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 7,
+          "top1Finish": 14,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 12,
+          "top1Finish": 4,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 4,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 11,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 8
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 10,
+          "top1Finish": 6,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 10,
+          "top1Finish": 9,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 3,
+          "top1Finish": 3,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 6,
+          "top1Finish": 5,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 30109,
+      "name": "xgboost",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "win",
+      "elapsedSeconds": 4.175,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.15,
+        "winnerHitAt2": 0.35,
+        "mrr": 0.3595,
+        "ndcgAt1": 0.2687,
+        "ndcgAt5": 0.4547,
+        "podiumCountAt3": 1.1,
+        "podiumRecallAt3": 0.3667,
+        "podiumCountAt5": 1.55,
+        "winnerHitAt3": 0.5,
+        "winnerHitAt5": 0.55,
+        "top1PodiumRate": 0.3,
+        "outperformMarketAndPodiumAt1": 0.25,
+        "ndcgAt3": 0.3787,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 2,
+          "top1Finish": 5,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 2,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 9,
+          "top1Finish": 5,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 2,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 14,
+          "top1Finish": 15,
+          "top1Popularity": 18
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 3,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 9,
+          "top1Finish": 13,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 6,
+          "top1Finish": 13,
+          "top1Popularity": 9
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 9,
+          "top1Finish": 10,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 18,
+          "top1Finish": 18,
+          "top1Popularity": 14
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 13,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 8
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 3,
+          "top1Finish": 5,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 7,
+          "top1Finish": 9,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 3,
+          "top1Finish": 6,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 5,
+          "top1Finish": 5,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 6,
+          "top1Popularity": 7
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 7,
+          "top1Finish": 4,
+          "top1Popularity": 5
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 25683,
+      "name": "winner",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "jra",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "podium",
+      "elapsedSeconds": 4.18,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 61,
+        "horses": 738,
+        "availability": {
+          "form": {
+            "observed": 738,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 735,
+            "fraction": 0.9959
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 41,
+      "validationRaces": 20,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 20,
+        "winHitAt1": 0.25,
+        "winnerHitAt2": 0.25,
+        "mrr": 0.3995,
+        "ndcgAt1": 0.3833,
+        "ndcgAt5": 0.5137,
+        "podiumCountAt3": 1.55,
+        "podiumRecallAt3": 0.5167,
+        "podiumCountAt5": 1.9,
+        "winnerHitAt3": 0.5,
+        "winnerHitAt5": 0.55,
+        "top1PodiumRate": 0.55,
+        "outperformMarketAndPodiumAt1": 0.2,
+        "ndcgAt3": 0.4746,
+        "marketBaselineWinAt1": 0.25,
+        "marketBaselineWinnerAt3": 0.6,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "jra-2026-10-25-京都-01",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-02",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-03",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 8,
+          "winnerRank": 8,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-06",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 12,
+          "winnerRank": 9,
+          "top1Finish": 5,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-07",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 3,
+          "top1Finish": 2,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-08",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 6,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-09",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 9,
+          "winnerRank": 6,
+          "top1Finish": 7,
+          "top1Popularity": 4
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-10",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 15,
+          "winnerRank": 4,
+          "top1Finish": 3,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-京都-11",
+          "date": "2026-10-25",
+          "track": "京都",
+          "fieldSize": 18,
+          "winnerRank": 8,
+          "top1Finish": 14,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-01",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 11,
+          "top1Finish": 4,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-03",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 18,
+          "winnerRank": 3,
+          "top1Finish": 2,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-04",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 13,
+          "winnerRank": 8,
+          "top1Finish": 3,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-07",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 3,
+          "top1Finish": 3,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "jra-2026-10-25-新潟-09",
+          "date": "2026-10-25",
+          "track": "新潟",
+          "fieldSize": 14,
+          "winnerRank": 14,
+          "top1Finish": 6,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-01",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 11,
+          "top1Finish": 9,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-02",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 7,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-03",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 12,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-09",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 11,
+          "winnerRank": 3,
+          "top1Finish": 6,
+          "top1Popularity": 6
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-10",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "jra-2026-10-25-東京-11",
+          "date": "2026-10-25",
+          "track": "東京",
+          "fieldSize": 16,
+          "winnerRank": 3,
+          "top1Finish": 5,
+          "top1Popularity": 11
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 31285,
+      "name": "podium",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 2.638,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.7143,
+        "winnerHitAt2": 0.7143,
+        "mrr": 0.7905,
+        "ndcgAt1": 0.7619,
+        "ndcgAt5": 0.7289,
+        "podiumCountAt3": 1.2857,
+        "podiumRecallAt3": 0.4286,
+        "podiumCountAt5": 2.2857,
+        "winnerHitAt3": 0.8571,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.8571,
+        "outperformMarketAndPodiumAt1": 0.1429,
+        "ndcgAt3": 0.5818,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 5,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 3,
+          "top1Finish": 5,
+          "top1Popularity": 6
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 33017,
+      "name": "ability",
+      "lightgbmLambdaMARTAlias": true
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ana",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 2.486,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.1429,
+        "winnerHitAt2": 0.1429,
+        "mrr": 0.2574,
+        "ndcgAt1": 0.3175,
+        "ndcgAt5": 0.3755,
+        "podiumCountAt3": 0.8571,
+        "podiumRecallAt3": 0.2857,
+        "podiumCountAt5": 1.4286,
+        "winnerHitAt3": 0.1429,
+        "winnerHitAt5": 0.2857,
+        "top1PodiumRate": 0.5714,
+        "outperformMarketAndPodiumAt1": 0.5714,
+        "ndcgAt3": 0.2794,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 8,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 10,
+          "top1Finish": 2,
+          "top1Popularity": 12
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 4,
+          "top1Finish": 3,
+          "top1Popularity": 5
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 9,
+          "top1Finish": 6,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 8,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 11,
+          "top1Finish": 11,
+          "top1Popularity": 4
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 27491,
+      "name": "ana",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "pointwise",
+      "target": "graded",
+      "elapsedSeconds": 3.208,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.5714,
+        "winnerHitAt2": 1,
+        "mrr": 0.7857,
+        "ndcgAt1": 0.6667,
+        "ndcgAt5": 0.7846,
+        "podiumCountAt3": 1.8571,
+        "podiumRecallAt3": 0.619,
+        "podiumCountAt5": 2.4286,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.8571,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.7111,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 2,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 2,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 239318,
+      "name": "pointwise",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "xgboost",
+      "target": "graded",
+      "elapsedSeconds": 2.625,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.5714,
+        "winnerHitAt2": 1,
+        "mrr": 0.7857,
+        "ndcgAt1": 0.7143,
+        "ndcgAt5": 0.8012,
+        "podiumCountAt3": 2,
+        "podiumRecallAt3": 0.6667,
+        "podiumCountAt5": 2.4286,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.8571,
+        "outperformMarketAndPodiumAt1": 0.2857,
+        "ndcgAt3": 0.7521,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 2,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 2,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 35735,
+      "name": "xgboost",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "win",
+      "elapsedSeconds": 2.639,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.7143,
+        "winnerHitAt2": 0.7143,
+        "mrr": 0.7704,
+        "ndcgAt1": 0.7619,
+        "ndcgAt5": 0.7447,
+        "podiumCountAt3": 1.4286,
+        "podiumRecallAt3": 0.4762,
+        "podiumCountAt5": 2.4286,
+        "winnerHitAt3": 0.7143,
+        "winnerHitAt5": 0.8571,
+        "top1PodiumRate": 0.8571,
+        "outperformMarketAndPodiumAt1": 0.1429,
+        "ndcgAt3": 0.6079,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 7,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 4,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 36539,
+      "name": "winner",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "podium",
+      "elapsedSeconds": 2.652,
+      "processPeakRssKiB": 2570684,
+      "experimentFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 55,
+        "horses": 576,
+        "availability": {
+          "form": {
+            "observed": 576,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 167,
+            "fraction": 0.2899
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 48,
+      "validationRaces": 7,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 7,
+        "winHitAt1": 0.7143,
+        "winnerHitAt2": 0.8571,
+        "mrr": 0.8333,
+        "ndcgAt1": 0.7619,
+        "ndcgAt5": 0.7993,
+        "podiumCountAt3": 1.8571,
+        "podiumRecallAt3": 0.619,
+        "podiumCountAt5": 2.4286,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.8571,
+        "outperformMarketAndPodiumAt1": 0.2857,
+        "ndcgAt3": 0.7064,
+        "marketBaselineWinAt1": 0.5714,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-06",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 11,
+          "winnerRank": 3,
+          "top1Finish": 3,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-盛岡-07",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 5,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-01",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 2
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 2,
+          "top1Finish": 5,
+          "top1Popularity": 5
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 38602,
+      "name": "podium",
+      "lightgbmLambdaMARTAlias": false
+    }
+  ],
+  "eligibilityStatus": "superseded-by-complete-roster-audit",
+  "supersededBy": "ranking-complete-roster-20261110.json"
+}
