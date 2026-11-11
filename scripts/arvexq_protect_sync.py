@@ -738,10 +738,16 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
 
 
 def guard(body: dict[str, Any], read=fetch_current, *, base: str) -> dict[str, Any]:
+    from arvexq.ingest.banei import is_banei
     out = copy.deepcopy(body)
     updated = []
     for detail in out.get("details") or []:
         if not isinstance(detail, dict) or not detail.get("id"):
+            continue
+        if is_banei(detail.get("track"), detail.get("id")):
+            # Banei is excluded on every route, including this D1
+            # sync guard, which previously had no check of its own
+            # and relied entirely on upstream filtering.
             continue
         old = read(base, str(detail["id"]))
         updated.append(protect_detail(old, detail))

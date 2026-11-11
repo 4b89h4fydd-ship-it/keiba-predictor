@@ -26,6 +26,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
+from arvexq.ingest.banei import is_banei
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
 from arvexq.prediction.observed_model import model_version
@@ -335,8 +336,8 @@ def prepare(
     if phase != "collect":
         raise ValueError("unknown prefetch stage")
     bundle = _read(bundle_path)
-    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
-    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and str(d.get("track") or "") not in ("帯広", "帯広ば") and not any(f"-{name}-" in str(d.get("id")) for name in ("帯広", "帯広ば"))]
+    rows = [r for r in (bundle.get("races") or []) if isinstance(r, dict) and r.get("id") and not is_banei(r.get("track"), r.get("id"))]
+    initial = [d for d in (bundle.get("details") or []) if isinstance(d, dict) and d.get("id") and not is_banei(d.get("track"), d.get("id"))]
     by_id: dict[str, dict[str, Any]] = {str(d["id"]): d for d in initial}
     # Replay only validated existing outputs of this SAME canonical prefetch,
     # so a failed upstream HTTP fetch cannot erase a known published roster.
@@ -486,9 +487,13 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
     """
     from arvexq.pipeline.persisted_inputs import verify_persisted_facts, may_create_prerace_prediction
     day = _read(bundle_path)
-    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id") and str(r.get("track") or "") not in ("帯広", "帯広ば") and "-帯広-" not in str(r.get("id")) and "-帯広ば-" not in str(r.get("id"))]
+    rows = [r for r in (day.get("races") or []) if isinstance(r, dict) and r.get("id") and not is_banei(r.get("track"), r.get("id"))]
+    # The details dict takes the same exclusion as the rows: before
+    # this, a banei detail survived here even though its race row was
+    # filtered out, and was persisted with the day bundle.
     details = {str(d["id"]): d for d in (day.get("details") or [])
-               if isinstance(d, dict) and d.get("id")}
+               if isinstance(d, dict) and d.get("id")
+               and not is_banei(d.get("track"), d.get("id"))}
     saved = {"races": rows, "details": list(details.values())}
     integrity = verify_persisted_facts(
         {"summaries": rows, "details": list(details.values())}, saved
