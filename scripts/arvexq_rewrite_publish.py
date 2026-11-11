@@ -1722,7 +1722,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     listing = _get(f"/api/races?date={date}")
     summaries = listing.get("races") or listing.get("summaries") or []
     counts = {"races": len(summaries), "published": 0, "skipped": 0,
-              "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0}
+              "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0,
+              "receiptMismatch": 0}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or "帯広" in str(summary.get("track") or ""):
@@ -1762,6 +1763,27 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                          if revision else ""))
                 continue
             final = protect_detail(old_raw, new)
+            # The self-verify above ran on the pre-protection product,
+            # but protect_detail may restore or merge stored blocks,
+            # and the sync worker re-serializes values afterwards.
+            # The 2026-11-11 audit found 256 stored v9b receipts whose
+            # CONTENT no longer re-hashes to the sealed receipt (every
+            # re-sealed upgrade verifies; first publications stored
+            # after these later transforms often do not). Verify the
+            # exact protected product that is about to be posted, and
+            # fail closed instead of storing an unverifiable receipt.
+            final_detail = (unpack_detail(final)
+                            if isinstance(final, dict)
+                            and "arvexqFullPayload" in final else final)
+            protected_check = verified_unified(dict(
+                unpack_detail(old_raw),
+                unifiedForecast=final_detail.get("unifiedForecast")))
+            if protected_check is None:
+                counts["failed"] += 1
+                counts["receiptMismatch"] += 1
+                print(f"FAIL {race_id}: protected product does not "
+                      "self-verify (receipt-content-mismatch)")
+                continue
             if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
                 final = pack_detail(final)
             result = _post_sync(final, token)
@@ -1774,7 +1796,19 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             stored = back_detail.get("unifiedForecast") or {}
             if stored.get("receiptSha256") != receipt:
                 counts["failed"] += 1
+                counts["receiptMismatch"] += 1
                 print(f"FAIL {race_id}: read-back receipt mismatch")
+                continue
+            # The string check above cannot detect content drift:
+            # the receipt string is copied verbatim even when a later
+            # transform changed the sealed values (the 256-ticket
+            # failure mode). Re-verify the stored product's content
+            # against its own receipt before calling this published.
+            if verified_unified(back_detail) is None:
+                counts["failed"] += 1
+                counts["receiptMismatch"] += 1
+                print(f"FAIL {race_id}: read-back content does not "
+                      "verify (receipt-content-mismatch)")
                 continue
             # The receipt covers only the unified product. The stored
             # detail also carries predictionMarks (what the entry list
