@@ -71,3 +71,7 @@ SHA検証付きで152レース・1,725頭分を復元（中央55・地方97）�
 |新馬・障害|一括対象から除外はしないが、タイトル/種別の正規化と専用被覆率・性能評価は未完了|
 
 本番採用不可。独立テストでのv9b/R24優越性は未証明。研究結果は本番に投入しない。
+
+## 最新コードのActions
+
+コードコミット `1091d225c5394c5712349576c20049e667611c13` はValidation [42957555306](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/42957555306)、Ranking [42957555258](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/42957555258)、Independent [42957555224](https://github.com/4b89h4fydd-ship-it/keiba-predictor/actions/runs/42957555224) が全てsuccess。以後のコミットはこの結果の証拠文書のみ。
