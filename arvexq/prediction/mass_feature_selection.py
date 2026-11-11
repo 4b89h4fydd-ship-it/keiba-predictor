@@ -4,7 +4,7 @@ from collections import defaultdict
 from math import isfinite
 from typing import Any, Iterable
 
-SELECTION_VERSION = "arvexq-mass-feature-selection-v1"
+SELECTION_VERSION = "arvexq-mass-feature-selection-v2-nar-context"
 
 # Keep the broad factory exploratory, but freeze only a disciplined candidate set.
 # This prevents feature-name/payload explosion and removes obvious correlated copies
@@ -45,7 +45,7 @@ def _history_allowed(name: str) -> bool:
 
 
 def snapshot_feature_allowed(name: str) -> bool:
-    if name.startswith(("static::", "market::", "category::", "delta::")):
+    if name.startswith(("static::", "market::", "category::", "delta::", "nar::")):
         return True
     if name.startswith("history::"):
         return _history_allowed(name)
@@ -63,7 +63,7 @@ def snapshot_feature_allowed(name: str) -> bool:
                 and bparts[1] in HISTORY_SUBSETS
                 and bparts[4] in {"mean", "median", "max", "last", "trend"}
             )
-        return base.startswith(("static::", "market::", "delta::"))
+        return base.startswith(("static::", "market::", "delta::", "nar::"))
     return False
 
 
