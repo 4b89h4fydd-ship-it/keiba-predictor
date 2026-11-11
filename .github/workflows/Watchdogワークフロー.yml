@@ -1,0 +1,74 @@
+name: ARVEXQ v26 Archive Watchdog
+
+# The v26 shadow lane's dated sealed-marks archive
+# (arvexq/ui/static/v26-marks/<date>.json) is produced outside this
+# repository's workflows. On 2026-11-11 the archive never arrived and
+# nothing noticed: the UI silently hid the v26 column all day.
+#
+# This watchdog checks, every morning before the first race, that
+# today's archive exists in the repo and satisfies the archive
+# contract (scripts/arvexq_v26_marks_archive.py). A missing or
+# invalid archive opens one issue per date and fails the run, so the
+# gap is visible hours before post time instead of after it.
+#
+# The watchdog never creates or alters marks. A day whose sealed
+# pre-race archive was not produced stays missing; it is never
+# reconstructed from post-race information.
+
+on:
+  schedule:
+    # JST 06:30 and 09:00 (UTC 21:30 previous day, 00:00).
+    - cron: "30 21 * * *"
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Archive date to check (YYYY-MM-DD, default: today JST)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: arvexq-v26-archive-watchdog
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve target date (JST)
+        id: target
+        run: |
+          DATE="${{ inputs.date }}"
+          if [ -z "$DATE" ]; then
+            DATE=$(TZ=Asia/Tokyo date +%F)
+          fi
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "Checking v26 archive for $DATE"
+      - name: Validate today's v26 sealed-marks archive
+        id: validate
+        run: |
+          python3 scripts/arvexq_v26_marks_archive.py \
+            --date "${{ steps.target.outputs.date }}"
+      - name: Open an issue when the archive is missing or invalid
+        if: failure() && steps.validate.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DATE: ${{ steps.target.outputs.date }}
+        run: |
+          TITLE="v26 sealed-marks archive missing/invalid: $DATE"
+          EXISTING=$(gh issue list --state open --search "$TITLE" --json number --jq 'length')
+          if [ "$EXISTING" = "0" ]; then
+            gh issue create --title "$TITLE" --body "The dated v26 sealed-marks archive for $DATE is missing from arvexq/ui/static/v26-marks/ or does not satisfy the archive contract (scripts/arvexq_v26_marks_archive.py). The web UI now shows the gap explicitly and keeps the production v9b marks unchanged. Do not reconstruct this day's v26 marks from post-race information; a sealed pre-race archive that was never produced stays missing."
+          else
+            echo "Issue already open for $DATE; not duplicating."
+          fi
+          exit 1
