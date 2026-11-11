@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from arvexq.prediction.mass_model_export import export_all_runtimes
-from arvexq.prediction.mass_model_training import train_all_heads
+from arvexq.prediction.mass_model_training import train_all_heads, _training_circuit
 
 
 def load_jsonl(path: str | Path) -> list[dict]:
@@ -32,9 +32,21 @@ def main() -> int:
     parser.add_argument("dataset",help="Frozen training JSONL from export_mass_training_dataset.py")
     parser.add_argument("model_dir",help="Directory for CatBoost/vectorizer artifacts")
     parser.add_argument("runtime_dir",help="Directory for standalone runtime exports")
+    parser.add_argument(
+        "--circuit", choices=("jra", "nar"), required=True,
+        help="Mandatory circuit of this single-circuit frozen dataset; no mixed training",
+    )
     args=parser.parse_args()
 
     rows=load_jsonl(args.dataset)
+    try:
+        actual_circuit = _training_circuit(rows)
+    except ValueError as exc:
+        raise SystemExit(f"refuse mixed or unlabelled training: {exc}") from exc
+    if actual_circuit != args.circuit:
+        raise SystemExit(
+            f"refuse training: requested {args.circuit}, frozen rows are {actual_circuit}"
+        )
     races=len({str(r.get("raceId") or "") for r in rows})
     if races<40:
         raise SystemExit(f"refuse training: only {races} frozen races; collect more true pre-race snapshots")
