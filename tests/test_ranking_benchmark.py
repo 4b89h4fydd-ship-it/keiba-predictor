@@ -50,6 +50,12 @@ class BenchmarkContracts(unittest.TestCase):
         self.assertEqual(r['after']['races'],2)
         with self.assertRaises(ValueError):calibrate_and_evaluate(cal,test,train_through='2026-11-01')
 
+    def test_missing_field_size_is_not_invented(self):
+        from arvexq.prediction.mass_feature_factory import _finish_quality,_position_quality
+        self.assertIsNone(_finish_quality({"finish":1}))
+        self.assertIsNone(_position_quality({"corner4":2}))
+        self.assertEqual(_finish_quality({"finish":1,"fieldSize":10}),1)
+
     def test_actual_returns_required(self):
         with self.assertRaises(ValueError):ticket_metrics([{'stake':100,'odds':5}])
         r=ticket_metrics([{'stake':100,'return':500,'settled':True},{'stake':100,'return':0,'settled':True}])

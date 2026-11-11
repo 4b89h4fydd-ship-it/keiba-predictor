@@ -103,7 +103,7 @@ def _finish_quality(run: dict[str, Any]) -> float | None:
     if fin is None or fin <= 0:
         return None
     if field is None or field < 2:
-        field = max(2.0, fin)
+        return None
     if fin > field:
         return None
     return _clamp(1.0 - (fin - 1.0) / (field - 1.0), 0.0, 1.0)
@@ -183,7 +183,7 @@ def _position_quality(run: dict[str, Any]) -> float | None:
     if pos is None or pos <= 0:
         return None
     if field is None or field < 2:
-        field = max(2.0, pos)
+        return None
     return _clamp(1.0 - (pos - 1.0) / (field - 1.0), 0.0, 1.0)
 
 

@@ -116,3 +116,32 @@ test sequence under the fixed minimum and source constraints. Operational
 schedule entitlement and irrecoverable historical pre-off fields cannot be
 made complete by reporting them as passed. All recovered evidence is retained
 for further verified source reconciliation.
+
+## Final runtime checks and correction to selection documentation
+
+main collector run42952066279 completed44/44 currently upcoming source races,
+0 failures,retaining a14,100,788-byte gzip artifact. Four earlier races were
+already covered by the48-race early MotherDuck capture. Both are observed
+source subsets,not independent official-universe completeness claims.
+Research integration3c5ad7d3 passed Actions42952729185 and42952725162;
+67 local tests +8 subtests passed before the final missing-field-size guard.
+Six model artifacts are now actually retrieved,closing the previous export
+blocker after user approval. No new permission request was needed.
+
+The morning-picks static archive was also checked:Nov10 has genuinely versioned
+v9b ticket evidence,committed09e5f93 at01:55:19Z. However none of the five replay
+test race_ids has ticketEvidence in its corresponding morning manifest. Thus
+there is NO same-cohort v9b original for that comparison; this is not a blanket
+claim that all historical v9b evidence was lost. A future evidence join must
+inspect these static manifests rather than only top-level MotherDuck model names.
+
+Earlier documentation listed the80%/30-sample/Wilson65% helper as the current
+selection policy. That is incomplete. `rank_selection.js` has aNov11 policy v2
+requiring matching v9b model/receipt hashes,prior approved-out-of-sample policy
+evidence,timestamps,1–3 valid nonduplicate wide tickets,hitProbability>=.70 and
+stressExpectedReturn>=1.05. Legacy Nov10 morning entries use older popularity
+selection. Do not pool different policy versions or change these rules here.
+
+Final source guard:future form/position quality no longer invents fieldSize
+from finishing/corner rank. Without an observed fieldSize>=2,quality is missing.
+Existing frozen matrices remain unchanged; no historical accuracy gain claimed.
