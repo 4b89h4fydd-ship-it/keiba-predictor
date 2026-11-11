@@ -21,7 +21,8 @@ def main():
  c.execute("CREATE TABLE IF NOT EXISTS arvexq_history_research.main.frozen_benchmark_execution_v1 (execution_id VARCHAR, payload JSON)")
  import uuid
  execution=str(uuid.uuid4())
- record=dict(audit=audit,reports=results,code_bundle_sha=hashlib.sha256(base64.b64decode(BUNDLE)).hexdigest(),data_sha=hashlib.sha256(path.read_bytes()).hexdigest(),productionChanged=False)
+ model_artifacts={str(p.relative_to(root/'models')):base64.b64encode(p.read_bytes()).decode() for p in (root/'models').rglob('*') if p.is_file()}
+ record=dict(model_artifacts_base64=model_artifacts,audit=audit,reports=results,code_bundle_sha=hashlib.sha256(base64.b64decode(BUNDLE)).hexdigest(),data_sha=hashlib.sha256(path.read_bytes()).hexdigest(),productionChanged=False)
  c.execute('INSERT INTO arvexq_history_research.main.frozen_benchmark_execution_v1 VALUES (?,?)',[execution,json.dumps(record)])
  print('DONE',execution,json.dumps(record),flush=True)
 if __name__=='__main__':main()
