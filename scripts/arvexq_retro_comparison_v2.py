@@ -40,7 +40,7 @@ def extract(rid, snap, day):
   active.append((int(n),h))
  if len(set(n for n,_ in active))!=len(active):return None,"duplicate_entry_number"
  if set(entries)!=set(n for n,_ in active) or len(active)<4: return None,"incomplete_roster"
- if sorted(entries.values())[:3]!=[1,2,3] or len(set(entries.values()))!=len(entries): return None,"ambiguous_finish"
+ if any(pos != 1+sum(q<pos for q in entries.values()) for pos in entries.values()): return None,"invalid_competition_ranks"
  rows=[]
  for n,h in active:
   allruns=h.get("allPastRuns") if isinstance(h.get("allPastRuns"),list) and h["allPastRuns"] else h.get("recentRaces")
@@ -53,7 +53,7 @@ def extract(rid, snap, day):
    try:when=datetime.date.fromisoformat(when).isoformat()
    except ValueError:continue
    if when>=day:continue
-   identity=(when,str(r.get("raceId") or ""),str(r.get("track") or ""),str(r.get("raceNumber") or ""))
+   identity=(when,str(r.get("raceId"))) if r.get("raceId") else (when,hashlib.sha256(json.dumps(r,sort_keys=True).encode()).hexdigest())
    if identity in seen_runs:continue
    seen_runs.add(identity)
    if len(when)<10 or not when[:10][:4].isdigit():continue
@@ -97,9 +97,9 @@ def metrics(races,model):
  for r in races:
   s=model.predict(np.array([h["features"] for h in r],dtype=np.float32))
   order=sorted(range(len(r)),key=lambda i:(-s[i],r[i]["horse_number"]))
-  winner=next(i for i,e in enumerate(r) if e["finish"]==1)
-  correct+=order[0]==winner
-  top3+=winner in order[:3]
+  winners={i for i,e in enumerate(r) if e["finish"]==1}
+  correct+=order[0] in winners
+  top3+=bool(winners.intersection(order[:3]))
   podium+=r[order[0]]["finish"]<=3
  n=len(races)
  return {"races":n,"top1_win":correct/n if n else None,"winner_top3":top3/n if n else None,"top1_podium":podium/n if n else None}
@@ -111,8 +111,8 @@ def evaluate(races,model,cal):
  top5=[];mrr=[];ndcg=[]; probs=[];labels=[]
  for race in races:
   scores=model.predict(np.array([h['features'] for h in race],dtype=np.float32))
-  order=np.argsort(-scores,kind='stable');winner=next(i for i,h in enumerate(race) if h['finish']==1)
-  rank=list(order).index(winner)+1
+  order=np.argsort(-scores,kind='stable');winners={i for i,h in enumerate(race) if h['finish']==1}
+  rank=min(list(order).index(w)+1 for w in winners)
   top5.append(rank<=5);mrr.append(1/rank)
   gains=[2**h['label']-1 for h in race]
   dcg=sum(gains[i]/math.log2(k+2) for k,i in enumerate(order[:3]))
