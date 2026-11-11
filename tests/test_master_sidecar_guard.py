@@ -93,6 +93,38 @@ class MasterSidecarGuardTests(unittest.TestCase):
         protected = protect_detail(old, incoming)
         self.assertEqual(protected["masterAnalysis"], old["masterAnalysis"])
 
+    def test_roundtrip_resend_with_damaged_sidecar_restores_stored(self):
+        # Live sync seeds its write from the stored detail: identical
+        # rewritePublish marker, ready status, every forecast block.
+        # The returned sidecar has been through display transport, so
+        # its signed bytes no longer reproduce contentSha256. The
+        # write must not be rejected, and the stored original must be
+        # retained verbatim (the damaged copy is never adopted).
+        old = saved()
+        incoming = deepcopy(old)
+        incoming["oddsUpdatedAt"] = 456
+        incoming["masterAnalysis"]["runners"][0]["pWin"] = 0.9
+        protected = protect_detail(old, incoming)
+        self.assertEqual(protected["masterAnalysis"], old["masterAnalysis"])
+        self.assertEqual(protected["oddsUpdatedAt"], 456)
+
+    def test_advancing_publication_with_damaged_sidecar_still_rejected(self):
+        # A genuine new publication advances the marker chain
+        # (revision links to the stored receipt). Strict sidecar
+        # verification must still apply there.
+        old = saved()
+        incoming = deepcopy(old)
+        marker = incoming["preparedMeta"]["rewritePublish"]
+        marker["publishedAt"] = "2026-11-09T09:30:00+09:00"
+        marker["firstPublishedAt"] = "2026-11-09T09:00:00+09:00"
+        marker["revision"] = {
+            "previousReceiptSha256": "a" * 64,
+            "revisionCount": 1,
+        }
+        incoming["masterAnalysis"]["runners"][0]["pWin"] = 0.9
+        with self.assertRaisesRegex(ValueError, "signature or capture mismatch"):
+            protect_detail(old, incoming)
+
 
 if __name__ == "__main__":
     unittest.main()

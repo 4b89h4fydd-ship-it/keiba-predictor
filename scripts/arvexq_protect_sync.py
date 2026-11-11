@@ -588,6 +588,21 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
             out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
         else:
             out.pop('masterAnalysis', None)
+    elif (isinstance(stored_marker, dict) and marker == stored_marker
+            and 'masterAnalysis' in old):
+        # Idempotent re-send / seeded round-trip: the write carries the
+        # stored publication's marker verbatim, so the publication chain
+        # has NOT advanced. Live sync seeds its writes from the stored
+        # detail and round-trips the sidecar through display projections
+        # that do not preserve its signed bytes; verifying the returned
+        # copy here rejects every such detail batch (Realtime Sync has
+        # failed on this since the sidecar guard landed on 2026-11-09).
+        # The incoming sidecar is neither verified nor adopted: the
+        # stored original is retained verbatim, exactly as for a
+        # non-publish write. A round-trip with NO stored sidecar falls
+        # through to the strict verification below, and any write whose
+        # marker genuinely advances the chain is still fully verified.
+        out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
     elif 'masterAnalysis' in out:
         from hashlib import sha256
         sidecar = out['masterAnalysis']
