@@ -88,6 +88,8 @@ def provisional_capture(detail, *, now):
     if any(detail.get(key) not in (None, {}, [], "") for key in
            ("result", "results", "payouts")):
         raise ValueError("non-empty post-race fields prohibited")
+    if "帯広" in str(detail.get("track") or "") or "帯広" in str(detail["id"]):
+        raise ValueError("retired banei excluded")
     post = _post_at(detail)
     if not now < post:
         raise ValueError("post time already passed")
@@ -122,6 +124,7 @@ def provisional_capture(detail, *, now):
         "sourceProvenance": {"endpointFamily": "existing-cloudflare-race-api",
                              "observedAtEpoch": int(now.timestamp()),
                              "independentAttestation": False},
+        "rawPreoffDetail": deepcopy(filtered),
         "horsesWithPastRuns": history_count,
         "historyComplete": history_count == len(active),
         "version": VERSION, "eligibility": "provisional-not-officially-attested",
@@ -136,11 +139,11 @@ def provisional_capture(detail, *, now):
     return record
 
 
-def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
+def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=0,
             fetch=None):
     clock = (now or datetime.now(JST)).astimezone(JST)
-    if ahead_minutes < 1 or max_races < 1:
-        raise ValueError("positive collection window required")
+    if ahead_minutes < 1 or max_races < 0:
+        raise ValueError("positive window and nonnegative race limit required")
     fetcher = fetch or _get_json
     root = base.rstrip("/")
     if root != API_BASE:
@@ -154,6 +157,8 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
     for row in candidates:
         if not isinstance(row, dict) or not row.get("id"):
             continue
+        if "帯広" in str(row.get("track") or "") or "帯広" in str(row["id"]):
+            continue
         try:
             mins = (_post_at(row) - clock).total_seconds() / 60
         except ValueError:
@@ -161,7 +166,9 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
         if 0 < mins <= ahead_minutes:
             due.append(row)
     due.sort(key=lambda x: (x.get("startTime") or "", str(x["id"])))
-    due = due[:max_races]
+    due_total = len(due)
+    deferred = due[max_races:] if max_races else []
+    due = due[:max_races] if max_races else due
     artifacts, failures = [], []
     # Only existing Cloudflare API routes; never a second provider or a
     # fabricated race ID. Compact /api/racecard is NOT sufficient history.
@@ -202,13 +209,14 @@ def collect(*, base=API_BASE, now=None, ahead_minutes=35, max_races=12,
                 raise ValueError("race dates disagree")
             if _post_at(detail) != _post_at(row):
                 raise ValueError("race scheduled post changed across endpoints")
-            record = provisional_capture(detail, now=clock)
+            record = provisional_capture(detail, now=clock if now is not None else datetime.now(JST))
             artifacts.append(record)
         except (ValueError, KeyError, TypeError, TimeoutError, OSError) as exc:
             failures.append({"raceId": rid, "errorType": type(exc).__name__,
                              "reason": str(exc)[:140]})
     return {"version": VERSION, "date": day, "capturedAtEpoch": int(clock.timestamp()),
-            "candidates": len(due), "captured": len(artifacts),
+            "candidates": len(due), "dueTotal": due_total,
+            "deferredRaceIds": [r["id"] for r in deferred], "captured": len(artifacts),
             "records": artifacts, "failures": failures,
             "verifiedForTraining": False}
 
@@ -230,7 +238,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-dir", type=Path, default=Path("preoff-research-capture"))
     parser.add_argument("--ahead-minutes", type=int, default=35)
-    parser.add_argument("--max-races", type=int, default=12)
+    parser.add_argument("--max-races", type=int, default=0)
     args = parser.parse_args()
     data = collect(ahead_minutes=args.ahead_minutes, max_races=args.max_races)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
@@ -238,7 +246,7 @@ def main():
     print(json.dumps({**result, "captured": data["captured"], "candidates": data["candidates"],
                       "failures": data["failures"], "trainingEligible": False},
                      ensure_ascii=False))
-    return 0
+    return 1 if data["failures"] or data.get("deferredRaceIds") else 0
 
 
 if __name__ == "__main__":

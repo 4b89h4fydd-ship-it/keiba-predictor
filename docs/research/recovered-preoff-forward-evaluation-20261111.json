@@ -1,0 +1,798 @@
+{
+  "eligibility": "provisional-source-not-independently-attested",
+  "splitFixedBeforeScoring": true,
+  "models": {
+    "ability": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.2,
+        "winnerHitAt2": 0.2,
+        "mrr": 0.34,
+        "ndcgAt1": 0.4,
+        "ndcgAt5": 0.5827,
+        "podiumCountAt3": 1.4,
+        "podiumRecallAt3": 0.4667,
+        "podiumCountAt5": 2.2,
+        "winnerHitAt3": 0.2,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.6,
+        "outperformMarketAndPodiumAt1": 0.2,
+        "ndcgAt3": 0.411,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 0.1,
+        "podiumTemperature": 0.1,
+        "podiumAfter": 2.1466877047301507,
+        "before": {
+          "races": 5,
+          "logLoss": 2.2430253941286002,
+          "brier": 0.8951451278442335,
+          "podiumBrier": 1.9354544204136985,
+          "ece": 0.02940535403385987,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 20,
+              "predicted": 0.08455129098978535,
+              "observed": 0.05
+            },
+            {
+              "bin": 1,
+              "n": 27,
+              "predicted": 0.12255459926682566,
+              "observed": 0.14814814814814814
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 3.065927887437238,
+          "brier": 1.09841010767757,
+          "podiumBrier": 2.1466877047301507,
+          "ece": 0.13594885610325597,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 34,
+              "predicted": 0.03395706299970824,
+              "observed": 0.11764705882352941
+            },
+            {
+              "bin": 1,
+              "n": 4,
+              "predicted": 0.1519192087312489,
+              "observed": 0.0
+            },
+            {
+              "bin": 2,
+              "n": 4,
+              "predicted": 0.26124535555508616,
+              "observed": 0.0
+            },
+            {
+              "bin": 3,
+              "n": 2,
+              "predicted": 0.3253308697917023,
+              "observed": 0.5
+            },
+            {
+              "bin": 4,
+              "n": 2,
+              "predicted": 0.45240357310770185,
+              "observed": 0.0
+            },
+            {
+              "bin": 6,
+              "n": 1,
+              "predicted": 0.6373327150657715,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 1380,
+          "profit": 880,
+          "hitRate": 0.2,
+          "roi": 2.76,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 340,
+          "profit": -160,
+          "hitRate": 0.6,
+          "roi": 0.68,
+          "roiWithoutLargestPayout": 0.4,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": 0.0,
+        "wins": 0,
+        "losses": 0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "ana": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.0,
+        "winnerHitAt2": 0.0,
+        "mrr": 0.1808,
+        "ndcgAt1": 0.0667,
+        "ndcgAt5": 0.2988,
+        "podiumCountAt3": 0.8,
+        "podiumRecallAt3": 0.2667,
+        "podiumCountAt5": 1.8,
+        "winnerHitAt3": 0.0,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.2,
+        "outperformMarketAndPodiumAt1": 0.0,
+        "ndcgAt3": 0.1767,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 10.0,
+        "podiumTemperature": 0.1,
+        "podiumAfter": 2.0961250216918783,
+        "before": {
+          "races": 5,
+          "logLoss": 2.2554976051805693,
+          "brier": 0.8969770756898514,
+          "podiumBrier": 2.0010401396379196,
+          "ece": 0.03591199603441118,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 24,
+              "predicted": 0.08983617054963905,
+              "observed": 0.125
+            },
+            {
+              "bin": 1,
+              "n": 23,
+              "predicted": 0.12364921333950706,
+              "observed": 0.08695652173913043
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 2.226229691041034,
+          "brier": 0.8904500359869463,
+          "podiumBrier": 2.007037403138635,
+          "ece": 0.03422788432104725,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 24,
+              "predicted": 0.0914851966023079,
+              "observed": 0.125
+            },
+            {
+              "bin": 1,
+              "n": 23,
+              "predicted": 0.12192849050193959,
+              "observed": 0.08695652173913043
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 0,
+          "profit": -500,
+          "hitRate": 0.0,
+          "roi": 0.0,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 0,
+          "profit": -500,
+          "hitRate": 0.0,
+          "roi": 0.0,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": -0.2,
+        "wins": 0,
+        "losses": 1,
+        "ci95": [
+          -0.5,
+          0.0
+        ]
+      }
+    },
+    "pointwise": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.0,
+        "winnerHitAt2": 0.4,
+        "mrr": 0.2952,
+        "ndcgAt1": 0.1333,
+        "ndcgAt5": 0.4668,
+        "podiumCountAt3": 1.4,
+        "podiumRecallAt3": 0.4667,
+        "podiumCountAt5": 2.0,
+        "winnerHitAt3": 0.4,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.2,
+        "outperformMarketAndPodiumAt1": 0.0,
+        "ndcgAt3": 0.38,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 0.5,
+        "podiumTemperature": 0.5,
+        "podiumAfter": 2.106079999609416,
+        "before": {
+          "races": 5,
+          "logLoss": 2.202107557697079,
+          "brier": 0.9012485888004977,
+          "podiumBrier": 1.9595301194610815,
+          "ece": 0.051548876625143035,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 31,
+              "predicted": 0.07467409793649471,
+              "observed": 0.06451612903225806
+            },
+            {
+              "bin": 1,
+              "n": 13,
+              "predicted": 0.13758472302377991,
+              "observed": 0.23076923076923078
+            },
+            {
+              "bin": 2,
+              "n": 1,
+              "predicted": 0.23343570702809144,
+              "observed": 0.0
+            },
+            {
+              "bin": 3,
+              "n": 2,
+              "predicted": 0.33153292881571694,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 2.4109710433989036,
+          "brier": 1.016838860336693,
+          "podiumBrier": 2.106079999609416,
+          "ece": 0.11771449981831093,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 35,
+              "predicted": 0.050411974633263724,
+              "observed": 0.08571428571428572
+            },
+            {
+              "bin": 1,
+              "n": 6,
+              "predicted": 0.1421212607418504,
+              "observed": 0.0
+            },
+            {
+              "bin": 2,
+              "n": 2,
+              "predicted": 0.23464507105273136,
+              "observed": 1.0
+            },
+            {
+              "bin": 3,
+              "n": 1,
+              "predicted": 0.3067393661618695,
+              "observed": 0.0
+            },
+            {
+              "bin": 4,
+              "n": 1,
+              "predicted": 0.40599743198015265,
+              "observed": 0.0
+            },
+            {
+              "bin": 5,
+              "n": 1,
+              "predicted": 0.5709935632139691,
+              "observed": 0.0
+            },
+            {
+              "bin": 6,
+              "n": 1,
+              "predicted": 0.6298328199232135,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 0,
+          "profit": -500,
+          "hitRate": 0.0,
+          "roi": 0.0,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 100,
+          "profit": -400,
+          "hitRate": 0.2,
+          "roi": 0.2,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": -0.2,
+        "wins": 0,
+        "losses": 1,
+        "ci95": [
+          -0.5,
+          0.0
+        ]
+      }
+    },
+    "xgboost": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.2,
+        "winnerHitAt2": 0.4,
+        "mrr": 0.4182,
+        "ndcgAt1": 0.3333,
+        "ndcgAt5": 0.5564,
+        "podiumCountAt3": 1.6,
+        "podiumRecallAt3": 0.5333,
+        "podiumCountAt5": 2.2,
+        "winnerHitAt3": 0.6,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.4,
+        "outperformMarketAndPodiumAt1": 0.2,
+        "ndcgAt3": 0.4425,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 0.1,
+        "podiumTemperature": 0.1,
+        "podiumAfter": 1.9204889286579097,
+        "before": {
+          "races": 5,
+          "logLoss": 2.210419474114004,
+          "brier": 0.8870605822067341,
+          "podiumBrier": 1.9885537983101471,
+          "ece": 0.041220747312839305,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 22,
+              "predicted": 0.08948579826598745,
+              "observed": 0.045454545454545456
+            },
+            {
+              "bin": 1,
+              "n": 25,
+              "predicted": 0.12125249752593106,
+              "observed": 0.16
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 2.157131426794144,
+          "brier": 0.8774916522129868,
+          "podiumBrier": 1.9204889286579097,
+          "ece": 0.037092200279604415,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 29,
+              "predicted": 0.07582578984350599,
+              "observed": 0.06896551724137931
+            },
+            {
+              "bin": 1,
+              "n": 15,
+              "predicted": 0.14188888622861975,
+              "observed": 0.2
+            },
+            {
+              "bin": 2,
+              "n": 3,
+              "predicted": 0.22423960036967663,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 250,
+          "profit": -250,
+          "hitRate": 0.2,
+          "roi": 0.5,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 210,
+          "profit": -290,
+          "hitRate": 0.4,
+          "roi": 0.42,
+          "roiWithoutLargestPayout": 0.2,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": 0.0,
+        "wins": 1,
+        "losses": 1,
+        "ci95": [
+          -0.5,
+          0.3333333333333333
+        ]
+      }
+    },
+    "winner": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.0,
+        "winnerHitAt2": 0.0,
+        "mrr": 0.2515,
+        "ndcgAt1": 0.3333,
+        "ndcgAt5": 0.5535,
+        "podiumCountAt3": 1.6,
+        "podiumRecallAt3": 0.5333,
+        "podiumCountAt5": 2.0,
+        "winnerHitAt3": 0.6,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.6,
+        "outperformMarketAndPodiumAt1": 0.4,
+        "ndcgAt3": 0.4785,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 0.2,
+        "podiumTemperature": 0.2,
+        "podiumAfter": 1.783926174094195,
+        "before": {
+          "races": 5,
+          "logLoss": 2.2092863082004577,
+          "brier": 0.8891540255307472,
+          "podiumBrier": 1.887324759273407,
+          "ece": 0.04844075347008385,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 25,
+              "predicted": 0.08553430826187883,
+              "observed": 0.04
+            },
+            {
+              "bin": 1,
+              "n": 22,
+              "predicted": 0.13007464970241045,
+              "observed": 0.18181818181818182
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 2.430029277110697,
+          "brier": 1.002457967737861,
+          "podiumBrier": 1.783926174094195,
+          "ece": 0.07226463252115041,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 34,
+              "predicted": 0.05359671294285029,
+              "observed": 0.08823529411764706
+            },
+            {
+              "bin": 1,
+              "n": 4,
+              "predicted": 0.11987322392401391,
+              "observed": 0.25
+            },
+            {
+              "bin": 2,
+              "n": 5,
+              "predicted": 0.24176886733103853,
+              "observed": 0.2
+            },
+            {
+              "bin": 3,
+              "n": 3,
+              "predicted": 0.3269047752657455,
+              "observed": 0.0
+            },
+            {
+              "bin": 5,
+              "n": 1,
+              "predicted": 0.5086602017946052,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 0,
+          "profit": -500,
+          "hitRate": 0.0,
+          "roi": 0.0,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 360,
+          "profit": -140,
+          "hitRate": 0.6,
+          "roi": 0.72,
+          "roiWithoutLargestPayout": 0.42,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": -0.2,
+        "wins": 0,
+        "losses": 1,
+        "ci95": [
+          -0.5,
+          0.0
+        ]
+      }
+    },
+    "podium": {
+      "ranking": {
+        "races": 5,
+        "winHitAt1": 0.0,
+        "winnerHitAt2": 0.4,
+        "mrr": 0.3167,
+        "ndcgAt1": 0.2,
+        "ndcgAt5": 0.4737,
+        "podiumCountAt3": 1.6,
+        "podiumRecallAt3": 0.5333,
+        "podiumCountAt5": 1.8,
+        "winnerHitAt3": 0.6,
+        "winnerHitAt5": 0.6,
+        "top1PodiumRate": 0.4,
+        "outperformMarketAndPodiumAt1": 0.0,
+        "ndcgAt3": 0.4375,
+        "marketBaselineWinAt1": 0.0,
+        "marketBaselineWinnerAt3": 0.2,
+        "roi": null
+      },
+      "probability": {
+        "temperature": 0.2,
+        "podiumTemperature": 0.2,
+        "podiumAfter": 2.035440568772357,
+        "before": {
+          "races": 5,
+          "logLoss": 2.202429642193741,
+          "brier": 0.8872411647826599,
+          "podiumBrier": 1.8832298905046585,
+          "ece": 0.03001988687386327,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 19,
+              "predicted": 0.07799135753794322,
+              "observed": 0.05263157894736842
+            },
+            {
+              "bin": 1,
+              "n": 27,
+              "predicted": 0.12201972809126715,
+              "observed": 0.14814814814814814
+            },
+            {
+              "bin": 2,
+              "n": 1,
+              "predicted": 0.2236315483148659,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "after": {
+          "races": 5,
+          "logLoss": 2.5847173747114223,
+          "brier": 1.0607477645835965,
+          "podiumBrier": 2.035440568772357,
+          "ece": 0.08076002039032942,
+          "calibrationCurve": [
+            {
+              "bin": 0,
+              "n": 33,
+              "predicted": 0.03837599507989844,
+              "observed": 0.09090909090909091
+            },
+            {
+              "bin": 1,
+              "n": 6,
+              "predicted": 0.14702490266965992,
+              "observed": 0.16666666666666666
+            },
+            {
+              "bin": 2,
+              "n": 4,
+              "predicted": 0.23839556679316265,
+              "observed": 0.25
+            },
+            {
+              "bin": 3,
+              "n": 2,
+              "predicted": 0.3717258549488075,
+              "observed": 0.0
+            },
+            {
+              "bin": 4,
+              "n": 1,
+              "predicted": 0.46834221767045825,
+              "observed": 0.0
+            },
+            {
+              "bin": 6,
+              "n": 1,
+              "predicted": 0.6860665516046681,
+              "observed": 0.0
+            }
+          ],
+          "brierDefinition": "sum across runners, average across races"
+        },
+        "productionEligible": false,
+        "note": "candidate calibration; score-generation training must independently precede calibration"
+      },
+      "payoutCheck": "stored-payout-shape-and-finisher-reconciliation-only",
+      "roi": {
+        "単勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 0,
+          "profit": -500,
+          "hitRate": 0.0,
+          "roi": 0.0,
+          "roiWithoutLargestPayout": 0.0,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        },
+        "複勝": {
+          "tickets": 5,
+          "stake": 500,
+          "return": 200,
+          "profit": -300,
+          "hitRate": 0.4,
+          "roi": 0.4,
+          "roiWithoutLargestPayout": 0.2,
+          "largestPayoutPolicy": "remove largest payout, retain all original stakes"
+        }
+      },
+      "invalidPayoutRaceIds": [],
+      "calibrationRaces": 6,
+      "testDates": [
+        "2026-11-06",
+        "2026-11-10"
+      ],
+      "pairedVsAbility": {
+        "days": 2,
+        "races": 5,
+        "meanDifference": -0.2,
+        "wins": 0,
+        "losses": 1,
+        "ci95": [
+          -0.5,
+          0.0
+        ]
+      }
+    }
+  }
+}
