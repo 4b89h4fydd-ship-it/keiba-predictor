@@ -1233,7 +1233,11 @@ function racecardHeadHtml(r){
 function racecardMarkLegend(r){
   var has26=!!v26RaceEntry(r),w=widenSection(r),
     hasW=!!(w&&Array.isArray(w.section.addedPartners)&&w.section.addedPartners.length);
-  if(!has26&&!hasW)return '<div class="rc-mark-legend"></div>';
+  if(!has26&&!hasW){
+    var status=state.v26ArchiveStatus;
+    var reason=status&&status.date===r.date?status.state:'loading';
+    return '<div class="rc-mark-legend" role="status">v26（試験中）：'+(reason==='missing'?'この日の保存印は未取得です。':reason==='error'?'保存印の取得に失敗しました。':reason==='invalid'?'保存印データが不正です。':'保存印を確認中です。')+' 本番v9bの印は変更していません。</div>';
+  }
   var text='';
   if(has26)text+='左の「v26」列は試験中の別系統（多眼）の印、右の「v9b」列は本番予想の印です。両系統で同じ印が付いた馬は、v26側を色付きで強調しています。';
   if(hasW)text+=(text?' ':'')+(w.lane==='v28'?'▽は順当なレース以外で買い目の相手に入る馬です（v28・試験中）。本番予想の印は変わりません。':'▽は荒れたレースで買い目の相手に入る馬です（v25・試験中）。本番予想の印は変わりません。');
@@ -3728,19 +3732,31 @@ function load(force){
          payload.date!==d||!payload.races||Array.isArray(payload.races))return;
       state.selectionArchive=payload;render();
     }).catch(function(){/* A missing purchase record is not a failed prediction. */});
-  // v26 shadow-lane marks: a dated static archive holding a read-only
-  // copy of the v26 multi-eye lane's sealed marks, display-only and
-  // independent of the production forecast. A missing file (no v26
-  // seals for this date) simply leaves the v26 column hidden.
+  // v26 is a read-only shadow lane. Never substitute production or retrospective
+  // predictions when its dated sealed archive is absent. Surface failures visibly.
   function requestV26Marks(){
+    state.v26ArchiveStatus={date:d,state:'loading'};
     fetch('/v26-marks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d)+'&t='+seq,{cache:'no-store'})
-      .then(function(response){return response.ok?response.json():null})
-      .then(function(payload){
+      .then(function(response){
+        if(response.status===404)return {missing:true};
+        if(!response.ok)throw new Error('v26 archive HTTP '+response.status);
+        return response.json().then(function(payload){return {payload:payload}});
+      })
+      .then(function(result){
         if(seq!==state.requestSeq||state.date!==d)return;
-        if(!payload||payload.date!==d||!payload.races||typeof payload.races!=='object'||Array.isArray(payload.races))return;
-        state.v26Marks=payload;
-        render()
-      }).catch(function(){/* No v26 archive for this date. */})
+        var payload=result.payload;
+        if(result.missing){state.v26Marks=null;state.v26ArchiveStatus={date:d,state:'missing'};}
+        else if(!payload||payload.date!==d||!payload.races||typeof payload.races!=='object'||Array.isArray(payload.races)){
+          state.v26Marks=null;state.v26ArchiveStatus={date:d,state:'invalid'};
+        }else{
+          state.v26Marks=payload;state.v26ArchiveStatus={date:d,state:'ready'};
+        }
+        render();
+      }).catch(function(){
+        if(seq!==state.requestSeq||state.date!==d)return;
+        state.v26Marks=null;state.v26ArchiveStatus={date:d,state:'error'};
+        render();
+      });
   }
   if(state.v26Marks&&state.v26Marks.date!==d)state.v26Marks=null;
   requestV26Marks();
