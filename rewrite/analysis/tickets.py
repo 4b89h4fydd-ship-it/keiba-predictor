@@ -218,10 +218,20 @@ def generate_tickets(
         r.number: r.strength for r in forecast.runners if r.strength is not None
     }
     outcomes = distribution(strengths)
+    # Candidate pools must follow the same ordering that assigned
+    # the marks (forecast layer: win probability, then top-3
+    # probability, then horse number). Stored probabilities are
+    # rounded to 4 decimals, so win-probability ties at the pool
+    # boundary are common; breaking them by horse number alone let
+    # a lower top-3 runner (e.g. the ☆) take the pool slot of the
+    # △ runner the marks ranked above it.
+    by_number = {r.number: r for r in forecast.runners}
     ranked = sorted(
         strengths,
         key=lambda n: (
-            -(next(r.p_win for r in forecast.runners if r.number == n) or 0.0), n
+            -(by_number[n].p_win or 0.0),
+            -(by_number[n].p_top3 or 0.0),
+            n,
         ),
     )
     probability_tickets: list[Ticket] = []
