@@ -1715,6 +1715,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
 
 
 def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
+    from arvexq.ingest.banei import is_banei
     from arvexq.ingest.full_snapshot_codec import pack_detail, unpack_detail
     from arvexq.prediction.unified_product import verified as verified_unified
 
@@ -1726,7 +1727,10 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
               "receiptMismatch": 0}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
-        if not race_id or "帯広" in str(summary.get("track") or ""):
+        if not race_id or is_banei(summary.get("track"), race_id):
+            # Banei is excluded on every route via the shared test;
+            # the race-id check fires even when the track is missing
+            # (the old track-only check let those races through).
             counts["skipped"] += 1
             continue
         try:
