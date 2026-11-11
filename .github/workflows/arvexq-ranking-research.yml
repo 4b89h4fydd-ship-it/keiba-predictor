@@ -12,6 +12,8 @@ on:
       - 'tests/test_provisional_preoff_collector.py'
       - 'tests/test_motherduck_ranking_export.py'
       - 'scripts/export_motherduck_frozen_ranking.py'
+      - 'scripts/arvexq_history_reconstruct.py'
+      - 'tests/test_history_reconstruct.py'
       - 'requirements-ranking-research.txt'
       - '.github/workflows/arvexq-ranking-research.yml'
   workflow_dispatch:
@@ -34,6 +36,7 @@ jobs:
         run: python -m py_compile arvexq/research/ranking_feature_signals.py arvexq/research/ranking_challenger.py scripts/export_motherduck_frozen_ranking.py
       - name: Run leakage / ranking / paired holdout tests
         run: |
+          python -m unittest discover -s tests -p 'test_history_reconstruct.py' -v
           python -m unittest discover -s tests -p 'test_ranking_challenger.py' -v
           python -m unittest discover -s tests -p 'test_motherduck_ranking_export.py' -v
           python -m unittest discover -s tests -p 'test_ranking_benchmark.py' -v
