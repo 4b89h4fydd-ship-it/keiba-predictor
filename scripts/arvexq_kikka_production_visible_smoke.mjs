@@ -28,6 +28,16 @@ async function main(){
       distance:detail?.distance,surface:detail?.surface,date:detail?.date},
     sourceFields:{date:summary?.race_date||summary?.date||null}
   }));
+  const defaultBody=await json(base+'/api/race/'+encodeURIComponent(target)+'?rawprobe='+Date.now());
+  const rawCandidate=(defaultBody?.detail||{}).kikkaCandidate;
+  function safeShape(c){return {present:!!c,
+    keys:Object.keys(c||{}).sort(),
+    markCount:(c?.marks||[]).length,
+    firstMarkKeys:Object.keys((c?.marks||[])[0]||{}).sort(),
+    capturedAtPresent:!!c?.capturedAt,
+    originalSourceHashEqual:!!(candidate?.sourceHash&&c?.sourceHash&&candidate.sourceHash===c.sourceHash),
+  }}
+  console.log('KIKKA_API_VIEW_SHAPES',JSON.stringify({default:safeShape(rawCandidate),display:safeShape(candidate),defaultKeys:Object.keys(defaultBody||{}).sort()}));
   if(!detail||!candidate)throw Error('CANDIDATE_MISSING_FROM_ACTUAL_LIVE_D1');
   // Diagnose the real live JSON through EXACT production PWA prediction adapter
   // and the mark visibility adapter. No fixtures.
