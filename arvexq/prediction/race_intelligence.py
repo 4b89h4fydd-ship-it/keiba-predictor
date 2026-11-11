@@ -8,6 +8,7 @@ from typing import Any
 
 from arvexq.prediction.sectional_profile import profile
 from arvexq.prediction.bias_provenance import provenance
+from arvexq.prediction.special_races import build_special_race_box
 
 
 def career_coverage(horse: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
@@ -61,4 +62,9 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
         count += 1
     detail["researchEvidenceVersion"] = "arvexq-race-intelligence-v1"
     detail["researchEvidenceHorses"] = count
+    # An evidence-only namespace for the two JRA specialist populations.
+    # No existing marks, ticket choices, or prediction inputs are rewritten.
+    specialist = build_special_race_box(detail)
+    if specialist is not None:
+        detail["specialRaceBox"] = specialist
     return detail
