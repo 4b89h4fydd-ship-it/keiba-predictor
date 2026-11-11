@@ -39,12 +39,12 @@ jobs:
           PYTHONPATH=. python -m pytest -q tests/test_provisional_preoff_collector.py
       - name: Capture today's near-post evidence (existing read-only API)
         run: |
-          PYTHONPATH=. python scripts/arvexq_collect_provisional_preoff.py --out-dir preoff-research-capture --ahead-minutes 35 --max-races 12
+          PYTHONPATH=. python scripts/arvexq_collect_provisional_preoff.py --out-dir preoff-research-capture --ahead-minutes 1440 --max-races 0
       - name: Preserve compressed provisional evidence and audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: arvexq-provisional-preoff-${{ github.run_id }}
           path: preoff-research-capture/*.json.gz
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: warn
