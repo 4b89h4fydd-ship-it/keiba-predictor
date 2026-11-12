@@ -126,11 +126,16 @@ class NarDecayUpgradeQualificationTests(TestCase):
         self.assertIsNone(_nar_decay_upgrade_info(detail, NOW))
 
     def test_post_lead_guard(self):
+        # The lead guard was removed on 2026-11-12 (user
+        # instruction): a race qualifies until its post, and a
+        # race past its post never qualifies.
         detail = stored_detail()
         late = datetime(2026, 11, 4, 12, 40, tzinfo=JST)  # 10 min
-        self.assertIsNone(_nar_decay_upgrade_info(detail, late))
+        self.assertIsNotNone(_nar_decay_upgrade_info(detail, late))
         just_enough = datetime(2026, 11, 4, 12, 30, tzinfo=JST)
         self.assertIsNotNone(_nar_decay_upgrade_info(detail, just_enough))
+        past_post = datetime(2026, 11, 4, 12, 51, tzinfo=JST)
+        self.assertIsNone(_nar_decay_upgrade_info(detail, past_post))
 
 
 def _build(detail, fake_v8):
