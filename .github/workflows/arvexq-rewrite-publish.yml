@@ -75,8 +75,17 @@ jobs:
         env:
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
+          set -o pipefail
           if [ -n "${{ inputs.date }}" ]; then
-            python3 scripts/arvexq_rewrite_publish.py --date "${{ inputs.date }}"
+            python3 scripts/arvexq_rewrite_publish.py --date "${{ inputs.date }}" 2>&1 | tee publish-run.log
           else
-            python3 scripts/arvexq_rewrite_publish.py
+            python3 scripts/arvexq_rewrite_publish.py 2>&1 | tee publish-run.log
           fi
+      - name: Upload publish audit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-publish-audit-${{ github.run_number }}
+          path: publish-run.log
+          if-no-files-found: ignore
+          retention-days: 30

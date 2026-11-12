@@ -790,3 +790,21 @@ jobs:
           if-no-files-found: ignore
           retention-days: 3
 
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-prefetch-audit-${{ github.run_number }}
+          path: |
+            prefetch-report.json
+            prefetch-facts-report.json
+            prefetch-repair-selection.json
+            current-d1-report.json
+            verified-d1-report.json
+            facts-current-d1-report.json
+            facts-sync-selection.json
+            persisted-facts-report.json
+            persisted-evidence-check.json
+          if-no-files-found: ignore
+          retention-days: 30
+

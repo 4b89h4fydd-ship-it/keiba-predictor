@@ -227,3 +227,14 @@ jobs:
             runtime-live.log
           if-no-files-found: ignore
           retention-days: 3
+
+      - name: Upload audit records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-live-audit-${{ github.run_number }}
+          path: |
+            live-sync.log
+            live-audit.json
+          if-no-files-found: ignore
+          retention-days: 30
