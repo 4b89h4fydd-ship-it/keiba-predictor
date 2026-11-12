@@ -55,7 +55,100 @@
     "withEloBreakdown": "replay 432 + sex-notation identity merges 3 (see sexFoldedIdentities)",
     "withoutEloBreakdown": "35 debut horses (no prior start, elo does not exist by definition) + 1 horse whose latest start (2025-11-07) is in the still-running older-results tranche"
    },
-   "adoptedByUserDecision": "2026-11-12: user chose the replay candidate over the chain file (chain covers only 12 of 471 horses with exact values) for the 2026-11-13 publish material"
+   "adoptedByUserDecision": "2026-11-12: user chose the replay candidate over the chain file (chain covers only 12 of 471 horses with exact values) for the 2026-11-13 publish material",
+   "trialSpd2Supplements": {
+    "note": "Ability-trial (能力試験/能力審査) speed supplements for debut horses that had no race-based spd2. Each value is the measured trial time expressed on the production spd2 yardstick: par = median of all pool race times at the same (track, surface, distance) dated strictly before the trial date (pool = the same corpus + refetched runs used for this file, via shadow_v8.build_speed_adjusted); raw = trial time - par; when the trial day has a variant for (track, surface) the value is variant-adjusted exactly like race runs, otherwise the raw residual is used and the form is recorded per horse. spd2_recent = spd2_best = the single trial value. Elo is never derived from trials; elo fields of these entries are unchanged.",
+    "sources": [
+     "Kawasaki trials: nankankeiba.com official trial lists (shiken_list), Sonoda trials: sonoda-himeji.jp official ability-exam results, Nagoya trials: Nagoya Keiba official 能力審査成績表 PDFs (mirrored by Aichi Owners Association)."
+    ],
+    "horses": [
+     {
+      "name": "ロンギングウィン",
+      "race": "nar-2026-11-13-園田-02",
+      "number": 1,
+      "trial": {
+       "date": "2026-10-26",
+       "track": "園田",
+       "surface": "ダート",
+       "distance": 820,
+       "timeSeconds": 55.7,
+       "result": "合格"
+      },
+      "par": 52.0,
+      "parSamples": 4001,
+      "rawResidual": 3.700000000000003,
+      "variant": null,
+      "form": "raw-no-variant",
+      "spd2_recent": 3.700000000000003,
+      "spd2_best": 3.700000000000003
+     },
+     {
+      "name": "メディウィッチ",
+      "race": "nar-2026-11-13-園田-02",
+      "number": 2,
+      "trial": {
+       "date": "2026-10-26",
+       "track": "園田",
+       "surface": "ダート",
+       "distance": 820,
+       "timeSeconds": 55.1,
+       "result": "合格"
+      },
+      "par": 52.0,
+      "parSamples": 4001,
+      "rawResidual": 3.1000000000000014,
+      "variant": null,
+      "form": "raw-no-variant",
+      "spd2_recent": 3.1000000000000014,
+      "spd2_best": 3.1000000000000014
+     },
+     {
+      "name": "ホープソアーズハイ",
+      "race": "nar-2026-11-13-名古屋-04",
+      "number": 2,
+      "trial": {
+       "date": "2026-05-25",
+       "track": "名古屋",
+       "surface": "ダート",
+       "distance": 900,
+       "timeSeconds": 62.8,
+       "result": "合格"
+      },
+      "par": 57.150000000000006,
+      "parSamples": 50,
+      "rawResidual": 5.6499999999999915,
+      "variant": -0.6999999999999957,
+      "form": "variant-adjusted",
+      "spd2_recent": 6.349999999999987,
+      "spd2_best": 6.349999999999987
+     },
+     {
+      "name": "ゼーメンシュ",
+      "race": "nar-2026-11-13-名古屋-04",
+      "number": 3,
+      "trial": {
+       "date": "2026-07-31",
+       "track": "名古屋",
+       "surface": "ダート",
+       "distance": 900,
+       "timeSeconds": 60.2,
+       "result": "合格"
+      },
+      "par": 57.2,
+      "parSamples": 76,
+      "rawResidual": 3.0,
+      "variant": -0.44999999999999574,
+      "form": "variant-adjusted",
+      "spd2_recent": 3.4499999999999957,
+      "spd2_best": 3.4499999999999957
+     }
+    ],
+    "notConverted": {
+     "kawasaki800mNoRaces": "20 Kawasaki debut horses have measured 800m trial passes (2026-07-31/09-11/10-16), but Kawasaki racecourse runs no 800m races at all (0 in the acquired corpus), so no same-distance par exists and no value was fabricated for them.",
+     "nishiwakiTrainingCenter": "5 Sonoda horses passed at Nishiwaki Training Center, where no races are held; no par exists on this yardstick, so no value was added.",
+     "recordsNotFound": "6 horses: 5 Nagoya horses whose passing records are believed to be in rounds 15-16 (Oct 2026), whose official PDFs were not yet reachable/indexed, and 1 Kawasaki horse (フィリアス) whose passing record was not located (only a 2026-06-19 fail is published)."
+    }
+   }
   }
  },
  "races": {
@@ -251,10 +344,14 @@
      "elo_evidence": 0.0
     },
     "2": {
-     "elo_evidence": 0.0
+     "elo_evidence": 0.0,
+     "spd2_recent": 6.349999999999987,
+     "spd2_best": 6.349999999999987
     },
     "3": {
-     "elo_evidence": 0.0
+     "elo_evidence": 0.0,
+     "spd2_recent": 3.4499999999999957,
+     "spd2_best": 3.4499999999999957
     },
     "4": {
      "elo_evidence": 0.0
@@ -839,10 +936,14 @@
    "segment": "debut",
    "extras": {
     "1": {
-     "elo_evidence": 0.0
+     "elo_evidence": 0.0,
+     "spd2_recent": 3.700000000000003,
+     "spd2_best": 3.700000000000003
     },
     "2": {
-     "elo_evidence": 0.0
+     "elo_evidence": 0.0,
+     "spd2_recent": 3.1000000000000014,
+     "spd2_best": 3.1000000000000014
     },
     "3": {
      "elo_evidence": 0.0
