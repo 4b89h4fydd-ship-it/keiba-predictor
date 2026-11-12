@@ -197,6 +197,30 @@
      "ticket-r24-upgrade",
      "marksResync"
     ]
+   },
+   {
+    "observed_at": "2026-11-12T19:06:14+09:00",
+    "request_id": "req-20261112180310-162595",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": "2026-11-12T11:51:33+09:00",
+      "publishedAt": "2026-11-12T12:26:52+09:00",
+      "receiptSha256": "c0c20fb6380186114eefec3f75b2d5cba4d62774cecddc4da2a685594359a4f0"
+     },
+     "revision": {
+      "reason": "roster-change",
+      "revisedAt": "2026-11-12T12:26:52+09:00",
+      "revisionCount": 2
+     },
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
    }
   ],
   "nar-2026-11-12-川崎-11": [
@@ -242,12 +266,92 @@
      "ticket-r24-upgrade",
      "marksResync"
     ]
+   },
+   {
+    "observed_at": "2026-11-12T19:06:17+09:00",
+    "request_id": "req-20261112180310-2158b7",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:39:23+09:00",
+      "receiptSha256": "bfcf731a9e7a9b2f46b6e5a28ac093dc9a231a95ae13666c25f32b616ba70572"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   },
+   {
+    "observed_at": "2026-11-12T19:06:22+09:00",
+    "request_id": "req-20261112190412-7b9806",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:39:23+09:00",
+      "receiptSha256": "bfcf731a9e7a9b2f46b6e5a28ac093dc9a231a95ae13666c25f32b616ba70572"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
    }
   ],
   "nar-2026-11-12-川崎-12": [
    {
     "observed_at": "2026-11-12T18:04:28+09:00",
     "request_id": "req-20261112180310-2b925c",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:38:33+09:00",
+      "receiptSha256": "c6bfcd9a36c89743f19a985ec1174099202cde097852552786ca01b9f366cd71"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   },
+   {
+    "observed_at": "2026-11-12T19:06:20+09:00",
+    "request_id": "req-20261112180310-2b925c",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:38:33+09:00",
+      "receiptSha256": "c6bfcd9a36c89743f19a985ec1174099202cde097852552786ca01b9f366cd71"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   },
+   {
+    "observed_at": "2026-11-12T19:06:25+09:00",
+    "request_id": "req-20261112190412-ea4323",
     "stamp": {
      "marker": {
       "abilityLane": "v1-prior",
@@ -317,65 +421,106 @@
    "race_id": "nar-2026-11-12-門別-10",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:23+09:00",
-   "run_id": "43188158434",
+   "processed_at": "2026-11-12T19:06:13+09:00",
+   "run_id": "43197067611",
    "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
-   "attempts": 1
+   "detail": "HTTPError: HTTP Error 503: Service Unavailable",
+   "attempts": 2
   },
   "req-20261112180310-8a25a9": {
    "request_id": "req-20261112180310-8a25a9",
    "race_id": "nar-2026-11-12-川崎-10",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:24+09:00",
-   "run_id": "43188158434",
+   "processed_at": "2026-11-12T19:06:14+09:00",
+   "run_id": "43197067611",
    "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
-   "attempts": 1
+   "detail": "HTTPError: HTTP Error 503: Service Unavailable",
+   "attempts": 2
   },
   "req-20261112180310-162595": {
    "request_id": "req-20261112180310-162595",
    "race_id": "nar-2026-11-12-門別-11",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:26+09:00",
-   "run_id": "43188158434",
-   "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
-   "attempts": 1
+   "processed_at": "2026-11-12T19:06:14+09:00",
+   "run_id": "43197067611",
+   "status": "not-applied",
+   "detail": "frozen: already published ready (receipt c0c20fb63801…); roster unchanged",
+   "attempts": 2
   },
   "req-20261112180310-547f99": {
    "request_id": "req-20261112180310-547f99",
    "race_id": "nar-2026-11-12-川崎-11",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:27+09:00",
-   "run_id": "43188158434",
+   "processed_at": "2026-11-12T19:06:17+09:00",
+   "run_id": "43197067611",
    "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
-   "attempts": 1
+   "detail": "HTTPError: HTTP Error 503: Service Unavailable",
+   "attempts": 2
   },
   "req-20261112180310-2158b7": {
    "request_id": "req-20261112180310-2158b7",
    "race_id": "nar-2026-11-12-門別-12",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:28+09:00",
-   "run_id": "43188158434",
+   "processed_at": "2026-11-12T19:06:17+09:00",
+   "run_id": "43197067611",
+   "produced_kind": "ticket-pool4-upgrade",
+   "receipt": "006f09cbca38…",
    "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
-   "attempts": 1
+   "detail": "pristine masterAnalysis restore failed for surgical re-issue; frozen forecast kept",
+   "attempts": 2
   },
   "req-20261112180310-2b925c": {
    "request_id": "req-20261112180310-2b925c",
    "race_id": "nar-2026-11-12-川崎-12",
    "revision_kind": "ticket-pool4-upgrade",
    "mode": "apply",
-   "processed_at": "2026-11-12T18:04:29+09:00",
-   "run_id": "43188158434",
+   "processed_at": "2026-11-12T19:06:20+09:00",
+   "run_id": "43197067611",
+   "produced_kind": "ticket-pool4-upgrade",
+   "receipt": "7d6507169f03…",
    "status": "error-retryable",
-   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "detail": "pristine masterAnalysis restore failed for surgical re-issue; frozen forecast kept",
+   "attempts": 2
+  },
+  "req-20261112190412-fbc5f0": {
+   "request_id": "req-20261112190412-fbc5f0",
+   "race_id": "nar-2026-11-12-川崎-11",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T19:06:22+09:00",
+   "run_id": "43197067611",
+   "status": "error-retryable",
+   "detail": "HTTPError: HTTP Error 503: Service Unavailable",
+   "attempts": 1
+  },
+  "req-20261112190412-7b9806": {
+   "request_id": "req-20261112190412-7b9806",
+   "race_id": "nar-2026-11-12-門別-12",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T19:06:22+09:00",
+   "run_id": "43197067611",
+   "produced_kind": "ticket-pool4-upgrade",
+   "receipt": "006f09cbca38…",
+   "status": "error-retryable",
+   "detail": "pristine masterAnalysis restore failed for surgical re-issue; frozen forecast kept",
+   "attempts": 1
+  },
+  "req-20261112190412-ea4323": {
+   "request_id": "req-20261112190412-ea4323",
+   "race_id": "nar-2026-11-12-川崎-12",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T19:06:25+09:00",
+   "run_id": "43197067611",
+   "produced_kind": "ticket-pool4-upgrade",
+   "receipt": "7d6507169f03…",
+   "status": "error-retryable",
+   "detail": "pristine masterAnalysis restore failed for surgical re-issue; frozen forecast kept",
    "attempts": 1
   }
  },
