@@ -217,11 +217,12 @@ NAR_DECAY_V8_ABILITY_MODEL_VERSION = (
 # Exactly-once is structural: the re-issue stamps the decayed
 # label, so the qualification can never hold again. Races past
 # their post (or with a result) never reach the branch — the
-# build's post/result checks run first. The lead guard matches
-# the env-repair branch (15 minutes): the rebuild input is not
-# odds-dependent, and the buffer keeps a race from starting
-# between the guard's evaluation and its write.
-NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=15)
+# build's post/result checks run first. The lead guard was
+# removed on the evening of 2026-11-12 on the user's explicit
+# instruction (apply the new method to tonight's remaining races;
+# do not stop on a lead-time rule): eligibility now holds until
+# the post itself.
+NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
