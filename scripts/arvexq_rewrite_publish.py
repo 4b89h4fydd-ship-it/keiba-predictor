@@ -206,6 +206,23 @@ NAR_DECAY_V9B_ABILITY_MODEL_VERSION = (
 NAR_DECAY_V8_ABILITY_MODEL_VERSION = (
     V8_ABILITY_MODEL_VERSION + "-nar-decay2")
 
+# NAR decay upgrade (2026-11-12, user instruction "from today's
+# remaining races"): the decay above reaches races first-published
+# after it landed, but the user directed that today's NAR races
+# still pre-post move to the new method as well. A NAR race frozen
+# on the v9b lane with an UNDECAYED abilityModelVersion is therefore
+# re-issued ONCE from the current payload (see
+# _nar_decay_upgrade_info) — the same one-time upgrade pattern as
+# the blend / env-repair branches, never a direct store rewrite.
+# Exactly-once is structural: the re-issue stamps the decayed
+# label, so the qualification can never hold again. Races past
+# their post (or with a result) never reach the branch — the
+# build's post/result checks run first. The lead guard matches
+# the env-repair branch (15 minutes): the rebuild input is not
+# odds-dependent, and the buffer keeps a race from starting
+# between the guard's evaluation and its write.
+NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=15)
+
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
 # their win odds only on race-day morning (coverage is normally
@@ -585,6 +602,54 @@ def _env_repair_upgrade_info(old: dict, now: datetime,
             "marksResync": resync,
             "probabilityComputedAt":
                 computed_at.isoformat(timespec="seconds")}
+
+
+def _nar_decay_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time NAR evidence-decay re-issue.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - the race is a NAR race (race id prefix — the same test the
+      env-repair branch uses; the decay is NAR-only by design and
+      a jra- race can never qualify);
+    - it was published on the v9b lane (abilityLane
+      v9b-cal-market);
+    - its sealed product does NOT already carry the decay: the
+      abilityModelVersion stamped inside the receipt is one of the
+      undecayed labels (the v9b or the v8 label). A race
+      first-published after the decay landed, and a race already
+      re-issued by this upgrade, carries a "-nar-decay2" label and
+      never qualifies again — the upgrade is exactly-once by
+      construction, with no date gate to expire;
+    - the post is still at least NAR_DECAY_UPGRADE_MIN_LEAD away.
+
+    Anything unreadable does not qualify; the caller keeps the
+    frozen forecast (fail-closed). The caller still re-verifies
+    after the rebuild that the decay actually landed (the rebuilt
+    forecast came out of the decayed v8 layer) before stamping
+    anything.
+    """
+    race_id = str(old.get("id") or "")
+    if not race_id.startswith("nar-"):
+        return None
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    if unified.get("abilityModelVersion") not in (
+            V9B_ABILITY_MODEL_VERSION, V8_ABILITY_MODEL_VERSION):
+        return None
+    post = _post_at(old)
+    if post is None or post - now < NAR_DECAY_UPGRADE_MIN_LEAD:
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "nar-decay-upgrade"}
 
 
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
@@ -1245,6 +1310,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     lane_upgrade = None
     blend_upgrade = None
     env_repair_upgrade = None
+    decay_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -1262,7 +1328,12 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 # a full rebuild, so it precedes the surgical
                 # upgrades below; a blend upgrade in the same pass
                 # already rebuilds from the repaired payload and
-                # subsumes it); a v9b forecast frozen
+                # subsumes it); a NAR forecast frozen WITHOUT the
+                # F1 evidence decay only because it was first
+                # published before the decay reached this lane is
+                # re-issued once from the current payload (see
+                # _nar_decay_upgrade_info — also a full rebuild, so
+                # it too precedes the surgical upgrades); a v9b forecast frozen
                 # WITHOUT placeExpectedValues only because the
                 # upstream sync did not carry place odds yet is
                 # re-issued once when they complete (see
@@ -1276,6 +1347,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                         old, now, summary.get("surface"))
                 if (blend_upgrade is None
                         and env_repair_upgrade is None):
+                    decay_upgrade = _nar_decay_upgrade_info(old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None
+                        and decay_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exception: a forecast
@@ -1353,6 +1428,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     blend_upgrade["receipt"] = freeze[1]
                 elif env_repair_upgrade is not None:
                     env_repair_upgrade["receipt"] = freeze[1]
+                elif decay_upgrade is not None:
+                    decay_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -1384,7 +1461,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     v8_fallback_status = v8_forecast.status
         elif reissue is None and lane_upgrade is None \
                 and blend_upgrade is None \
-                and env_repair_upgrade is None:
+                and env_repair_upgrade is None \
+                and decay_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -1469,6 +1547,18 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"(receipt {str(env_repair_upgrade['receipt'])[:12]}…); "
                       f"env-repair rebuild did not land on the "
                       f"v9b lane; keeping the frozen forecast")
+    if decay_upgrade is not None and not nar_evidence_decay:
+        # The decay upgrade was attempted but the rebuild did not
+        # land on the decayed v8 layer (the v8 forecast did not
+        # come back ok, so the race fell back to the v1 lane, or
+        # the segment no longer classifies as NAR): re-issuing now
+        # would rewrite a forecast on sale WITHOUT the one change
+        # that justifies it. Keep the frozen forecast byte-stable;
+        # a later cycle can retry while the qualification holds.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(decay_upgrade['receipt'])[:12]}…); "
+                      f"nar-decay rebuild did not land on the "
+                      f"decayed v8 layer; keeping the frozen forecast")
     # Trifecta R24 (adopted 2026-11-08 by user order after the
     # screen on the graded 194 production races: B ROI 0.7230 ->
     # R24 0.9055): formation B's mark-order skeleton with the win
@@ -1841,6 +1931,41 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                      "runner; the forecast is recomputed from "
                      "the current payload, which carries the "
                      "stored surface"),
+        }
+    if decay_upgrade is not None:
+        # NAR evidence-decay re-issue of a frozen forecast: the
+        # roster and the lane are unchanged — the only change is
+        # that the ability scores are recomputed with the F1
+        # evidence decay this race predates. Same audit chain as
+        # the other re-issues: the first publication time is
+        # preserved and the previous receipt is recorded. The
+        # exactly-once property is structural: the rebuilt product
+        # carries the decayed abilityModelVersion, so
+        # _nar_decay_upgrade_info can never qualify this race again.
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            decay_upgrade.get("firstPublishedAt")
+            or decay_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "nar-decay-upgrade",
+            "reason": "nar-decay-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": decay_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "note": (f"one-time NAR evidence-decay adoption "
+                     f"(user instruction 2026-11-12): this race "
+                     f"was first published before the F1 evidence "
+                     f"decay reached the production lane, so its "
+                     f"ability scores were computed undamped; the "
+                     f"forecast is recomputed with the decay "
+                     f"(runs-k{NAR_EVIDENCE_DECAY_K:g}, NAR only) "
+                     f"while the race is still pre-post"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
