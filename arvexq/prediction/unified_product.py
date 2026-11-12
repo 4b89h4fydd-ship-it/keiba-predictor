@@ -142,6 +142,54 @@ def canonical_receipt(product):
     return _receipt_digest(_value_canonical(canonical))
 
 
+# The ticket-EV labelling statuses api_shape can stamp into
+# analysisStages.tickets — the complete, closed set of values the
+# projection-stripped block can legitimately hold (rewrite/output/
+# api_shape.py: derived from the ticket plan's win-EV estimates and
+# whether the probabilities were calibrated).
+_TICKET_STAGE_STATUSES = (
+    "probability-only-ev-suppressed",
+    "win-ev-uncalibrated-estimate",
+    "win-ev-calibrated-estimate",
+)
+
+
+def _serving_form_digests(canonical):
+    """Digests of the sealed form behind an API-projection read-back.
+
+    The live worker wraps every GET response in a display projection
+    (public-race.js, applied by the entry's withCors) that recursively
+    deletes a fixed set of retired key names — including the literal
+    key "tickets" — at EVERY nesting level. Inside the sealed product
+    exactly one block carries that name: analysisStages.tickets, an
+    EV-status label emitted by rewrite/output/api_shape.py. The D1
+    payload retains it, but every API read-back (the publish lane's
+    post-write verification, protect_sync's post-verify) sees the
+    product without it, so no stored first publication ever re-verified
+    through the API (publish run #294, 2026-11-12: all 48 fresh
+    publications failed read-back with receipt-content-mismatch while
+    the pre-post protected check passed; restoring exactly this block
+    reproduced the sealed digest byte-for-byte on the stored rows).
+
+    The block holds no probability, mark or roster content — only
+    which ticket-EV labelling applied, a status drawn from the closed
+    set above — and every other leaf stays bound by the digest, so
+    accepting a read-back with the block restored to any of its
+    legitimate values does not weaken post-seal drift detection. It
+    is the same category as the JS re-serialization forms below: the
+    receipt binds content, never the last serializer's spelling of it.
+    """
+    stages = canonical.get("analysisStages")
+    if not isinstance(stages, dict) or "tickets" in stages:
+        return ()
+    digests = []
+    for status in _TICKET_STAGE_STATUSES:
+        restored = dict(canonical)
+        restored["analysisStages"] = {**stages, "tickets": {"status": status}}
+        digests.append(_receipt_digest(_value_canonical(restored)))
+    return digests
+
+
 def verified(race):
     """Revalidate immutable receipt and its hash, not only claimed IDs."""
     candidate = (race or {}).get("unifiedForecast")
@@ -155,6 +203,9 @@ def verified(race):
         _receipt_digest(canonical),
         # Legacy form, payload JS round-tripped (stored production rows).
         _receipt_digest(_float_restored(canonical)),
+        # Serving form: sealed product as read back through the API
+        # display projection (see _serving_form_digests).
+        *_serving_form_digests(canonical),
     }
     return candidate if candidate.get("receiptSha256") in accepted else None
 
