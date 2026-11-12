@@ -1121,6 +1121,69 @@ def _canonical_receipt(product: dict) -> str:
     return canonical_receipt(product)
 
 
+def _build_mass_feature_archive(old: dict):
+    """Freeze the pre-off mass-feature archive for a publication.
+
+    Returns (archive, status): archive is the lossless transport
+    envelope produced by mass_feature_transport.archive_snapshot
+    (the exact producer pack_mass_detail uses) or None; status is a
+    small dict describing the outcome for the caller to stamp/count.
+
+    Why this exists (2026-11-11): the legacy persistence path froze
+    a mass-feature snapshot whenever a detail carrying a
+    preRacePrediction lock was stored, and protect_sync later packed
+    it into massFeatureArchive. This lane — the sole forecast
+    producer since the cutover — never carried that lock, so no
+    published detail has carried the archive since 2026-10-17 while
+    v9b publications only exist from 2026-11-04: the sealed-forecast
+    x feature-archive intersection is empty, and no same-race model
+    comparison can ever be graded from stored data. Freezing the
+    matrix here, from the same pre-off input detail the forecast is
+    computed from, restarts that accumulation.
+
+    The feature factory reads only pre-race facts (past runs strictly
+    before the race date, entries, and the market as observed in the
+    input detail), and the snapshot's featureHash is the origin hash
+    the transport re-verifies, so the archive's originHashVerified
+    is earned, not asserted. pack_mass_detail itself is not reused:
+    it requires a preRacePrediction lock in the detail, and this
+    lane's provenance anchor is the sealed publication (receipt +
+    lane marker) — fabricating a lock would change other lanes'
+    semantics. The archive is research evidence only: it feeds no
+    mark, probability, ticket or receipt.
+
+    A failure never blocks publication (the masterAnalysis shadow
+    rule); the caller stamps and counts it instead.
+    """
+    try:
+        from arvexq.ingest.banei import is_banei
+        if is_banei(old.get("track"), old.get("id")):
+            return None, {"status": "excluded-banei"}
+        from arvexq.prediction.mass_feature_factory import (
+            FEATURE_SCHEMA_VERSION)
+        from arvexq.prediction.mass_feature_snapshot import (
+            SNAPSHOT_VERSION, build_mass_feature_snapshot)
+        from arvexq.prediction.mass_feature_transport import (
+            archive_snapshot)
+        snapshot = build_mass_feature_snapshot(old)
+        archive = archive_snapshot(
+            snapshot,
+            race_id=str(old.get("id") or ""),
+            race_date=str(old.get("date") or ""))
+        return archive, {
+            "status": "attached",
+            "featureHash": archive["featureHash"],
+            "rawBytes": archive["rawBytes"],
+            "payloadBytes": len(archive["payload"]),
+            "horseCount": archive["horseCount"],
+            "schemaVersion": FEATURE_SCHEMA_VERSION,
+            "snapshotVersion": SNAPSHOT_VERSION,
+        }
+    except Exception as exc:
+        return None, {"status": "error",
+                      "error": f"{type(exc).__name__}: {exc}"}
+
+
 def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     """Return (new_detail, receipt) or (None, reason) when not publishable."""
     from arvexq.ingest.full_snapshot_codec import unpack_detail
@@ -1452,6 +1515,12 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     master_analysis["contentSha256"] = sha256(json.dumps(
         master_analysis, sort_keys=True, separators=(",", ":"),
         ensure_ascii=False).encode("utf-8")).hexdigest()
+    # Freeze the pre-off feature matrix beside the forecast (see
+    # _build_mass_feature_archive): built from the same input detail
+    # the forecast was computed from, attached to the same published
+    # detail, so the sealed v9b product and its feature evidence can
+    # later be graded on the SAME race. Research evidence only.
+    mass_archive, mass_archive_status = _build_mass_feature_archive(old)
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
@@ -1550,6 +1619,18 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     new["preRaceBet"] = pre_race_bet
     # Namespaced research-only sidecar. No prediction marks / tickets change.
     new["masterAnalysis"] = master_analysis
+    if mass_archive is not None:
+        # Frozen pre-off feature evidence, packed by the transport
+        # into its lossless archive envelope. The raw snapshot is
+        # not stored alongside: the archive restores it byte-exactly
+        # (mass_feature_transport.restore_snapshot), which is the
+        # form the MotherDuck export and the ranking challenger read.
+        new["massFeatureArchive"] = mass_archive
+        new["massFeatureHash"] = mass_archive["featureHash"]
+        new["massFeatureSchemaVersion"] = mass_archive_status[
+            "schemaVersion"]
+        new["massFeatureSnapshotVersion"] = mass_archive_status[
+            "snapshotVersion"]
     by_no = {m["horseNumber"]: m["mark"] for m in marks}
     horses = []
     for h in old.get("horses") or []:
@@ -1583,6 +1664,12 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     if v8_fallback_status is not None:
         meta["rewritePublish"]["v8Fallback"] = (
             f"v8 forecast not ok: {v8_fallback_status}; v1 lane used")
+    if mass_archive_status.get("status") == "error":
+        # The feature archive is research evidence; publication
+        # proceeds without it, but the failure stays on the lane
+        # marker and in the run counts instead of vanishing silently.
+        meta["rewritePublish"]["massFeatureArchiveError"] = (
+            mass_archive_status["error"])
     if reissue is not None:
         # Roster-change re-issue of a frozen forecast: keep the chain
         # auditable inside the lane marker (first publication time,
@@ -1724,7 +1811,8 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     summaries = listing.get("races") or listing.get("summaries") or []
     counts = {"races": len(summaries), "published": 0, "skipped": 0,
               "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0,
-              "receiptMismatch": 0}
+              "receiptMismatch": 0,
+              "massArchived": 0, "massArchiveFailed": 0}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or is_banei(summary.get("track"), race_id):
@@ -1754,6 +1842,19 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                         .get("rewritePublish") or {}).get("revision")
             if revision is not None:
                 counts["reissued"] += 1
+            if isinstance(new.get("massFeatureArchive"), dict):
+                counts["massArchived"] += 1
+            else:
+                # Frozen/skipped races returned above never reach
+                # here; a built publication without its feature
+                # archive is a research-evidence gap for this race
+                # and is named, never silently absorbed.
+                counts["massArchiveFailed"] += 1
+                mass_err = ((new.get("preparedMeta") or {})
+                            .get("rewritePublish") or {}
+                            ).get("massFeatureArchiveError")
+                print(f"MASS-ARCHIVE-SKIP {race_id}: "
+                      f"{mass_err or 'archive not attached'}")
             check = verified_unified(dict(unpack_detail(old_raw),
                                           unifiedForecast=new["unifiedForecast"]))
             if check is None:
