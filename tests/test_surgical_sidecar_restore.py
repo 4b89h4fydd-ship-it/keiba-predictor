@@ -94,7 +94,8 @@ class RestorePristineSidecarTests(TestCase):
         new = _surgical_new(copy.deepcopy(old_raw))
         with patch.object(pub, "_get_admin",
                           return_value=_export_response(stored)):
-            self.assertTrue(_restore_pristine_sidecar(new, "token"))
+            ok, reason = _restore_pristine_sidecar(new, "token")
+            self.assertTrue(ok, reason)
         self.assertEqual(new["masterAnalysis"], pristine_sidecar())
         protect_detail = pub._load_protect()
         final = protect_detail(old_raw, new)  # must not raise
@@ -105,19 +106,24 @@ class RestorePristineSidecarTests(TestCase):
         self.assertEqual(trifecta["points"], 12)
 
     def test_no_sidecar_is_trivially_fine(self):
-        self.assertTrue(_restore_pristine_sidecar(
-            {"id": "nar-2026-11-12-川崎-11"}, None))
+        ok, _reason = _restore_pristine_sidecar(
+            {"id": "nar-2026-11-12-川崎-11"}, None)
+        self.assertTrue(ok)
 
     def test_missing_token_fails_closed(self):
         new = _surgical_new(_stored_with(mangled_sidecar()))
-        self.assertFalse(_restore_pristine_sidecar(new, None))
+        ok, reason = _restore_pristine_sidecar(new, None)
+        self.assertFalse(ok)
+        self.assertEqual(reason, "no-token")
 
     def test_stored_digest_must_verify(self):
         stored = _stored_with(mangled_sidecar())
         new = _surgical_new(_stored_with(mangled_sidecar()))
         with patch.object(pub, "_get_admin",
                           return_value=_export_response(stored)):
-            self.assertFalse(_restore_pristine_sidecar(new, "token"))
+            ok, reason = _restore_pristine_sidecar(new, "token")
+        self.assertFalse(ok)
+        self.assertEqual(reason, "stored-digest-mismatch")
 
     def test_captured_at_mismatch_fails_closed(self):
         stored = _stored_with(pristine_sidecar())
@@ -131,7 +137,9 @@ class RestorePristineSidecarTests(TestCase):
         new = _surgical_new(_stored_with(mangled_sidecar()))
         with patch.object(pub, "_get_admin",
                           return_value=_export_response(stored)):
-            self.assertFalse(_restore_pristine_sidecar(new, "token"))
+            ok, reason = _restore_pristine_sidecar(new, "token")
+        self.assertFalse(ok)
+        self.assertEqual(reason, "captured-at-mismatch")
 
     def test_receipt_chain_mismatch_fails_closed(self):
         stored = _stored_with(pristine_sidecar())
@@ -139,10 +147,14 @@ class RestorePristineSidecarTests(TestCase):
         new = _surgical_new(_stored_with(mangled_sidecar()))
         with patch.object(pub, "_get_admin",
                           return_value=_export_response(stored)):
-            self.assertFalse(_restore_pristine_sidecar(new, "token"))
+            ok, reason = _restore_pristine_sidecar(new, "token")
+        self.assertFalse(ok)
+        self.assertEqual(reason, "receipt-chain-mismatch")
 
     def test_export_failure_fails_closed(self):
         new = _surgical_new(_stored_with(mangled_sidecar()))
         with patch.object(pub, "_get_admin",
                           side_effect=RuntimeError("boom")):
-            self.assertFalse(_restore_pristine_sidecar(new, "token"))
+            ok, reason = _restore_pristine_sidecar(new, "token")
+        self.assertFalse(ok)
+        self.assertTrue(reason.startswith("export-fetch"), reason)

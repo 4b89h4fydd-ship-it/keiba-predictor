@@ -351,10 +351,14 @@ SURGICAL_TICKET_REVISION_KINDS = ("ticket-r24-upgrade",
                                   "ticket-pool4-upgrade")
 
 
-def _restore_pristine_sidecar(new: dict, token: str | None) -> bool:
+def _restore_pristine_sidecar(new: dict, token: str | None):
     """Replace a surgical re-issue's masterAnalysis with the
     pristine stored copy, fetched over the authenticated
     snapshot-export channel.
+
+    Returns (ok, reason): reason names the failing step when ok
+    is False, so a rejected lane run says exactly which link of
+    the chain broke instead of a bare failure.
 
     Why: the lane reads stored details through the public API
     projection, which does not preserve the sidecar's signed
@@ -371,60 +375,63 @@ def _restore_pristine_sidecar(new: dict, token: str | None) -> bool:
     this write: same version and capturedAt as the incoming
     sidecar, the stored publication's receipt equals the
     revision's previousReceiptSha256, and the stored sidecar's
-    own digest verifies. Anything else returns False and the
-    caller fails the write closed (retryable) rather than post
-    a sidecar whose bytes cannot be verified.
+    own digest verifies. Anything else fails and the caller
+    fails the write closed (retryable) rather than post a
+    sidecar whose bytes cannot be verified.
     """
     sidecar = new.get("masterAnalysis")
     if not isinstance(sidecar, dict):
-        return True  # nothing signed to restore
+        return True, "no-sidecar"  # nothing signed to restore
     if not token:
-        return False
+        return False, "no-token"
     race_id = str(new.get("id") or "")
     if not race_id:
-        return False
+        return False, "no-race-id"
     revision = ((new.get("preparedMeta") or {}).get("rewritePublish")
                 or {}).get("revision") or {}
     try:
         resp = _get_admin(
             "/api/admin/snapshot-export?table=race_details&race_id="
             + urllib.parse.quote(race_id, safe=""), token)
-        rows = resp.get("rows") or []
-        if not rows:
-            return False
-        payload = rows[0].get("payload")
+    except Exception as exc:
+        return False, f"export-fetch: {type(exc).__name__}: {exc}"
+    rows = resp.get("rows") or []
+    if not rows:
+        return False, "export-no-rows"
+    payload = rows[0].get("payload")
+    try:
         stored = (json.loads(payload) if isinstance(payload, str)
                   else payload)
         if not isinstance(stored, dict):
-            return False
+            return False, "payload-not-a-dict"
         from arvexq.ingest.full_snapshot_codec import unpack_detail
         stored = unpack_detail(stored)
-        stored_sidecar = stored.get("masterAnalysis")
-        if not isinstance(stored_sidecar, dict):
-            return False
-        if stored_sidecar.get("version") != sidecar.get("version"):
-            return False
-        if stored_sidecar.get("capturedAt") != sidecar.get("capturedAt"):
-            return False
-        stored_marker = ((stored.get("preparedMeta") or {})
-                         .get("rewritePublish") or {})
-        if (not revision.get("previousReceiptSha256")
-                or stored_marker.get("receiptSha256")
-                != revision.get("previousReceiptSha256")):
-            return False
-        from hashlib import sha256
-        unsigned = {k: v for k, v in stored_sidecar.items()
-                    if k != "contentSha256"}
-        expected = sha256(json.dumps(
-            unsigned, sort_keys=True, separators=(",", ":"),
-            ensure_ascii=False).encode("utf-8")).hexdigest()
-        if stored_sidecar.get("contentSha256") != expected:
-            return False
-    except Exception:
-        return False
+    except Exception as exc:
+        return False, f"payload-parse: {type(exc).__name__}: {exc}"
+    stored_sidecar = stored.get("masterAnalysis")
+    if not isinstance(stored_sidecar, dict):
+        return False, "no-stored-sidecar"
+    if stored_sidecar.get("version") != sidecar.get("version"):
+        return False, "version-mismatch"
+    if stored_sidecar.get("capturedAt") != sidecar.get("capturedAt"):
+        return False, "captured-at-mismatch"
+    stored_marker = ((stored.get("preparedMeta") or {})
+                     .get("rewritePublish") or {})
+    if (not revision.get("previousReceiptSha256")
+            or stored_marker.get("receiptSha256")
+            != revision.get("previousReceiptSha256")):
+        return False, "receipt-chain-mismatch"
+    from hashlib import sha256
+    unsigned = {k: v for k, v in stored_sidecar.items()
+                if k != "contentSha256"}
+    expected = sha256(json.dumps(
+        unsigned, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False).encode("utf-8")).hexdigest()
+    if stored_sidecar.get("contentSha256") != expected:
+        return False, "stored-digest-mismatch"
     import copy as _copy
     new["masterAnalysis"] = _copy.deepcopy(stored_sidecar)
-    return True
+    return True, "restored"
 
 
 def _post_sync(detail: dict, token: str) -> dict:
@@ -2382,10 +2389,13 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                       + (f" ({revision.get('reason')} reissue)"
                          if revision else ""))
                 continue
+            _sidecar_ok, _sidecar_reason = (True, "not-surgical")
             if (revision is not None
                     and (revision.get("kind") or revision.get("reason"))
-                    in SURGICAL_TICKET_REVISION_KINDS
-                    and not _restore_pristine_sidecar(new, token)):
+                    in SURGICAL_TICKET_REVISION_KINDS):
+                _sidecar_ok, _sidecar_reason = \
+                    _restore_pristine_sidecar(new, token)
+            if not _sidecar_ok:
                 # The surgical re-issue inherits its sidecar from
                 # the projected read, whose signed bytes the
                 # projection does not preserve; without the
@@ -2394,7 +2404,7 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 # forecast stays; a later cycle retries).
                 counts["failed"] += 1
                 print(f"FAIL {race_id}: pristine masterAnalysis "
-                      f"restore failed for surgical re-issue; "
+                      f"restore failed ({_sidecar_reason}); "
                       f"keeping the frozen forecast")
                 continue
             final = protect_detail(old_raw, new)
