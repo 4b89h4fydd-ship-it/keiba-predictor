@@ -450,6 +450,13 @@ def process_entry(entry: dict, ledger: dict, token: str | None,
         return outcome
 
     protect_detail = pub._load_protect()
+    if (produced_kind in pub.SURGICAL_TICKET_REVISION_KINDS
+            and not pub._restore_pristine_sidecar(new, token)):
+        outcome["status"] = "error-retryable"
+        outcome["detail"] = ("pristine masterAnalysis restore failed "
+                             "for surgical re-issue; frozen forecast "
+                             "kept")
+        return outcome
     final = protect_detail(old_raw, new)
     if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
         final = pack_detail(final)

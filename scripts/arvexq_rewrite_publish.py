@@ -333,6 +333,100 @@ def _get(path: str) -> dict:
     raise last  # type: ignore[misc]
 
 
+def _get_admin(path: str, token: str) -> dict:
+    """GET an SYNC_TOKEN-authenticated API path (snapshot export)."""
+    req = urllib.request.Request(
+        API_BASE + path,
+        headers={"User-Agent": UA, "Accept": "application/json",
+                 "Authorization": f"Bearer {token}"})
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+# Surgical ticket revisions (the one-time formation narrowings)
+# keep the stored forecast — and with it the masterAnalysis
+# shadow sidecar — byte-identical by construction; they never
+# recompute the analysis the sidecar signs.
+SURGICAL_TICKET_REVISION_KINDS = ("ticket-r24-upgrade",
+                                  "ticket-pool4-upgrade")
+
+
+def _restore_pristine_sidecar(new: dict, token: str | None) -> bool:
+    """Replace a surgical re-issue's masterAnalysis with the
+    pristine stored copy, fetched over the authenticated
+    snapshot-export channel.
+
+    Why: the lane reads stored details through the public API
+    projection, which does not preserve the sidecar's signed
+    bytes (its contentSha256 no longer re-hashes over the read
+    copy), and protect_detail strict-verifies the sidecar of any
+    marker-advancing publish write — so a surgical re-issue,
+    whose marker advances while its sidecar is inherited from
+    the projected read, is rejected with "masterAnalysis
+    signature or capture mismatch" even though nothing about
+    the analysis changed. The D1 row itself still holds the
+    pristine sidecar; the snapshot export returns it verbatim.
+
+    The stored copy is adopted only when its identity chains to
+    this write: same version and capturedAt as the incoming
+    sidecar, the stored publication's receipt equals the
+    revision's previousReceiptSha256, and the stored sidecar's
+    own digest verifies. Anything else returns False and the
+    caller fails the write closed (retryable) rather than post
+    a sidecar whose bytes cannot be verified.
+    """
+    sidecar = new.get("masterAnalysis")
+    if not isinstance(sidecar, dict):
+        return True  # nothing signed to restore
+    if not token:
+        return False
+    race_id = str(new.get("id") or "")
+    if not race_id:
+        return False
+    revision = ((new.get("preparedMeta") or {}).get("rewritePublish")
+                or {}).get("revision") or {}
+    try:
+        resp = _get_admin(
+            "/api/admin/snapshot-export?table=race_details&race_id="
+            + urllib.parse.quote(race_id, safe=""), token)
+        rows = resp.get("rows") or []
+        if not rows:
+            return False
+        payload = rows[0].get("payload")
+        stored = (json.loads(payload) if isinstance(payload, str)
+                  else payload)
+        if not isinstance(stored, dict):
+            return False
+        from arvexq.ingest.full_snapshot_codec import unpack_detail
+        stored = unpack_detail(stored)
+        stored_sidecar = stored.get("masterAnalysis")
+        if not isinstance(stored_sidecar, dict):
+            return False
+        if stored_sidecar.get("version") != sidecar.get("version"):
+            return False
+        if stored_sidecar.get("capturedAt") != sidecar.get("capturedAt"):
+            return False
+        stored_marker = ((stored.get("preparedMeta") or {})
+                         .get("rewritePublish") or {})
+        if (not revision.get("previousReceiptSha256")
+                or stored_marker.get("receiptSha256")
+                != revision.get("previousReceiptSha256")):
+            return False
+        from hashlib import sha256
+        unsigned = {k: v for k, v in stored_sidecar.items()
+                    if k != "contentSha256"}
+        expected = sha256(json.dumps(
+            unsigned, sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False).encode("utf-8")).hexdigest()
+        if stored_sidecar.get("contentSha256") != expected:
+            return False
+    except Exception:
+        return False
+    import copy as _copy
+    new["masterAnalysis"] = _copy.deepcopy(stored_sidecar)
+    return True
+
+
 def _post_sync(detail: dict, token: str) -> dict:
     body = json.dumps(
         {"summaries": [], "details": [detail],
@@ -2287,6 +2381,21 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 print(f"DRY  {race_id}: receipt {receipt[:12]}… verified"
                       + (f" ({revision.get('reason')} reissue)"
                          if revision else ""))
+                continue
+            if (revision is not None
+                    and (revision.get("kind") or revision.get("reason"))
+                    in SURGICAL_TICKET_REVISION_KINDS
+                    and not _restore_pristine_sidecar(new, token)):
+                # The surgical re-issue inherits its sidecar from
+                # the projected read, whose signed bytes the
+                # projection does not preserve; without the
+                # pristine stored sidecar protect_detail would
+                # reject the write. Fail closed (the frozen
+                # forecast stays; a later cycle retries).
+                counts["failed"] += 1
+                print(f"FAIL {race_id}: pristine masterAnalysis "
+                      f"restore failed for surgical re-issue; "
+                      f"keeping the frozen forecast")
                 continue
             final = protect_detail(old_raw, new)
             # The self-verify above ran on the pre-protection product,
