@@ -70,7 +70,8 @@ JST = ZoneInfo("Asia/Tokyo")
 # names the env-repair marks-resync state (the two stored marks
 # blocks disagree after a repair) rather than a stamp of its own.
 KNOWN_KINDS = ("lane-upgrade", "blend-upgrade", "place-ev-upgrade",
-               "ticket-r24-upgrade", "env-repair-upgrade", "marksResync")
+               "ticket-r24-upgrade", "ticket-pool4-upgrade",
+               "env-repair-upgrade", "marksResync")
 RACE_ID_RE = re.compile(r"^(jra|nar)-\d{4}-\d{2}-\d{2}-\S+-\d{1,2}$")
 RACE_DATE_RE = re.compile(r"^\w+-(\d{4}-\d{2}-\d{2})-")
 MAX_ATTEMPTS = 5
@@ -237,6 +238,34 @@ def goal_state(detail: dict, kind: str, pub) -> str | None:
             return None
         if stored and stored == set(formation_r24_selections(mark_order)):
             return "stored trifecta is already the R24 subset"
+        return None
+    if kind == "ticket-pool4-upgrade":
+        if rev_kind == "ticket-pool4-upgrade":
+            return "latest revision stamp is ticket-pool4-upgrade"
+        formation = marker.get("ticketFormation")
+        if isinstance(formation, dict) and \
+                formation.get("formation") == "P4A2":
+            return "marker already records the P4A2 ticket formation"
+        mark_order = pub._stored_mark_order(detail)
+        if mark_order is None or len(mark_order) < 3:
+            return None
+        from rewrite.analysis.tickets import (
+            formation_pool4_axis2_selections)
+        trifecta = None
+        for entry in detail.get("recommendedBets") or []:
+            if isinstance(entry, dict) and entry.get("kind") == "3連単":
+                trifecta = entry
+                break
+        if trifecta is None:
+            return None
+        try:
+            stored = {tuple(int(n) for n in combo)
+                      for combo in trifecta.get("combos") or []}
+        except (TypeError, ValueError):
+            return None
+        if stored and stored == set(
+                formation_pool4_axis2_selections(mark_order)):
+            return "stored trifecta is already the pool4-axis2 subset"
         return None
     if kind == "env-repair-upgrade":
         # The pipeline branch itself is scoped to one date; an

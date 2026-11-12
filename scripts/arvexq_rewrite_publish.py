@@ -251,6 +251,29 @@ PLACE_EV_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 # forward lane v34 is untouched: its control arm stays B36.
 TICKET_R24_UPGRADE_MIN_LEAD = timedelta(minutes=60)
 
+# Ticket formation by segment (2026-11-12, user order): the
+# production trifecta formation is R24 for JRA and pool4-axis2
+# ("P4A2") for NAR — R24 with the leg pool narrowed from the top
+# five marks to the top four, so the fifth mark (☆) is in no leg
+# (24 -> 12 points), no probability cut: the cut candidate from
+# the same sweep is NOT adopted, its standalone effect was
+# unestablished. Evidence: the offline threshold sweep on the
+# frozen-gate corpus built from the stored production details
+# (research/r24-threshold-sweep-20261112) returned 0.662 against
+# R24's 0.486 on the #509 NAR test set (139 races) and 0.800
+# against 0.629 on the extended 200-race set, ahead of R24 on
+# all five days. New NAR publications build P4A2 directly and
+# the lane marker records the fact under "ticketFormation"; a
+# NAR race already frozen with the R24 trifecta is re-issued
+# ONCE under the surgical pattern of the ticket-R24 upgrade
+# (see _ticket_pool4_upgrade_info / _apply_ticket_pool4_upgrade):
+# only the trifecta recommendation blocks are filtered to the
+# P4A2 subset of the stored combinations; the forecast itself
+# never moves. JRA publications stay exactly what they were —
+# R24, and no ticketFormation marker entry.
+NAR_TRIFECTA_FORMATION = "P4A2"
+TICKET_POOL4_UPGRADE_MIN_LEAD = timedelta(minutes=60)
+
 # Env-repair re-issue (2026-11-09, user instruction 「印かえていいよ」):
 # the NAR summary/detail builders hardcoded the race surface to ""
 # (app.py nar_race_summaries / nar_race_detail /
@@ -1007,6 +1030,205 @@ def _apply_ticket_r24_upgrade(old: dict, info: dict, captured: str):
     return new, unified["receiptSha256"]
 
 
+def _ticket_pool4_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time ticket-pool4 upgrade of a frozen NAR race.
+
+    The NAR sibling of _ticket_r24_upgrade_info, under the same
+    rules. A stored forecast qualifies only when ALL of these hold:
+
+    - the race is NAR (race id prefix "nar-", the same identity
+      test the env-repair upgrade uses — JRA races keep R24 and
+      never qualify);
+    - it carries this lane's publish marker, it has not already
+      been re-issued by this upgrade (exactly-once), and its
+      marker does not already record the P4A2 ticket formation
+      (a race first-published with P4A2 is final);
+    - the post is still at least TICKET_POOL4_UPGRADE_MIN_LEAD away;
+    - the stored mark order is readable and identical in both
+      stored mark blocks, with all five marks present (with fewer
+      marks the R24 and P4A2 constructions coincide, so there is
+      nothing to narrow);
+    - the stored recommended trifecta is still exactly the R24
+      construction on those marks (a race already carrying the
+      P4A2 subset, a formation-B trifecta — that is the R24
+      upgrade's input, handled by its own step first — or anything
+      else, is left alone: the upgrade narrows R24 to P4A2 and
+      invents nothing).
+
+    Anything unreadable simply does not qualify; the caller keeps
+    the frozen forecast (fail-closed).
+    """
+    race_id = str(old.get("id") or "")
+    if not race_id.startswith("nar-"):
+        return None
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    revision = marker.get("revision")
+    if isinstance(revision, dict) and (
+            revision.get("kind") == "ticket-pool4-upgrade"
+            or revision.get("reason") == "ticket-pool4-upgrade"):
+        return None
+    formation = marker.get("ticketFormation")
+    if isinstance(formation, dict) and (
+            formation.get("formation") == NAR_TRIFECTA_FORMATION):
+        return None
+    post = _post_at(old)
+    if post is None or post - now < TICKET_POOL4_UPGRADE_MIN_LEAD:
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    if not isinstance(unified.get("ticketPlan"), dict):
+        return None
+    mark_order = _stored_mark_order(old)
+    if mark_order is None or len(mark_order) < 5:
+        return None
+    from rewrite.analysis.tickets import (
+        formation_pool4_axis2_selections, formation_r24_selections)
+    trifecta = None
+    for entry in old.get("recommendedBets") or []:
+        if isinstance(entry, dict) and entry.get("kind") == "3連単":
+            trifecta = entry
+            break
+    if trifecta is None:
+        return None
+    try:
+        stored = {tuple(int(n) for n in combo)
+                  for combo in trifecta.get("combos") or []}
+    except (TypeError, ValueError):
+        return None
+    if stored == set(formation_pool4_axis2_selections(mark_order)):
+        return None  # already P4A2: final
+    if stored != set(formation_r24_selections(mark_order)):
+        return None  # not the R24 construction: do not guess
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": marker.get("abilityLane"),
+            "reason": "ticket-pool4-upgrade",
+            "markOrder": mark_order}
+
+
+def _apply_ticket_pool4_upgrade(old: dict, info: dict, captured: str):
+    """Build the ticket-pool4 upgrade re-issue of a frozen NAR forecast.
+
+    Surgical by construction, exactly like _apply_ticket_r24_upgrade:
+    the stored forecast — probabilities, marks, diagnosis, odds, EV
+    blocks and every non-trifecta ticket kind — is kept exactly as
+    published. Only the trifecta recommendation is narrowed: in the
+    grouped recommendedBets (top level, and the prediction block's
+    mirror, which the publisher always writes identical to it) every
+    stored combination carrying a leg outside the top four marks is
+    dropped (the fifth mark, ☆, was the only such leg in an R24
+    combination), and in the unified ticket plan the 3連単 items are
+    filtered the same way. The result must equal the canonical P4A2
+    construction on the stored marks exactly, or the upgrade aborts
+    (returns None; the caller keeps the frozen forecast). The
+    receipt is re-sealed over the modified unified forecast and the
+    revision is stamped kind "ticket-pool4-upgrade" with the first
+    publication time preserved; the marker also gains the
+    ticketFormation entry fresh NAR publications carry.
+    """
+    import copy
+
+    from rewrite.analysis.tickets import formation_pool4_axis2_selections
+
+    mark_order = info["markOrder"]
+    leg_pool = set(mark_order[:4])
+    expected = set(formation_pool4_axis2_selections(mark_order))
+
+    def _narrow(bets):
+        if not isinstance(bets, list):
+            return None
+        out = []
+        for entry in bets:
+            if not isinstance(entry, dict):
+                return None
+            entry = copy.deepcopy(entry)
+            if entry.get("kind") == "3連単":
+                try:
+                    kept = [list(combo) for combo in entry.get("combos") or []
+                            if all(int(n) in leg_pool for n in combo)]
+                    kept_set = {tuple(int(n) for n in combo)
+                                for combo in kept}
+                except (TypeError, ValueError, IndexError):
+                    return None
+                if kept_set != expected:
+                    return None
+                entry["combos"] = kept
+                entry["points"] = len(kept)
+            out.append(entry)
+        return out
+
+    new = copy.deepcopy(old)
+    narrowed = _narrow(new.get("recommendedBets"))
+    if narrowed is None:
+        return None
+    new["recommendedBets"] = narrowed
+    prediction = new.get("prediction")
+    if isinstance(prediction, dict):
+        # The publisher writes prediction.recommendedBets identical
+        # to the top-level list; the API projection strips it from
+        # the read, so restore the mirror from the narrowed list
+        # rather than dropping the stored block.
+        prediction["recommendedBets"] = copy.deepcopy(narrowed)
+    unified = new.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    plan = unified.get("ticketPlan")
+    if not isinstance(plan, dict) or not isinstance(plan.get("items"), list):
+        return None
+    items = []
+    for item in plan["items"]:
+        if isinstance(item, dict) and item.get("kind") == "3連単":
+            combo = item.get("combo") or []
+            try:
+                legs = [int(n) for n in combo]
+            except (TypeError, ValueError, IndexError):
+                return None
+            if not all(n in leg_pool for n in legs):
+                continue
+        items.append(item)
+    plan["items"] = items
+    unified["receiptSha256"] = _canonical_receipt(unified)
+
+    previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+    prev_revision = previous.get("revision")
+    prev_count = (prev_revision.get("revisionCount")
+                  if isinstance(prev_revision, dict) else None)
+    meta = dict(old.get("preparedMeta") or {})
+    marker = dict(previous)
+    marker["publishedAt"] = captured
+    marker["receiptSha256"] = unified["receiptSha256"]
+    marker["firstPublishedAt"] = (
+        info.get("firstPublishedAt") or info.get("publishedAt") or captured)
+    marker["ticketFormation"] = {
+        "formation": NAR_TRIFECTA_FORMATION, "scope": "nar-only"}
+    marker["revision"] = {
+        "kind": "ticket-pool4-upgrade",
+        "reason": "ticket-pool4-upgrade",
+        "revisedAt": captured,
+        "revisionCount": (prev_count if isinstance(prev_count, int)
+                          else 0) + 1,
+        "previousReceiptSha256": info.get("receipt")
+        or previous.get("receiptSha256"),
+        "previousAbilityLane": info.get("previousAbilityLane"),
+        "abilityLane": info.get("previousAbilityLane"),
+        "note": ("one-time ticket-pool4 upgrade (user order "
+                 "2026-11-12): the NAR trifecta recommendation "
+                 "switched from R24 (leg pool = mark ranks 1-5, "
+                 "24 points) to pool4-axis2 (leg pool = mark "
+                 "ranks 1-4, win leg = mark ranks 1-2, 12 "
+                 "points); probabilities, marks and every other "
+                 "ticket kind are the stored ones, only the "
+                 "trifecta recommendation was narrowed to the "
+                 "pool4-axis2 subset of the stored combinations"),
+    }
+    meta["rewritePublish"] = marker
+    new["preparedMeta"] = meta
+    return new, unified["receiptSha256"]
+
+
 def _is_inactive(horse: dict) -> bool:
     if horse.get("scratched") or horse.get("withdrawn"):
         return True
@@ -1278,16 +1500,28 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                         and env_repair_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
-                        # The last freeze exception: a forecast
+                        # The last freeze exceptions, both surgical
+                        # ticket upgrades that apply on top of the
+                        # freshest stored forecast and never undo a
+                        # blend or place-EV upgrade: a forecast
                         # frozen with the formation-B trifecta is
                         # re-issued once with the recommendation
                         # narrowed to R24 (see
-                        # _ticket_r24_upgrade_info — surgical, it
-                        # applies on top of the freshest stored
-                        # forecast and never undoes a blend or
-                        # place-EV upgrade). Anything else stays
-                        # frozen.
+                        # _ticket_r24_upgrade_info); a NAR forecast
+                        # frozen with the R24 trifecta is likewise
+                        # re-issued once narrowed to pool4-axis2
+                        # (see _ticket_pool4_upgrade_info). A race
+                        # carrying the B form takes the R24 step
+                        # first and the pool4 step on a later pass.
+                        # Anything else stays frozen.
                         ticket_upgrade = _ticket_r24_upgrade_info(old, now)
+                        upgrade_apply = _apply_ticket_r24_upgrade
+                        upgrade_label = "ticket-R24"
+                        if ticket_upgrade is None:
+                            ticket_upgrade = _ticket_pool4_upgrade_info(
+                                old, now)
+                            upgrade_apply = _apply_ticket_pool4_upgrade
+                            upgrade_label = "ticket-pool4"
                         if ticket_upgrade is None:
                             return None, (
                                 f"frozen: already published ready "
@@ -1306,19 +1540,19 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                             return None, (
                                 f"frozen: already published ready "
                                 f"(receipt {str(freeze[1])[:12]}…); "
-                                f"ticket-R24 upgrade deferred: the "
+                                f"{upgrade_label} upgrade deferred: the "
                                 f"API projection does not carry the "
                                 f"stored prediction blocks for this "
                                 f"race")
                         ticket_upgrade["receipt"] = freeze[1]
-                        upgraded = _apply_ticket_r24_upgrade(
+                        upgraded = upgrade_apply(
                             old, ticket_upgrade,
                             now.isoformat(timespec="seconds"))
                         if upgraded is None:
                             return None, (
                                 f"frozen: already published ready "
                                 f"(receipt {str(freeze[1])[:12]}…); "
-                                f"ticket-R24 upgrade could not be "
+                                f"{upgrade_label} upgrade could not be "
                                 f"computed from the stored product; "
                                 f"keeping the frozen forecast")
                         return upgraded
@@ -1479,6 +1713,11 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     # marks and every other ticket kind are unchanged; the
     # sealing lane keeps the legacy formation and lane v34 keeps
     # B36 as its control arm.
+    # Since 2026-11-12 (user order, see NAR_TRIFECTA_FORMATION
+    # above) the formation is segment-dependent: NAR builds
+    # pool4-axis2 (P4A2, 12 points) and JRA keeps R24. Races
+    # already frozen with the R24 trifecta on the NAR side are
+    # narrowed by the one-time ticket-pool4-upgrade above.
     # Place （複勝） odds ranges from the same payload rows as the
     # win odds: carried into the ticket plan as display-only place
     # EV ranges. Runners without an observed range simply have no
@@ -1492,10 +1731,12 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     and isinstance(high, (int, float))
                     and not isinstance(high, bool)):
                 place_odds[r.number] = (float(low), float(high))
-    tickets = generate_tickets(forecast, win_odds,
-                               calibration_validated=False,
-                               trifecta_formation="R24",
-                               place_odds=place_odds)
+    tickets = generate_tickets(
+        forecast, win_odds,
+        calibration_validated=False,
+        trifecta_formation=(NAR_TRIFECTA_FORMATION
+                            if segment == "nar" else "R24"),
+        place_odds=place_odds)
     # Evaluate the user's 18-factor master specification on the EXACT same
     # pre-off race and incumbent forecast. Shadow output is advisory only:
     # production v9b marks, R24 tickets, receipts, and frozen history remain
@@ -1702,6 +1943,16 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "type": "evidence-runs-shrinkage",
             "k": NAR_EVIDENCE_DECAY_K,
             "scope": "nar-only"}
+    if segment == "nar":
+        # Ticket pool4-axis2 (NAR only, 2026-11-12): this
+        # publication's trifecta was built with the P4A2 formation
+        # (leg pool = mark ranks 1-4, win leg = mark ranks 1-2)
+        # instead of R24; JRA publications keep R24 and carry no
+        # such entry, exactly as before. The one-time
+        # ticket-pool4-upgrade stamps the same entry when it
+        # narrows a frozen NAR publication.
+        meta["rewritePublish"]["ticketFormation"] = {
+            "formation": NAR_TRIFECTA_FORMATION, "scope": "nar-only"}
     if v9b_passthrough is not None:
         meta["rewritePublish"]["v9bPassthrough"] = (
             f"v9b post-processing passed through: {v9b_passthrough}; "
