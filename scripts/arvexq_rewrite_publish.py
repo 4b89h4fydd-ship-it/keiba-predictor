@@ -80,6 +80,22 @@ the bad first publish cannot happen; the deferral has a hard
 deadline of 06:00 JST on race day, after which the race publishes
 on the v1 fallback as before — a v1 forecast is better than none.
 
+Supply visibility (2026-11-12): the deferral deadline is also the
+hole the 2026-11-12 incident fell through — the extras export had
+stopped the night before, so at 06:00 every one of the day's 48
+races published on the v1 fallback and NOBODY NOTICED until the
+evening; the run summary said nothing about the missing material.
+Publishing still never blocks on the shortage (a v1 forecast is
+better than none), but publish_date now grades its own supply from
+the lanes the run leaves races standing on: the counts carry
+v1Fallback (races standing on the v1 fallback), extrasPresent
+(whether the date's v8 extras file exists at all) and supplyAlert
+("none" / "partial" / "all"). When EVERY served race stands on the
+fallback, the run prints a SUPPLY ALERT line plus the alert record
+as JSON (both land in publish-run.log, which the audit artifact
+uploads) and writes supply-alert-<date>.json beside the run. A
+partial fallback prints a SUPPLY WARNING naming the races.
+
 Usage:
   SYNC_TOKEN=... python3 scripts/arvexq_rewrite_publish.py [--date YYYY-MM-DD ...] [--dry-run]
 
@@ -2324,6 +2340,86 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     return new, unified["receiptSha256"]
 
 
+def _marker_lane(detail) -> str | None:
+    """The ability lane a detail stands on, from its publish marker.
+
+    Reads preparedMeta.rewritePublish.abilityLane off an UNPACKED
+    detail (a stored publication or a fresh build; surgical upgrade
+    builds keep the lane they apply on top of). Anything unreadable
+    simply has no lane to report.
+    """
+    if not isinstance(detail, dict):
+        return None
+    marker = (detail.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    lane = marker.get("abilityLane")
+    return lane if isinstance(lane, str) and lane else None
+
+
+def _supply_report(date: str, standing: dict, extras: dict,
+                   now: datetime) -> dict:
+    """Grade one publish run's material supply, visibly.
+
+    ``standing`` maps race id -> ability lane for every race this
+    run leaves with a live forecast (newly published on that lane,
+    or already frozen on it); ``extras`` is the date's
+    ``_load_v8_extras`` mapping. Returns the run's supply grade:
+    scope "none" (no served race on the v1 fallback), "partial"
+    (some) or "all" (every served race — the 2026-11-12 shape:
+    the extras never landed, the 06:00 deadline passed, and the
+    whole day fell back in silence). Only the "all" grade carries
+    an alert payload for the caller to shout about; grading never
+    blocks publication.
+    """
+    fallback_ids = sorted(
+        race_id for race_id, lane in standing.items()
+        if lane == "v1-prior")
+    extras_present = bool(extras)
+    if not fallback_ids:
+        scope = "none"
+    elif len(fallback_ids) == len(standing):
+        scope = "all"
+    else:
+        scope = "partial"
+    report = {"scope": scope, "fallbackIds": fallback_ids,
+              "extrasPresent": extras_present, "alert": None}
+    if scope != "all":
+        return report
+    if extras_present:
+        cause = (f"although the v8 extras file for {date} is present "
+                 f"({len(extras)} race entries), the v8 lane was not "
+                 f"usable for any served race")
+        shout_cause = "V8 LANE UNUSABLE FOR EVERY SERVED RACE"
+    else:
+        cause = (f"the v8 extras file for {date} is missing or "
+                 f"unreadable, so no served race could take the v8 "
+                 f"lane")
+        shout_cause = f"V8 EXTRAS FILE MISSING FOR {date}"
+    payload = {
+        "kind": "arvexq-supply-alert",
+        "version": 1,
+        "date": date,
+        "generatedAt": now.isoformat(timespec="seconds"),
+        "scope": "all",
+        "extrasFilePresent": extras_present,
+        "extrasRaces": len(extras),
+        "servedRaces": len(standing),
+        "v1FallbackRaces": len(fallback_ids),
+        "fallbackRaceIds": fallback_ids,
+        "message": (f"all {len(standing)} served races for {date} "
+                    f"stand on the v1 fallback: {cause}. Forecasts "
+                    f"are published but degraded."),
+    }
+    report["alert"] = {
+        "payload": payload,
+        "shout": (f"ALL {len(standing)} SERVED RACES ON THE V1 "
+                  f"FALLBACK — {shout_cause}; forecasts are live "
+                  f"but degraded"),
+    }
+    return report
+
+
 def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     from arvexq.ingest.banei import is_banei
     from arvexq.ingest.full_snapshot_codec import pack_detail, unpack_detail
@@ -2336,6 +2432,11 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
               "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0,
               "receiptMismatch": 0,
               "massArchived": 0, "massArchiveFailed": 0}
+    # race id -> ability lane this run leaves the race standing on
+    # (published on it now, or already frozen on it); graded at the
+    # end of the run by _supply_report so a material shortage is
+    # visible in the run's own summary instead of passing silently.
+    standing: dict[str, str] = {}
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or is_banei(summary.get("track"), race_id):
@@ -2352,6 +2453,12 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             if new is None:
                 if isinstance(receipt, str) and receipt.startswith("frozen:"):
                     counts["frozen"] += 1
+                    try:
+                        lane = _marker_lane(unpack_detail(old_raw))
+                    except Exception:
+                        lane = None
+                    if lane:
+                        standing[race_id] = lane
                     print(f"FREEZE {race_id}: {receipt}")
                 elif (isinstance(receipt, str)
                         and receipt.startswith("deferred:")):
@@ -2386,6 +2493,9 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 continue
             if dry_run:
                 counts["published"] += 1
+                lane = _marker_lane(new)
+                if lane:
+                    standing[race_id] = lane
                 print(f"DRY  {race_id}: receipt {receipt[:12]}… verified"
                       + (f" ({revision.get('reason')} reissue)"
                          if revision else ""))
@@ -2483,12 +2593,49 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                       f"{built_pm} / stored unified {stored_uf})")
                 continue
             counts["published"] += 1
+            lane = _marker_lane(new)
+            if lane:
+                standing[race_id] = lane
             print(f"OK   {race_id}: receipt {receipt[:12]}… live"
                   + (f" ({revision.get('reason')} reissue)"
                      if revision else ""))
         except Exception as exc:  # per-race isolation; report and continue
             counts["failed"] += 1
             print(f"FAIL {race_id}: {type(exc).__name__}: {exc}")
+    # Supply visibility (2026-11-12): grade what this run actually
+    # served. The counts always carry the grade; a partial fallback
+    # names its races on a warning line; a total fallback shouts.
+    # Nothing here blocks or alters publication — the forecasts are
+    # already out (or frozen) exactly as before; this only makes a
+    # material shortage impossible to miss in the run's own record.
+    report = _supply_report(date, standing, _load_v8_extras(date),
+                            datetime.now(JST))
+    counts["v1Fallback"] = len(report["fallbackIds"])
+    counts["extrasPresent"] = report["extrasPresent"]
+    counts["supplyAlert"] = report["scope"]
+    if report["scope"] == "partial":
+        print(f"SUPPLY WARNING {date}: "
+              f"{len(report['fallbackIds'])} of {len(standing)} "
+              f"served races stand on the v1 fallback (v8 extras "
+              f"file {'present' if report['extrasPresent'] else 'MISSING'}"
+              f"): {', '.join(report['fallbackIds'])}")
+    elif report["alert"] is not None:
+        alert = report["alert"]
+        payload_text = json.dumps(alert["payload"],
+                                  ensure_ascii=False, indent=2)
+        print(f"SUPPLY ALERT {date}: {alert['shout']}")
+        # The audit artifact uploads publish-run.log, so the alert
+        # record is printed into the run log in full; the dedicated
+        # file is also written beside the run for direct pickup.
+        print(f"SUPPLY ALERT DETAIL supply-alert-{date}.json:")
+        print(payload_text)
+        try:
+            Path(f"supply-alert-{date}.json").write_text(
+                payload_text + "\n", encoding="utf-8")
+        except OSError as exc:
+            print(f"SUPPLY ALERT {date}: could not write "
+                  f"supply-alert-{date}.json ({exc}); the alert "
+                  f"above stands")
     return counts
 
 
