@@ -91,6 +91,24 @@ BETAS: dict[str, float] = {"jra_flat": 4.0, "nar": 3.0}
 EXTRA_FEATURES = ("elo", "elo_rel", "elo_evidence",
                   "spd2_recent", "spd2_best")
 
+# F1 evidence decay (audit finding F1, 2026-11-11): the raw score
+# renormalizes the segment weights over whichever features happen to
+# be available, so a horse with a single career start could take the
+# race maximum, score 1.0 and be marked ◎ above eight-start horses —
+# evidence volume never damped the score. The production publish
+# lane (scripts/arvexq_rewrite_publish.py) opts NAR races into
+# shrinking each scored horse's raw score toward the scored-field
+# mean by its evidence reliability n / (n + k), n = evidence_runs
+# (capped at 8 by the extractor), with this k. The development
+# evaluation (research/f1-evidence-decay-20261112, 331 NAR races,
+# all six headline metrics improved, ◎ win rate +2.42pt with the
+# date-cluster 95% CI excluding zero) fixed k = 2 ("runs-k2"); JRA
+# showed no improvement and is never decayed. The default here stays
+# OFF: only the publish lane passes the constant, and only for
+# Segment.NAR, so the shadow lane and every other caller keep the
+# undamped candidate byte-for-byte.
+NAR_EVIDENCE_DECAY_K = 2.0
+
 
 def horse_key_of(runner: RunnerRecord,
                  race_date: Optional[str] = None) -> Optional[str]:
@@ -477,11 +495,22 @@ def race_extras(
 def forecast_race_v8(
     race: RaceRecord,
     extras: Optional[dict[int, dict[str, float]]] = None,
+    *,
+    evidence_decay_k: Optional[float] = None,
 ) -> RaceForecast:
     """Score one race with the v8 candidate: harness-identical
     combination of base features + merged extras under the fitted
     weights and per-segment beta, then the production pace/probability
-    /marks path. Raises KeyError for segments without a candidate."""
+    /marks path. Raises KeyError for segments without a candidate.
+
+    ``evidence_decay_k`` (production publish lane only, NAR only):
+    when a positive k is passed AND the race's segment is NAR, each
+    scored horse's raw score is shrunk toward the scored-field mean
+    by n / (n + k), n = the horse's evidence_runs, after the scores
+    are fixed and before strengths are derived — the F1 fix. The
+    segment gate lives here, not only in the caller, so no caller
+    can ever decay a JRA race; with the default (None) the output
+    is byte-identical to the undamped candidate."""
     segment = race.segment.value
     weights = WEIGHTS[segment]
     beta = BETAS[segment]
@@ -534,6 +563,22 @@ def forecast_race_v8(
         )
         return RaceForecast(race.race_id, beta, PROBABILITY_STATUS,
                             runners, "insufficient-scored-runners")
+    if evidence_decay_k is not None and evidence_decay_k > 0 \
+            and race.segment is Segment.NAR:
+        # F1 fix (see NAR_EVIDENCE_DECAY_K): shrink the raw scores
+        # toward the scored-field mean by evidence reliability
+        # before the strength transform. Identical in position and
+        # arithmetic to the evaluated research challenger runs-k2
+        # (arvexq/research/f1_evidence_decay.py with k=2,
+        # coverage_power=0, where the coverage factor is exactly 1).
+        raw_mean = sum(scores.values()) / len(scores)
+        scores = {
+            n: round(raw_mean + (feats[n].evidence_runs
+                                 / (feats[n].evidence_runs
+                                    + evidence_decay_k))
+                     * (s - raw_mean), 4)
+            for n, s in scores.items()
+        }
     mean_score = sum(scores.values()) / len(scores)
     strengths: dict[int, float] = {}
     for n, s in scores.items():
