@@ -128,6 +128,143 @@
      "marksResync"
     ]
    }
+  ],
+  "nar-2026-11-12-門別-10": [
+   {
+    "observed_at": "2026-11-12T18:04:21+09:00",
+    "request_id": "req-20261112180310-701aab",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:39:15+09:00",
+      "receiptSha256": "09c0827f1d405f17625f3f04e062f7e3a37b0c9003a606545200818a8dcab91d"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-12-川崎-10": [
+   {
+    "observed_at": "2026-11-12T18:04:23+09:00",
+    "request_id": "req-20261112180310-8a25a9",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:38:24+09:00",
+      "receiptSha256": "f1b33ac36952da66735a2458f0eddb1cdcccbe824405e27ac2e50abd2aca02ca"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-12-門別-11": [
+   {
+    "observed_at": "2026-11-12T18:04:24+09:00",
+    "request_id": "req-20261112180310-162595",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": "2026-11-12T11:51:33+09:00",
+      "publishedAt": "2026-11-12T12:26:52+09:00",
+      "receiptSha256": "c0c20fb6380186114eefec3f75b2d5cba4d62774cecddc4da2a685594359a4f0"
+     },
+     "revision": {
+      "reason": "roster-change",
+      "revisedAt": "2026-11-12T12:26:52+09:00",
+      "revisionCount": 2
+     },
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-12-川崎-11": [
+   {
+    "observed_at": "2026-11-12T18:04:26+09:00",
+    "request_id": "req-20261112180310-547f99",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:38:29+09:00",
+      "receiptSha256": "cbb11d540aa326784f382f74449d51c366fdd7c3279c9acc4febd8c9447f72ed"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "place-ev-upgrade",
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-12-門別-12": [
+   {
+    "observed_at": "2026-11-12T18:04:27+09:00",
+    "request_id": "req-20261112180310-2158b7",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:39:23+09:00",
+      "receiptSha256": "bfcf731a9e7a9b2f46b6e5a28ac093dc9a231a95ae13666c25f32b616ba70572"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
+  ],
+  "nar-2026-11-12-川崎-12": [
+   {
+    "observed_at": "2026-11-12T18:04:28+09:00",
+    "request_id": "req-20261112180310-2b925c",
+    "stamp": {
+     "marker": {
+      "abilityLane": "v1-prior",
+      "blendApplied": null,
+      "postBlendApplied": null,
+      "firstPublishedAt": null,
+      "publishedAt": "2026-11-12T09:38:33+09:00",
+      "receiptSha256": "c6bfcd9a36c89743f19a985ec1174099202cde097852552786ca01b9f366cd71"
+     },
+     "revision": null,
+     "predictionStatus": "ready"
+    },
+    "applied_kinds": [
+     "ticket-r24-upgrade",
+     "marksResync"
+    ]
+   }
   ]
  },
  "results": {
@@ -173,6 +310,72 @@
    "run_id": "42574172505",
    "status": "dry-run-already-applied",
    "detail": "slim-ledger-observation: observed applied on 2026-11-09T15:33:23+09:00 (request req-20261109153256-8c95aa)",
+   "attempts": 1
+  },
+  "req-20261112180310-701aab": {
+   "request_id": "req-20261112180310-701aab",
+   "race_id": "nar-2026-11-12-門別-10",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:23+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "attempts": 1
+  },
+  "req-20261112180310-8a25a9": {
+   "request_id": "req-20261112180310-8a25a9",
+   "race_id": "nar-2026-11-12-川崎-10",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:24+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "attempts": 1
+  },
+  "req-20261112180310-162595": {
+   "request_id": "req-20261112180310-162595",
+   "race_id": "nar-2026-11-12-門別-11",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:26+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "attempts": 1
+  },
+  "req-20261112180310-547f99": {
+   "request_id": "req-20261112180310-547f99",
+   "race_id": "nar-2026-11-12-川崎-11",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:27+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "attempts": 1
+  },
+  "req-20261112180310-2158b7": {
+   "request_id": "req-20261112180310-2158b7",
+   "race_id": "nar-2026-11-12-門別-12",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:28+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
+   "attempts": 1
+  },
+  "req-20261112180310-2b925c": {
+   "request_id": "req-20261112180310-2b925c",
+   "race_id": "nar-2026-11-12-川崎-12",
+   "revision_kind": "ticket-pool4-upgrade",
+   "mode": "apply",
+   "processed_at": "2026-11-12T18:04:29+09:00",
+   "run_id": "43188158434",
+   "status": "error-retryable",
+   "detail": "ValueError: masterAnalysis signature or capture mismatch",
    "attempts": 1
   }
  },
