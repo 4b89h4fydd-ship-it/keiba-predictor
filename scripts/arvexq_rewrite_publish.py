@@ -107,7 +107,8 @@ from rewrite.analysis.forecast import forecast_race  # noqa: E402
 from rewrite.analysis.lane_config import LANE_BETA, LANE_WEIGHTS  # noqa: E402
 from rewrite.analysis.pace import forecast_pace  # noqa: E402
 from rewrite.analysis.shadow_v8 import WEIGHTS as V8_WEIGHTS  # noqa: E402
-from rewrite.analysis.shadow_v8 import forecast_race_v8  # noqa: E402
+from rewrite.analysis.shadow_v8 import (  # noqa: E402
+    NAR_EVIDENCE_DECAY_K, forecast_race_v8)
 from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa: E402
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
@@ -182,6 +183,28 @@ V9B_ABILITY_MODEL_VERSION = "arvexq-v9b-elo-speed2-temp0.6692-blend50"
 V9B_ABILITY_STATUS = "rewrite-ability-elo-speed2-v9b"
 V9B_PROBABILITY_STATUS = "calibrated-market-blend-v9b"
 V9B_ADOPTION_DATE = "2026-11-04"
+
+# F1 evidence decay, NAR only (2026-11-12, user instruction after
+# the development evaluation on research branch
+# research/f1-evidence-decay-20261112: 331 NAR races, all six
+# headline metrics improved for the runs-k2 candidate, ◎ win rate
+# +2.42pt, date-cluster 95% CI +0.53..+4.05; the same evaluation
+# showed no improvement — if anything harm — on JRA, so JRA is
+# never decayed). On the v8 lane, a NAR race's raw ability scores
+# are shrunk toward the scored-field mean by evidence reliability
+# n / (n + k), k = NAR_EVIDENCE_DECAY_K, inside forecast_race_v8
+# (which also gates on Segment.NAR itself). The lane and the model
+# version do NOT move: the decay is an ability-layer change, so it
+# is labelled where the ability layer is labelled — the sealed
+# product's abilityModelVersion gains a "-nar-decay2" suffix on
+# decayed races (stamped before the receipt hash, like the v9b
+# label), and the lane marker records the same fact. Races already
+# frozen keep their frozen forecast untouched; the decay reaches
+# only races first-published (or re-issued) after this change.
+NAR_DECAY_V9B_ABILITY_MODEL_VERSION = (
+    V9B_ABILITY_MODEL_VERSION + "-nar-decay2")
+NAR_DECAY_V8_ABILITY_MODEL_VERSION = (
+    V8_ABILITY_MODEL_VERSION + "-nar-decay2")
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
@@ -1337,6 +1360,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     segment = race.segment.value
     forecast = None
     used_v8 = False
+    nar_evidence_decay = False
     v8_fallback_status = None
     if race_date >= V8_CUTOVER_DATE and segment in V8_WEIGHTS:
         entry = _load_v8_extras(race_date).get(race.race_id)
@@ -1348,10 +1372,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             except (TypeError, ValueError):
                 extras = {}
             if extras:
-                v8_forecast = forecast_race_v8(race, extras)
+                v8_forecast = forecast_race_v8(
+                    race, extras,
+                    evidence_decay_k=(NAR_EVIDENCE_DECAY_K
+                                      if segment == "nar" else None))
                 if v8_forecast.status == "ok":
                     forecast = v8_forecast
                     used_v8 = True
+                    nar_evidence_decay = segment == "nar"
                 else:
                     v8_fallback_status = v8_forecast.status
         elif reissue is None and lane_upgrade is None \
@@ -1542,15 +1570,21 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         # Per-race honest labeling: ability is the v8 layer, the
         # probabilities are its v9b post-processing (temperature
         # calibration + market blend). Stamped before the receipt
-        # hash so the label is part of the verified product.
-        unified["abilityModelVersion"] = V9B_ABILITY_MODEL_VERSION
+        # hash so the label is part of the verified product. A NAR
+        # race whose ability scores carry the F1 evidence decay is
+        # labelled as such (see NAR_DECAY_* above).
+        unified["abilityModelVersion"] = (
+            NAR_DECAY_V9B_ABILITY_MODEL_VERSION if nar_evidence_decay
+            else V9B_ABILITY_MODEL_VERSION)
         unified["probabilityStatus"] = V9B_PROBABILITY_STATUS
     elif used_v8:
         # Per-race honest labeling: this forecast's ability layer is
         # the adopted v8 candidate, not the v1 prior. Stamped before
         # the receipt hash so the label is part of the verified
         # product.
-        unified["abilityModelVersion"] = V8_ABILITY_MODEL_VERSION
+        unified["abilityModelVersion"] = (
+            NAR_DECAY_V8_ABILITY_MODEL_VERSION if nar_evidence_decay
+            else V8_ABILITY_MODEL_VERSION)
     unified["receiptSha256"] = _canonical_receipt(unified)
 
     win = {r.number: round(r.p_win, 6) for r in forecast.runners}
@@ -1657,6 +1691,17 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "temperature": V9B_TEMPERATURE,
             "blendWeight": V9B_BLEND_WEIGHT,
             "blendApplied": blend_applied}
+    if nar_evidence_decay:
+        # F1 evidence decay (NAR only): the ability scores of this
+        # publication were shrunk toward the scored-field mean by
+        # evidence reliability n / (n + k) inside the v8 layer. The
+        # sealed product's abilityModelVersion carries the matching
+        # "-nar-decay2" suffix; this marker entry is the lane-side
+        # record of the same fact.
+        meta["rewritePublish"]["evidenceDecay"] = {
+            "type": "evidence-runs-shrinkage",
+            "k": NAR_EVIDENCE_DECAY_K,
+            "scope": "nar-only"}
     if v9b_passthrough is not None:
         meta["rewritePublish"]["v9bPassthrough"] = (
             f"v9b post-processing passed through: {v9b_passthrough}; "
