@@ -1,0 +1,91 @@
+name: arvexq-rewrite-publish
+
+# Sole forecast producer: publishes the rewrite engine's forecasts into
+# production race details (see scripts/arvexq_rewrite_publish.py).
+# Replaces the retired unified-preoff and prerace-freeze lanes.
+
+on:
+  push:
+    # Push is the trigger that demonstrably fires even while GitHub's
+    # scheduler is degraded (2026-11-04: no scheduled publish or sync
+    # completions after ~14:10 JST, while every push-triggered run
+    # fired). The place-EV upgrade lane dies quietly when this
+    # workflow starves, so any change to the publish script or the
+    # engine packages it runs also serves as a publish attempt for
+    # today + tomorrow. Publishing is idempotent and serialized by
+    # the concurrency group below.
+    branches: [main]
+    paths:
+      - scripts/arvexq_rewrite_publish.py
+      - arvexq/prediction/**
+      - arvexq/forecast/**
+      - .github/workflows/arvexq-rewrite-publish.yml
+  schedule:
+    # Hourly :05, JST 06:05-20:05 (UTC 21:05 prev day - 11:05)
+    - cron: "05 0-11,21-23 * * *"
+    # Extra evening runs :35, JST 17:35-20:35 (UTC 08:35-11:35)
+    - cron: "35 8-11 * * *"
+  workflow_run:
+    # Redundant trigger: GitHub has dropped this workflow's scheduled
+    # runs for hours at a time (only 2 runs ever recorded; the last a
+    # schedule success at 2026-10-28 19:25 JST, while other
+    # workflows' schedules kept firing). Full Prefetch completes many
+    # times a day right after writing the facts this publish consumes,
+    # so follow every one of its completions instead of relying on
+    # the schedule alone. Runs with no date input (today + tomorrow
+    # JST), same as a schedule run.
+    # Realtime Sync completions are followed for the same reason:
+    # the place-EV upgrade can only fire after a sync lands full
+    # place coverage, official place odds stand only ~60-100 min
+    # before post, and the upgrade guard closes at post-60min — an
+    # hourly schedule alone structurally loses that race (2026-11-04
+    # morning: several mid-card races missed exactly this way).
+    workflows: ["ARVEXQ Full Prefetch", "ARVEXQ Realtime Sync"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target date (YYYY-MM-DD); empty = today and tomorrow JST"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Serialize this workflow's own runs: a schedule run and a
+# workflow_run follow-up (or two follow-ups from back-to-back
+# prefetch completions) must never publish at the same moment.
+# Queued runs wait rather than being cancelled; the publish itself
+# is idempotent and skips races that have already started.
+concurrency:
+  group: arvexq-rewrite-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Publish rewrite forecasts
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          set -o pipefail
+          if [ -n "${{ inputs.date }}" ]; then
+            python3 scripts/arvexq_rewrite_publish.py --date "${{ inputs.date }}" 2>&1 | tee publish-run.log
+          else
+            python3 scripts/arvexq_rewrite_publish.py 2>&1 | tee publish-run.log
+          fi
+      - name: Upload publish audit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-publish-audit-${{ github.run_number }}
+          path: publish-run.log
+          if-no-files-found: ignore
+          retention-days: 30
