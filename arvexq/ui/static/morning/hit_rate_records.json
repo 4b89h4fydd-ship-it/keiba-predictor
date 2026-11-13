@@ -7368,5 +7368,27 @@
     "source": "production",
     "segment": "nar",
     "track": "門別"
+  },
+  "nar-2026-11-12-川崎-11": {
+    "id": "nar-2026-11-12-川崎-11",
+    "date": "2026-11-12",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 6,
+    "hit": true,
+    "source": "production",
+    "segment": "nar",
+    "track": "川崎"
+  },
+  "nar-2026-11-12-川崎-12": {
+    "id": "nar-2026-11-12-川崎-12",
+    "date": "2026-11-12",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 6,
+    "hit": false,
+    "source": "production",
+    "segment": "nar",
+    "track": "川崎"
   }
 }
