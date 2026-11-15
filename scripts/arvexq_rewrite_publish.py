@@ -76,17 +76,21 @@ cannot be read consistently the cycle fails closed and does not
 overwrite. Symmetrically, a first publication of a v8-eligible race
 is DEFERRED while its extras are still expected (they land with the
 nightly shadow seal at ~21:40, after the evening first publish), so
-the bad first publish cannot happen; the deferral has a hard
-deadline of 06:00 JST on race day, after which the race publishes
-on the v1 fallback as before — a v1 forecast is better than none.
+the bad first publish cannot happen; the deferral runs until the
+race's own post time (2026-11-15 change: the previous hard deadline
+of 06:00 JST on race day fell through to the v1 fallback, so a file
+that missed the night run degraded the whole day — 2026-11-12, and
+again 2026-11-14/15 when the file sat unstaged until morning). A
+race whose extras never land is not first-published at all; past
+post it is not publishable anyway, and no forecast is ever built
+from results after the fact.
 
 Supply visibility (2026-11-12): the deferral deadline is also the
 hole the 2026-11-12 incident fell through — the extras export had
 stopped the night before, so at 06:00 every one of the day's 48
 races published on the v1 fallback and NOBODY NOTICED until the
 evening; the run summary said nothing about the missing material.
-Publishing still never blocks on the shortage (a v1 forecast is
-better than none), but publish_date now grades its own supply from
+publish_date now grades its own supply from
 the lanes the run leaves races standing on: the counts carry
 v1Fallback (races standing on the v1 fallback), extrasPresent
 (whether the date's v8 extras file exists at all) and supplyAlert
@@ -95,6 +99,11 @@ fallback, the run prints a SUPPLY ALERT line plus the alert record
 as JSON (both land in publish-run.log, which the audit artifact
 uploads) and writes supply-alert-<date>.json beside the run. A
 partial fallback prints a SUPPLY WARNING naming the races.
+Since 2026-11-15 the grading also covers the total-outage shape
+the old scopes called "none" and passed over in silence: target
+races exist but the run leaves NOTHING standing (every race
+deferred or skipped — the 2026-11-14/15 mornings). That grades
+"none-served" and carries the same alert.
 
 Usage:
   SYNC_TOKEN=... python3 scripts/arvexq_rewrite_publish.py [--date YYYY-MM-DD ...] [--dry-run]
@@ -159,8 +168,8 @@ SCRATCH_STATUSES = {"出走取消", "競走除外", "欠場"}
 # all 36 races were therefore first-published on the v1 lane and the
 # freeze then locked them there under the v2 model version. Two
 # guards now close that trap: first publication of a v8-eligible
-# race defers while its extras are missing (hard deadline 06:00 JST
-# on race day, see _v8_extras_deadline), and a frozen v1-lane
+# race defers while its extras are missing (until the race's own
+# post time, see _v8_extras_deadline), and a frozen v1-lane
 # forecast upgrades to the v8 lane once its extras exist (see
 # _lane_upgrade_info). The extras file is re-read for every race
 # (no per-run cache), so a file landing mid-run is picked up by the
@@ -490,22 +499,26 @@ def _load_v8_extras(date: str) -> dict:
     return races if isinstance(races, dict) else {}
 
 
-def _v8_extras_deadline(race_date: str) -> datetime | None:
-    """Hard deadline for the v8-extras deferral: 06:00 JST on race day.
+def _v8_extras_deadline(race_date: str,
+                        post: datetime | None = None) -> datetime | None:
+    """Deferral deadline for a v8-eligible race without extras.
 
-    A v8-eligible race whose extras have not landed is not published
+    Since 2026-11-15 the deadline is the race's own post time: a
+    v8-eligible race whose extras have not landed is not published
     at all until then (the extras normally arrive with the nightly
-    shadow seal at ~21:40 the evening before). At/after the deadline
-    the race publishes on the v1 fallback exactly as before — a v1
-    forecast is better than none, and a permanently missing export
-    must not silence a whole day. An unparseable date disables the
-    deferral (publish as before).
+    shadow seal at ~21:40 the evening before), so a file that lands
+    any time before post still gets the race first-published on the
+    v8 lane. The previous race-day 06:00 JST hard deadline fell
+    through to the v1 fallback, and the freeze then locked that
+    fallback in for the whole day (2026-11-12; the 2026-11-14/15
+    mornings, when the file sat unstaged past 06:00). ``post`` is
+    the race's scheduled start (see _post_at); without a usable
+    post time there is no deadline to defer against, so the
+    deferral is disabled and the caller publishes as before.
     """
-    try:
-        day = datetime.strptime(race_date, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
-        return None
-    return datetime(day.year, day.month, day.day, 6, 0, tzinfo=JST)
+    if isinstance(post, datetime) and post.tzinfo is not None:
+        return post
+    return None
 
 
 def _lane_upgrade_info(old: dict) -> dict | None:
@@ -1819,18 +1832,26 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
             # the 2026-11-02 incident). Skip this cycle; a later one
-            # publishes it on the v8 lane. Hard deadline 06:00 JST on
-            # race day: past it, fall through to the v1 fallback.
+            # publishes it on the v8 lane. The deferral runs until
+            # the race's own post time (2026-11-15 change: the old
+            # race-day 06:00 JST hard deadline published the whole
+            # day on v1 whenever the extras missed the night run —
+            # 2026-11-12, and again 2026-11-14/15 when the file sat
+            # unstaged until morning). Past post the race is not
+            # publishable at all (see the post-time gate above), so
+            # a permanently missing export now costs the race its
+            # forecast instead of degrading it — the user's call:
+            # no v1 first publication without the material.
             # Re-issues (roster change / lane upgrade / blend
             # upgrade) never defer: they must proceed with whatever
             # lane is usable now.
-            deadline = _v8_extras_deadline(race_date)
+            deadline = _v8_extras_deadline(race_date, post)
             if (deadline is not None and now.tzinfo is not None
                     and now < deadline):
                 return None, (f"deferred: v8 extras for {race_date} "
                               f"not yet available; first publication "
-                              f"waits for the extras or the race-day "
-                              f"06:00 JST deadline")
+                              f"waits for the extras or the race's "
+                              f"post time")
     if forecast is None:
         forecast = forecast_race(
             race, beta=LANE_BETA,
@@ -2358,17 +2379,23 @@ def _marker_lane(detail) -> str | None:
 
 
 def _supply_report(date: str, standing: dict, extras: dict,
-                   now: datetime) -> dict:
+                   now: datetime, target_races: int = 0) -> dict:
     """Grade one publish run's material supply, visibly.
 
     ``standing`` maps race id -> ability lane for every race this
     run leaves with a live forecast (newly published on that lane,
     or already frozen on it); ``extras`` is the date's
-    ``_load_v8_extras`` mapping. Returns the run's supply grade:
+    ``_load_v8_extras`` mapping; ``target_races`` is how many races
+    the run was asked to serve for the date (listing entries minus
+    the standing Banei exclusion). Returns the run's supply grade:
     scope "none" (no served race on the v1 fallback), "partial"
-    (some) or "all" (every served race — the 2026-11-12 shape:
+    (some), "all" (every served race — the 2026-11-12 shape:
     the extras never landed, the 06:00 deadline passed, and the
-    whole day fell back in silence). Only the "all" grade carries
+    whole day fell back in silence) or "none-served" (target races
+    exist but the run leaves NOTHING standing — the 2026-11-14/15
+    shape: the material sat unstaged all morning, every race
+    deferred or skipped, and the old grading called that "none"
+    and stayed silent). The "all" and "none-served" grades carry
     an alert payload for the caller to shout about; grading never
     blocks publication.
     """
@@ -2376,14 +2403,52 @@ def _supply_report(date: str, standing: dict, extras: dict,
         race_id for race_id, lane in standing.items()
         if lane == "v1-prior")
     extras_present = bool(extras)
+    report = {"scope": "none", "fallbackIds": fallback_ids,
+              "extrasPresent": extras_present,
+              "targetRaces": target_races, "alert": None}
+    if target_races > 0 and not standing:
+        if extras_present:
+            cause = (f"although the v8 extras file for {date} is "
+                     f"present ({len(extras)} race entries), no "
+                     f"race could be served")
+            shout_cause = "NO RACE SERVED ALTHOUGH EXTRAS ARE PRESENT"
+        else:
+            cause = (f"the v8 extras file for {date} is missing or "
+                     f"unreadable, and no race was served at all")
+            shout_cause = f"V8 EXTRAS FILE MISSING FOR {date}"
+        payload = {
+            "kind": "arvexq-supply-alert",
+            "version": 1,
+            "date": date,
+            "generatedAt": now.isoformat(timespec="seconds"),
+            "scope": "none-served",
+            "extrasFilePresent": extras_present,
+            "extrasRaces": len(extras),
+            "servedRaces": 0,
+            "targetRaces": target_races,
+            "v1FallbackRaces": 0,
+            "fallbackRaceIds": [],
+            "message": (f"none of the {target_races} target races "
+                        f"for {date} was served by this run: "
+                        f"{cause}. No forecast stands for the date "
+                        f"from this run."),
+        }
+        report["scope"] = "none-served"
+        report["alert"] = {
+            "payload": payload,
+            "shout": (f"NO SERVED RACES FOR {date} — "
+                      f"{shout_cause}; this run published or left "
+                      f"standing none of its {target_races} target "
+                      f"races"),
+        }
+        return report
     if not fallback_ids:
         scope = "none"
     elif len(fallback_ids) == len(standing):
         scope = "all"
     else:
         scope = "partial"
-    report = {"scope": scope, "fallbackIds": fallback_ids,
-              "extrasPresent": extras_present, "alert": None}
+    report["scope"] = scope
     if scope != "all":
         return report
     if extras_present:
@@ -2428,6 +2493,22 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     protect_detail = _load_protect()
     listing = _get(f"/api/races?date={date}")
     summaries = listing.get("races") or listing.get("summaries") or []
+
+    def _summary_post_key(summary: dict):
+        # Process in post-time order (2026-11-15): the workflow's
+        # 30-minute timeout can cut a long run short, and the old
+        # listing order spent that budget on whatever came first —
+        # on 2026-11-14/15 the late races were served while the
+        # early ones starved. Earliest post first; a summary with
+        # no readable start time keeps its listing place at the end
+        # (the sort is stable).
+        raw = (summary.get("start_time")
+               or summary.get("scheduledStartTime")
+               or summary.get("startTime") or "")
+        text = str(raw)[:5]
+        return (0, text) if text else (1, "")
+
+    summaries = sorted(summaries, key=_summary_post_key)
     counts = {"races": len(summaries), "published": 0, "skipped": 0,
               "frozen": 0, "deferred": 0, "reissued": 0, "failed": 0,
               "receiptMismatch": 0,
@@ -2437,6 +2518,10 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     # end of the run by _supply_report so a material shortage is
     # visible in the run's own summary instead of passing silently.
     standing: dict[str, str] = {}
+    # Races this run was asked to serve (listing entries minus the
+    # Banei exclusion); _supply_report needs it to tell a quiet day
+    # apart from a total outage where nothing was served at all.
+    targets = 0
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or is_banei(summary.get("track"), race_id):
@@ -2445,6 +2530,7 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             # (the old track-only check let those races through).
             counts["skipped"] += 1
             continue
+        targets += 1
         try:
             resp = _get("/api/race/" + urllib.parse.quote(str(race_id), safe=""))
             old_raw = resp.get("detail") or {}
@@ -2604,12 +2690,14 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             print(f"FAIL {race_id}: {type(exc).__name__}: {exc}")
     # Supply visibility (2026-11-12): grade what this run actually
     # served. The counts always carry the grade; a partial fallback
-    # names its races on a warning line; a total fallback shouts.
+    # names its races on a warning line; a total fallback shouts;
+    # and since 2026-11-15 a run that serves NOTHING although
+    # target races exist shouts too (scope "none-served").
     # Nothing here blocks or alters publication — the forecasts are
     # already out (or frozen) exactly as before; this only makes a
     # material shortage impossible to miss in the run's own record.
     report = _supply_report(date, standing, _load_v8_extras(date),
-                            datetime.now(JST))
+                            datetime.now(JST), target_races=targets)
     counts["v1Fallback"] = len(report["fallbackIds"])
     counts["extrasPresent"] = report["extrasPresent"]
     counts["supplyAlert"] = report["scope"]

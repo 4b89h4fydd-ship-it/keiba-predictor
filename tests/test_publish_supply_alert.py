@@ -14,7 +14,9 @@ supply-alert-<date>.json beside the run).
 
 These tests pin the grading helper, and publish_date's accounting
 across the fresh-publish shape of the incident (unpublished race,
-no extras, past the deadline), the normal extras-present day, and
+no extras — since 2026-11-15 the race defers until post instead
+of falling back at 06:00, and the run alerts on serving nothing),
+the normal extras-present day, and
 frozen races standing on mixed lanes.
 """
 from __future__ import annotations
@@ -204,6 +206,40 @@ class SupplyReportTests(TestCase):
         self.assertFalse(payload["extrasFilePresent"])
         self.assertIn("missing or unreadable", payload["message"])
 
+    def test_no_targets_empty_standing_stays_quiet(self):
+        # A date with no target races at all (e.g. only Banei on
+        # the listing) is a quiet day, not an outage.
+        report = _supply_report(DATE, {}, {}, FIXED_NOW,
+                                target_races=0)
+        self.assertEqual(report["scope"], "none")
+        self.assertIsNone(report["alert"])
+
+    def test_targets_but_nothing_served_alerts(self):
+        report = _supply_report(DATE, {}, {}, FIXED_NOW,
+                                target_races=3)
+        self.assertEqual(report["scope"], "none-served")
+        self.assertFalse(report["extrasPresent"])
+        alert = report["alert"]
+        self.assertIn("NO SERVED RACES FOR " + DATE, alert["shout"])
+        self.assertIn("V8 EXTRAS FILE MISSING", alert["shout"])
+        payload = alert["payload"]
+        self.assertEqual(payload["kind"], "arvexq-supply-alert")
+        self.assertEqual(payload["scope"], "none-served")
+        self.assertEqual(payload["servedRaces"], 0)
+        self.assertEqual(payload["targetRaces"], 3)
+        self.assertEqual(payload["v1FallbackRaces"], 0)
+        self.assertIn("no race was served at all",
+                      payload["message"])
+
+    def test_targets_nothing_served_extras_present(self):
+        extras = {"r1": {"segment": "nar", "extras": {"1": {}}}}
+        report = _supply_report(DATE, {}, extras, FIXED_NOW,
+                                target_races=2)
+        self.assertEqual(report["scope"], "none-served")
+        self.assertTrue(report["extrasPresent"])
+        self.assertIn("no race could be served",
+                      report["alert"]["payload"]["message"])
+
     def test_all_fallback_extras_present_names_other_cause(self):
         standing = {"r1": "v1-prior"}
         extras = {"r1": {"segment": "nar", "extras": {"1": {}}}}
@@ -216,23 +252,27 @@ class SupplyReportTests(TestCase):
 
 class PublishSupplyAlertTests(TestCase):
     def test_fresh_publish_without_extras_alerts(self):
-        # The 2026-11-12 shape: unpublished race, extras file
-        # missing, deadline passed -> published on v1, loudly.
+        # The 2026-11-14/15 shape: unpublished race, extras file
+        # missing, still before post. Since 2026-11-15 the race
+        # defers until its post time instead of falling back to v1
+        # at the old 06:00 deadline, so this run serves nothing —
+        # and says so loudly (scope "none-served").
         counts, out, tmp = run_publish({RACE_ID: fresh_detail()}, {})
         with tmp:
-            self.assertEqual(counts["published"], 1)
-            self.assertEqual(counts["v1Fallback"], 1)
+            self.assertEqual(counts["published"], 0)
+            self.assertEqual(counts["deferred"], 1)
+            self.assertEqual(counts["v1Fallback"], 0)
             self.assertFalse(counts["extrasPresent"])
-            self.assertEqual(counts["supplyAlert"], "all")
+            self.assertEqual(counts["supplyAlert"], "none-served")
             self.assertIn("SUPPLY ALERT", out)
-            self.assertIn("ALL 1 SERVED RACES ON THE V1 FALLBACK",
-                          out)
+            self.assertIn("NO SERVED RACES FOR " + DATE, out)
             alert_file = Path(tmp.name) / f"supply-alert-{DATE}.json"
             self.assertTrue(alert_file.exists())
             payload = json.loads(
                 alert_file.read_text(encoding="utf-8"))
-            self.assertEqual(payload["fallbackRaceIds"], [RACE_ID])
-            self.assertEqual(payload["servedRaces"], 1)
+            self.assertEqual(payload["scope"], "none-served")
+            self.assertEqual(payload["servedRaces"], 0)
+            self.assertEqual(payload["targetRaces"], 1)
             self.assertFalse(payload["extrasFilePresent"])
 
     def test_fresh_publish_with_extras_is_quiet(self):
@@ -281,6 +321,46 @@ class PublishSupplyAlertTests(TestCase):
                 (Path(tmp.name) / f"supply-alert-{DATE}.json")
                 .read_text(encoding="utf-8"))
             self.assertEqual(payload["fallbackRaceIds"], [v1a, v1b])
+
+
+class PublishOrderTests(TestCase):
+    def test_processing_follows_post_time_order(self):
+        # The listing hands the late race first; publish_date must
+        # still process the early-post race first (2026-11-15), so
+        # a run cut short by the workflow timeout loses the late
+        # races, not the early ones.
+        late = "nar-2099-01-01-高知-12"
+        early = "nar-2099-01-01-高知-01"
+        details = {late: frozen_detail(late, "v8-elo-speed2"),
+                   early: frozen_detail(early, "v8-elo-speed2")}
+        summaries = [
+            {"race_id": late, "id": late, "track": "高知",
+             "start_time": "20:50"},
+            {"race_id": early, "id": early, "track": "高知",
+             "start_time": "10:00"},
+        ]
+
+        def fake_get(url: str):
+            if url.startswith("/api/races"):
+                return {"races": summaries}
+            rid = urllib.parse.unquote(url.rsplit("/", 1)[-1])
+            return {"detail": details[rid]}
+
+        stdout = io.StringIO()
+        with patch("scripts.arvexq_rewrite_publish._get",
+                   side_effect=fake_get), \
+                patch("scripts.arvexq_rewrite_publish._load_protect",
+                      return_value=lambda old, new: new), \
+                patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                      return_value={}), \
+                patch("scripts.arvexq_rewrite_publish.datetime",
+                      _FixedDateTime), \
+                redirect_stdout(stdout):
+            counts = publish_date(DATE, None, True)
+        out = stdout.getvalue()
+        self.assertEqual(counts["frozen"], 2)
+        self.assertLess(out.index(f"FREEZE {early}"),
+                        out.index(f"FREEZE {late}"))
 
 
 if __name__ == "__main__":
