@@ -170,12 +170,12 @@ EXTRAS = {"nar-2026-11-02-船橋-12": {
 
 
 class ExtrasDeadlineTests(TestCase):
-    def test_deadline_is_0600_jst_on_race_day(self):
-        self.assertEqual(
-            _v8_extras_deadline("2026-11-03"),
-            datetime(2026, 11, 3, 6, 0, tzinfo=JST))
+    def test_deadline_is_the_races_post_time(self):
+        post = datetime(2026, 11, 3, 10, 0, tzinfo=JST)
+        self.assertEqual(_v8_extras_deadline("2026-11-03", post), post)
 
-    def test_unparseable_date_disables_deferral(self):
+    def test_no_post_time_disables_deferral(self):
+        self.assertIsNone(_v8_extras_deadline("2026-11-03"))
         self.assertIsNone(_v8_extras_deadline("not-a-date"))
         self.assertIsNone(_v8_extras_deadline(""))
 
