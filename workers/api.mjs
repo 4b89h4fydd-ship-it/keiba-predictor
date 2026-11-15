@@ -4,6 +4,7 @@ import {forecastRevisions} from './api_forecast_revisions.mjs';
 import {storageAudit} from './api_storage_audit.mjs';
 import {snapshotExport} from './api_snapshot_export.mjs';
 import {readCompressedRace,storageEnvironment,compressStoredSnapshot} from './api_full_snapshot.mjs';
+import {overlayRaceResponse,overlayDayResponse} from './api_display_overlay.mjs';
 export default {async fetch(request,env,ctx){
   const url=new URL(request.url);
   // Retire Banei from live traffic without touching archived D1 rows.
@@ -16,7 +17,7 @@ export default {async fetch(request,env,ctx){
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
       try{
         const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));
-        if(restored){restored.headers.set('x-arvexq-readback','full-preoff');return restored}
+        if(restored){restored.headers.set('x-arvexq-readback','full-preoff');try{return await overlayRaceResponse(restored)}catch{return restored}}
       }
     catch(e){return Response.json({ok:false,error:'saved detail restore unavailable'},{status:503,headers:{'access-control-allow-origin':'*'}})}
   }
@@ -25,5 +26,13 @@ export default {async fetch(request,env,ctx){
     if(request.method!=='GET')return Response.json({ok:false,error:'method not allowed'},{status:405});
     return storageAudit(request,env);
   }
-  return original.fetch(request,storageEnvironment(env,url.pathname==='/api/day'&&url.searchParams.get('details')!=='0'),ctx);
+  const proxiedEnv=storageEnvironment(env,url.pathname==='/api/day'&&url.searchParams.get('details')!=='0');
+  const response=await original.fetch(request,proxiedEnv,ctx);
+  if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
+    try{return await overlayRaceResponse(response)}catch{return response}
+  }
+  if(request.method==='GET'&&url.pathname==='/api/day'){
+    try{return await overlayDayResponse(response,env,url)}catch{return response}
+  }
+  return response;
 }};
