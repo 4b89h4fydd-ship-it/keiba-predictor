@@ -55,11 +55,17 @@
           }
           const state=raceState(r,opts),next=liveById.get(r.id)?.next;
           const risk=r.riskLabel&&r.riskLabel.label;
+          // Upset forecast （荒れ予想）: same validated risk score as the
+          // label; the badge also carries its 0-100 score so the day grid
+          // shows the upset degree per race. Level uses the label's own
+          // bands （堅=低/普=中/荒=高）, so it cannot contradict the label.
+          const riskScore=r.riskLabel&&Number.isFinite(Number(r.riskLabel.score))?Math.round(Number(r.riskLabel.score)*100):null;
+          const riskLevel=risk==="堅"?"低":risk==="荒"?"高":risk==="普"?"中":null;
           const riskBadge=risk?'<em class="arv-risk-badge '+
             (risk==="堅"?"risk-solid":risk==="荒"?"risk-rough":"risk-normal")+
-            '" title="波乱リスク判定">'+esc(risk)+'</em>':"";
+            '" title="荒れ予想（波乱リスク'+esc(risk)+(riskLevel?"・荒れ度"+riskLevel:"")+(riskScore!==null?"・スコア"+riskScore:"")+'）">'+esc(risk)+(riskScore!==null?" "+riskScore:"")+'</em>':"";
           return '<button type="button" class="arv-all-race '+esc(state)+(next?' next':'')+
-            '" data-race="'+esc(r.id)+'" data-race-state="'+esc(state)+'" aria-label="'+esc(track+' '+number+'R '+clock(r)+' '+liveLabel(state)+(risk?' 波乱リスク'+risk:''))+'">'+
+            '" data-race="'+esc(r.id)+'" data-race-state="'+esc(state)+'" aria-label="'+esc(track+' '+number+'R '+clock(r)+' '+liveLabel(state)+(risk?' 波乱リスク'+risk+(riskLevel?' 荒れ予想'+riskLevel:'')+(riskScore!==null?' スコア'+riskScore:''):''))+'">'+
             '<strong>'+number+'R</strong><small>'+esc(clock(r)||"未取得")+'</small>'+
             '<em class="arv-race-state">'+esc(liveLabel(state))+'</em>'+riskBadge+'</button>';
         }).join("");

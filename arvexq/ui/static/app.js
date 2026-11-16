@@ -2796,6 +2796,37 @@ function riskLabelNote(r){
   if(rl.segment==='nar')return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：地方の検証（951レース）では「堅」で◎1着率61.9%・本線的中35.9%、「荒」で◎26.3%・本線8.0%でした。</small>';
   return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：中央では検証未確定のため参考表示です。</small>'
 }
+// Upset forecast （荒れ予想）: the standalone upset display the user asked
+// for, derived by the risk-label module from the SAME validated risk score
+// as the 堅/普/荒 label (identical bands, so the two can never disagree):
+// the label is the 3-way summary, the upset forecast is its detailed form
+// (level 高/中/低 + 0-100 score + the main contributing factors).
+function upsetForecastOf(r){
+  var rl=r&&r.riskLabel;
+  if(!rl||!rl.label)return null;
+  var mod=window.ARVEXQRiskLabel;
+  if(!mod||typeof mod.upsetFromRisk!=='function')return null;
+  return mod.upsetFromRisk(rl)
+}
+function upsetLevelClass(level){
+  return level==='高'?'upset-high':(level==='低'?'upset-low':'upset-mid')
+}
+function upsetChip(r){
+  var up=upsetForecastOf(r);
+  if(!up)return '';
+  return '<span class="arv-upset-chip '+upsetLevelClass(up.level)+'" title="荒れ予想（波乱リスク） スコア'+up.score100+'：'+esc(up.reasons.join('・'))+'"><small>荒れ予想</small><b>'+esc(up.level)+'</b><i>'+up.score100+'</i></span>'
+}
+function upsetBand(r){
+  var up=upsetForecastOf(r);
+  if(!up)return '';
+  return '<div class="arv-upset-band '+upsetLevelClass(up.level)+'">'+
+    '<span class="arv-upset-band-title">荒れ予想</span>'+
+    '<span class="arv-upset-band-level">荒れ度 <b>'+esc(up.level)+'</b></span>'+
+    '<span class="arv-upset-band-score">スコア <b>'+up.score100+'</b></span>'+
+    riskLabelBadge(r)+
+    '<span class="arv-upset-band-reasons">'+esc(up.reasons.join('・'))+'</span>'+
+  '</div>'
+}
 function volatilityBadge(r){
   var v=r&&r.volatility||{},ready=v.ready===true&&n(v.score)>0,label=ready?String(v.label||'標'):'…',
       cls=ready?(' vol-'+(label==='硬'?'hard':label==='標'?'standard':label==='荒'?'rough':'wild')):' vol-pending',
@@ -3048,7 +3079,7 @@ function venueRaceRows(){
         return '<div class="arv-favorite-venue-item"><button class="smart-race-row '+cls+'" data-race="'+esc(r.id)+'" data-race-state="'+esc(lifecycle)+'">'+
           '<strong>'+no+'R</strong>'+ 
           '<span class="smart-race-time">'+(fin?'確定':(flash?'速報':timeHtml(r)))+'</span>'+ 
-          '<span class="smart-race-title">'+stateTag+riskLabelBadge(r)+'<b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc((r.weather&&r.weather!=='不明')?r.weather:'天候待ち')+' / '+esc((r.condition&&r.condition!=='不明')?r.condition:'馬場待ち')+'</small></span>'+
+          '<span class="smart-race-title">'+stateTag+riskLabelBadge(r)+upsetChip(r)+'<b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc((r.weather&&r.weather!=='不明')?r.weather:'天候待ち')+' / '+esc((r.condition&&r.condition!=='不明')?r.condition:'馬場待ち')+'</small></span>'+
           '<span class="smart-chevron">›</span>'+ 
         '</button>'+favoriteStarHtml(r,'arv-venue-favorite-star')+'</div>'
       }).join('')+
@@ -3102,7 +3133,7 @@ function smartRaceHead(r){
         officialRaceActions(r)+
       '</div>'+
       '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div>'+
-    '</div>'+riskLabelNote(r)+
+    '</div>'+upsetBand(r)+riskLabelNote(r)+
   '</section>'
 }
 function renderRaceLoading(){

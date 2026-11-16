@@ -17,6 +17,7 @@
 import {RISK_ECDF_TABLES} from './api_risk_label_constants.mjs';
 
 export const RISK_LABEL_VERSION = 'arvexq-risk-label-v1';
+export const UPSET_FORECAST_VERSION = 'arvexq-upset-forecast-v1';
 
 function ecdf(table, value) {
   const bp = table.bp;
@@ -151,4 +152,74 @@ export function computeRiskLabel(detail) {
     components: Object.fromEntries(
       Object.entries(components).map(([k, v]) => [k, Math.round(v * 10000) / 10000])),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Upset forecast （荒れ予想）: a presentation of the SAME validated risk
+// score — no new definition, no new thresholds. The level bands are the
+// validation's pre-fixed absolute bands, identical to the label bands, so
+// the forecast can never contradict the 堅/普/荒 label:
+//   score < 1/3  -> label 堅 / upset level 低
+//   score < 2/3  -> label 普 / upset level 中
+//   otherwise    -> label 荒 / upset level 高
+// score100 is the risk score on a 0-100 scale (SPEC §5.2 波乱リスク帯）.
+// reasons is a one-line summary naming the components that contribute most
+// to the score (each component's ECDF within the segment, recomputed from
+// the label's stored raw component values). For a low-upset race the
+// summary names the strongest stabilising components instead.
+// NOTE: the score is validated for NAR （地方， 951R) only; for JRA the same
+// display is shown but the separation is not confirmed (see REPORT.md in
+// volatility-risk-20261116). The display code keeps that caveat in its note
+// text rather than in the forecast object itself.
+const UPSET_COMPONENTS = [
+  // [components key, ECDF table key, high-side phrase, low-side phrase]
+  ['ent_model', 'ent', '予想が割れている', '予想が本命に集中している'],
+  ['weak_fav_mkt', 'weak_fav', '人気が割れている', '人気が本命に集中している'],
+  ['field', 'field', '出走頭数が多い', '出走頭数が少ない'],
+  ['thin_share', 'thin_share', '実績の薄い馬が多い', '実績馬が揃っている'],
+  ['weak_ability_conc', 'weak_ab', '能力が拮抗している', '能力上位が抜けている'],
+];
+
+export function upsetFromRisk(risk) {
+  if (!risk || typeof risk !== 'object') return null;
+  const segment = risk.segment;
+  const table = RISK_ECDF_TABLES[segment];
+  const score = finite(risk.score);
+  if (!table || score === null || !risk.components) return null;
+  const level = score >= 2 / 3 ? '高' : score >= 1 / 3 ? '中' : '低';
+  const ranked = [];
+  for (let i = 0; i < UPSET_COMPONENTS.length; i++) {
+    const [key, tableKey, highPhrase, lowPhrase] = UPSET_COMPONENTS[i];
+    const v = finite(risk.components[key]);
+    if (v === null) return null;
+    ranked.push({i, e: ecdf(table[tableKey], v), highPhrase, lowPhrase});
+  }
+  let reasons;
+  if (level === '低') {
+    const picked = ranked.filter((x) => x.e <= 0.5)
+      .sort((a, b) => (a.e - b.e) || (a.i - b.i)).slice(0, 2);
+    const list = picked.length ? picked
+      : [ranked.slice().sort((a, b) => (a.e - b.e) || (a.i - b.i))[0]];
+    reasons = list.map((x) => x.lowPhrase);
+  } else {
+    const picked = ranked.filter((x) => x.e >= 0.5)
+      .sort((a, b) => (b.e - a.e) || (a.i - b.i)).slice(0, 2);
+    const list = picked.length ? picked
+      : [ranked.slice().sort((a, b) => (b.e - a.e) || (a.i - b.i))[0]];
+    reasons = list.map((x) => x.highPhrase);
+  }
+  return {
+    version: UPSET_FORECAST_VERSION,
+    level,
+    score100: Math.round(score * 100),
+    label: risk.label,
+    score,
+    segment,
+    reasons,
+  };
+}
+
+export function computeUpsetForecast(detail) {
+  const risk = computeRiskLabel(detail);
+  return risk ? upsetFromRisk(risk) : null;
 }
