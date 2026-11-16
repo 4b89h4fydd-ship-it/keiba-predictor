@@ -1222,6 +1222,15 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
     delete out._staticRacecardFallback;
   }
   if(typeof window!=='undefined'&&window.ARVEXQRaceIdentity)out=window.ARVEXQRaceIdentity.sanitize(out);
+  // Client-side risk label: keep an API-provided label when one arrived;
+  // otherwise compute from the incoming full detail when it carries the
+  // forecast (its sealed odds are the validation's market snapshot), and
+  // only then from the merged result.
+  if(!out.riskLabel&&typeof window!=='undefined'&&window.ARVEXQRiskLabel){
+    var rlSrc=(incoming&&incoming.unifiedForecast&&Array.isArray(incoming.horses))?incoming:out,
+        rlLbl=window.ARVEXQRiskLabel.computeRiskLabel(rlSrc);
+    if(rlLbl)out.riskLabel=rlLbl;
+  }
   return mergeResultHorseFields(out)
 }
 function raceDisplayCoreReady(d,row){
@@ -2762,6 +2771,40 @@ function renderHome(){
     (window.ARVEXQUnifiedHome?'</div>':'')+
     '</main>'+cinematicFooter()+'</div>'
 }
+// Risk label （堅／普／荒）: an API-provided riskLabel always wins; otherwise
+// the client module (forecast/risk_label.js, a port of the API overlay that
+// cannot be deployed) computes it from the stored full detail. The label is
+// a pure function of that detail, so tiles, venue rows and the detail
+// header all show the same value for the same race.
+function clientRiskLabel(d){
+  if(!d||typeof d!=='object')return null;
+  if(d.riskLabel&&d.riskLabel.label)return d.riskLabel;
+  var mod=window.ARVEXQRiskLabel;
+  if(!mod)return null;
+  var lbl=mod.computeRiskLabel(d);
+  if(lbl)d.riskLabel=lbl;
+  return lbl||null
+}
+var riskLabelRestoreBusy={};
+function attachClientRiskLabel(d){
+  if(!d||!d.id)return;
+  if(clientRiskLabel(d))return;
+  var mod=window.ARVEXQRiskLabel;
+  if(!mod||typeof mod.ensureRiskLabel!=='function')return;
+  var id=String(d.id);
+  if(riskLabelRestoreBusy[id])return;
+  riskLabelRestoreBusy[id]=true;
+  mod.ensureRiskLabel(d).then(function(lbl){
+    delete riskLabelRestoreBusy[id];
+    if(!lbl)return;
+    saveDetailCache(d.id,d);
+    var changed=false;
+    state.races.forEach(function(r){
+      if(String(r.id)===id&&JSON.stringify(r.riskLabel||null)!==JSON.stringify(lbl)){r.riskLabel=lbl;changed=true}
+    });
+    if(changed){persistRaceSummaryCache();render()}
+  }).catch(function(){delete riskLabelRestoreBusy[id]})
+}
 function riskLabelBadge(r){
   var lbl=r&&r.riskLabel&&r.riskLabel.label;
   if(!lbl)return '';
@@ -4006,6 +4049,7 @@ function mergeBootstrap(body){
   details.forEach(function(d){
     if(!d||!d.id)return;
     instantTrackDetails[String(d.id)]=d;
+    attachClientRiskLabel(d);
     saveDetailCache(d.id,d);
     if(d.volatility)pvol[String(d.id)]=d.volatility
   });
@@ -4264,6 +4308,12 @@ function load(force){
         selectedRacePreload.analysisReady=analysisReady;
         selectedRacePreload.lastError=failed?('race-detail failures '+failed):'';
         lastDetailsAt=Date.now();
+        var riskChanged=false;
+        (state.races||[]).forEach(function(r){
+          var dd=instantTrackDetails[String(r.id)];
+          if(dd&&dd.riskLabel&&JSON.stringify(r.riskLabel||null)!==JSON.stringify(dd.riskLabel)){r.riskLabel=dd.riskLabel;riskChanged=true}
+        });
+        if(riskChanged)persistRaceSummaryCache();
         prebuildSpecialForecastPlans();
         render();
         scheduleTopRefresh();
