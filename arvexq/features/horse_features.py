@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from arvexq.core.runner_status import is_inactive_runner
+from arvexq.prediction.jra_class_evidence import attach_jra_class_evidence
 from arvexq.prediction.past_performance import observed_runs, analyze_past_performance
 
 
@@ -32,6 +33,12 @@ def build_horse_features(horse: dict[str, Any], race: dict[str, Any]) -> dict[st
 
 
 def attach_race_features(detail: dict[str, Any]) -> dict[str, Any]:
+    # Fill source-backed JRA class ordinals into historical runs missing
+    # opponentLevel before the past-five context reads them. The attacher
+    # existed but was never called on this path, so opponentLevelObserved
+    # stayed 0% for every runner. JRA only; NAR runs carry no such field
+    # and are left untouched (no inferred values).
+    attach_jra_class_evidence(detail)
     detail["horseFeatures"] = [
         build_horse_features(h, detail)
         for h in (detail.get("horses") or [])
