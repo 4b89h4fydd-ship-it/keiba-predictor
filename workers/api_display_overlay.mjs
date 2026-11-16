@@ -10,6 +10,9 @@
 // odds_current — the same rows whose winOdds are displayed — is the source
 // for oddsUpdatedAt). Stored D1 payloads are never rewritten here.
 
+import {computeRiskLabel} from './api_risk_label.mjs';
+import {restoreBytes} from './api_full_snapshot.mjs';
+
 const UNKNOWN = '不明';
 
 function validEnv(value) {
@@ -63,6 +66,29 @@ function jsonResponse(body, original) {
   });
 }
 
+// Volatility risk label （堅／普／荒）: computed from the stored full detail.
+// Thin day payloads carry the full detail inside the arvexqFullPayload
+// envelope; restore it in-memory (never written back) when the thin form
+// itself lacks the forecast material. Any failure leaves the race unlabelled.
+const RISK_LABEL_MAX_RESTORE_BYTES = 4000000;
+
+async function attachRiskLabel(detail) {
+  if (!detail || typeof detail !== 'object' || detail.riskLabel) return;
+  try {
+    let label = computeRiskLabel(detail);
+    if (!label) {
+      const ref = detail.arvexqFullPayload;
+      if (ref && Number(ref.bytes) > 0 && Number(ref.bytes) <= RISK_LABEL_MAX_RESTORE_BYTES) {
+        const raw = await restoreBytes({arvexqFullPayload: ref});
+        label = computeRiskLabel(JSON.parse(new TextDecoder().decode(raw)));
+      }
+    }
+    if (label) detail.riskLabel = label;
+  } catch {
+    // Unlabelled is the honest outcome when material cannot be read.
+  }
+}
+
 // GET /api/race/<id>: body is {summary, detail, odds, ...}. The summary and
 // odds rows travel with the response, so no extra storage reads are needed.
 export async function overlayRaceResponse(response) {
@@ -75,6 +101,10 @@ export async function overlayRaceResponse(response) {
   }
   if (!body || typeof body !== 'object' || !body.detail) return response;
   overlayDisplayFields(body.detail, body.summary, maxOddsEpoch(body.odds));
+  await attachRiskLabel(body.detail);
+  if (body.detail.riskLabel && body.summary && typeof body.summary === 'object') {
+    body.summary.riskLabel = body.detail.riskLabel;
+  }
   return jsonResponse(body, response);
 }
 
@@ -115,6 +145,11 @@ export async function overlayDayResponse(response, env, url) {
     const rid = String(detail?.id ?? detail?.race_id ?? detail?.raceId ?? '');
     if (!rid) continue;
     overlayDisplayFields(detail, summaries.get(rid), oddsMax.get(rid) ?? null);
+    // Same label object on the detail and its day-list summary, so the home
+    // tiles and the race detail header always show the same value.
+    await attachRiskLabel(detail);
+    const summary = summaries.get(rid);
+    if (detail.riskLabel && summary) summary.riskLabel = detail.riskLabel;
   }
   return jsonResponse(body, response);
 }
