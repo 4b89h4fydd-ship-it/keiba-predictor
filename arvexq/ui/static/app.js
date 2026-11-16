@@ -2829,9 +2829,12 @@ function homeVenueTags(){
   }).join('')+'</nav>'
 }
 function renderHome(){
+  /* v346 — home is venue tags only (user decision 2026-11-16): the old
+     all-venues 1R-12R grid under the tags is removed; tapping a tag
+     opens that venue's page (venueRows, ascending 1R order). The
+     ARVEXQHorsePortal module stays loaded for its smoke/realtime
+     consumers but is no longer rendered on the home. */
   return '<div class="smart-shell smart-home">'+smartHomeHero()+'<main class="smart-main smart-home-main">'+(window.ARVEXQUnifiedHome?'<div class="arv-unified-body">'+window.ARVEXQUnifiedHome.dateBar(state.date)+window.ARVEXQUnifiedHome.buttons('horse',{selected:homePickCounts('selected'),special:homePickCounts('special')}):'')+homeVenueTags()+
-    (window.ARVEXQHorsePortal?window.ARVEXQHorsePortal.home(state.races||[],{date:state.date,today:today(),nowMinutes:nowMins(),selected:homePickCounts('selected'),special:homePickCounts('special')}):
-      '<section class="arv-all-panel"><header class="arv-all-title"><h2>各会場の全レース</h2></header><p class="arv-all-empty">出走データを読み込み中です。</p></section>')+
     (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
     (window.ARVEXQUnifiedHome?'</div>':'')+
     '</main>'+cinematicFooter()+'</div>'
