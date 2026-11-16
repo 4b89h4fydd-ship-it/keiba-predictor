@@ -2348,10 +2348,6 @@ function smartVenueCards(){
 }
 
 var selectedRacePreload={date:'',busy:{},done:{},timer:null,fullLoaded:false,fullLoading:false,loadedCount:0,expectedCount:0,lastError:''},fastTopRefresh=null,selectedSectionsOpen={selected:false},selectedCircuitSectionsOpen={selected:{'中央':false,'地方':false}};
-function selectedRaceLoadStatus(){
-  var expected=n(selectedRacePreload.expectedCount,0)||(state.races||[]).filter(function(r){return r&&r.id}).length,loaded=n(selectedRacePreload.loadedCount,0);
-  return{expected:expected,loaded:loaded,complete:!!selectedRacePreload.fullLoaded,loading:!!selectedRacePreload.fullLoading,error:selectedRacePreload.lastError||''}
-}
 function raceIsGraded(r){
   if(!r)return false;
   if(r.isGraded===true||r.graded===true||r.isGradeRace===true||r.gradeRace===true)return true;
@@ -2561,23 +2557,6 @@ function expectedValueRaceProfile(r,p){
   if(!candidates.length)return{selected:false,score:0,reason:'実オッズ期待値基準未達',mode:'actual',readiness:ready,selection:strict,model:method.id};
   var best=candidates[0],evEdge=best.ev-1,score=Math.round(clamp(clamp(evEdge/.65,0,1)*.40+clamp((best.edge-60)/32,0,1)*.21+best.evidence*.15+ready.market*.12+clamp(best.kelly/.10,0,1)*.08+clamp(best.pwin/Math.max(uniform*2,.12),0,1)*.04,0,1)*100),selected=score>=vg.score;
   return{selected:selected,score:score,horse:best.x.horse,horseNo:n(best.x.horse&&best.x.horse.horseNumber),horseName:String(best.x.horse&&best.x.horse.name||''),odds:best.odds,pwin:best.pwin,ev:best.ev,kelly:best.kelly,riskFraction:Math.min(.02,best.kelly*.20),edge:best.edge,evidence:best.evidence,coverage:cov,mode:'actual',readiness:ready,selection:strict,reason:selected?'買い目品質ゲート通過':'買い目品質スコア不足',model:method.id+'-actual-odds'}
-}
-function fixedPickLoadStatus(circuit){
-  var rows=(state.races||[]).filter(function(r){return r&&r.id&&String(r.circuit||'')===String(circuit)}),loaded=0;
-  rows.forEach(function(r){var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id);if(d&&raceDisplayCoreReady(d,r||d))loaded++});
-  return{expected:rows.length,loaded:loaded,complete:rows.length?loaded>=rows.length:selectedRaceLoadStatus().complete,partial:loaded>0}
-}
-function fixedPickEmpty(kind,circuit){
-  if(String(state.date||'')>='2026-11-11'){
-    var rows=(state.races||[]).filter(function(r){return !circuit||String(r.circuit||'')===String(circuit)}),archive=state.selectionArchive,
-        decisions=archive&&archive.date===state.date&&archive.races||{},missed=rows.filter(function(r){return decisions[r.id]&&decisions[r.id].evaluation&&decisions[r.id].evaluation.status==='not-selected'}).length;
-    return '<div class="fixed-pick-empty"><b>'+(missed===rows.length&&rows.length?'本日の厳選はありません':'厳選の購入条件を確認中')+'</b><small>'+(missed?('条件を満たさず見送り '+missed+'レース。'):'')+'検証結果・実オッズが未確認のレースは購入推奨に含めません。全レースの予想は閲覧できます。</small></div>';
-  }
-  if(!morningPickReady())return '<div class="fixed-pick-empty"><b>朝の選定未確定</b><small>全レースを朝に一度だけ判定。発走後に選定を追加しません。</small></div>';
-  var st=fixedPickLoadStatus(circuit),label='厳選判定';
-  // Missing late detail data must not change the already published morning list.
-  var incomplete=(state.races||[]).filter(function(r){return r&&String(r.circuit||'')===String(circuit)&&morningPickOf(r)&&morningPickOf(r).assessed===false}).length;
-  return '<div class="fixed-pick-empty"><b>該当なし</b><small>'+(incomplete?('基準を満たす確定候補なし｜情報不足 '+incomplete+'レース（朝の未判定を後付けしません）'):(label+'基準を通過したレースなし'))+'</small></div>'
 }
 function rankPickOddsText(v){var x=Number(v);return Number.isFinite(x)?(Math.round(x*10)/10).toFixed(1):'—'}
 function rankPickRowHtml(z,cls){
