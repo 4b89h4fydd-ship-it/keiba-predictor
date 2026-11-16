@@ -231,11 +231,17 @@
           // grade and stay 未取得.
           var dg=diagMap[no]||{},
               score100=dg.abilityScore!=null&&Number.isFinite(Number(dg.abilityScore))?Math.round(Number(dg.abilityScore)*1000)/10:null,
-              grade=dg.grade!=null&&String(dg.grade)?String(dg.grade):(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?(Number(dg.winProbability)>=0.2?'S':(Number(dg.winProbability)>=0.12?'A':(Number(dg.winProbability)>=0.07?'B':(Number(dg.winProbability)>=0.035?'C':'D')))):'');
+              grade=dg.grade!=null&&String(dg.grade)?String(dg.grade):(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?(Number(dg.winProbability)>=0.2?'S':(Number(dg.winProbability)>=0.12?'A':(Number(dg.winProbability)>=0.07?'B':(Number(dg.winProbability)>=0.035?'C':'D')))):''),
+              // Display-only wiring for the racecard 勝率 label (v341):
+              // the mark entry carries the probability for marked
+              // horses, the diagnosis entry for every roster horse.
+              // The forecast payload itself is not modified.
+              winP=obj.winProbability!=null&&Number.isFinite(Number(obj.winProbability))?Number(obj.winProbability)
+                :(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?Number(dg.winProbability):null);
           return {horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             attentionMark:!!attentionMap[no],
-            predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
+            predRank:999,winProbability:winP,p1Probability:winP,p2Probability:null,
             p3Probability:null,overallGrade:grade,coverage:0,
             overallScoreExact:score100,
             overallReasons:dg.reason?[String(dg.reason)]:[],
