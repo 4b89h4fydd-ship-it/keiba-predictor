@@ -1,68 +1,68 @@
 {
   "version": "arvexq-empirical-ticket-hit-v1",
   "modelVersion": "arvexq-rewrite-v3-v9b",
-  "asOfDate": "2026-11-16",
+  "asOfDate": "2026-11-17",
   "definition": "one main-ticket item wins if any pre-off combination hit",
   "minimumSample": 30,
   "minimumObservedHitRate": 0.8,
   "minimumWilsonLower95": 0.65,
-  "totalVerifiedRaces": 763,
+  "totalVerifiedRaces": 834,
   "buckets": {
     "ワイド|6": {
       "kind": "ワイド",
       "points": 6,
-      "sample": 710,
-      "wins": 548,
-      "hitRate": 0.771831,
-      "wilsonLower95": 0.739548,
+      "sample": 775,
+      "wins": 595,
+      "hitRate": 0.767742,
+      "wilsonLower95": 0.736735,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
-          "sample": 107,
-          "wins": 62,
-          "hitRate": 0.579439
+          "sample": 133,
+          "wins": 82,
+          "hitRate": 0.616541
         },
         "nar": {
-          "sample": 603,
-          "wins": 486,
-          "hitRate": 0.80597
+          "sample": 642,
+          "wins": 513,
+          "hitRate": 0.799065
         }
       }
     },
     "ワイド|5": {
       "kind": "ワイド",
       "points": 5,
-      "sample": 52,
-      "wins": 35,
-      "hitRate": 0.673077,
-      "wilsonLower95": 0.537559,
+      "sample": 57,
+      "wins": 38,
+      "hitRate": 0.666667,
+      "wilsonLower95": 0.537223,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
-          "sample": 15,
-          "wins": 4,
-          "hitRate": 0.266667
+          "sample": 17,
+          "wins": 5,
+          "hitRate": 0.294118
         },
         "nar": {
-          "sample": 37,
-          "wins": 31,
-          "hitRate": 0.837838
+          "sample": 40,
+          "wins": 33,
+          "hitRate": 0.825
         }
       }
     },
     "ワイド|4": {
       "kind": "ワイド",
       "points": 4,
-      "sample": 1,
+      "sample": 2,
       "wins": 1,
-      "hitRate": 1.0,
-      "wilsonLower95": 0.206543,
+      "hitRate": 0.5,
+      "wilsonLower95": 0.094529,
       "qualified": false,
       "bySegment": {
         "jra_flat": {
-          "sample": 1,
+          "sample": 2,
           "wins": 1,
-          "hitRate": 1.0
+          "hitRate": 0.5
         }
       }
     }
