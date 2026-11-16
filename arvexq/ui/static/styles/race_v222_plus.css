@@ -2681,3 +2681,16 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark 
 .smart-race-title .arv-risk-badge{margin-right:5px}
 .smart-race-head-left .arv-risk-badge{margin-left:2px}
 .risk-label-note{display:block;margin-top:6px;font-size:10px;line-height:1.5;color:#9fb6c2}
+.arv-upset-chip{display:inline-flex;align-items:baseline;gap:3px;font-style:normal;font-size:10px;line-height:1;padding:3px 6px;border-radius:999px;border:1px solid #697176;background:#30363a;color:#eee7dc;vertical-align:middle;white-space:nowrap;margin-right:5px}
+.arv-upset-chip small{font-size:9px;font-weight:700;opacity:.85}
+.arv-upset-chip b{font-size:11px;font-weight:900}
+.arv-upset-chip i{font-style:normal;font-size:9px;opacity:.85}
+.arv-upset-chip.upset-low{background:#173d2a;border-color:#3f9e6b;color:#a9ecc4}
+.arv-upset-chip.upset-mid{background:#30363a;border-color:#697176;color:#eee7dc}
+.arv-upset-chip.upset-high{background:#4a292b;border-color:#a05f63;color:#f3c1c3}
+.arv-upset-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;padding:7px 10px;border-radius:10px;border:1px solid #697176;background:#232a2e;color:#eee7dc;font-size:11px}
+.arv-upset-band.upset-low{background:#12291d;border-color:#3f9e6b}
+.arv-upset-band.upset-high{background:#33191b;border-color:#a05f63}
+.arv-upset-band-title{font-weight:900;font-size:11px;letter-spacing:.04em}
+.arv-upset-band-level b,.arv-upset-band-score b{font-size:14px;font-weight:900}
+.arv-upset-band-reasons{font-size:10px;color:#c8d4da}
