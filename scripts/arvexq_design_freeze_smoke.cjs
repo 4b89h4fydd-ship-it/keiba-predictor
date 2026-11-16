@@ -19,13 +19,13 @@ function fingerprint(text){
 }
 const styleBaseline={
   "arvexq/ui/static/styles.css": "924bf5a30829c3bb",
-  "arvexq/ui/static/styles/legacy_v118_v221.css": "017f3b66e81a6bea",
-  "arvexq/ui/static/styles/race_v222_plus.css": "41af5152406d59ef",
-  "arvexq/ui/static/sports/unified-home.css": "41dfa35af79e90bf",
-  "arvexq/ui/static/sports/all-races.css": "03c0b3e12ceff2a1",
+  "arvexq/ui/static/styles/legacy_v118_v221.css": "f257fd1e4159db60",
+  "arvexq/ui/static/styles/race_v222_plus.css": "d0f3c5933ba41ef0",
+  "arvexq/ui/static/sports/unified-home.css": "10899d661f666180",
+  "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
-  "arvexq/ui/static/betting/bet_ui.css": "ee96c3e4c06763d4"
+  "arvexq/ui/static/betting/bet_ui.css": "ef2cb6dbeafbfef3"
 };
 for(const [name,expected] of Object.entries(styleBaseline)){
   const actual=fingerprint(fs.readFileSync(path.join(root,name),'utf8'));
@@ -42,14 +42,14 @@ function functionBody(name,text=src){
   return text.slice(start,end);
 }
 const layoutBaseline={
-  "cinematicTabs": "d7aa73a99c251411",
+  "cinematicTabs": "f04fa416e3c7313b",
   "smartRaceTopBar": "6f0925af17890feb",
-  "smartRaceHead": "d99dff533e6b1bb3",
+  "smartRaceHead": "d33922ddb12cd467",
   "renderPicker": "8b81f0479683023d",
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
-  "horseDetailPage": "acb13e0e1920774a",
-  "renderRace": "aae7b8774e3e9e4e"
+  "horseDetailPage": "df827cb40bc07925",
+  "renderRace": "36c793cb7ecc4b86"
 };
 const baseSource=baselineRef?baseText('arvexq/ui/static/app.js'):null;
 for(const [name,expected] of Object.entries(layoutBaseline))

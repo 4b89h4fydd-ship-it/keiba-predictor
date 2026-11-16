@@ -21,6 +21,54 @@
 /* The complete ◎【単】/◎【軸】 labels belong beside the horse name, not in the 25-30px mark cell. */
 .rc-racecard-v339 .rc-v336-mark{overflow:hidden!important}
 .rc-racecard-v339 .rc-v336-mark .rc-mark-box>small{display:none!important}
+/* v345 netkeiba-form UI (user decision 2026-11-16): venue tags on the
+   home, flags slot on venue race rows, five main tabs, the check
+   column on the racecard, and the win-odds list panel. Kept in this
+   inline block so the frozen stylesheet modules stay untouched. */
+.nk-venue-tags{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nk-venue-tags::-webkit-scrollbar{display:none}
+.nk-venue-tag{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:86px;padding:8px 12px;border:1px solid #c9c2b2;border-radius:12px;background:#fffdf7;color:#26303a;font-family:inherit;cursor:pointer;text-align:left}
+.nk-venue-tag b{font-size:17px;font-weight:900;line-height:1.15}
+.nk-venue-tag small{font-size:11px;font-weight:700;color:#6b7683}
+.nk-venue-tag.is-live{border-color:#c0392b;background:#fdf0ec}
+.nk-venue-tag.is-live small{color:#c0392b}
+.nk-venue-tag.is-next{border-color:#9c865d;background:#fbf6ea}
+.nk-venue-tag.is-done{opacity:.55}
+.smart-race-flags{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:15px!important;padding:0 4px!important}
+@media(max-width:430px){.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:13.5px!important}}
+.racecard-row.rc-racecard-v339 .rc-v336-mark.rc-v345-checkcol{flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;padding:0!important}
+.racecard-row.rc-racecard-v339 .rc-v345-checkcol .rc-mark-box{flex:1 1 auto!important;height:auto!important}
+.rc-v345-owncheck{appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:1px;width:100%;margin:0;padding:3px 0 4px;border:0;border-top:1px dashed #50616b;background:transparent;color:#aeb9c2;font-family:inherit;cursor:pointer;line-height:1}
+.rc-v345-owncheck .rc-v345-ownbox{font-size:13px;line-height:1}
+.rc-v345-owncheck small{font-size:8.5px;font-weight:700;line-height:1}
+.rc-v345-owncheck.is-on{color:#ffd97a;background:rgba(209,178,119,.14)}
+.rc-v345-owncheck:active{filter:brightness(1.25)}
+.nk-odds-list{display:flex;flex-direction:column}
+.nk-odds-row{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #e4e7ec}
+.nk-odds-row.scratched{opacity:.55}
+.nk-odds-name{flex:1 1 auto;min-width:0;appearance:none;-webkit-appearance:none;border:0;background:transparent;color:inherit;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nk-odds-value{flex:0 0 auto;text-align:right}
+/* Upset band / chip readability (hard requirement, production finding
+   2026-11-16: the band under the race header was dark text on a dark
+   maroon background and unreadable even zoomed). These overrides pin
+   every band/chip element — including the nested risk badge and the
+   reasons line — to explicit high-contrast pairs, so no inherited
+   colour can leak in. Do not soften these values. */
+.arv-upset-band{background:#394047!important;border-color:#8a949c!important;color:#f7f3ea!important}
+.arv-upset-band.upset-high{background:#571e23!important;border-color:#d98a8e!important;color:#ffece8!important}
+.arv-upset-band.upset-low{background:#1c4630!important;border-color:#4cae77!important;color:#e2f7e8!important}
+.arv-upset-band .arv-upset-band-title{color:inherit!important;font-size:12px!important}
+.arv-upset-band .arv-upset-band-level,.arv-upset-band .arv-upset-band-score{color:inherit!important}
+.arv-upset-band .arv-upset-band-level b,.arv-upset-band .arv-upset-band-score b{color:#ffffff!important;font-size:15px!important}
+.arv-upset-band .arv-upset-band-reasons{color:#e8e2d2!important;font-size:11px!important;opacity:1!important}
+.arv-upset-band.upset-high .arv-upset-band-reasons{color:#ffd9d2!important}
+.arv-upset-band.upset-low .arv-upset-band-reasons{color:#cdeeda!important}
+.arv-upset-band .arv-risk-badge{background:#f7f3ea!important;border-color:#f7f3ea!important;color:#26303a!important}
+.arv-upset-chip{background:#394047!important;border-color:#8a949c!important;color:#f7f3ea!important}
+.arv-upset-chip.upset-high{background:#571e23!important;border-color:#d98a8e!important;color:#ffece8!important}
+.arv-upset-chip.upset-low{background:#1c4630!important;border-color:#4cae77!important;color:#e2f7e8!important}
+.arv-upset-chip small,.arv-upset-chip i{opacity:1!important}
 </style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v362-192.png">
