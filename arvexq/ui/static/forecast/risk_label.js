@@ -94,7 +94,14 @@
     for(i=0;i<roster.length;i++){
       n=roster[i];
       odds=finite(horseByNo.has(n)?horseByNo.get(n).winOdds:null);
-      if(odds===null||odds<=1)return null;
+      // Win odds of exactly 1.0 are genuine in the NAR feed (verified in
+      // official results: a runner in a small pool can be returned at
+      // 1.0, e.g. 金沢 2026-11-16 4R winner, 1番人気, winOdds 1.0
+      // pre-race and in the result). The implied probability 1/1.0 is
+      // present, not missing — the validation only excluded races whose
+      // implied_prob was missing — so only odds below 1 (or absent /
+      // non-finite) make the component uncomputable.
+      if(odds===null||odds<1)return null;
       raw=1/odds;rawSum+=raw;
       if(raw>rawMax)rawMax=raw;
     }
@@ -199,6 +206,128 @@
     }).catch(function(){return null;});
   }
 
+  var RISK_LABEL_GAP_VERSION='arvexq-risk-label-gap-v1';
+
+  // Why a forecast-bearing race has NO label: a display diagnostic, never
+  // an estimate (port of riskLabelGap in workers/api_risk_label.mjs).
+  // Returns null when the race has no issued forecast to judge (no
+  // unifiedForecast / roster / segment — those races are simply
+  // unforecast) and null when a label IS computable. Otherwise returns
+  // {version, code, reason, segment, ...} naming the first component, in
+  // computeRiskLabel's own check order, that cannot be computed from the
+  // stored material. The validated population excluded exactly these
+  // races (implied_prob missing, ability component missing), so for them
+  // "no label, with the reason shown" is the faithful output.
+  function riskLabelGap(detail){
+    if(!detail||typeof detail!=='object')return null;
+    var uf=detail.unifiedForecast;
+    if(!uf||!Array.isArray(uf.roster)||!Array.isArray(uf.diagnosis))return null;
+    var roster=uf.roster.map(function(x){return Number(x&&x.horseNumber);})
+      .filter(function(n){return Number.isInteger(n)&&n>0;});
+    if(roster.length<3||new Set(roster).size!==roster.length)return null;
+    var segment=(detail.circuit==='地方'||uf.circuit==='地方')?'nar'
+      :(detail.circuit==='中央'||uf.circuit==='中央')?'jra':null;
+    if(!segment)return null;
+    if(computeRiskLabel(detail))return null;
+
+    var diag=new Map(),i,n,d;
+    for(i=0;i<uf.diagnosis.length;i++){
+      d=uf.diagnosis[i];n=Number(d&&d.horseNumber);
+      if(Number.isInteger(n)&&n>0&&!diag.has(n))diag.set(n,d);
+    }
+    function gap(code,reason,extra){
+      var g={version:RISK_LABEL_GAP_VERSION,code:code,reason:reason,segment:segment};
+      if(extra)Object.keys(extra).forEach(function(k){g[k]=extra[k];});
+      return g;
+    }
+
+    // ent_model: every roster runner needs a usable forecast probability.
+    for(i=0;i<roster.length;i++){
+      var p=finite(diag.has(roster[i])?diag.get(roster[i]).winProbability:null);
+      if(p===null||p<0)return gap('forecast-probabilities','予想確率が不足しているため');
+    }
+
+    // weak_fav_mkt: every roster runner needs sealed win odds (>= 1;
+    // odds of exactly 1.0 are genuine, see computeRiskLabel). A runner
+    // scratched after issuance loses its sealed odds in the stored
+    // detail, which is reported as its own reason.
+    var horseByNo=new Map(),h;
+    var horses=detail.horses||[];
+    for(i=0;i<horses.length;i++){
+      h=horses[i];n=Number(h&&h.horseNumber);
+      if(Number.isInteger(n)&&n>0&&!horseByNo.has(n))horseByNo.set(n,h);
+    }
+    var badOdds=[],odds;
+    for(i=0;i<roster.length;i++){
+      n=roster[i];
+      odds=finite(horseByNo.has(n)?horseByNo.get(n).winOdds:null);
+      if(odds===null||odds<1)badOdds.push(n);
+    }
+    if(badOdds.length){
+      var scratched=badOdds.some(function(no){
+        var rec=horseByNo.get(no);
+        return !!rec&&(rec.scratched===true
+          ||String(rec.status||'').indexOf('出走取消')>=0
+          ||String(rec.status||'').indexOf('取消')>=0);
+      });
+      return scratched
+        ?gap('market-odds-scratched','出走取消の馬のオッズがないため',{horses:badOdds})
+        :gap('market-odds-missing','オッズ情報が不足しているため',{horses:badOdds});
+    }
+
+    // thin_share: evidence runs recorded by the issuing analysis.
+    var runners=(detail.masterAnalysis&&Array.isArray(detail.masterAnalysis.runners))
+      ?detail.masterAnalysis.runners:null;
+    if(!runners)return gap('evidence-missing','過去走のデータが不足しているため');
+    var evByNo=new Map(),r;
+    for(i=0;i<runners.length;i++){
+      r=runners[i];n=Number(r&&r.horseNumber);
+      if(Number.isInteger(n)&&n>0&&!evByNo.has(n))evByNo.set(n,finite(r.evidenceRuns));
+    }
+    for(i=0;i<roster.length;i++){
+      var ev=evByNo.has(roster[i])?evByNo.get(roster[i]):undefined;
+      if(ev===null||ev===undefined)
+        return gap('evidence-missing','過去走のデータが不足しているため');
+    }
+
+    // weak_ability_conc: the issuing engine itself records no ability
+    // score for evidence-thin runners （能力スコアなし); below 80%
+    // coverage the component is missing by the validation's rule.
+    var abCount=0;
+    for(i=0;i<roster.length;i++){
+      if(finite(diag.has(roster[i])?diag.get(roster[i]).abilityScore:null)!==null)abCount+=1;
+    }
+    if(abCount<0.8*roster.length){
+      return gap('ability-coverage','能力スコアのない馬が含まれるため',
+        {abilityCovered:abCount,field:roster.length});
+    }
+
+    return gap('unknown','判定材料が不足しているため');
+  }
+
+  // Gap counterpart of ensureRiskLabel for thin day details: diagnose
+  // directly when the material is present; otherwise restore the sealed
+  // envelope in memory (never written back) and diagnose the restored
+  // payload. Resolves to the gap object (also set on
+  // detail.riskLabelGap) or null.
+  function ensureRiskLabelGap(detail){
+    if(!detail||typeof detail!=='object')return Promise.resolve(null);
+    if(detail.riskLabel&&detail.riskLabel.label)return Promise.resolve(null);
+    if(detail.riskLabelGap&&detail.riskLabelGap.code)
+      return Promise.resolve(detail.riskLabelGap);
+    var gap=riskLabelGap(detail);
+    if(gap){detail.riskLabelGap=gap;return Promise.resolve(gap);}
+    var ref=detail[FULL_KEY];
+    if(!ref||!(Number(ref.bytes)>0&&Number(ref.bytes)<=RISK_LABEL_MAX_RESTORE_BYTES))
+      return Promise.resolve(null);
+    return restoreBytes(detail).then(function(raw){
+      var full=JSON.parse(new TextDecoder().decode(raw));
+      var restored=riskLabelGap(full);
+      if(restored)detail.riskLabelGap=restored;
+      return restored;
+    }).catch(function(){return null;});
+  }
+
   /* Upset forecast （荒れ予想）: a presentation of the SAME validated risk
      score — no new definition, no new thresholds. The level bands are the
      validation's pre-fixed absolute bands, identical to the label bands,
@@ -270,6 +399,9 @@
     upsetVersion:UPSET_FORECAST_VERSION,
     computeRiskLabel:computeRiskLabel,
     ensureRiskLabel:ensureRiskLabel,
+    riskLabelGap:riskLabelGap,
+    ensureRiskLabelGap:ensureRiskLabelGap,
+    gapVersion:RISK_LABEL_GAP_VERSION,
     computeUpsetForecast:computeUpsetForecast,
     upsetFromRisk:upsetFromRisk,
     restoreBytes:restoreBytes,

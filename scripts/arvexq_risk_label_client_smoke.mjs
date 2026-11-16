@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import zlib from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {computeRiskLabel as serverCompute} from '../workers/api_risk_label.mjs';
+import {computeRiskLabel as serverCompute, riskLabelGap as serverGap} from '../workers/api_risk_label.mjs';
 
 const src = fs.readFileSync(new URL('../arvexq/ui/static/forecast/risk_label.js', import.meta.url), 'utf8');
 const sandbox = {};
@@ -117,6 +117,115 @@ assert.equal(client.computeRiskLabel(cases[5]).segment, 'jra');
   bad.arvexqFullPayload.sha256 = '0'.repeat(64);
   assert.equal(await client.ensureRiskLabel(bad), null);
   assert.equal(bad.riskLabel, undefined);
+}
+
+// Win odds of exactly 1.0 are genuine in the NAR feed (official results
+// record them): the favourite at 1.0 must still get a label, identically
+// on client and server.
+{
+  const d = detail({
+    probs: [0.78, 0.08, 0.05, 0.04, 0.03, 0.02],
+    abilities: [0.95, 0.4, 0.3, 0.25, 0.2, 0.15],
+    odds: [1.0, 12.0, 20.0, 28.0, 40.0, 60.0],
+    evidence: [9, 8, 8, 7, 8, 6],
+  });
+  const lbl = client.computeRiskLabel(d);
+  assert.ok(lbl, 'odds 1.0 favourite still labelled');
+  sameJson(lbl, serverCompute(d));
+  assert.equal(client.riskLabelGap(d), null);
+  assert.equal(serverGap(d), null);
+  // Odds below 1 remain invalid.
+  const bad = detail({
+    probs: [0.5, 0.3, 0.2],
+    abilities: [0.8, 0.4, 0.3],
+    odds: [0.5, 4.0, 6.0],
+    evidence: [8, 8, 8],
+  });
+  assert.equal(client.computeRiskLabel(bad), null);
+  sameJson(client.computeRiskLabel(bad), serverCompute(bad));
+}
+
+// Gap diagnosis: no label, but a forecast exists -> the reason is named,
+// identically on client and server. No forecast -> no gap (silence is
+// correct there: the race is simply unforecast).
+{
+  const abilityGap = detail({
+    probs: [0.4, 0.25, 0.15, 0.1, 0.1],
+    abilities: [0.8, 0.4, null, null, 0.2],
+    odds: [2.5, 4.0, 7.0, 11.0, 11.0],
+    evidence: [8, 8, 8, 8, 8],
+  });
+  assert.equal(client.computeRiskLabel(abilityGap), null);
+  sameJson(client.riskLabelGap(abilityGap), serverGap(abilityGap));
+  assert.equal(client.riskLabelGap(abilityGap).code, 'ability-coverage');
+  assert.equal(client.riskLabelGap(abilityGap).abilityCovered, 3);
+
+  const scratched = detail({
+    probs: [0.4, 0.3, 0.2, 0.1],
+    abilities: [0.8, 0.5, 0.4, 0.3],
+    odds: [2.0, 4.0, 6.0, null],
+    evidence: [8, 8, 8, 8],
+  });
+  scratched.horses[3].scratched = true;
+  scratched.horses[3].status = '出走取消';
+  assert.equal(client.riskLabelGap(scratched).code, 'market-odds-scratched');
+  sameJson(client.riskLabelGap(scratched), serverGap(scratched));
+
+  const missingOdds = detail({
+    probs: [0.4, 0.3, 0.2, 0.1],
+    abilities: [0.8, 0.5, 0.4, 0.3],
+    odds: [2.0, 4.0, 6.0, null],
+    evidence: [8, 8, 8, 8],
+  });
+  assert.equal(client.riskLabelGap(missingOdds).code, 'market-odds-missing');
+  sameJson(client.riskLabelGap(missingOdds), serverGap(missingOdds));
+
+  const noEvidence = detail({
+    probs: [0.4, 0.3, 0.2, 0.1],
+    abilities: [0.8, 0.5, 0.4, 0.3],
+    odds: [2.0, 4.0, 6.0, 9.0],
+    evidence: [8, 8, 8, 8],
+  });
+  delete noEvidence.masterAnalysis;
+  assert.equal(client.riskLabelGap(noEvidence).code, 'evidence-missing');
+  sameJson(client.riskLabelGap(noEvidence), serverGap(noEvidence));
+
+  assert.equal(client.riskLabelGap({circuit: '地方', horses: []}), null);
+  assert.equal(serverGap({circuit: '地方', horses: []}), null);
+  assert.equal(client.riskLabelGap(cases[0]), null);
+  assert.equal(serverGap(cases[0]), null);
+}
+
+// Envelope restore for the gap: a thin detail whose full payload has an
+// ability-coverage gap resolves the gap and stashes it on the detail.
+{
+  const full = detail({
+    probs: [0.4, 0.25, 0.15, 0.1, 0.1],
+    abilities: [0.8, 0.4, null, null, 0.2],
+    odds: [2.5, 4.0, 7.0, 11.0, 11.0],
+    evidence: [8, 8, 8, 8, 8],
+  });
+  full.id = 'nar-2026-11-16-大井-12';
+  const raw = Buffer.from(JSON.stringify(full), 'utf8');
+  const gz = zlib.gzipSync(raw);
+  const thin = {
+    id: full.id,
+    circuit: '地方',
+    arvexqFullPayload: {
+      version: 'arvexq-full-payload-v1',
+      bytes: raw.length,
+      sha256: createHash('sha256').update(raw).digest('hex'),
+      gzipBase64: gz.toString('base64'),
+    },
+  };
+  assert.equal(client.riskLabelGap(thin), null);
+  const gap = await client.ensureRiskLabelGap(thin);
+  assert.equal(gap.code, 'ability-coverage');
+  sameJson(thin.riskLabelGap, gap);
+  // A labelled race resolves no gap even through the envelope path.
+  const labelled = JSON.parse(JSON.stringify(thin));
+  labelled.riskLabel = client.computeRiskLabel(cases[0]);
+  assert.equal(await client.ensureRiskLabelGap(labelled), null);
 }
 
 console.log('RISK_LABEL_CLIENT_SMOKE_PASS');

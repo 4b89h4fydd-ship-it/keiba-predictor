@@ -1230,6 +1230,15 @@ function mergeRaceReflection(base,incoming,oddsRows,summary){
     var rlSrc=(incoming&&incoming.unifiedForecast&&Array.isArray(incoming.horses))?incoming:out,
         rlLbl=window.ARVEXQRiskLabel.computeRiskLabel(rlSrc);
     if(rlLbl)out.riskLabel=rlLbl;
+    // No label: when the source is the authoritative incoming full detail,
+    // record WHY (a forecast-bearing race must not stay silently
+    // unlabelled). Partial merges keep the fallback source out of the
+    // diagnosis so a half-merged object never produces a wrong reason.
+    else if(rlSrc===incoming&&incoming.masterAnalysis
+      &&typeof window.ARVEXQRiskLabel.riskLabelGap==='function'&&!out.riskLabelGap){
+      var rlGap=window.ARVEXQRiskLabel.riskLabelGap(incoming);
+      if(rlGap)out.riskLabelGap=rlGap;
+    }
   }
   return mergeResultHorseFields(out)
 }
@@ -2774,8 +2783,23 @@ function attachClientRiskLabel(d){
   if(riskLabelRestoreBusy[id])return;
   riskLabelRestoreBusy[id]=true;
   mod.ensureRiskLabel(d).then(function(lbl){
+    if(!lbl){
+      // No label from the restored payload either: diagnose why, so a
+      // forecast-bearing race shows its reason instead of staying silent.
+      if(typeof mod.ensureRiskLabelGap!=='function'){delete riskLabelRestoreBusy[id];return}
+      mod.ensureRiskLabelGap(d).then(function(gap){
+        delete riskLabelRestoreBusy[id];
+        if(!gap)return;
+        saveDetailCache(d.id,d);
+        var gchanged=false;
+        state.races.forEach(function(r){
+          if(String(r.id)===id&&!r.riskLabelGap){r.riskLabelGap=gap;gchanged=true}
+        });
+        if(gchanged){persistRaceSummaryCache();render()}
+      }).catch(function(){delete riskLabelRestoreBusy[id]});
+      return;
+    }
     delete riskLabelRestoreBusy[id];
-    if(!lbl)return;
     saveDetailCache(d.id,d);
     var changed=false;
     state.races.forEach(function(r){
@@ -2792,7 +2816,14 @@ function riskLabelBadge(r){
 }
 function riskLabelNote(r){
   var rl=r&&r.riskLabel;
-  if(!rl||!rl.label)return '';
+  if(!rl||!rl.label){
+    // Forecast issued but no label: say why instead of showing nothing.
+    // The gap is diagnosed from the authoritative detail (merge path /
+    // envelope restore in attachClientRiskLabel), never guessed here.
+    var gap=r&&r.riskLabelGap;
+    if(gap&&gap.reason)return '<small class="risk-label-note">荒れ予想：判定なし（'+esc(gap.reason)+'）。</small>';
+    return '';
+  }
   if(rl.segment==='nar')return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：地方の検証（951レース）では「堅」で◎1着率61.9%・本線的中35.9%、「荒」で◎26.3%・本線8.0%でした。</small>';
   return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：中央では検証未確定のため参考表示です。</small>'
 }
