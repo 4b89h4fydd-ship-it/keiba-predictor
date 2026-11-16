@@ -92,7 +92,14 @@ export function computeRiskLabel(detail) {
   let rawSum = 0, rawMax = 0;
   for (const n of roster) {
     const odds = finite(horseByNo.get(n)?.winOdds);
-    if (odds === null || odds <= 1) return null;
+    // Win odds of exactly 1.0 are genuine in the NAR feed (verified in
+    // official results: a runner in a small pool can be returned at 1.0,
+    // e.g. 金沢 2026-11-16 4R winner, 1番人気, winOdds 1.0 pre-race and in
+    // the result). The implied probability 1/1.0 is present, not missing —
+    // the validation only excluded races whose implied_prob was missing —
+    // so only odds below 1 (or absent / non-finite) make the component
+    // uncomputable.
+    if (odds === null || odds < 1) return null;
     const raw = 1 / odds;
     rawSum += raw;
     if (raw > rawMax) rawMax = raw;
@@ -152,6 +159,103 @@ export function computeRiskLabel(detail) {
     components: Object.fromEntries(
       Object.entries(components).map(([k, v]) => [k, Math.round(v * 10000) / 10000])),
   };
+}
+
+export const RISK_LABEL_GAP_VERSION = 'arvexq-risk-label-gap-v1';
+
+// Why a forecast-bearing race has NO label: a display diagnostic, never an
+// estimate. Returns null when the race has no issued forecast to judge
+// (no unifiedForecast / roster / segment — those races are simply
+// unforecast) and null when a label IS computable. Otherwise returns
+// {version, code, reason, segment, ...} naming the first component, in
+// computeRiskLabel's own check order, that cannot be computed from the
+// stored material. The validated population excluded exactly these races
+// (implied_prob missing, ability component missing), so for them "no
+// label, with the reason shown" is the faithful output.
+export function riskLabelGap(detail) {
+  if (!detail || typeof detail !== 'object') return null;
+  const uf = detail.unifiedForecast;
+  if (!uf || !Array.isArray(uf.roster) || !Array.isArray(uf.diagnosis)) return null;
+  const roster = uf.roster
+    .map((x) => Number(x && x.horseNumber))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  if (roster.length < 3 || new Set(roster).size !== roster.length) return null;
+  const segment = detail.circuit === '地方' || uf.circuit === '地方' ? 'nar'
+    : detail.circuit === '中央' || uf.circuit === '中央' ? 'jra' : null;
+  if (!segment) return null;
+  if (computeRiskLabel(detail)) return null;
+
+  const diag = new Map();
+  for (const d of uf.diagnosis) {
+    const n = Number(d && d.horseNumber);
+    if (Number.isInteger(n) && n > 0 && !diag.has(n)) diag.set(n, d);
+  }
+  const gap = (code, reason, extra) => Object.assign(
+    {version: RISK_LABEL_GAP_VERSION, code, reason, segment}, extra || {});
+
+  // ent_model: every roster runner needs a usable forecast probability.
+  for (const n of roster) {
+    const p = finite(diag.get(n)?.winProbability);
+    if (p === null || p < 0) {
+      return gap('forecast-probabilities', '予想確率が不足しているため');
+    }
+  }
+
+  // weak_fav_mkt: every roster runner needs sealed win odds (>= 1; odds of
+  // exactly 1.0 are genuine, see computeRiskLabel). A runner scratched
+  // after issuance loses its sealed odds in the stored detail, which is
+  // reported as its own reason.
+  const horseByNo = new Map();
+  for (const h of detail.horses || []) {
+    const n = Number(h && h.horseNumber);
+    if (Number.isInteger(n) && n > 0 && !horseByNo.has(n)) horseByNo.set(n, h);
+  }
+  const badOdds = [];
+  for (const n of roster) {
+    const odds = finite(horseByNo.get(n)?.winOdds);
+    if (odds === null || odds < 1) badOdds.push(n);
+  }
+  if (badOdds.length) {
+    const scratched = badOdds.some((n) => {
+      const h = horseByNo.get(n);
+      return !!h && (h.scratched === true
+        || String(h.status || '').includes('出走取消')
+        || String(h.status || '').includes('取消'));
+    });
+    return scratched
+      ? gap('market-odds-scratched', '出走取消の馬のオッズがないため', {horses: badOdds})
+      : gap('market-odds-missing', 'オッズ情報が不足しているため', {horses: badOdds});
+  }
+
+  // thin_share: evidence runs recorded by the issuing analysis.
+  const runners = detail.masterAnalysis && Array.isArray(detail.masterAnalysis.runners)
+    ? detail.masterAnalysis.runners : null;
+  if (!runners) return gap('evidence-missing', '過去走のデータが不足しているため');
+  const evByNo = new Map();
+  for (const r of runners) {
+    const n = Number(r && r.horseNumber);
+    if (Number.isInteger(n) && n > 0 && !evByNo.has(n)) evByNo.set(n, finite(r.evidenceRuns));
+  }
+  for (const n of roster) {
+    const ev = evByNo.get(n);
+    if (ev === null || ev === undefined) {
+      return gap('evidence-missing', '過去走のデータが不足しているため');
+    }
+  }
+
+  // weak_ability_conc: the issuing engine itself records no ability score
+  // for evidence-thin runners （能力スコアなし); below 80% coverage the
+  // component is missing by the validation's rule.
+  let abCount = 0;
+  for (const n of roster) {
+    if (finite(diag.get(n)?.abilityScore) !== null) abCount += 1;
+  }
+  if (abCount < 0.8 * roster.length) {
+    return gap('ability-coverage', '能力スコアのない馬が含まれるため',
+      {abilityCovered: abCount, field: roster.length});
+  }
+
+  return gap('unknown', '判定材料が不足しているため');
 }
 
 // ---------------------------------------------------------------------------
