@@ -33,6 +33,9 @@ const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight','esc',
   'markRoleLabel','visiblePredictionMark','honmeiA11yText','racecardMarkDisplay',
   'racecardOddsHtml','carriedWeightText','v25AddedHtml','v26CellHtml','racecardMarkCellHtml',
+  // racecardEntryRow also renders the sub-line strip; inject its production
+  // helpers (userMarkKey through racecardSublineHtml), not mocks.
+  span('userMarkKey','racecardUserMarkToolsHtml')+
   span('racecardEntryRow','morningSavedMarkRows')+'return racecardEntryRow')(
   isScratchHorse,(n,d=0)=>Number(n)||d,(_,h)=>h.name,(v,a,b)=>Math.max(a,Math.min(b,v)),
   ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
