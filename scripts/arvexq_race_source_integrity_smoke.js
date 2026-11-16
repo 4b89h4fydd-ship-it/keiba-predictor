@@ -58,6 +58,15 @@ const roleEnd=src.indexOf('\n}',roleStart)+2;
 assert(roleStart>=0&&roleEnd>roleStart,'production markRoleLabel helper is required');
 const markRoleLabel=new Function(src.slice(roleStart,roleEnd)+';return markRoleLabel;')();
 assert.equal(markRoleLabel({predMark:'◎'}),'◎ 本命');
+// racecardEntryRow renders the sub-line strip via racecardSublineHtml and
+// its production helpers (user-mark map, surface record rates, band win
+// text). Inject that whole production block, not mocks: it spans from
+// userMarkKey through the end of racecardSublineHtml and contains only
+// function declarations and constants.
+const sublineStart=src.indexOf('function userMarkKey(');
+const sublineEnd=src.indexOf('function racecardUserMarkToolsHtml(',sublineStart);
+assert(sublineStart>=0&&sublineEnd>sublineStart,'production sub-line helpers are required');
+const sublineHelpers=src.slice(sublineStart,sublineEnd);
 const visibleStart=src.indexOf('function visiblePredictionMark(');
 const visibleEnd=src.indexOf('function honmeiA11yText(',visibleStart);
 assert(visibleStart>=0&&visibleEnd>visibleStart,'shared visible axis mark helper required');
@@ -68,7 +77,7 @@ const renderRunner=new Function(
   'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight',
   'carriedWeightText','esc','racecardOddsHtml','racecardMarkDisplay',
   'honmeiA11yText','honmeiBadgeText','markRoleLabel','visiblePredictionMark','v25AddedHtml','v26CellHtml','racecardMarkCellHtml',
-  src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
+  sublineHelpers+src.slice(rowStart,rowEnd)+';return racecardEntryRow;'
 )(
   ()=>false, (x,d=0)=>Number.isFinite(Number(x))?Number(x):d,
   (_r,h)=>h.name, (x,lo,hi)=>Math.max(lo,Math.min(hi,x)),
@@ -93,7 +102,10 @@ const root={};new Function('window',home)(root);
 const actions=root.ARVEXQUnifiedHome.buttons();
 assert.equal((actions.match(/class="arv-unified-alert"/g)||[]).length,0,'no selected or special alert without a real race');
 const counted=root.ARVEXQUnifiedHome.buttons('horse',{selected:{central:1,local:0},special:{central:0,local:1}});
-assert.equal((counted.match(/class="arv-unified-alert"/g)||[]).length,1,'current selected action needs !; the special lane has no separate home action');
+// The selection (厳選) home action was removed with the selection UI
+// (PR #544, user directive 2026-11-16), so counts no longer render any
+// alert badge on the home actions.
+assert.equal((counted.match(/class="arv-unified-alert"/g)||[]).length,0,'no home action alert after selection UI removal');
 assert.match(style,/arv-unified-alert/);
 
 // Regression against legacy D1 list and device cache resurrecting excluded Banei.

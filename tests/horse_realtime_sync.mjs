@@ -64,7 +64,9 @@ assert.equal(state('09:59','浦和-03').status,'cancelled');
 assert.ok(home.liveModel('horse',rows,day,at('23:59')).some(r=>r.status==='elapsed'));
 assert.notEqual(home.liveSignature('horse',rows,day,at('09:59')),
                 home.liveSignature('horse',rows,day,at('10:01')));
-assert.match(home.buttons('horse'),/data-home-page="selected"/);
+// The selection (厳選) home button was removed with the selection UI
+// (PR #544, user directive 2026-11-16); it must not come back.
+assert.doesNotMatch(home.buttons('horse'),/data-home-page="selected"/);
 assert.match(home.buttons('horse'),/data-home-page="favorites"/);
 assert.doesNotMatch(home.buttons('horse'),/data-home-page="ai-stats"/);
 assert.doesNotMatch(source,/kyotei|boat|競艇/i);
