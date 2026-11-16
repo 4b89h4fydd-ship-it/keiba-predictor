@@ -46,7 +46,7 @@ function courseStageFrac(r,st){
   return normFrac(start+p.dir*laps*prog)
 }
 var app=document.getElementById("app");
-var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,horseModalNo:null,detailHorseNo:null,subPage:null,subPageReturnPanel:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,diagnosisOpenId:null,oddsBusy:false,oddsRefreshAt:{},oddsTimer:null,environmentTimer:null,environmentBusy:false,bootstrapReady:false,bootstrapProgress:null,resultTimer:null,homePage:null,aiStatsTrack:null,pickCircuit:null,raceReturnHomePage:null,raceReturnPickCircuit:null};
+var state={date:today(),circuit:"地方",races:[],track:null,race:null,raceLoading:null,picker:false,loading:false,error:null,timer:null,anim:null,simSpeed:5,simTarget:20,simRunning:false,simPaused:false,simStopped:false,simIndex:0,simDone:0,simCounts:null,simCurrentT:0,pred:null,requestSeq:0,detailSeq:0,raceReturnPicker:false,historyTimer:null,raceStack:[],historyPrefetch:{},paceStage:0,paceMapStage:0,horseModalNo:null,detailHorseNo:null,subPage:null,subPageReturnPanel:null,collectingHorse:null,collectTimer:null,scenarioCode:null,analysisSaved:{},openPanel:null,diagnosisOpenId:null,oddsBusy:false,oddsRefreshAt:{},oddsTimer:null,environmentTimer:null,environmentBusy:false,bootstrapReady:false,bootstrapProgress:null,resultTimer:null,homePage:null,aiStatsTrack:null,pickCircuit:null,raceReturnHomePage:null,raceReturnPickCircuit:null};
 
 /* Existing venue exclusion: never resurrect archived Banei rows in the app.
    Race archives are retained; only active navigation and displayed lists hide them. */
@@ -1949,13 +1949,190 @@ function resultPanel(r){
       '<div class="muted result-status-compact">'+(final?'結果は確定扱いですが着順詳細は未取得です。':(String(r.date||'')<today()||String(r.date||'')===today()&&mins(r.startTime)<=nowMins()?'公式結果の反映待ちです。自動再確認しています。':'発走前・結果未確定'))+'</div><button type="button" data-detail-retry="'+esc(r.id)+'">結果を再確認</button>') +
   researchRecapPanel(r)+'</section>'
 }
+/* v342 — position map on the pace tab: a netkeiba-style formation
+   diagram drawn inside the tab (front = right, inner = top), with a
+   スタート後 / 3コーナー / 4コーナー stage switch. Material priority:
+   1) the published unified forecast's paceStages (pack order = front
+      to back, lane = inner..outer) — the forecast's own formation;
+   2) a client-side estimate from each runner's last-5 corner
+      positions — labelled as an estimate on screen, never presented
+      as fact. Runners with neither source are listed as 位置不明
+      below the field; their positions are never invented. Display
+      only: no forecast payload is modified. */
+var PACE_MAP_STAGES=[
+  {key:'start',label:'スタート後',t:0},
+  {key:'turn3',label:'3コーナー',t:2/3},
+  {key:'turn4',label:'4コーナー',t:1}
+];
+function paceMapStageIdx(){return clamp(n(state.paceMapStage,0),0,PACE_MAP_STAGES.length-1)}
+function paceMapRelAt(positions,fieldSize,t){
+  // Relative position (0 = front, 1 = last) of one past run at path
+  // fraction t. The corner-position array is read as a [0..1] path:
+  // first element = first corner, last = final corner; t = 2/3 lands
+  // on the third element of a four-corner record (the 3コーナー).
+  var ps=(positions||[]).map(function(v){return n(v,0)}).filter(function(v){return v>0});
+  if(!ps.length)return null;
+  var fs=Math.max(2,n(fieldSize,0)||ps.length);
+  function rel(pos){return clamp((pos-1)/Math.max(1,fs-1),0,1)}
+  if(ps.length===1)return rel(ps[0]);
+  var x=clamp(t,0,1)*(ps.length-1),i=Math.floor(x),f=x-i;
+  return rel(ps[i]+(ps[Math.min(ps.length-1,i+1)]-ps[i])*f);
+}
+function paceMapEstimateStages(r,active){
+  // Per runner and stage: recency-weighted mean relative corner
+  // position over the last 5 starts (historicalWindow). Inside/outside
+  // is only a frame-number guide — there is no observed lane data in
+  // the past-run record — and is labelled as such on screen.
+  var per={};
+  active.forEach(function(h){
+    var no=n(h.horseNumber),runs=historicalWindow(h,r),w=recencyWeights(runs.length),acc=null;
+    runs.forEach(function(rr,i){
+      if(!rr)return;
+      var vals=PACE_MAP_STAGES.map(function(st){return paceMapRelAt(rr.cornerPositions,rr.fieldSize,st.t)});
+      if(vals.some(function(v){return v==null}))return;
+      if(!acc)acc={sum:[0,0,0],w:0};
+      vals.forEach(function(v,k){acc.sum[k]+=v*(w[i]||1)});
+      acc.w+=(w[i]||1);
+    });
+    if(acc&&acc.w>0)per[no]=acc.sum.map(function(s){return s/acc.w});
+  });
+  var known=active.filter(function(h){return !!per[n(h.horseNumber)]});
+  if(known.length<2)return null;
+  return PACE_MAP_STAGES.map(function(st,si){
+    var items=known.map(function(h){
+      var no=n(h.horseNumber);
+      return {no:no,rel:per[no][si],lane:clamp((frame(h)-1)/7*2-1,-1,1)};
+    });
+    // Spread the field over the full width per stage: raw relative
+    // positions cluster mid-pack and would hide the formation.
+    var lo=Math.min.apply(null,items.map(function(it){return it.rel})),
+        hi=Math.max.apply(null,items.map(function(it){return it.rel}));
+    items.forEach(function(it){it.rel=hi>lo?(it.rel-lo)/(hi-lo):.5});
+    items.sort(function(a,b){return a.rel-b.rel||a.no-b.no});
+    return {key:st.key,label:st.label,items:items};
+  });
+}
+function paceMapData(r){
+  var active=(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0&&!isScratchHorse(h)});
+  if(active.length<2)return null;
+  var byNo={};active.forEach(function(h){byNo[n(h.horseNumber)]=h});
+  var raw=r.unifiedForecast&&Array.isArray(r.unifiedForecast.paceStages)?r.unifiedForecast.paceStages:[];
+  var forecastStages=PACE_MAP_STAGES.map(function(st){
+    var found=null;
+    raw.forEach(function(z){if(z&&String(z.key||'')===st.key)found=z});
+    if(!found||!Array.isArray(found.pack)||!found.pack.length)return null;
+    var items=[];
+    found.pack.forEach(function(z){
+      var no=n(z&&z.no,0);
+      if(!no||!byNo[no])return;
+      if(items.some(function(it){return it.no===no}))return;
+      items.push({no:no,rel:0,lane:clamp(n(z.lane,0)/3,-1,1)});
+    });
+    if(items.length<2)return null;
+    items.forEach(function(it,i){it.rel=items.length>1?i/(items.length-1):0});
+    return {key:st.key,label:st.label,items:items};
+  });
+  var placed={},unknown=[];
+  if(forecastStages.every(function(s){return !!s})){
+    // A published pack can omit an active runner (observed in real
+    // data). Fill such runners from the estimate model and flag them
+    // per-horse (「推」 pill) so the two sources never blur together;
+    // runners the estimate cannot place either stay 位置不明.
+    var missing=active.filter(function(h){return !forecastStages[0].items.some(function(it){return it.no===n(h.horseNumber)})});
+    var filled=0;
+    if(missing.length){
+      var estAll=paceMapEstimateStages(r,active);
+      if(estAll){
+        forecastStages=forecastStages.map(function(st,si){
+          var items=st.items.slice();
+          missing.forEach(function(h){
+            var no=n(h.horseNumber),found=null;
+            estAll[si].items.forEach(function(it){if(it.no===no)found=it});
+            if(found)items.push({no:no,rel:found.rel,lane:found.lane,estimated:true});
+          });
+          items.sort(function(a,b){return a.rel-b.rel||a.no-b.no});
+          return {key:st.key,label:st.label,items:items};
+        });
+        filled=missing.filter(function(h){return forecastStages[0].items.some(function(it){return it.no===n(h.horseNumber)&&it.estimated})}).length;
+      }
+    }
+    forecastStages[0].items.forEach(function(it){placed[it.no]=1});
+    active.forEach(function(h){if(!placed[n(h.horseNumber)])unknown.push(n(h.horseNumber))});
+    return {source:'forecast',stages:forecastStages,unknown:unknown,estimatedFilled:filled};
+  }
+  var est=paceMapEstimateStages(r,active);
+  if(!est)return null;
+  est[0].items.forEach(function(it){placed[it.no]=1});
+  active.forEach(function(h){if(!placed[n(h.horseNumber)])unknown.push(n(h.horseNumber))});
+  return {source:'estimate',stages:est,unknown:unknown};
+}
+function paceMapLayout(items){
+  // Deterministic grid placement: each runner, front first, takes the
+  // free cell nearest its ideal spot (x from rel, y from lane). Cell
+  // pitch (13% x 19% of the field) matches the node footprint, so the
+  // formation stays readable without overlaps at desktop widths.
+  var cols=[10,23,36,49,62,75,88],rows=[12,31,50,69,88],used={},placed=[];
+  var sorted=items.slice().sort(function(a,b){return a.rel-b.rel||a.no-b.no});
+  sorted.forEach(function(it){
+    var wantX=89-it.rel*78,wantY=50+it.lane*31,best=null,bestScore=Infinity;
+    for(var c=0;c<cols.length;c++)for(var rw=0;rw<rows.length;rw++){
+      var key=c+':'+rw;
+      if(used[key])continue;
+      var dx=(cols[c]-wantX)/13,dy=(rows[rw]-wantY)/19,score=dx*dx+dy*dy;
+      if(score<bestScore){bestScore=score;best={x:cols[c],y:rows[rw],key:key}}
+    }
+    if(best){used[best.key]=1;placed.push({no:it.no,rel:it.rel,lane:it.lane,estimated:!!it.estimated,x:best.x,y:best.y})}
+  });
+  return placed;
+}
+function paceMapSection(r,p){
+  var data=paceMapData(r);
+  if(!data)return '';
+  var idx=paceMapStageIdx(),stage=data.stages[idx]||data.stages[0];
+  var byNo={};(r.horses||[]).forEach(function(h){byNo[n(h.horseNumber)]=h});
+  var items=paceMapLayout(stage.items);
+  var height=clamp(140+items.length*12,230,340);
+  var tabs=PACE_MAP_STAGES.map(function(st,i){
+    return '<button type="button" data-pace-map-stage="'+i+'" class="'+(i===idx?'active':'')+'" aria-pressed="'+(i===idx)+'">'+esc(st.label)+'</button>';
+  }).join('');
+  var dots=PACE_MAP_STAGES.map(function(st,i){return '<i class="'+(i===idx?'on':'')+'"></i>'}).join('');
+  var nodes=items.map(function(it,i){
+    var h=byNo[it.no]||{},nm=String(h.name||''),short=nm.length>3?nm.slice(0,3):nm;
+    return '<div class="pace-map-node" style="left:'+it.x.toFixed(1)+'%;top:'+it.y.toFixed(1)+'%" title="'+esc(it.no+'番 '+nm)+'">'
+      +'<span class="pace-map-uni" aria-hidden="true">🐎</span>'
+      +'<span class="pace-map-badge-row"><span class="frame-badge frame'+frame(h)+'">'+esc(it.no)+'</span>'
+      +(i===0?'<span class="pace-map-lead">先頭</span>':'')
+      +(it.estimated?'<span class="pace-map-est">推</span>':'')+'</span>'
+      +'<span class="pace-map-name">'+esc(short)+'</span></div>';
+  }).join('');
+  var unknown=data.unknown.length?'<div class="pace-map-unknown"><span class="pace-map-unknown-label">位置不明：</span>'
+    +data.unknown.map(function(no){
+      var h=byNo[no]||{};
+      return '<span class="pace-map-unknown-chip"><span class="frame-badge frame'+frame(h)+'">'+esc(no)+'</span>'+esc(h.name||'')+'</span>';
+    }).join('')
+    +'<small>'+(data.source==='forecast'?'発行済み予想の隊列に含まれていないため、位置は表示していません':'過去走の通過順位が取得できていないため、位置は表示していません')+'</small></div>':'';
+  var note=data.source==='forecast'
+    ? '発行済み予想（AI展開予想）の隊列図です。前が右・内が上です。'+(data.estimatedFilled?'「推」印の馬は発行隊列に含まれていないため、過去走の通過順位からの推定位置です。':'')
+    : '過去の脚質・通過順位（直近5走）からの推定位置です。確定情報ではありません。内外は枠順からの目安です。';
+  return '<section class="card pace-map-card"><h2>展開予想・位置取り</h2>'
+    +'<div class="pace-map-tabs" role="tablist" aria-label="展開の局面">'+tabs+'</div>'
+    +'<div class="pace-map-dots" aria-hidden="true">'+dots+'</div>'
+    +'<div class="pace-map-field" style="height:'+height+'px">'
+      +'<div class="pace-map-rail" aria-hidden="true"></div>'
+      +'<span class="pace-map-axis in">内</span><span class="pace-map-axis out">外</span>'
+      +'<span class="pace-map-axis front">前方 ▶</span><span class="pace-map-axis rear">◀ 後方</span>'
+      +nodes
+    +'</div>'
+    +unknown
+    +'<p class="muted pace-map-note">'+esc(note)+'</p></section>';
+}
 function paceDisplayPanel(r,p){
   // The primary route is the existing four-stage view.  Keep the verified
   // server forecast as a safe fallback when a stage plan is still loading.
   var receiptStages=r&&r.unifiedForecast&&Array.isArray(r.unifiedForecast.paceStages)?r.unifiedForecast.paceStages:[];
   if(!p.plan&&receiptStages.length)p.plan={stages:receiptStages};
   var plan=activeScenarioPlan(p)||p.plan||{};
-  return visiblePaceStages(plan).length?paceBoard(r,p):pacePanel(r,p);
+  return paceMapSection(r,p)+(visiblePaceStages(plan).length?paceBoard(r,p):pacePanel(r,p));
 }
 function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse,open:state.diagnosisOpenId!=null&&String(state.diagnosisOpenId)===String(r.id)}):'')+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+paceDisplayPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・展開予想から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
@@ -3356,6 +3533,7 @@ function openRace(id,keepStack,skipHistory,preservePanel){
   state.picker=false;
   state.scenarioCode=null;
   state.paceStage=0;
+  state.paceMapStage=0;
 
   var row=(state.races||[]).find(function(x){return String(x&&x.id||'')===String(id)}),cached=instantTrackDetails[String(id)]||loadDetailCache(id,true);
   var initial=mergeRaceReflection(normalizeDetailSummary(row,id),cached,null,null);
@@ -3559,7 +3737,7 @@ function goBack(){
     ++state.detailSeq;
     if(state.historyTimer){clearTimeout(state.historyTimer);state.historyTimer=null}
     if(state.collectTimer){clearTimeout(state.collectTimer);state.collectTimer=null}
-    state.collectingHorse=null;state.error=null;state.pred=null;state.scenarioCode=null;state.paceStage=0;
+    state.collectingHorse=null;state.error=null;state.pred=null;state.scenarioCode=null;state.paceStage=0;state.paceMapStage=0;
 
     if(state.raceLoading||state.race){
         if(state.raceStack.length){
@@ -3657,7 +3835,7 @@ function refreshDiagnosisNow(id){
 }
 function pollDiagnosisRefresh(id,attempt){return}
 
-function bind(){document.querySelectorAll('[data-favorite-toggle]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}toggleFavoriteRace(this.getAttribute('data-favorite-toggle'),this.getAttribute('data-favorite-date'))}});document.querySelectorAll('[data-home-close]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.homePage=null;state.pickCircuit=null;state.aiStatsTrack=null;state.raceStack=[];state.track=null;state.race=null;state.picker=false;render();window.scrollTo(0,0)}});document.querySelectorAll('[data-home-page]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.raceStack=[];state.homePage=this.getAttribute('data-home-page')||null;state.pickCircuit=null;state.aiStatsTrack=null;state.track=null;state.race=null;state.picker=false;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-pick-circuit]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.pickCircuit=this.getAttribute('data-pick-circuit')||null;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-detail-retry]').forEach(function(el){el.onclick=function(e){e.preventDefault();openRace(el.getAttribute('data-detail-retry'),true,true,true)}});document.querySelectorAll('[data-selected-section]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-section');if(k==='selected')selectedSectionsOpen[k]=!!el.open}});document.querySelectorAll('[data-selected-circuit]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-circuit'),c=el.getAttribute('data-pick-circuit');if(k==='selected'&&(c==='中央'||c==='地方'))selectedCircuitSectionsOpen[k][c]=!!el.open}});document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;if(key==='bets'){state.subPageReturnPanel=state.openPanel||'entry';state.subPage='bets';window.scrollTo(0,0);render();return}if(key==='detail'&&state.race&&!state.detailHorseNo){var hs=(state.race.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});if(hs.length)state.detailHorseNo=n(hs[0].horseNumber)}state.openPanel=opening?key:null;render();if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-action="copy-bet"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}copyCurrentBet()}});document.querySelectorAll('[data-action="open-bets-page"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.subPageReturnPanel=state.openPanel||'entry';state.subPage='bets';window.scrollTo(0,0);render()}});document.querySelectorAll('[data-action="close-race-subpage"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.subPage=null;state.openPanel=state.subPageReturnPanel||'entry';state.subPageReturnPanel=null;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-action="live-open"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=true;liveCenterTrack='';liveCenterCircuit='';render()}});document.querySelectorAll('[data-action="live-close"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=false;render();setTimeout(fastReflectNow,150)}});document.querySelectorAll('[data-action="today-return"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}returnToToday()}});document.querySelectorAll('[data-live-track]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterTrack=this.getAttribute('data-live-track')||'';liveCenterCircuit=this.getAttribute('data-live-circuit')||'';render()}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.subPage=null;state.detailHorseNo=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.homePage=null;state.aiStatsTrack=null;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;if(!state.homePage){state.aiStatsTrack=null;state.pickCircuit=null}state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.subPage=null;state.detailHorseNo=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render()};els=document.querySelectorAll('[data-special-fold]');for(i=0;i<els.length;i++)els[i].ontoggle=function(){state.specialForecastOpen=!!this.open;try{localStorage.setItem('arvexq-special-forecast-open',this.open?'1':'0')}catch(e){}};els=document.querySelectorAll('[data-diagnosis-fold]');for(i=0;i<els.length;i++)els[i].ontoggle=function(){state.diagnosisOpenId=this.open&&state.race?String(state.race.id):null};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)}),preserve=this.getAttribute('data-preserve-panel')==='1';if(state.homePage&&(state.homePage==='selected'||state.homePage==='special'||state.homePage==='favorites')){state.raceReturnHomePage=state.homePage;state.raceReturnPickCircuit=state.pickCircuit}else{state.raceReturnHomePage=null;state.raceReturnPickCircuit=null}if(row){state.track=row.track;if(row.circuit)state.circuit=row.circuit}window.scrollTo(0,0);openRace(id,false,false,preserve)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var ra=document.querySelectorAll('[data-action="reload-all"]');for(i=0;i<ra.length;i++)ra[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}reloadAllData()};var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false,true)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-check]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)toggleHorseChecked(state.race,this.getAttribute('data-horse-check'))};els=document.querySelectorAll('[data-user-mark]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)cycleUserMark(state.race,this.getAttribute('data-user-mark'))};els=document.querySelectorAll('[data-user-mark-clear]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)clearUserMarks(state.race)};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseDetailPage(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-detail-horse]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.detailHorseNo=n(this.getAttribute('data-detail-horse'));state.openPanel='detail';render();var panel=document.getElementById('section-detail');if(panel)setTimeout(function(){panel.scrollIntoView({block:'start',behavior:'smooth'})},0)};els=document.querySelectorAll('[data-detail-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(-1)};els=document.querySelectorAll('[data-detail-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(1)};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPaceStagePage(this.getAttribute('data-pace-open'))};els=document.querySelectorAll('[data-pace-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPaceStagePage(this.getAttribute('data-pace-next'))};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
+function bind(){document.querySelectorAll('[data-favorite-toggle]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}toggleFavoriteRace(this.getAttribute('data-favorite-toggle'),this.getAttribute('data-favorite-date'))}});document.querySelectorAll('[data-home-close]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.homePage=null;state.pickCircuit=null;state.aiStatsTrack=null;state.raceStack=[];state.track=null;state.race=null;state.picker=false;render();window.scrollTo(0,0)}});document.querySelectorAll('[data-home-page]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.raceStack=[];state.homePage=this.getAttribute('data-home-page')||null;state.pickCircuit=null;state.aiStatsTrack=null;state.track=null;state.race=null;state.picker=false;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-pick-circuit]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.pickCircuit=this.getAttribute('data-pick-circuit')||null;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-detail-retry]').forEach(function(el){el.onclick=function(e){e.preventDefault();openRace(el.getAttribute('data-detail-retry'),true,true,true)}});document.querySelectorAll('[data-selected-section]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-section');if(k==='selected')selectedSectionsOpen[k]=!!el.open}});document.querySelectorAll('[data-selected-circuit]').forEach(function(el){el.ontoggle=function(){var k=el.getAttribute('data-selected-circuit'),c=el.getAttribute('data-pick-circuit');if(k==='selected'&&(c==='中央'||c==='地方'))selectedCircuitSectionsOpen[k][c]=!!el.open}});document.querySelectorAll('[data-panel]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}var key=el.getAttribute('data-panel'),opening=state.openPanel!==key;if(key==='bets'){state.subPageReturnPanel=state.openPanel||'entry';state.subPage='bets';window.scrollTo(0,0);render();return}if(key==='detail'&&state.race&&!state.detailHorseNo){var hs=(state.race.horses||[]).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});if(hs.length)state.detailHorseNo=n(hs[0].horseNumber)}state.openPanel=opening?key:null;render();if(opening&&key==='result'&&state.race&&isFinal(state.race)&&!(((state.race.result||{}).payouts||[]).length))setTimeout(function(){refreshPayoutsOnly(0)},0)}});document.querySelectorAll('[data-action="odds-update"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}refreshOddsOnly(true)}});document.querySelectorAll('[data-action="copy-bet"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}copyCurrentBet()}});document.querySelectorAll('[data-action="open-bets-page"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.subPageReturnPanel=state.openPanel||'entry';state.subPage='bets';window.scrollTo(0,0);render()}});document.querySelectorAll('[data-action="close-race-subpage"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.subPage=null;state.openPanel=state.subPageReturnPanel||'entry';state.subPageReturnPanel=null;window.scrollTo(0,0);render()}});document.querySelectorAll('[data-action="live-open"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=true;liveCenterTrack='';liveCenterCircuit='';render()}});document.querySelectorAll('[data-action="live-close"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterOpen=false;render();setTimeout(fastReflectNow,150)}});document.querySelectorAll('[data-action="today-return"]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}returnToToday()}});document.querySelectorAll('[data-live-track]').forEach(function(el){el.onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}liveCenterTrack=this.getAttribute('data-live-track')||'';liveCenterCircuit=this.getAttribute('data-live-circuit')||'';render()}});document.querySelectorAll('[data-dashboard-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-dashboard-tab');var id=el.getAttribute('data-tab-race');if(state.race&&String(state.race.id)===id)render();else openRace(id,false,false)}});document.querySelectorAll('.cinema-venue img').forEach(function(img){img.onerror=function(){this.style.display='none';var parent=this.parentElement;if(parent&&!parent.querySelector('.venue-photo-missing')){var label=document.createElement('span');label.className='venue-photo-missing';label.textContent='写真を読み込めません';parent.appendChild(label)}}});document.querySelectorAll('[data-date]').forEach(function(el){el.onclick=function(){++state.detailSeq;state.raceLoading=null;state.date=el.getAttribute('data-date');state.openPanel=null;state.subPage=null;state.detailHorseNo=null;state.race=null;state.track=null;state.picker=false;load()}});document.querySelectorAll('[data-detail-tab]').forEach(function(el){el.onclick=function(){state.detailTab=el.getAttribute('data-detail-tab');render()}});var els=document.querySelectorAll('[data-circuit]'),i;for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.circuit=this.getAttribute('data-circuit');state.homePage=null;state.aiStatsTrack=null;state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};var d=document.getElementById('date');if(d)d.onchange=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.date=this.value;if(!state.homePage){state.aiStatsTrack=null;state.pickCircuit=null}state.openPanel=null;state.track=null;state.race=null;state.picker=false;load()};els=document.querySelectorAll('[data-track]');for(i=0;i<els.length;i++)els[i].onclick=function(){state.raceStack=[];++state.detailSeq;state.raceLoading=null;state.race=null;state.pred=null;state.picker=false;state.track=this.getAttribute('data-track');var dc=this.getAttribute('data-circuit');if(dc)state.circuit=dc;state.openPanel=null;state.subPage=null;state.detailHorseNo=null;state.detailTab='出走表';mergeCachedVolatilityForTrack(state.track);window.scrollTo(0,0);render()};els=document.querySelectorAll('[data-special-fold]');for(i=0;i<els.length;i++)els[i].ontoggle=function(){state.specialForecastOpen=!!this.open;try{localStorage.setItem('arvexq-special-forecast-open',this.open?'1':'0')}catch(e){}};els=document.querySelectorAll('[data-diagnosis-fold]');for(i=0;i<els.length;i++)els[i].ontoggle=function(){state.diagnosisOpenId=this.open&&state.race?String(state.race.id):null};els=document.querySelectorAll('[data-race]');for(i=0;i<els.length;i++)els[i].onclick=function(){var id=this.getAttribute('data-race'),row=state.races.find(function(x){return String(x.id)===String(id)}),preserve=this.getAttribute('data-preserve-panel')==='1';if(state.homePage&&(state.homePage==='selected'||state.homePage==='special'||state.homePage==='favorites')){state.raceReturnHomePage=state.homePage;state.raceReturnPickCircuit=state.pickCircuit}else{state.raceReturnHomePage=null;state.raceReturnPickCircuit=null}if(row){state.track=row.track;if(row.circuit)state.circuit=row.circuit}window.scrollTo(0,0);openRace(id,false,false,preserve)};els=document.querySelectorAll('[data-past-race]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPastRace(this.getAttribute('data-past-race'))};var b=document.querySelectorAll('[data-action="back"]');for(i=0;i<b.length;i++)b[i].onclick=goBack;var rr=document.querySelectorAll('[data-action="reload"]');for(i=0;i<rr.length;i++)rr[i].onclick=reloadCurrent;var ra=document.querySelectorAll('[data-action="reload-all"]');for(i=0;i<ra.length;i++)ra[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}reloadAllData()};var fi=document.querySelectorAll('[data-action="fetch-all-info"]');for(i=0;i<fi.length;i++)fi[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};var rh=document.querySelectorAll('[data-action="retry-history"]');for(i=0;i<rh.length;i++)rh[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(null)};els=document.querySelectorAll('[data-horse-fetch]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}collectRaceInfo(this.getAttribute('data-horse-fetch'))};var ar=document.querySelectorAll('[data-action="all-races"]');for(i=0;i<ar.length;i++)ar[i].onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};var pn=document.querySelector('[data-action="pace-next"]');if(pn)pn.onclick=function(){var x=nextRace();if(x){openRace(x.id,false,false,true)}};var pp=document.querySelector('[data-action="pace-pick"]');if(pp)pp.onclick=function(){state.raceStack=[];state.picker=true;state.track=null;render()};els=document.querySelectorAll('[data-horse-check]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)toggleHorseChecked(state.race,this.getAttribute('data-horse-check'))};els=document.querySelectorAll('[data-user-mark]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)cycleUserMark(state.race,this.getAttribute('data-user-mark'))};els=document.querySelectorAll('[data-user-mark-clear]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}if(state.race)clearUserMarks(state.race)};els=document.querySelectorAll('[data-horse-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openHorseDetailPage(this.getAttribute('data-horse-open'))};els=document.querySelectorAll('[data-detail-horse]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.detailHorseNo=n(this.getAttribute('data-detail-horse'));state.openPanel='detail';render();var panel=document.getElementById('section-detail');if(panel)setTimeout(function(){panel.scrollIntoView({block:'start',behavior:'smooth'})},0)};els=document.querySelectorAll('[data-detail-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(-1)};els=document.querySelectorAll('[data-detail-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveDetailHorse(1)};els=document.querySelectorAll('[data-horse-close]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}closeHorseModal()};els=document.querySelectorAll('[data-horse-prev]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(-1)};els=document.querySelectorAll('[data-horse-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}moveHorseModal(1)};els=document.querySelectorAll('[data-scenario-code]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.scenarioCode=this.getAttribute('data-scenario-code');state.paceStage=0;render()};els=document.querySelectorAll('[data-pace-open]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPaceStagePage(this.getAttribute('data-pace-open'))};els=document.querySelectorAll('[data-pace-next]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}openPaceStagePage(this.getAttribute('data-pace-next'))};els=document.querySelectorAll('[data-pace-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}drawPaceStage(n(this.getAttribute('data-pace-stage'),0))};els=document.querySelectorAll('[data-pace-map-stage]');for(i=0;i<els.length;i++)els[i].onclick=function(e){if(e){e.preventDefault();e.stopPropagation()}state.paceMapStage=clamp(n(this.getAttribute('data-pace-map-stage'),0),0,2);render()};var board=document.getElementById('pace-board');if(board){board.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;var rect=board.getBoundingClientRect(),plan=activeScenarioPlan(state.pred),len=(plan&&plan.stages?plan.stages.length:0);if(!len)return;var cur=n(state.paceStage,0),dir=(e.clientX-rect.left)<rect.width/2?-1:1,nx=(cur+dir+len)%len;drawPaceStage(nx)}}var panel=document.getElementById('horse-modal-panel');if(panel){panel.onclick=function(e){if(e&&e.target&&e.target.closest&&e.target.closest('button,a,input,select,textarea,summary'))return;var rect=panel.getBoundingClientRect();moveHorseModal((e.clientX-rect.left)<rect.width/2?-1:1)}}}
 function initPaceBoard(){return}
 
 function hydrateInstantFromDevice(rows){

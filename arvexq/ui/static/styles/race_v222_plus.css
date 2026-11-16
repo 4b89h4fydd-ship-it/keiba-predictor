@@ -2567,3 +2567,44 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark 
   .rc-v341-win{font-size:13px!important}
   .rc-v341-left{gap:6px!important}
 }
+
+/* v342 — pace-tab position map (netkeiba-style formation diagram).
+   Horizontal field: front = right, inner = top. Stage switch is
+   スタート後 / 3コーナー / 4コーナー. The field is turf-green inside
+   the app's dark card, with a pale rail band on top like the
+   reference app. Nodes are emoji + frame badge + short name. */
+.pace-map-card{overflow:hidden}
+.pace-map-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:2px 0 5px}
+.pace-map-tabs button{min-height:40px;padding:0 4px;border:1px solid rgba(125,160,186,.32);border-radius:999px;background:#17242e;color:#aebdca;font-size:13px;font-weight:900;touch-action:manipulation}
+.pace-map-tabs button.active{border-color:#2e7d32;background:#2e7d32;color:#fff;box-shadow:0 2px 8px rgba(46,125,50,.35)}
+.pace-map-dots{display:flex;justify-content:center;gap:26px;margin:0 0 7px}
+.pace-map-dots i{width:8px;height:8px;border-radius:50%;background:rgba(140,170,195,.35)}
+.pace-map-dots i.on{background:#66bb6a;box-shadow:0 0 0 3px rgba(102,187,106,.22)}
+.pace-map-field{position:relative;border-radius:13px;overflow:hidden;border:1px solid rgba(30,90,40,.45);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 34px,rgba(0,0,0,.045) 34px 68px),linear-gradient(180deg,#8fd45f 0%,#79c74c 34%,#63b53a 68%,#549e31 100%)}
+.pace-map-rail{position:absolute;left:0;right:0;top:0;height:17px;background:linear-gradient(180deg,#cfeef7,#a8dcea);border-bottom:3px solid rgba(255,255,255,.85);
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 3px,transparent 3px 26px),linear-gradient(180deg,#cfeef7,#a8dcea)}
+.pace-map-axis{position:absolute;z-index:3;padding:2px 7px;border-radius:999px;background:rgba(10,40,14,.55);color:#eaffea;font-size:10px;font-weight:900;letter-spacing:.04em;pointer-events:none}
+.pace-map-axis.in{left:7px;top:23px}
+.pace-map-axis.out{left:7px;bottom:7px}
+.pace-map-axis.front{right:7px;top:23px}
+.pace-map-axis.rear{left:52px;bottom:7px}
+.pace-map-node{position:absolute;z-index:2;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;white-space:nowrap;pointer-events:none}
+.pace-map-uni{font-size:21px;line-height:1.05;transform:scaleX(-1);filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.pace-map-badge-row{display:flex;align-items:center;gap:3px}
+.pace-map-node .frame-badge{width:23px;height:23px;border-radius:50%;font-size:11px;border:2px solid rgba(255,255,255,.8);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.pace-map-lead{padding:1px 5px;border-radius:999px;background:#d32f2f;color:#fff;font-size:9px;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.pace-map-est{padding:1px 5px;border-radius:999px;background:#f5d547;color:#111;font-size:9px;font-weight:900;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.pace-map-name{font-size:11px;font-weight:900;color:#0d2f0a;text-shadow:0 1px 0 rgba(255,255,255,.75),0 -1px 0 rgba(255,255,255,.45),1px 0 0 rgba(255,255,255,.55),-1px 0 0 rgba(255,255,255,.55)}
+.pace-map-unknown{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:9px;padding:8px 9px;border:1px dashed rgba(125,160,186,.4);border-radius:10px;background:rgba(10,20,28,.35);font-size:12px}
+.pace-map-unknown-label{font-weight:900;color:#c9dbe7}
+.pace-map-unknown-chip{display:inline-flex;align-items:center;gap:4px;font-weight:700}
+.pace-map-unknown-chip .frame-badge{width:21px;height:21px;border-radius:50%;font-size:10px}
+.pace-map-unknown small{flex-basis:100%;color:#8fa3ae;font-size:10.5px;line-height:1.5}
+.pace-map-note{margin:8px 0 0;font-size:11.5px;line-height:1.6}
+@media(max-width:430px){
+  .pace-map-uni{font-size:18px}
+  .pace-map-node .frame-badge{width:21px;height:21px;font-size:10px}
+  .pace-map-name{font-size:10px}
+  .pace-map-tabs button{font-size:12px;min-height:38px}
+}
