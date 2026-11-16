@@ -2534,3 +2534,36 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark 
   .rc-v340-usermark{padding:3px 7px!important}
   .rc-v340-usermark-value{font-size:14px!important}
 }
+
+/* v341 — the sub-line is a sibling strip UNDER each racecard row, not
+   a grid item inside it (see racecardSublineHtml in app.js). As a row
+   child it inherited the row's grid (defined by three competing
+   stylesheets) plus overflow:hidden and could be auto-placed into a
+   narrow column or clipped away; as a sibling it is plain block flow
+   in every cascade. The strip keeps the v340 colour scheme; the row
+   above it squares off its bottom corners where :has is supported so
+   row + strip read as one card. */
+.racecard-table .rc-v341-sub{
+  width:100%!important;min-width:0!important;box-sizing:border-box!important;
+  margin:-1px 0 6px!important;padding:5px 8px!important;
+  border:1px solid #33424b!important;border-radius:0 0 10px 10px!important;
+  background:#141d22!important;
+}
+.racecard-row:has(+ .rc-v341-sub){
+  border-bottom-left-radius:0!important;border-bottom-right-radius:0!important;
+  margin-bottom:0!important;
+}
+.rc-v341-left{
+  display:flex!important;align-items:baseline!important;gap:9px!important;
+  min-width:0!important;
+}
+.rc-v341-win{
+  flex:0 0 auto!important;color:#ffd75a!important;
+  font-size:14px!important;font-weight:1000!important;line-height:1.25!important;
+  white-space:nowrap!important;
+}
+.rc-v341-win.na{color:#8fa3ae!important;font-size:12px!important;font-weight:700!important}
+@media(max-width:360px){
+  .rc-v341-win{font-size:13px!important}
+  .rc-v341-left{gap:6px!important}
+}

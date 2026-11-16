@@ -838,17 +838,44 @@ function horseRecordRates(h){
   var c=valid.length;
   return {count:c,win:Math.round(w/c*100),place:Math.round(p/c*100),show:Math.round(s/c*100)};
 }
-function racecardSublineHtml(r,h){
+/* v341 — model win probability for the sub-line head. Source is the
+   prediction row (x.winProbability, wired from the unified forecast's
+   per-horse diagnosis/marks in forecast/prediction.js, or the server
+   stage probability on the archived path). This is the AI estimate —
+   never the factual record rates below, which stay labelled 1着率. */
+function racecardWinProbText(x){
+  var v=null;
+  if(x){
+    if(x.winProbability!=null&&Number.isFinite(Number(x.winProbability)))v=Number(x.winProbability);
+    else if(x.p1Probability!=null&&Number.isFinite(Number(x.p1Probability)))v=Number(x.p1Probability);
+  }
+  if(v==null)return null;
+  return '勝率 '+(clamp(v,0,1)*100).toFixed(1)+'%';
+}
+/* v341 — the sub-line is a SIBLING strip under the row, not a child of
+   it. As a grid item inside .racecard-row (display:grid +
+   overflow:hidden, columns defined by three competing stylesheets)
+   it was auto-placed into a narrow column / clipped and effectively
+   invisible wherever the v339 grid and the v340 block did not land
+   exactly as authored (user report 2026-11-16: note visible, sub-line
+   missing). As a sibling it is plain block flow under every cascade,
+   and the critical layout is also carried inline so a stale cached
+   CSS module cannot collapse it. */
+function racecardSublineHtml(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),rates=horseRecordRates(h),
       rateTxt=rates?('1着率 '+rates.win+'%　連対率 '+rates.place+'%　3着率 '+rates.show+'%（過去'+rates.count+'走）'):'過去走データなし',
-      mark=scratch?'':userMark(r,no);
-  return '<div class="rc-v340-sub">'
+      mark=scratch?'':userMark(r,no),
+      winTxt=racecardWinProbText(x);
+  return '<div class="rc-v340-sub rc-v341-sub" style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<span class="rc-v341-left">'
+    +'<span class="rc-v341-win'+(winTxt?'':' na')+'">'+(winTxt||'勝率 ―')+'</span>'
     +'<span class="rc-v340-rates">'+esc(rateTxt)+'</span>'
+    +'</span>'
     +(scratch?'':'<button type="button" class="rc-v340-usermark'+(mark?' has-mark':'')+'" data-user-mark="'+esc(no)+'" aria-label="自分の印を切り替える（現在：'+(mark||'なし')+'）。タップで ◎→○→▲→△→☆→なし の順に変わります"><span class="rc-v340-usermark-label">自分の印</span><span class="rc-v340-usermark-value">'+(mark||'＋')+'</span></button>')
     +'</div>';
 }
 function racecardUserMarkToolsHtml(r){
-  return '<div class="rc-v340-note">「自分の印」は出走表の各馬の下にあるボタンで付けられ、この端末にだけ保存されます（AI予想の印とは別です）。1着率・連対率・3着率は取得済みの過去走（着順が判明した分）から計算し、分母は各馬の走数です。3着率は3着以内の率です。</div>'
+  return '<div class="rc-v340-note">「自分の印」は出走表の各馬の下にあるボタンで付けられ、この端末にだけ保存されます（AI予想の印とは別です）。各馬の下の「勝率」はAI予想の推定値です。1着率・連対率・3着率は取得済みの過去走（着順が判明した分）から計算した実績で、分母は各馬の走数です。3着率は3着以内の率です。</div>'
     +(hasUserMarks(r)?'<button type="button" class="rc-v340-clear" data-user-mark-clear="1">自分の印を全て消す</button>':'');
 }
 function sortedHorseRows(rows){return(rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)})}
@@ -1310,8 +1337,8 @@ function racecardEntryRow(r,h,x){
       +'<b>'+esc(weightMain)+'</b><span class="rc-weight-delta">'+esc(weightDelta||'　')+'</span>'
     +'</div>'
     +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h,r)+'</div>'
-    +racecardSublineHtml(r,h)
-    +'</div>';
+    +'</div>'
+    +racecardSublineHtml(r,h,x);
 }
 function morningSavedMarkRows(r){
   // A pre-off loading/partial racecard must not display archived marks as live AI output.
