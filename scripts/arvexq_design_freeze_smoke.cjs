@@ -24,7 +24,10 @@ const styleBaseline={
   // Re-pinned 2026-11-16: user-directed netkeiba-form light colour
   // scheme (dark navy shells/rows -> light background, dark text,
   // dark-green headers) in the home/venue/race theme block.
-  "arvexq/ui/static/sports/unified-home.css": "66b50d2501da2951",
+  // Re-pinned 2026-11-17: user-directed pure-white ground (the cream
+  // paper theme #f6f2e8/#f7f7f4 -> #ffffff, tan borders -> light gray)
+  // on the main screens.
+  "arvexq/ui/static/sports/unified-home.css": "bc2daad4a4fd4c73",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
@@ -47,7 +50,9 @@ function functionBody(name,text=src){
 const layoutBaseline={
   "cinematicTabs": "f04fa416e3c7313b",
   "smartRaceTopBar": "6f0925af17890feb",
-  "smartRaceHead": "d33922ddb12cd467",
+  // Re-pinned 2026-11-17: user-directed removal of the yellow
+  // result-status box (smartInlineResult) from the race header.
+  "smartRaceHead": "1ec9637151efc9fd",
   "renderPicker": "8b81f0479683023d",
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
