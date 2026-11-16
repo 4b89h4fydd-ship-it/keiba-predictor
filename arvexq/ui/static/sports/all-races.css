@@ -76,3 +76,4 @@ body:has(.smart-home){background:#0b171f!important}
 /* The three AI menu shortcuts belong directly below the date bar, above all venue 1R-12R grids. */
 .smart-home .arv-unified-body>.arv-unified-actions{margin-top:8px;margin-bottom:10px}
 .smart-home .arv-unified-body>.arv-all-panel{margin-top:0}
+.arv-all-race .arv-risk-badge{font-size:9px;padding:2px 5px}

@@ -2673,3 +2673,11 @@ html body .smart-race-page .racecard-table.rc-has-v26 .rc-v336-mark .rc-ai-mark 
   border-color:#2fbf9a!important;background:rgba(47,191,154,.18)!important;color:#7fe7c8!important;
 }
 .rc-v343-check:active{filter:brightness(1.25)}
+/* Volatility risk label （堅／普／荒）: API riskLabel (arvexq-risk-label-v1). */
+.arv-risk-badge{display:inline-block;font-style:normal;font-size:10px;font-weight:900;line-height:1;padding:3px 6px;border-radius:999px;border:1px solid #697176;background:#30363a;color:#eee7dc;vertical-align:middle;white-space:nowrap}
+.arv-risk-badge.risk-solid{background:#173d2a;border-color:#3f9e6b;color:#a9ecc4}
+.arv-risk-badge.risk-normal{background:#30363a;border-color:#697176;color:#eee7dc}
+.arv-risk-badge.risk-rough{background:#4a292b;border-color:#a05f63;color:#f3c1c3}
+.smart-race-title .arv-risk-badge{margin-right:5px}
+.smart-race-head-left .arv-risk-badge{margin-left:2px}
+.risk-label-note{display:block;margin-top:6px;font-size:10px;line-height:1.5;color:#9fb6c2}

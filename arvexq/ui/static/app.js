@@ -895,6 +895,49 @@ function racecardWinProbText(x){
   if(v==null)return null;
   return '勝率 '+(clamp(v,0,1)*100).toFixed(1)+'%';
 }
+/* v344 — the band's 勝率 has ONE source of truth: the issued unified
+   forecast bound to this race. The prediction rows normally carry
+   exactly that value (forecast/prediction.js wires marks→diagnosis),
+   but when the unified receipt fails the row builder's roster
+   acceptance — e.g. the transient window between a roster change and
+   its re-issue — the rows silently fall back to the separate server
+   `prediction` stage object, whose revision can differ from the
+   issued unified forecast, so the same horse showed different win
+   rates depending on which surface/state rendered it (user report
+   2026-11-16, Kanazawa 1R: 46% / 58.9% / 49.16% across the morning).
+   So whenever a unified forecast is bound to this race (identity
+   check only — deliberately NOT the roster acceptance), the band
+   reads marks→diagnosis from it directly, in every display state.
+   A horse absent from the issued forecast (e.g. scratched after the
+   roster froze) shows ― rather than another lane's number. Races
+   with no unified forecast keep the previous row-based behaviour. */
+function raceUnifiedForecast(r){
+  var uf=r&&r.unifiedForecast;
+  if(!uf||uf.version!=='arvexq-unified-live-v1'||
+     uf.raceId!==r.id||uf.raceDate!==r.date)return null;
+  return uf;
+}
+function unifiedForecastWinProbability(r,no){
+  var uf=raceUnifiedForecast(r);
+  if(!uf)return null;
+  var i,m=null,d=null;
+  if(Array.isArray(uf.marks))for(i=0;i<uf.marks.length;i++){
+    if(Number(uf.marks[i]&&uf.marks[i].horseNumber)===Number(no)){m=uf.marks[i];break}
+  }
+  if(m&&m.winProbability!=null&&Number.isFinite(Number(m.winProbability)))return Number(m.winProbability);
+  if(Array.isArray(uf.diagnosis))for(i=0;i<uf.diagnosis.length;i++){
+    if(Number(uf.diagnosis[i]&&uf.diagnosis[i].horseNumber)===Number(no)){d=uf.diagnosis[i];break}
+  }
+  if(d&&d.winProbability!=null&&Number.isFinite(Number(d.winProbability)))return Number(d.winProbability);
+  return null;
+}
+function racecardBandWinText(r,no,x){
+  if(raceUnifiedForecast(r)){
+    var uv=unifiedForecastWinProbability(r,no);
+    return uv==null?null:('勝率 '+(clamp(uv,0,1)*100).toFixed(1)+'%');
+  }
+  return racecardWinProbText(x);
+}
 /* v341 — the sub-line is a SIBLING strip under the row, not a child of
    it. As a grid item inside .racecard-row (display:grid +
    overflow:hidden, columns defined by three competing stylesheets)
@@ -916,7 +959,7 @@ function racecardWinProbText(x){
 function racecardSublineHtml(r,h,x){
   var scratch=isScratchHorse(h),no=n(h.horseNumber),rates=horseRecordRatesBySurface(h),
       checked=!scratch&&isUserMarked(r,no),
-      winTxt=racecardWinProbText(x);
+      winTxt=racecardBandWinText(r,no,x);
   var head='<div class="rc-v343-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
     +'<span class="rc-v341-win'+(winTxt?'':' na')+'">'+(winTxt||'勝率 ―')+'</span>'
     +(scratch?'':'<button type="button" class="rc-v343-check'+(checked?' is-on':'')+'" data-user-mark="'+esc(no)+'" aria-pressed="'+checked+'" aria-label="自分の印（現在：'+(checked?'チェック済み':'未チェック')+'）。タップでオン・オフを切り替えます"><span class="rc-v343-check-box" aria-hidden="true">'+(checked?'☑️':'☐')+'</span><span class="rc-v343-check-label">自分の印</span></button>')
@@ -2235,7 +2278,7 @@ function smartTopBar(back,title,sub){
       '<button type="button" class="arv-sub-back" data-action="back" aria-label="戻る">‹</button>'+
       '<div class="smart-head-copy smart-head-copy-clean"><strong>'+esc(String(title||'').replace(/^本日の/,''))+'</strong></div>'+
       '<label class="arv-sub-date"><span>'+esc(state.date.replace(/-/g,'/'))+'</span>'+
-      '<input type="date" id="date" value="'+esc(state.date)+'" aria-label="厳選・特別・AI成績の表示日を変更"></label>'+
+      '<input type="date" id="date" value="'+esc(state.date)+'" aria-label="特別・AI成績の表示日を変更"></label>'+
       '<button type="button" class="arv-sub-close" data-home-close="1" aria-label="トップへ戻る">×</button>'+
       '</header>'
   }
@@ -2538,10 +2581,6 @@ function rankPickRowHtml(z,cls){
   var sys=(t.systems||[]).map(function(s){return s==='prod'?'本番':'v26'}).join('＋')||'厳選';
   return '<button type="button" class="'+cls+'" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b>'+lines+'</span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(sys)+'</em></button>'
 }
-function fixedSelectedBox(circuit,picks){
-  var body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return rankPickRowHtml(z,'fixed-pick-row')||'<button type="button" class="fixed-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝に選定・固定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選')+(t.noAxis?'｜軸なし・相手上位評価':'')+'｜'+esc(t.score||'—')+'点</em></button>'}).join(''):fixedPickEmpty('selected',circuit),open=!!(selectedCircuitSectionsOpen.selected&&selectedCircuitSectionsOpen.selected[circuit]);
-  return '<details class="fixed-pick-box fixed-pick-circuit" data-selected-circuit="selected" data-pick-circuit="'+esc(circuit)+'" '+(open?'open':'')+'><summary class="fixed-pick-box-head"><b>'+esc(circuit)+'</b><span class="fixed-pick-summary-right"><em>'+picks.length+'レース</em><i>⌄</i></span></summary><div class="fixed-pick-box-body">'+body+'</div></details>'
-}
 function selectedRaceBetPreview(r){
   var d=instantTrackDetails[String(r.id)]||loadDetailCache(r.id),st=mins(r.startTime),started=r.date===today()&&st<9999&&nowMins()>=st,
       source=mergeRaceReflection(r,d,null,null),plan=frozenAiBetForRace(source),p=null;
@@ -2552,10 +2591,6 @@ function selectedRaceBetPreview(r){
   var lines=(plan.items||[]).map(function(z){var comboText=z.combo||betComboText(z.kind,z.combos||[]);return '<span class="selected-bet-chip '+(z.kind==='3連単'?'tri':'')+'"><b>おすすめ買い目</b> '+esc(z.kind)+' '+esc(comboText)+'</span>'}).join('');if(plan.trifectaReviewed&&plan.trifectaDecision==='見送り')lines+='<span class="selected-bet-chip tri"><b>3連単</b> 検討済み・見送り</span>';
   var result='';if(d&&isFinal(d)){var hit=aiBetPlanHit(d,plan),lv=hit&&hit.levels||{},hits=[];['本線','保険'].forEach(function(k){if(lv[k])hits.push(k+'HIT')});result='<div class="selected-result '+(hit&&hit.hit?'hit':'miss')+'">結果　'+(hits.length?hits.join(' / '):'通常買い目不的中')+(hit&&hit.tri?'　<strong>3連単HIT</strong>':'')+'</div>'}
   return '<div class="selected-bets">'+lines+'</div>'+result
-}
-function smartSelectedRaces(forceOpen){
-  var central=selectedRaceCandidates('中央'),local=selectedRaceCandidates('地方'),open=forceOpen?true:!!selectedSectionsOpen.selected,total=central.length+local.length;
-  return '<details class="smart-fixed-picks" data-selected-section="selected" '+(open?'open':'')+'><summary class="smart-fixed-picks-head"><span><b>厳選レース</b><small>保存買い目・実オッズ・券種別の検証結果で判定</small></span><span class="smart-fixed-summary-right"><em>'+total+'レース</em><i>⌄</i></span></summary><div class="smart-fixed-pick-grid">'+fixedSelectedBox('中央',central)+fixedSelectedBox('地方',local)+'</div></details>'
 }
 function computeMorningSpecialRaceCandidates(){
  if(!window.ARVEXQSpecialSelection)throw Error('special selection module missing');
@@ -2705,17 +2740,8 @@ function homeCircuitChooser(title,kind){
         status=loading?'取得中':(pending?'朝の判定待ち':'朝の確定選定');
     buttons+='<button type="button" class="arv-pick-circuit-btn" data-pick-circuit="'+circuit+'" aria-label="'+esc(circuit+' '+count+'件の'+title)+'"><span><small>'+esc(title)+'</small><b>'+esc(circuit)+'</b><em class="arv-pick-count">'+count+'件</em>'+(status?'<small class="arv-pick-count-pending">'+status+'</small>':'')+'</span><strong>›</strong></button>'
   });
-  var emptyNote=(kind==='selected'&&!loading&&!pending&&(counts.central+counts.local)===0)?
-    fixedPickEmpty('selected',null):'';
-  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+emptyNote+
+  return '<section class="arv-pick-circuit-page"><div class="smart-section-title"><div><b>'+esc(title)+'</b><small>中央・地方ごとの該当件数</small></div></div><div class="arv-pick-circuit-grid">'+buttons+'</div>'+
     '</section>'
-}
-function selectedCircuitPage(circuit){
-  var picks=selectedRaceCandidates(circuit),body=picks.length?picks.map(function(z){var r=z.race,t=z.selection||{};return rankPickRowHtml(z,'fixed-pick-row arv-direct-pick-row')||'<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small><small>'+esc(t.reason||'朝の固定判定')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(t.primaryType||'厳選')+(t.noAxis?'｜軸なし・相手上位評価':'')+'｜'+esc((t.types||[]).filter(function(x){return x!==t.primaryType}).join('・')||t.score||'—')+'</em></button>'}).join(''):fixedPickEmpty('selected',circuit);
-  var rankDay=picks.some(function(z){return String(z.selection&&z.selection.modelVersion||'')==='arvexq-rank-selection-v1'}),
-      headNote=rankDay?'旧人気条件による朝の固定記録':'発走前の印・馬番入り買い目を保存確認';
-
-  return '<section class="smart-fixed-picks arv-direct-picks"><div class="smart-fixed-picks-head"><span><b>'+esc(circuit)+' 厳選レース</b><small>'+esc(headNote)+'</small></span><em>'+picks.length+'レース</em></div><div class="fixed-pick-box-body">'+body+'</div></section>'
 }
 function specialCircuitPage(circuit){
   var picks=specialForecastRaceCandidates().filter(function(r){return String(r.circuit||'')===String(circuit)}),body=picks.length?picks.map(function(r){return '<button type="button" class="fixed-pick-row arv-direct-pick-row" data-race="'+esc(r.id)+'"><span><b>'+esc(r.track)+' '+esc(r.raceNumber)+'R</b><small>'+esc(r.title||'')+'</small></span><time>'+esc(r.startTime||'--:--')+'</time><em>'+esc(specialForecastRaceTag(r))+'</em></button>'}).join(''):(morningPickReady()?'<div class="fixed-pick-empty"><b>該当なし</b><small>'+esc(circuit)+'の重賞・高知ファイナルなし</small></div>':'<div class="fixed-pick-empty"><b>朝の特別予想未確定</b><small>朝の全開催確定後に一度だけ対象を固定します</small></div>');
@@ -2725,7 +2751,6 @@ function renderHomeSectionPage(){
   var page=state.homePage||'';
 
   if(page==='favorites')return '<div class="smart-shell">'+smartTopBar(true,'お気に入りレース','保存したレース')+'<main class="smart-main smart-home-subpage arv-favorites-page">'+(favoriteHomeSection()||'<section class="arv-favorites-home"><p class="arv-favorites-empty">この日のお気に入りレースはありません。</p></section>')+'</main>'+cinematicFooter()+'</div>';
-  if(page==='selected')return '<div class="smart-shell">'+smartTopBar(true,state.pickCircuit?(state.pickCircuit+' 厳選レース'):'厳選レース',state.pickCircuit?'本日の厳選':'中央 / 地方')+'<main class="smart-main smart-home-subpage">'+(state.pickCircuit?selectedCircuitPage(state.pickCircuit):homeCircuitChooser('厳選レース','selected'))+'</main>'+cinematicFooter()+'</div>';
   if(page==='special')return '<div class="smart-shell">'+smartTopBar(true,state.pickCircuit?(state.pickCircuit+' 特別予想'):'特別予想',state.pickCircuit?'重賞・高知ファイナル':'中央 / 地方')+'<main class="smart-main smart-home-subpage">'+(state.pickCircuit?specialCircuitPage(state.pickCircuit):homeCircuitChooser('特別予想','special'))+'</main>'+cinematicFooter()+'</div>';
   state.homePage=null;state.pickCircuit=null;return renderHome()
 }
@@ -2736,6 +2761,18 @@ function renderHome(){
     (state.error?'<div class="notice">'+esc(state.error)+'</div>':'')+
     (window.ARVEXQUnifiedHome?'</div>':'')+
     '</main>'+cinematicFooter()+'</div>'
+}
+function riskLabelBadge(r){
+  var lbl=r&&r.riskLabel&&r.riskLabel.label;
+  if(!lbl)return '';
+  var cls=lbl==='堅'?'risk-solid':(lbl==='荒'?'risk-rough':'risk-normal');
+  return '<span class="arv-risk-badge '+cls+'" title="波乱リスク判定（堅い順に 堅・普・荒）">'+esc(lbl)+'</span>'
+}
+function riskLabelNote(r){
+  var rl=r&&r.riskLabel;
+  if(!rl||!rl.label)return '';
+  if(rl.segment==='nar')return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：地方の検証（951レース）では「堅」で◎1着率61.9%・本線的中35.9%、「荒」で◎26.3%・本線8.0%でした。</small>';
+  return '<small class="risk-label-note">波乱リスク判定「'+esc(rl.label)+'」：中央では検証未確定のため参考表示です。</small>'
 }
 function volatilityBadge(r){
   var v=r&&r.volatility||{},ready=v.ready===true&&n(v.score)>0,label=ready?String(v.label||'標'):'…',
@@ -2760,6 +2797,7 @@ function mergeCachedVolatilityForTrack(track){
     if(v&&v.version==='arvexq-volatility-v1'){
       if(JSON.stringify(r.volatility||null)!==JSON.stringify(v)){r.volatility=v;changed=true}
     }
+    if(d&&d.riskLabel&&JSON.stringify(r.riskLabel||null)!==JSON.stringify(d.riskLabel)){r.riskLabel=d.riskLabel;changed=true}
   });
   if(changed)persistRaceSummaryCache();
   return changed
@@ -2988,7 +3026,7 @@ function venueRaceRows(){
         return '<div class="arv-favorite-venue-item"><button class="smart-race-row '+cls+'" data-race="'+esc(r.id)+'" data-race-state="'+esc(lifecycle)+'">'+
           '<strong>'+no+'R</strong>'+ 
           '<span class="smart-race-time">'+(fin?'確定':(flash?'速報':timeHtml(r)))+'</span>'+ 
-          '<span class="smart-race-title">'+stateTag+'<b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc((r.weather&&r.weather!=='不明')?r.weather:'天候待ち')+' / '+esc((r.condition&&r.condition!=='不明')?r.condition:'馬場待ち')+'</small></span>'+ 
+          '<span class="smart-race-title">'+stateTag+riskLabelBadge(r)+'<b>'+esc(r.title||no+'R')+'</b><small>'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc((r.weather&&r.weather!=='不明')?r.weather:'天候待ち')+' / '+esc((r.condition&&r.condition!=='不明')?r.condition:'馬場待ち')+'</small></span>'+
           '<span class="smart-chevron">›</span>'+ 
         '</button>'+favoriteStarHtml(r,'arv-venue-favorite-star')+'</div>'
       }).join('')+
@@ -3038,11 +3076,11 @@ function smartRaceHead(r){
     '<div class="smart-race-title-stack smart-race-full-title"><div class="arv-favorite-title-row"><h1>'+esc(r.title||'レース詳細')+'</h1>'+favoriteStarHtml(r,'arv-detail-favorite-star')+'<button type="button" class="arv-reload-button arv-detail-reload" data-action="reload" aria-label="表示を更新" title="更新">↻</button></div>'+(markState?'<small class="arv-mark-fix-status">'+esc(markState)+'</small>':'')+'</div>'+
     '<div class="smart-race-head-layout">'+
       '<div class="smart-race-left-stack">'+
-        '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span><div class="smart-race-title-stack"><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'</div></div>'+cinematicGrade(r)+'</div>'+
+        '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span>'+riskLabelBadge(r)+'<div class="smart-race-title-stack"><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'</div></div>'+cinematicGrade(r)+'</div>'+
         officialRaceActions(r)+
-      '</div>'+ 
-      '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div>'+ 
-    '</div>'+ 
+      '</div>'+
+      '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div>'+
+    '</div>'+riskLabelNote(r)+
   '</section>'
 }
 function renderRaceLoading(){
@@ -3981,7 +4019,8 @@ function mergeBootstrap(body){
       }
       if(d.weather&&d.weather!=='不明')r.weather=d.weather;
       if(d.condition&&d.condition!=='不明')r.condition=d.condition;
-      if(d.oddsUpdatedAt)r.oddsUpdatedAt=d.oddsUpdatedAt
+      if(d.oddsUpdatedAt)r.oddsUpdatedAt=d.oddsUpdatedAt;
+      if(d.riskLabel)r.riskLabel=d.riskLabel
     }else if(pvol[String(r.id)]){
       r.volatility=pvol[String(r.id)]
     }
