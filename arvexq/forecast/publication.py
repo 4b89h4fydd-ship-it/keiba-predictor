@@ -59,33 +59,6 @@ def public_race(detail):
             if horse.get('horseNumber') in by_no:
                 horse['predMark'] = by_no[horse['horseNumber']]
         return result
-    # Urgent 2026 Kikuka Sho uses the date-held-out LEARNED challenger only.
-    # Retired forecast adapters must not override this race. Its research
-    # marks may be displayed explicitly as uncalibrated; no betting ticket.
-    from arvexq.prediction.kikka_urgent import RACE_ID, candidate_marks
-    if detail.get('id') == RACE_ID:
-        proposed = candidate_marks(detail)
-        if proposed:
-            source = detail['kikkaCandidate']
-            result['predictionStatus'] = 'candidate-analysis'
-            result['predictionModelVersion'] = source['modelVersion']
-            result['prediction'] = {
-                'modelVersion': source['modelVersion'],
-                'productionEligible': False, 'predictionStatus': 'candidate-analysis',
-                'capturedAt': source['capturedAt'], 'modelHash': source['modelHash'],
-            }
-            result['forecastText'] = ('菊花賞の発走前モデルの参考印。'
-                '勝率・3着内率は未校正で、馬券購入の推奨は行わない。')
-            result['predictionMarks'] = proposed
-            result['recommendedBets'] = []
-            by_no = {row['horseNumber']: row['mark'] for row in proposed}
-            for horse in result.get('horses') or []:
-                if horse.get('horseNumber') in by_no:
-                    horse['predMark'] = by_no[horse['horseNumber']]
-        else:
-            result['predictionStatus'] = 'new-model-unavailable'
-            result['recommendedBets'] = []
-        return result
     # No legacy or independently generated live forecast fallback: only a verified
     # unified pre-off receipt can originate new predictions. Immutable archived
     # originals may still be displayed by the guarded branch below.
