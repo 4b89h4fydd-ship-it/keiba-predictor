@@ -30,8 +30,12 @@ _NON_FINISH = ("中", "失")           # 競走中止・失格: a start without 
 
 
 def search_url(name: str) -> str:
-    # netkeiba expects EUC-JP query bytes; UTF-8 returns an empty result page.
-    return BASE + "/?" + urllib.parse.urlencode({"pid": "horse_list", "word": name}, encoding="euc-jp")
+    # netkeiba's horse search now expects UTF-8 query bytes: an EUC-JP word
+    # returns the "no matching data" page, while UTF-8 finds the horse (and
+    # redirects straight to its page on a unique hit). Verified against the
+    # live site 2026-11-16; the EUC-JP assumption silently emptied every
+    # name resolution through this provider.
+    return BASE + "/?" + urllib.parse.urlencode({"pid": "horse_list", "word": name})
 
 
 def _soup(html: str) -> BeautifulSoup:
@@ -81,8 +85,16 @@ def paginated_search(get: Callable[[str], str], name: str, birth_year: int | Non
             parsed = urllib.parse.urlsplit(url)
             if parsed.scheme != "https" or parsed.netloc != "db.netkeiba.com" or parsed.path != "/horse/list.html":
                 continue
-            params = urllib.parse.parse_qs(parsed.query, encoding="euc-jp", errors="replace")
-            if params.get("pid") != ["horse_list"] or params.get("word") != [name]:
+            # The advertised pagination links echo the search word in the
+            # encoding the search was submitted with; accept either decoding
+            # so a link is recognised whichever one the page used.
+            matched = False
+            for enc in ("utf-8", "euc-jp"):
+                params = urllib.parse.parse_qs(parsed.query, encoding=enc, errors="replace")
+                if params.get("pid") == ["horse_list"] and params.get("word") == [name]:
+                    matched = True
+                    break
+            if not matched:
                 continue
             raw_page = params.get("page", [""])[0]
             if raw_page.isdigit() and 2 <= int(raw_page) <= 12 and int(raw_page) not in visited:
@@ -96,7 +108,7 @@ def paginated_search(get: Callable[[str], str], name: str, birth_year: int | Non
             continue
         visited.add(page)
         url = BASE + "/horse/list.html?" + urllib.parse.urlencode(
-            {"pid": "horse_list", "word": name, "page": page}, encoding="euc-jp")
+            {"pid": "horse_list", "word": name, "page": page})
         try:
             html = get(url)
         except Exception:

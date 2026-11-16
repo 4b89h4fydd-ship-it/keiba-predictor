@@ -46,8 +46,11 @@ class ParserTests(unittest.TestCase):
         found = nk.parse_search(search_list(("2022100001", "テスト"), ("2022100002", "テストα")), "テスト")
         self.assertEqual([c["id"] for c in found], ["2022100001"])
 
-    def test_search_url_is_euc_jp(self):
-        self.assertIn("%A5%C6", nk.search_url("テスト"))
+    def test_search_url_is_utf8(self):
+        # Live-site behaviour (verified 2026-11-16): an EUC-JP word returns
+        # the "no matching data" page; UTF-8 finds the horse.
+        self.assertIn("%E3%83%86%E3%82%B9%E3%83%88", nk.search_url("テスト"))
+        self.assertNotIn("%A5%C6", nk.search_url("テスト"))
 
     def test_total_matches_listing_and_binds_to_race_date(self):
         stats = nk.build_stats(nk.parse_listing(listing_html(ROWS)), nk.parse_total(top_html(4)),
