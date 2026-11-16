@@ -18,7 +18,9 @@
     var historical=live&&live.source==='saved-preoff', stage64=live&&live.source==='stage64-preoff';
     var insufficient=live&&live.unavailable;
     var html=marks.length?marks.map(function(m){
-      return '<span class="ai-mark-item">'+escape(m.mark)+' '+escape(m.horseNumber)+' '+escape(m.name)+'</span>';
+      // v347: tapping a mark item opens that horse's detail page
+      // (data-horse-open, wired by the app's global binding).
+      return '<button type="button" class="ai-mark-item" data-horse-open="'+escape(m.horseNumber)+'" aria-label="'+escape(m.name)+'の詳細を開く">'+escape(m.mark)+' '+escape(m.horseNumber)+' '+escape(m.name)+'</button>';
     }).join('　'):'';
     return '<section id="section-aimarks" class="card"><h2>予想印</h2>'+
       (historical?'<p class="muted">発走前の保存原本（事後再計算なし）</p>':'')+

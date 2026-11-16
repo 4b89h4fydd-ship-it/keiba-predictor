@@ -94,11 +94,15 @@ html body .arv-dated-subbar .arv-sub-date>input{position:absolute;inset:0;width:
    supersedes the v1 dark "lightened" block): light background with
    dark text on every main screen; headers and primary accents in
    netkeiba-style dark green with white text. All text/background
-   pairs below meet WCAG AA contrast for their text size. */
+   pairs below meet WCAG AA contrast for their text size.
+   v3 (user decision 2026-11-17): the cream "paper" ground is pure
+   white (#ffffff) everywhere on the main screens; cards stay white
+   and are separated by light gray borders (#d9d9d9 family). State
+   tints (soon/running/finished) are unchanged accents. */
 html body .smart-shell.smart-home,
 html body .smart-shell.smart-venue-page,
 html body .smart-shell:has(> .smart-main.smart-race-page){
-  background:#f7f7f4!important;
+  background:#ffffff!important;
 }
 html body .smart-home .arv-unified-body{color:#1c1c1c!important}
 html body .smart-home .arv-unified-date{
@@ -995,17 +999,17 @@ html body .smart-home-subpage .arv-ai-metrics>div em{
    palette at the original high-specificity selectors instead of layering overrides. */
 html body .smart-shell:has(>.smart-main.smart-race-page),
 html body .smart-shell>.smart-main.smart-race-page{
- background:#f6f2e8!important;color:#000!important;
+ background:#ffffff!important;color:#000!important;
 }
 html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar{
- background:#f6f2e8!important;border-color:#d5c7b0!important;color:#000!important;
+ background:#ffffff!important;border-color:#d9d9d9!important;color:#000!important;
 }
 html body .smart-shell:has(>.smart-main.smart-race-page)>.smart-topbar .smart-head-copy strong{color:#000!important}
 html body .smart-race-page .smart-race-head,
 html body .smart-race-page .smart-race-header,
 html body .smart-race-page .smart-race-info,
 html body .smart-race-page .smart-race-summary{
- background:#f6f2e8!important;color:#000!important;border-color:#d5c7b0!important;
+ background:#ffffff!important;color:#000!important;border-color:#d9d9d9!important;
 }
 html body .smart-race-page .smart-race-head h1,
 html body .smart-race-page .smart-race-meta,
@@ -1335,7 +1339,7 @@ html body .smart-shell.smart-home>.arv-simple-brand img{
 html body,html body #app,html body .smart-shell,html body .smart-main,
 html body .smart-home-subpage,html body .smart-race-page,
 html body .smart-venue-page,html body .smart-venue-page .smart-main{
- background:#f6f2e8!important;color:#181818!important;
+ background:#ffffff!important;color:#181818!important;
 }
 html body .smart-shell.smart-home>.arv-simple-brand,
 html body .smart-shell.smart-home>.smart-main.smart-home-main,
@@ -1343,7 +1347,7 @@ html body .smart-shell.smart-home .arv-unified-body,
 html body .smart-home .arv-all-panel,
 html body .smart-home .arv-all-venue,
 html body .smart-home .arv-favorites-home{
- background:#f6f2e8!important;
+ background:#ffffff!important;
 }
 html body .smart-home .arv-unified-date,
 html body .smart-home .arv-unified-action,
@@ -1369,7 +1373,7 @@ html body .smart-race-page .smart-race-topbar,
 html body .smart-shell:has(.smart-race-page) .smart-race-topbar,
 html body .smart-shell:has(.smart-race-page) .smart-race-topbar button,
 html body .smart-topbar,html body .arv-dated-subbar{
- background:#f6f2e8!important;color:#171717!important;border-color:#d4cfc3!important;
+ background:#ffffff!important;color:#171717!important;border-color:#dcdcdc!important;
 }
 html body .smart-shell:has(.smart-race-page) .smart-race-topbar *,
 html body .smart-home-subpage .smart-section-title *,
@@ -1537,7 +1541,7 @@ html body .smart-race-page .rc-mark-legend{margin:3px 0 5px!important;line-heigh
 
 /* ARVEXQ light theme v4: single final palette, no competing dark override. */
 html,html body,html body:has(.smart-home){
-  background:#fffaf3!important;background-color:#fffaf3!important;
+  background:#ffffff!important;background-color:#ffffff!important;
 }
 html body .smart-shell.smart-home,
 html body .smart-shell.smart-home>.smart-main.smart-home-main,
@@ -1548,7 +1552,7 @@ html body .smart-shell.smart-home .arv-all-panel,
 html body .smart-shell.smart-home .arv-all-circuit,
 html body .smart-shell.smart-home .arv-all-venue,
 html body .smart-shell.smart-home .arv-favorites-home{
-  background:#fffaf3!important;background-image:none!important;
+  background:#ffffff!important;background-image:none!important;
   color:#24251e!important;box-shadow:none!important;
 }
 html body .smart-shell.smart-home .arv-unified-date{
@@ -1641,7 +1645,7 @@ html body .smart-shell.smart-home .arv-favorites-heading{
    This is presentation only: preserve marks, frame colors, odds and result states. */
 html body .smart-home-subpage,html body .smart-venue-page,
 html body .smart-race-page,html body .bet-detail-page-shell,
-html body .pace-stage-page-shell{background:#fffaf3!important;color:#292820!important}
+html body .pace-stage-page-shell{background:#ffffff!important;color:#292820!important}
 html body .smart-shell:has(.smart-home-subpage)>.smart-topbar,
 html body .smart-shell:has(.smart-venue-page)>.smart-topbar,
 html body .smart-shell:has(.smart-race-page)>.smart-topbar,
@@ -1659,10 +1663,10 @@ html body .smart-home-subpage .smart-ai-daily,
 html body .smart-venue-page .smart-race-section,
 html body .smart-race-page .smart-race-head,
 html body .smart-race-page .card{
- background:#fffdf8!important;border-color:#ded4c3!important;color:#292820!important;
+ background:#ffffff!important;border-color:#dddddd!important;color:#292820!important;
 }
 html body .smart-venue-page .smart-race-row:not(.final):not([data-race-state="elapsed"]):not([data-race-state="finished"]){
- background:#fffdf8!important;border-color:#e1d5c5!important
+ background:#ffffff!important;border-color:#e0e0e0!important
 }
 html body .smart-race-page .smart-race-tabs,
 html body .smart-race-page .race-nav-v230-top{
@@ -1679,7 +1683,7 @@ html body .smart-race-page .race-nav-v230-btn.active{
 /* Ticket recommendation card, including nested sections and labels. */
 html body .arv-three-bet,html body .bet-detail-page-shell .arv-three-bet,
 html body .smart-race-page .arv-three-bet{
- background:#fffaf0!important;background-image:none!important;border-color:#d9c6a8!important;
+ background:#ffffff!important;background-image:none!important;border-color:#d9d9d9!important;
  color:#2d2b25!important;box-shadow:none!important
 }
 html body .arv-three-bet .ai-bet-head,
@@ -1688,7 +1692,7 @@ html body .arv-three-bet .arv-three-ticket,
 html body .arv-three-bet .ai-bet-meta>span,
 html body .arv-three-bet .fixed-pick-box,
 html body .arv-three-bet .bet-mark-guide{
- background:#fffdf8!important;background-image:none!important;
+ background:#ffffff!important;background-image:none!important;
  border-color:#ddcdb7!important;color:#2d2b25!important;box-shadow:none!important
 }
 html body .arv-three-bet h2,html body .arv-three-bet h3,
@@ -1721,7 +1725,7 @@ html body .smart-race-page .pace-stage-menu-card,
 html body .smart-race-page .pace-text-timeline,
 html body .smart-race-page .pace-formation-track,
 html body .pace-stage-page-shell .card{
- background:#fffaf0!important;background-image:none!important;border-color:#dccab0!important;color:#292820!important
+ background:#ffffff!important;background-image:none!important;border-color:#dcdcdc!important;color:#292820!important
 }
 html body .smart-race-page .ai-stage-event,
 html body .smart-race-page .pace-stage-menu-btn{
@@ -1732,7 +1736,7 @@ html body .smart-race-page .pace-formation-tap-hint{color:#4e483d!important}
 html body .smart-race-page .ai-stage-tabs button.active{background:#f1d18a!important;color:#2c251b!important}
 html body .smart-race-page .ai-stage-tabs button:not(.active){background:#f5efe3!important;color:#35312b!important}
 /* Hero is now loaded from an existing, versioned image asset. */
-html body .smart-shell.smart-home>.arv-unified-hero{background:#fffaf3!important}
+html body .smart-shell.smart-home>.arv-unified-hero{background:#ffffff!important}
 html body .smart-shell.smart-home>.arv-unified-hero img{display:block!important;object-fit:cover!important}
 
 /* Approved paper-and-ink identity; top screen matches the brush image background. */
@@ -1740,7 +1744,7 @@ html body .smart-shell.smart-home>.arv-unified-hero{
  width:100%!important;max-width:920px!important;height:auto!important;
  aspect-ratio:3/1!important;position:relative!important;inset:auto!important;
  transform:none!important;margin:0 auto!important;padding:0!important;
- background:#f6f2e8!important;border:0!important;box-shadow:none!important;
+ background:#ffffff!important;border:0!important;box-shadow:none!important;
 }
 html body .smart-shell.smart-home>.arv-unified-hero img{
  width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;
@@ -1756,7 +1760,7 @@ html body .smart-shell.smart-home .arv-all-panel,
 html body .smart-shell.smart-home .arv-all-circuit,
 html body .smart-shell.smart-home .arv-all-venue,
 html body .smart-shell.smart-home .arv-favorites-home{
- background:#f6f2e8!important;background-image:none!important;color:#000!important;
+ background:#ffffff!important;background-image:none!important;color:#000!important;
 }
 html body .smart-shell.smart-home .arv-unified-date{background:#fff9ee!important;color:#000!important;border-color:#c0b09b!important}
 html body .smart-shell.smart-home .arv-unified-action{color:#000!important}
@@ -1781,7 +1785,7 @@ html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(
 html body .smart-shell.smart-home .arv-all-race[data-race-state="finished"]:not(:disabled) small{color:#fff!important}
 
 /* ARVEXQ GLOBAL PAPER THEME: all screens, panels, tabs, and buttons */
-:root{--arv-paper:#f6f2e8;--arv-paper-raised:#fff9ef;--arv-paper-border:#d1c2a9;--arv-ink:#000}
+:root{--arv-paper:#ffffff;--arv-paper-raised:#ffffff;--arv-paper-border:#d9d9d9;--arv-ink:#000}
 html,html body,html body .smart-shell,html body .smart-shell .smart-main,
 html body .smart-home,html body .smart-venue-page,html body .smart-home-subpage,
 html body .smart-race-page,html body .horse-detail-page-shell,
@@ -1863,8 +1867,8 @@ html body .smart-shell.horse-detail-page-shell>.horse-detail-topbar,
 html body .smart-shell.pace-stage-shell>.smart-race-topbar.pace-stage-topbar,
 html body .smart-shell .horse-detail-topbar,
 html body .smart-shell .pace-stage-topbar{
- background:#f6f2e8!important;background-image:none!important;color:#000!important;
- border-color:#d1c2a9!important;box-shadow:none!important;
+ background:#ffffff!important;background-image:none!important;color:#000!important;
+ border-color:#d9d9d9!important;box-shadow:none!important;
 }
 html body .smart-shell .horse-detail-top-title,
 html body .smart-shell .horse-detail-top-title *,
@@ -1895,8 +1899,8 @@ html body .smart-shell .pace-stage-menu-group,
 html body .smart-shell .pace-stage-menu-btn,
 html body .smart-shell .pace-stage-entry,
 html body .smart-shell .pace-stage-entry-btn{
- background:#f6f2e8!important;background-image:none!important;color:#000!important;
- border-color:#d1c2a9!important;box-shadow:none!important;
+ background:#ffffff!important;background-image:none!important;color:#000!important;
+ border-color:#d9d9d9!important;box-shadow:none!important;
 }
 html body .smart-shell .horse-detail-page .horse-info-cell small,
 html body .smart-shell .horse-detail-page .horse-info-cell b,
@@ -1915,8 +1919,8 @@ html body .smart-shell>header.smart-race-topbar,
 html body .smart-shell>header.arv-dated-subbar,
 html body .smart-shell>header.smart-section-topbar,
 html body .smart-shell.pace-stage-shell>header.pace-stage-topbar{
- background:#f6f2e8!important;background-image:none!important;
- border-color:#d0c3af!important;color:#000!important;
+ background:#ffffff!important;background-image:none!important;
+ border-color:#d9d9d9!important;color:#000!important;
  box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
 html body .smart-shell>header.smart-topbar .smart-head-copy,
@@ -1943,8 +1947,8 @@ html body .smart-shell .smart-race-tabs-wrap,
 html body .smart-shell .smart-race-tabs-container,
 html body .smart-shell .smart-race-panels,
 html body .smart-shell .smart-race-tabs{
- background:#f6f2e8!important;background-image:none!important;
- box-shadow:none!important;border-color:#d0c3af!important;
+ background:#ffffff!important;background-image:none!important;
+ box-shadow:none!important;border-color:#d9d9d9!important;
 }
 /* Special picks used white and pale blue letters on pale paper. */
 html body .smart-shell .smart-fixed-picks,
@@ -1960,11 +1964,11 @@ html body .smart-shell .fixed-pick-empty *{
  color:#000!important;opacity:1!important;text-shadow:none!important;
 }
 html body .smart-shell .fixed-pick-row{
- background:#fffaf0!important;border-color:#d0c3af!important;
+ background:#ffffff!important;border-color:#d9d9d9!important;
 }
 html body .smart-shell .smart-fixed-picks-head,
 html body .smart-shell .fixed-pick-box-body{
- background:#f6f2e8!important;border-color:#d0c3af!important;
+ background:#ffffff!important;border-color:#d9d9d9!important;
 }
 html body .smart-shell .fixed-pick-row :is(small,time,em),
 html body .smart-shell .smart-fixed-picks-head small{color:#000!important;opacity:1!important}
@@ -1976,8 +1980,8 @@ html body .smart-shell>header.pace-stage-topbar,
 html body .smart-shell>header.horse-detail-topbar,
 html body .smart-shell>header.arv-dated-subbar,
 html body .smart-shell>header.smart-section-topbar{
- background:#f6f2e8!important;background-image:none!important;color:#000!important;
- border:0!important;border-bottom:1px solid #d5c7b0!important;
+ background:#ffffff!important;background-image:none!important;color:#000!important;
+ border:0!important;border-bottom:1px solid #d9d9d9!important;
  box-shadow:none!important;
 }
 html body .smart-shell>header.smart-topbar :is(strong,small,span,b),
@@ -1989,11 +1993,11 @@ html body .smart-shell>header.horse-detail-topbar :is(strong,small,span,b){
 html body .smart-race-page .race-nav-v230,
 html body .smart-race-page .race-nav-v230-row,
 html body .smart-race-page .race-nav-v230-top{
- background:#f6f2e8!important;background-image:none!important;
- border-color:#d5c7b0!important;box-shadow:none!important;
+ background:#ffffff!important;background-image:none!important;
+ border-color:#d9d9d9!important;box-shadow:none!important;
 }
 html body .smart-race-page .race-nav-v230-btn{
- background:#fffaf0!important;background-image:none!important;
+ background:#ffffff!important;background-image:none!important;
  border-color:#cbb99e!important;color:#000!important;box-shadow:none!important;
 }
 html body .smart-race-page .race-nav-v230-btn.active{
@@ -2012,8 +2016,8 @@ html body .smart-shell.pace-stage-shell .pace-formation-track,
 html body .smart-shell.pace-stage-shell .pace-stage-jump,
 html body .smart-shell.pace-stage-shell .pace-stage-narrative,
 html body .smart-shell.pace-stage-shell .pace-stage-menu{
- background:#f6f2e8!important;background-image:none!important;
- border-color:#d5c7b0!important;box-shadow:none!important;color:#000!important;
+ background:#ffffff!important;background-image:none!important;
+ border-color:#d9d9d9!important;box-shadow:none!important;color:#000!important;
 }
 html body .smart-shell.pace-stage-shell .pace-stage-explain :is(p,span,small,b,strong,h2),
 html body .smart-shell.pace-stage-shell .pace-formation-card :is(p,span,small,b,strong,h2){
@@ -2061,7 +2065,7 @@ html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
 html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
  .ai-bet-meta>span,.arv-three-section,.arv-three-ticket,
  .arv-three-combo,.arv-three-check,.ai-bet-why,.bet-mark-guide
-){background:#fff9ef!important;background-image:none!important;border-color:#c7b698!important}
+){background:#ffffff!important;background-image:none!important;border-color:#cccccc!important}
 html body .smart-shell.bet-detail-page-shell .arv-three-bet .arv-three-combo{color:#171717!important}
 html body .smart-shell.bet-detail-page-shell .arv-three-bet :is(
  .ai-bet-meta b,.arv-three-budget strong
@@ -2077,7 +2081,7 @@ html body .smart-shell .smart-race-page :is(
 ){color:#171717!important;opacity:1!important;text-shadow:none!important}
 html body .smart-shell .smart-race-page :is(
  .pace-panel-direct,.pace-stage-menu-card,.pace-text-timeline,.ai-stage-event
-){background:#f6f2e8!important;border-color:#c7b698!important}
+){background:#ffffff!important;border-color:#cccccc!important}
 html body .smart-shell :is(
  .smart-race-content .muted,.smart-race-content .small,
  .smart-race-content .note,.smart-race-content small,
@@ -2132,7 +2136,7 @@ html body .smart-shell.smart-home>.arv-unified-hero,
 html body .smart-shell.smart-home>.arv-simple-brand{
  opacity:1!important;filter:none!important;backdrop-filter:none!important;
  -webkit-backdrop-filter:none!important;mix-blend-mode:normal!important;
- background:#f6f2e8!important;background-image:none!important;
+ background:#ffffff!important;background-image:none!important;
  box-shadow:none!important;text-shadow:none!important;
 }
 html body .smart-shell.smart-home>.arv-unified-hero::before,
@@ -2208,7 +2212,7 @@ html body .smart-shell .arv-race-status-label{
  position:relative!important;width:max-content!important;max-width:100%!important;
  margin:3px 0 0!important;padding:2px 7px!important;
  border-radius:5px!important;border:1px solid #746c5e!important;
- background:#f6f2e8!important;color:#25221e!important;
+ background:#ffffff!important;color:#25221e!important;
  font-size:11px!important;line-height:1.4!important;font-weight:900!important;
  white-space:nowrap!important;opacity:1!important;text-shadow:none!important
 }

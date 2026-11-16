@@ -956,32 +956,62 @@ function racecardBandWinText(r,no,x){
    on phones (user report 2026-11-16, Kanazawa 1R screenshot), so the
    rates now wrap naturally and are never cut. A horse with no past
    runs still gets the strip itself, the 勝率 and the mark button. */
+/* v347 — the factual-rates lines （芝/ダ per-surface 1着率・連対率・
+   3着率） shared by the racecard sub-line and the analysis tab. */
+function racecardRatesBodyHtml(r,h){
+  var rates=horseRecordRatesBySurface(h);
+  if(!rates)return '<div class="rc-v343-nodata">過去走データなし</div>';
+  var lines=raceSurfaceOrder(r).map(function(k){
+    var g=rates[k];if(!g)return '';
+    return '<div class="rc-v343-rates"><span class="rc-v343-surf rc-v343-surf-'+k+'">'+(k==='turf'?'芝':'ダ')+'</span>'
+      +'<span class="rc-v343-rates-txt">1着率 '+g.win+'%　連対率 '+g.place+'%　3着率 '+g.show+'%（'+g.count+'走）</span></div>';
+  }).join('');
+  if(!lines)lines='<div class="rc-v343-nodata">芝・ダート別の実績データなし</div>';
+  return lines+(rates.unknown?'<div class="rc-v343-unknown">馬場不明の過去走 '+rates.unknown+'走は率に含めていません</div>':'');
+}
 function racecardSublineHtml(r,h,x){
-  var scratch=isScratchHorse(h),no=n(h.horseNumber),rates=horseRecordRatesBySurface(h),
+  var scratch=isScratchHorse(h),no=n(h.horseNumber),
       checked=!scratch&&isUserMarked(r,no),
       winTxt=racecardBandWinText(r,no,x);
   var head='<div class="rc-v343-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
     +'<span class="rc-v341-win'+(winTxt?'':' na')+'">'+(winTxt||'勝率 ―')+'</span>'
     +(scratch?'':'<button type="button" class="rc-v343-check'+(checked?' is-on':'')+'" data-user-mark="'+esc(no)+'" aria-pressed="'+checked+'" aria-label="自分の印（現在：'+(checked?'チェック済み':'未チェック')+'）。タップでオン・オフを切り替えます"><span class="rc-v343-check-box" aria-hidden="true">'+(checked?'☑️':'☐')+'</span><span class="rc-v343-check-label">自分の印</span></button>')
     +'</div>';
-  var body='';
-  if(!rates){
-    body='<div class="rc-v343-nodata">過去走データなし</div>';
-  }else{
-    var lines=raceSurfaceOrder(r).map(function(k){
-      var g=rates[k];if(!g)return '';
-      return '<div class="rc-v343-rates"><span class="rc-v343-surf rc-v343-surf-'+k+'">'+(k==='turf'?'芝':'ダ')+'</span>'
-        +'<span class="rc-v343-rates-txt">1着率 '+g.win+'%　連対率 '+g.place+'%　3着率 '+g.show+'%（'+g.count+'走）</span></div>';
-    }).join('');
-    if(!lines)lines='<div class="rc-v343-nodata">芝・ダート別の実績データなし</div>';
-    body=lines+(rates.unknown?'<div class="rc-v343-unknown">馬場不明の過去走 '+rates.unknown+'走は率に含めていません</div>':'');
-  }
   return '<div class="rc-v340-sub rc-v341-sub rc-v343-sub" style="display:block">'
-    +head+body
+    +head+racecardRatesBodyHtml(r,h)
     +'</div>';
 }
+/* v347 — データ分析 tab: the 全頭診断 fold and the per-horse 勝率・
+   実績率 bands moved here from the racecard (user decision
+   2026-11-17). The racecard keeps only the basic card (number, name,
+   jockey, weight, body weight) plus the forecast mark and the user's
+   own check column. Horse names here open the same horse detail page
+   as everywhere else (data-horse-open). */
+function analysisDiagnosisHtml(r,p){
+  return window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse,open:state.diagnosisOpenId!=null&&String(state.diagnosisOpenId)===String(r.id)}):''
+}
+function analysisRatesSection(r,p){
+  var hs=(r.horses||[]).filter(function(h){return h&&n(h.horseNumber)>0}).slice().sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});
+  var rows=hs.map(function(h){
+    var x=(p.rows||[]).find(function(z){return z&&z.horse&&n(z.horse.horseNumber)===n(h.horseNumber)}),
+        scratch=isScratchHorse(h),no=n(h.horseNumber),name=horseDisplayName(r,h),
+        winTxt=racecardBandWinText(r,no,x);
+    return '<div class="arv-analysis-rate-row">'
+      +'<div class="arv-analysis-rate-head">'+badge(h)
+      +(scratch?'<span class="arv-analysis-rate-name">'+esc(name)+'</span>':'<button type="button" class="arv-analysis-rate-name" data-horse-open="'+esc(no)+'" aria-label="'+esc(name)+'の詳細を開く">'+esc(name)+'</button>')
+      +'<span class="rc-v341-win'+(winTxt?'':' na')+'">'+(winTxt||'勝率 ―')+'</span></div>'
+      +racecardRatesBodyHtml(r,h)
+      +'</div>';
+  }).join('');
+  return '<section class="card arv-analysis-rates"><h2>勝率・実績率</h2>'
+    +'<div class="rc-v340-note">「勝率」はAI予想の推定値です。1着率・連対率・3着率は取得済みの過去走（着順が判明した分）から計算した実績で、芝とダートに分けて表示します（分母はそれぞれの走数）。馬場が不明な過去走は率に含めていません。3着率は3着以内の率です。馬名をタップするとその馬の詳細が開きます。</div>'
+    +rows+'</section>';
+}
 function racecardUserMarkToolsHtml(r){
-  return '<div class="rc-v340-note">「自分の印」は出走表の各馬の印の列にあるチェック（☑）と、各馬の下段のボタンで付けられ、この端末にだけ保存されます（AI予想の印とは別です）。各馬の下の「勝率」はAI予想の推定値です。1着率・連対率・3着率は取得済みの過去走（着順が判明した分）から計算した実績で、芝とダートに分けて表示します（分母はそれぞれの走数）。馬場が不明な過去走は率に含めていません。3着率は3着以内の率です。</div>'
+  /* v347 — the 勝率・実績率 bands and their explanation moved to the
+     データ分析 tab (user decision 2026-11-17); this note now covers
+     only the user's own marks, which stay on the racecard. */
+  return '<div class="rc-v340-note">「自分の印」は出走表の各馬の印の列にあるチェック（☑）で付けられ、この端末にだけ保存されます（AI予想の印とは別です）。各馬の勝率・実績率は「データ分析」タブで見られます。</div>'
     +(hasUserMarks(r)?'<button type="button" class="rc-v340-clear" data-user-mark-clear="1">自分の印を全て消す</button>':'');
 }
 function sortedHorseRows(rows){return(rows||[]).slice().sort(function(a,b){return n(a.horse.horseNumber)-n(b.horse.horseNumber)})}
@@ -1471,8 +1501,9 @@ function racecardEntryRow(r,h,x){
       +'<b>'+esc(weightMain)+'</b><span class="rc-weight-delta">'+esc(weightDelta||'　')+'</span>'
     +'</div>'
     +'<div class="rc-v336-odds rc-odds" data-odds-no="'+esc(no)+'">'+racecardOddsHtml(h,r)+'</div>'
-    +'</div>'
-    +racecardSublineHtml(r,h,x);
+    +'</div>';
+    /* v347 — no sub-line band under the racecard row: the 勝率・実績率
+       bands live on the データ分析 tab now (analysisRatesSection). */
 }
 function morningSavedMarkRows(r){
   // A pre-off loading/partial racecard must not display archived marks as live AI output.
@@ -2305,7 +2336,7 @@ function paceDisplayPanel(r,p){
     ? paceOutcomeSection(r,p)+paceMapSection(r,p)
     : paceMapSection(r,p)+pacePanel(r,p);
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+(window.ARVEXQDiagnosisView?window.ARVEXQDiagnosisView.render(r,p,{original:authorizedPreOffMarks,esc:esc,started:function(x){return raceMarkClock(x).started},scratch:isScratchHorse,open:state.diagnosisOpenId!=null&&String(state.diagnosisOpenId)===String(r.id)}):'')+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+paceDisplayPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出馬表・予想・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+analysisDiagnosisHtml(r,p)+analysisRatesSection(r,p)+paceDisplayPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出馬表・予想・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -3220,10 +3251,10 @@ function renderVenue(){
     cinematicFooter()+
   '</div>'
 }
-function smartInlineResult(r){
-  var final=isFinal(r),flash=isFlash(r),any=hasAnyResultData(r),ready=hasResultData(r),f=((r.result||{}).finishers||[]).slice().sort(function(a,b){return n(a.finish)-n(b.finish)}).slice(0,3),nums=ready&&f.length?f.map(function(x){return n(x.horseNumber)}).join(' - '):'';
-  return '<button type="button" class="smart-inline-result '+(final?'final':(flash?'flash':''))+'" data-panel="result"><span>レース結果</span><strong>'+(final?(ready?'確定':'着順未取得'):(flash?(any?'速報':'速報待ち'):(String(r.date||'')<today()?'結果未取得':'未確定')))+'</strong></button>'
-}
+/* v347 — the yellow result-status box that sat at the right of the
+   race header (「レース結果 未確定」) is removed (user decision
+   2026-11-17). Results live on the 結果・払戻 tab only; the header
+   keeps the race name, post time and the upset band. */
 function officialRaceLinks(r){
   var central=String((r&&r.circuit)||state.circuit||'')==='中央';
   return central?{
@@ -3248,7 +3279,7 @@ function smartRaceHead(r){
         '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span>'+riskLabelBadge(r)+'<div class="smart-race-title-stack"><div class="smart-race-meta">'+esc(r.surface||'')+' '+esc(r.distance||'—')+'m　'+esc(r.weather||'')+' '+esc(r.condition||'')+'　'+count+'</div></div>'+cinematicGrade(r)+'</div>'+
         officialRaceActions(r)+
       '</div>'+
-      '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time>'+smartInlineResult(r)+'</div>'+
+      '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time></div>'+
     '</div>'+upsetBand(r)+riskLabelNote(r)+
   '</section>'
 }
@@ -3366,7 +3397,7 @@ function actualCornerLabel(i,count){if(count===1)return"4角";if(count===2)retur
 function actualOrderAt(r,idx){var f=(r.result&&r.result.finishers||[]).slice(),a=[];for(var i=0;i<f.length;i++){var p=f[i].cornerPositions||[],v=n(p[idx],0);if(v)a.push({x:f[i],pos:v})}a.sort(function(u,v){return u.pos-v.pos||n(u.x.finish)-n(v.x.finish)});return a}
 function renderResultLink(r){var final=isFinal(r),flash=isFlash(r),any=hasAnyResultData(r),label=final?'確定':(flash?'速報':'未確定');return '<details class="card result-disclosure"><summary style="cursor:pointer;padding:8px 0;font-weight:700">レース結果　'+label+' ＞</summary>'+(any?renderResult(r)+(final?renderPayouts(r):'')+renderActualFlow(r):'<p class="muted">'+(flash?'速報取得中です。':'結果はまだ出ていません。')+'</p>')+'</details>'}
 function renderPayouts(r){var result=r.result||{},rows=result.payouts||[],types=['単勝','複勝','枠連','馬連','ワイド','馬単','3連複','3連単'],head=state.payoutBusy?'<span class="muted">　取得中…</span>':(rows.length?'':('<span class="muted">　'+esc(result.payoutError||'取得待ち')+'</span>'));return '<section class="card"><div class="section-title">払い戻し'+head+'</div>'+types.map(function(t){var a=rows.filter(function(x){return x.type===t});return '<div style="padding:8px 0;border-bottom:1px solid #e4e7ec"><b>'+t+'</b>　'+(a.length?a.map(function(x){return esc(x.combination)+'　'+(x.amount==null?esc(x.note||'未取得'):fmtMoney(x.amount)+'円')}).join('<br>'):'<span class="muted">'+(state.payoutBusy?'取得中…':'—')+'</span>')+'</div>'}).join('')+'</section>'}
-function resultRowHtml(r,x){var h=horseByNo(r,x.horseNumber)||x;return'<div class="result-row"><span>'+esc(x.finishLabel||(x.finish?x.finish+'着':'—'))+'</span>'+badge(h)+'<span class="result-name">'+esc(x.name||h.name||"")+'</span><span>'+fmtTime(x.timeSeconds)+'</span></div>'}
+function resultRowHtml(r,x){var h=horseByNo(r,x.horseNumber)||x,nm=esc(x.name||h.name||""),onRoster=(r.horses||[]).some(function(z){return n(z.horseNumber)===n(x.horseNumber)});return'<div class="result-row"><span>'+esc(x.finishLabel||(x.finish?x.finish+'着':'—'))+'</span>'+badge(h)+(onRoster?'<button type="button" class="result-name result-name-btn" data-horse-open="'+esc(n(x.horseNumber))+'" aria-label="'+nm+'の詳細を開く">'+nm+'</button>':'<span class="result-name">'+nm+'</span>')+'<span>'+fmtTime(x.timeSeconds)+'</span></div>'}
 function renderResult(r){if(!hasAnyResultData(r))return"";var final=isFinal(r),label=final?"確定":"速報",badgeCls=final?"final-badge":"flash-badge",results=(r.result.finishers||[]).slice();(r.horses||[]).forEach(function(h){if(!results.some(function(z){return n(z.horseNumber)===n(h.horseNumber)}))results.push({horseNumber:h.horseNumber,name:h.name,finishLabel:h.status||"結果待ち"})});var f=results.sort(function(a,b){return (n(a.finish)||999)-(n(b.finish)||999)}),top=f.slice(0,5),rest=f.slice(5);return'<section class="card result-card"><div class="section-title">レース結果 <span class="'+badgeCls+'">'+(final&&!hasResultData(r)?'一部取得':label)+'</span></div>'+(final?'':'<div class="muted" style="margin-bottom:7px">速報値です。確定まで自動更新します。</div>')+'<div class="muted" style="margin-bottom:7px">馬場 '+esc(r.condition||'不明')+' / 天候 '+esc(r.weather||'不明')+'</div>'+top.map(function(x){return resultRowHtml(r,x)}).join("")+(rest.length?'<details class="result-more"><summary>6着以下を見る　'+rest.length+'頭</summary><div class="result-more-list">'+rest.map(function(x){return resultRowHtml(r,x)}).join("")+'</div></details>':'')+'</section>'}
 function gradeRank(g){return g==='S'?0:(g==='A'?1:(g==='B'?2:(g==='C'?3:9)))}
 
