@@ -21,7 +21,10 @@ const styleBaseline={
   "arvexq/ui/static/styles.css": "924bf5a30829c3bb",
   "arvexq/ui/static/styles/legacy_v118_v221.css": "f257fd1e4159db60",
   "arvexq/ui/static/styles/race_v222_plus.css": "d0f3c5933ba41ef0",
-  "arvexq/ui/static/sports/unified-home.css": "10899d661f666180",
+  // Re-pinned 2026-11-16: user-directed netkeiba-form light colour
+  // scheme (dark navy shells/rows -> light background, dark text,
+  // dark-green headers) in the home/venue/race theme block.
+  "arvexq/ui/static/sports/unified-home.css": "66b50d2501da2951",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
