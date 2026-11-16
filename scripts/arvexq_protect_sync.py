@@ -621,51 +621,6 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         # formation; retaining the prior research seal is preferable
         # to silently discarding the already captured comparison.
         out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
-    # Kyoto G1 emergency learned candidate is an immutable pre-off research
-    # artifact. Later odds/results or a failed full-day prefetch may not erase
-    # or forge it. Ignore a changed challenger from the same race entirely.
-    from arvexq.prediction.kikka_urgent import RACE_ID, candidate_marks
-    if str(old.get('id') or '') == RACE_ID:
-        original_marks = candidate_marks(old)
-        if original_marks:
-            # D1 retains the authentic before-off 'mark' originals, but the
-            # display projection removes the legacy 'mark' key. Supply an
-            # ADDITIVE markSymbol transport alias instead of overwriting the
-            # real protected marks, model hash, capture time or source hash.
-            original = copy.deepcopy(old['kikkaCandidate'])
-            if isinstance(original.get('marks'), list):
-                for row in original['marks']:
-                    if isinstance(row, dict) and row.get('mark') and not row.get('markSymbol'):
-                        row['markSymbol'] = row['mark']
-            out['kikkaCandidate'] = original
-            if candidate_marks(out) != original_marks:
-                raise ValueError('Kikuka display symbol alias did not preserve original hash')
-        elif 'kikkaCandidate' in old:
-            # Oct 25 D1 had marks that LOST their literal "mark" key in an
-            # old projection. It still preserves the authentic model/source
-            # SHA256. Repair ONLY the exact same before-off original hash,
-            # using newly generated, independently verified symbol fields.
-            # Do not modify a legitimate original or admit arbitrary new tips.
-            from arvexq.pipeline.persisted_inputs import may_create_prerace_prediction
-            old_c = old['kikkaCandidate']
-            new_c = out.get('kikkaCandidate')
-            same_original = (isinstance(old_c, dict) and isinstance(new_c, dict)
-                             and old_c.get('modelHash') == new_c.get('modelHash')
-                             and old_c.get('sourceHash') == new_c.get('sourceHash')
-                             and old_c.get('raceId') == new_c.get('raceId')
-                             and old_c.get('capturedAt') and new_c.get('capturedAt'))
-            if same_original and candidate_marks(out) and may_create_prerace_prediction(out):
-                # Keep the first real model's original pre-off capture time.
-                new_c['capturedAt'] = old_c['capturedAt']
-                if candidate_marks(out) is None:
-                    raise ValueError('Kikuka original capture timestamp invalid')
-                out['kikkaCandidate'] = new_c
-            else:
-                # Preserve even the invalid original bytes instead of erasing
-                # historic evidence or letting a foreign update overwrite it.
-                out['kikkaCandidate'] = copy.deepcopy(old_c)
-        elif 'kikkaCandidate' in out and candidate_marks(out) is None:
-            raise ValueError('new Kikuka challenger cannot be verified')
     # The full morning prediction is a permanent, first-published record.
     # It must survive a later live odds refresh, prefetch or result repair.
     baseline = old.get("morningMarkSnapshot")
