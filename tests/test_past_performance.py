@@ -111,6 +111,51 @@ class PastFiveContextTests(unittest.TestCase):
                              for h in candidate["horses"]), 1)
         self.assertNotIn("%", candidate["forecastText"])
 
+    def test_stored_seconds_key_feeds_last3f_observed(self):
+        # Regression (P2, 2026-11-16): stored details carry the closing
+        # sectional as "last3fSeconds", never as "last3f". normalize_run did
+        # not alias it, so last3fObserved was 0% in production while the raw
+        # value existed on ~94% of runs.
+        from arvexq.history import normalize_run
+        stored = {"date": "2026-09-20", "track": "大井", "title": "Ｃ２",
+                  "surface": "ダート", "distance": 1200, "condition": "良",
+                  "fieldSize": 14, "finish": 2, "timeSeconds": 74.6,
+                  "cornerPositions": [1, 1], "last3fSeconds": 39.3,
+                  "marginSeconds": 0.4}
+        self.assertEqual(normalize_run(stored)["last3f"], 39.3)
+        self.assertEqual(normalize_run({"last600Seconds": 36.1})["last3f"], 36.1)
+        self.assertEqual(normalize_run({"last3f": 35.0, "last3fSeconds": 39.3})["last3f"], 35.0)
+        a = analyze_past_performance({"allPastRuns": [stored]}, RACE)
+        self.assertEqual(a["datedRuns"], 1)
+        self.assertEqual(a["last3fObservedRuns"], 1)
+        self.assertTrue(a["runs"][0]["last3fObserved"])
+
+    def test_jra_class_evidence_reaches_past_five_context(self):
+        # Regression (P2, 2026-11-16): attach_jra_class_evidence existed but
+        # was never called on the detail path, so opponentLevelObserved was
+        # 0% even for JRA runs whose titles carry an explicit class.
+        from arvexq.features.horse_features import attach_race_features
+        jra_run = {"date": "2026-09-20", "track": "中山", "title": "3歳上1勝クラス",
+                   "surface": "芝", "distance": 1200, "condition": "良",
+                   "fieldSize": 10, "finish": 2, "cornerPositions": [3, 3],
+                   "last3fSeconds": 34.5, "marginSeconds": 0.2}
+        detail = {"date": "2026-10-09", "track": "中山", "surface": "芝",
+                  "condition": "良", "distance": 1200, "circuit": "中央",
+                  "horses": [{"horseNumber": 1, "allPastRuns": [dict(jra_run)]}]}
+        attach_race_features(detail)
+        past = detail["horseFeatures"][0]["pastPerformance"]
+        self.assertEqual(past["opponentLevelObservedRuns"], 1)
+        self.assertEqual(past["opponentLevelMean"], 2)  # 1勝クラス ordinal
+        # NAR: no source-backed level exists in stored runs; nothing inferred.
+        nar_detail = {"date": "2026-10-09", "track": "大井", "surface": "ダート",
+                      "condition": "良", "distance": 1200, "circuit": "地方",
+                      "horses": [{"horseNumber": 1, "allPastRuns": [
+                          {**jra_run, "track": "大井", "title": "Ｃ２"}]}]}
+        attach_race_features(nar_detail)
+        nar_past = nar_detail["horseFeatures"][0]["pastPerformance"]
+        self.assertEqual(nar_past["opponentLevelObservedRuns"], 0)
+        self.assertIsNone(nar_past["opponentLevelMean"])
+
     def test_date_at_or_after_off_never_used(self):
         h = {"recentRaces": [run("2026-10-09", 1), run("2026-10-10", 1)]}
         self.assertEqual(analyze_past_performance(h, RACE)["datedRuns"], 0)
