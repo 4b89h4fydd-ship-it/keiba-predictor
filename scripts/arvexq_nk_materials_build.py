@@ -48,9 +48,9 @@ normaliser between the collection side and that file; its inputs:
                       horse's "pace" field; the race's label is
                       carried as the entry's "paceLabel".
 
-Output format (version "nk-materials-v4"):
+Output format (version "nk-materials-v5"):
 
-  {"version": "nk-materials-v4", "date": ..., "source": ...,
+  {"version": "nk-materials-v5", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
@@ -497,7 +497,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     coverage["pace"] = sum(1 for h in all_horses
                            if h.get("pace") is not None)
     return {
-        "version": "nk-materials-v4",
+        "version": "nk-materials-v5",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),

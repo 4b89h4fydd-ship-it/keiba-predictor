@@ -9,7 +9,8 @@
 # retune them.
 #
 # ONE production-only deviation, recorded honestly (2026-11-17,
-# nk-materials-v4): integrate() below carries a `pace` term the
+# nk-materials-v4, merged into v5): integrate() below carries a
+# `pace` term the
 # research copy does not compute — the netkeiba AI pace forecast's
 # per-horse forecast positions, wired in by explicit user
 # instruction ("集めたデータは全部、予想に入れろ"). No historical
@@ -41,6 +42,12 @@ Form (transparent, no black box):
               + w_speed_overlap * overlap_z(h) # mean+-sd band overlap vs field
               + w_speed_fit   * fit_z(h)     # condition (dist/course) edge
               + w_speed_bias  * bias_z(h)    # course-vs-distance aptitude bias
+              + w_h2h         * h2h_z(h)     # head-to-head ahead rate (shrunk)
+              + w_mochitime   * mochitime_z(h)  # best time at today's
+                                             # conditions (raw seconds;
+                                             # the weight carries the sign)
+              + w_press       * press_z(h)   # newspaper marks, point-scored
+              + w_pedigree    * pedigree_z(h)  # sire course record (shrunk)
               + w_pace        * pace_z(h)    # AI pace-forecast position term
                                              # (production only, UNVALIDATED:
                                              #  see the header note)
@@ -430,7 +437,7 @@ DEFAULT_WEIGHTS = {  # smoke-only placeholders, NOT learned
     # pace: the AI pace-forecast position term (production-only,
     # UNVALIDATED — no historical data exists to learn or verify a
     # weight from). 0 here; the production adapter supplies the
-    # trial weight 0.10 and stamps it (nk-materials-v4).
+    # trial weight 0.10 and stamps it (nk-materials-v5).
     "pace": 0.0,
     # trend terms: 0 = off until learned on the 68-race collection
     "speed_slope": 0.0, "speed_dev": 0.0, "speed_vol": 0.0,
@@ -446,6 +453,12 @@ DEFAULT_WEIGHTS = {  # smoke-only placeholders, NOT learned
     "odds_drift": 0.0, "odds_wp_gap": 0.0,
     # head-to-head / best-time terms: 0 until learned (2026-11-16)
     "h2h": 0.0, "mochitime": 0.0,
+    # newspaper-mark / pedigree terms: 0 in the frozen defaults.
+    # The production adapter (rewrite/analysis/nk_materials.py,
+    # nk-materials-v5, 2026-11-17) opts in with trial weights by
+    # explicit user instruction; these terms have NOT passed a
+    # retrospective validation — see the adapter's docstring.
+    "press": 0.0, "pedigree": 0.0,
 }
 
 def integrate(horses, weights=None):
@@ -456,6 +469,10 @@ def integrate(horses, weights=None):
         nk_avg5 (5-run average index)|None, nk_best (best index)|None,
         nk_dist (distance index)|None, nk_course (course index)|None,
         front_rate|None,
+        h2h (head-to-head ahead rate, data-side shrunk)|None,
+        mochitime (best time in seconds at today's conditions)|None,
+        press_pts (newspaper mark points, research MARK_POINTS)|None,
+        pedigree_score (sire course score, data-side shrunk)|None,
         pace_score|None (production-only AI pace-forecast term:
         the adapter's signed position score in [-1, 1])
     Returns (probs dict num->p, coverage dict, per-horse detail list).
@@ -522,6 +539,8 @@ def integrate(horses, weights=None):
     odds_wp_gap_z = _zscores([f["odds_wp_gap"] for f in odds_feats])
     h2h_z = _zscores([h.get("h2h") for h in horses])
     mochitime_z = _zscores([h.get("mochitime") for h in horses])
+    press_z = _zscores([h.get("press_pts") for h in horses])
+    pedigree_z = _zscores([h.get("pedigree_score") for h in horses])
 
     logits, detail = {}, []
     for i, h in enumerate(horses):
@@ -570,6 +589,10 @@ def integrate(horses, weights=None):
             terms["h2h"] = w["h2h"] * h2h_z[i]
         if mochitime_z[i] is not None and w.get("mochitime"):
             terms["mochitime"] = w["mochitime"] * mochitime_z[i]
+        if press_z[i] is not None and w.get("press"):
+            terms["press"] = w["press"] * press_z[i]
+        if pedigree_z[i] is not None and w.get("pedigree"):
+            terms["pedigree"] = w["pedigree"] * pedigree_z[i]
         for v in terms.values():
             adj += v
         logits[h["num"]] = adj
@@ -583,6 +606,7 @@ def integrate(horses, weights=None):
                        "speed_overlap": overlap[i],
                        "speed_overlap_z": overlap_z[i],
                        "speed_fit_z": fit_z[i], "speed_bias_z": bias_z[i],
+                       "press_z": press_z[i], "pedigree_z": pedigree_z[i],
                        "terms": terms})
     mx = max(logits.values())
     ex = {k: math.exp(v - mx) for k, v in logits.items()}
@@ -610,6 +634,8 @@ def integrate(horses, weights=None):
         "odds_wp_gap": sum(1 for f in odds_feats if f["odds_wp_gap"] is not None),
         "h2h": sum(1 for h in horses if h.get("h2h") is not None),
         "mochitime": sum(1 for h in horses if h.get("mochitime") is not None),
+        "press": sum(1 for h in horses if h.get("press_pts") is not None),
+        "pedigree": sum(1 for h in horses if h.get("pedigree_score") is not None),
         "front_rate": sum(1 for h in horses if h.get("front_rate") is not None),
     }
     return probs, cov, detail

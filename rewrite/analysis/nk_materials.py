@@ -102,7 +102,61 @@ re-issues a v2-stamped pre-post JRA race exactly once under
 the trial; NAR races re-stamped by the same bump recompute
 identically.
 
-Pace term (v4, 2026-11-17, same user instruction — put ALL of
+All-materials terms (v5, 2026-11-17, the user's repeated
+instruction: put EVERYTHING in, now — "はよ全部いれろ"). The
+materials file has carried three more per-horse blocks since the
+builder's v2 extension (PR #570) that the adapter transported
+but never read, plus the newspaper marks the builder carries as
+"press". v5 wires all four into the evaluation as plain
+within-race z terms, through slots integrated_eval already had
+(h2h / mochitime) or gained alongside (press / pedigree):
+
+    mochitime  the horse's best time (seconds) under today's
+               conditions, exactly as the data-analysis tab
+               computes it (tier 1: same track/surface/distance;
+               lower tiers are the builder's recorded fallbacks).
+               Raw seconds are z-scored in-race; the weight is
+               NEGATIVE (-0.10) because a lower time is better —
+               the sign convention integrated_eval's own design
+               note prescribes for this slot.
+    h2h        the head-to-head ahead rate, shrunk toward the
+               neutral 0.5 with prior strength 3 duels:
+               (ahead + 3*0.5) / (duels + 3). A horse with one
+               lucky duel does not read as a proven dominator,
+               and a horse with no duels carries no value at all.
+               Weight +0.10.
+    pedigree   the sire's record at today's course (sireCourse:
+               starts / wins / top-3 from the collected
+               course-analysis sire table), shrunk toward a
+               generic 10-runner field (win 0.10, top-3 0.30)
+               with prior strength 10 starts, scored as the mean
+               of the two shrunk rates. A sire with no starts on
+               the table carries no value. Weight +0.10.
+    press      the newspaper marks, point-scored with the
+               research tree's MARK_POINTS (◎5 ○4 ▲3 △2 ☆1,
+               消/× 0) and averaged over the marks the collection
+               saved for the horse. A race whose collection saved
+               no per-horse marks (today's NAR file: press is
+               null throughout — the morning collection recorded
+               counts only) simply has no press term. Weight
+               +0.10.
+
+HONESTY RECORD: unlike the speed residual (frozen research
+weights) and the course terms (fit+calib-selected, and for JRA
+a marked trial), these four weights are NOT the output of any
+retrospective validation — no walk-forward measurement of
+bestTime / headToHead / pedigree / press as overlay terms on
+v9b exists. They enter at the same magnitude as the other
+material terms (0.10) by the user's explicit instruction, as a
+marked TRIAL: the stamp's weights label carries
+"all-materials-trial-20261117" with each weight whenever any of
+the four terms contributes, and forward results are the judge.
+(The version steps v3 -> v5 in the merged tree: v4 was the pace
+term's version on its own branch; the merged v5 carries both
+the pace term below and these four terms, definitions disjoint.)
+
+Pace term (v4, merged into v5, 2026-11-17, same user
+instruction — put ALL of
 the collected data in): the netkeiba AI pace forecast's
 per-horse forecast positions (start / 3-corner / 4-corner group
 diagrams, collected forward into pace-forecast.json and carried
@@ -144,8 +198,33 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v4"
+NK_MATERIALS_VERSION = "nk-materials-v5"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
+# All-materials trial terms (v5, see the module docstring):
+# bestTime / headToHead / pedigree / press at trial weights.
+# mochitime's sign is negative BY DESIGN (lower time = better);
+# the other three reward higher values. These weights are NOT
+# validated — the label says so on every stamp they touch.
+ALL_TERMS_WEIGHTS = {"mochitime": -0.10, "h2h": 0.10,
+                     "pedigree": 0.10, "press": 0.10}
+NK_ALL_TERMS_LABEL = (
+    "all-materials-trial-20261117(mochitime-0.10/h2h+0.10/"
+    "pedigree+0.10/press+0.10;unvalidated)")
+NK_ALL_TERMS_TRIAL = "all-materials-trial-20261117"
+# Newspaper mark points: the research tree's definition
+# (new-model features.py MARK_POINTS), verbatim.
+MARK_POINTS = {"◎": 5.0, "○": 4.0, "▲": 3.0, "△": 2.0, "☆": 1.0,
+               "消": 0.0, "×": 0.0}
+# Head-to-head shrinkage: toward the neutral ahead rate 0.5
+# with the strength of 3 prior duels (the same prior strength
+# integrated_eval's combo shrinkage uses).
+H2H_PRIOR_DUELS = 3.0
+H2H_PRIOR_RATE = 0.5
+# Sire-course shrinkage: toward a generic 10-runner field's
+# rates with the strength of 10 prior starts.
+SIRE_PRIOR_STARTS = 10.0
+SIRE_PRIOR_WIN_RATE = 0.10
+SIRE_PRIOR_TOP3_RATE = 0.30
 # Course-term weights for NAR races, selected on fit+calib only
 # (see the module docstring).
 COURSE_WEIGHTS_NAR = {"course_front": 0.10, "course_frame": 0.05}
@@ -230,10 +309,15 @@ def parse_materials_payload(payload) -> dict:
                       "courseAnalysis": dict|None,
                       "paceLabel": str|None}}.
 
-    Anything unreadable normalises to {} (no materials for the
-    date) or drops the offending race/horse — a malformed entry
-    must never take the lane down, and a dropped horse simply
-    receives no adjustment term.
+    Per horse the speed columns are read as numbers; the v2
+    blocks (bestTime / headToHead / pedigree) are carried as
+    dicts and press (the verbatim newspaper entry) as a dict or
+    string — the term helpers below read them defensively, so
+    carrying an odd shape costs the horse that term, never the
+    race. Anything unreadable normalises to {} (no materials
+    for the date) or drops the offending race/horse — a
+    malformed entry must never take the lane down, and a dropped
+    horse simply receives no adjustment term.
     """
     if not isinstance(payload, dict):
         return {}
@@ -260,6 +344,13 @@ def parse_materials_payload(payload) -> dict:
                 horse["nk_recent"] = (
                     [_num(v) for v in recent]
                     if isinstance(recent, list) else None)
+                for field in ("bestTime", "headToHead", "pedigree"):
+                    block = values.get(field)
+                    horse[field] = (block if isinstance(block, dict)
+                                    else None)
+                press = values.get("press")
+                horse["press"] = (press if isinstance(press, (dict, str))
+                                  else None)
                 horse["pace"] = _parse_pace(values.get("pace"))
                 horses[number] = horse
         course = entry.get("courseAnalysis")
@@ -280,6 +371,81 @@ def speed_coverage(entry) -> int:
         return 0
     return sum(1 for h in (entry.get("horses") or {}).values()
                if isinstance(h, dict) and h.get("nk_avg5") is not None)
+
+
+# --------------------------------------- all-materials terms (v5)
+def best_time_seconds(best_time):
+    """The bestTime block's seconds, or None. The block is the
+    builder's recorded best time under today's conditions (its
+    tier fallback choice travels with the value in the file)."""
+    if not isinstance(best_time, dict):
+        return None
+    return _num(best_time.get("seconds"))
+
+
+def h2h_shrunk_rate(head_to_head):
+    """The head-to-head ahead rate shrunk toward the neutral
+    0.5: (ahead + PRIOR*0.5) / (duels + PRIOR). None when the
+    horse has no recorded duels — no evidence, no term (a
+    shrunk 0.5 for every unmet horse would still z-score
+    against the met horses and invent a ranking)."""
+    if not isinstance(head_to_head, dict):
+        return None
+    duels = _num(head_to_head.get("duels"))
+    ahead = _num(head_to_head.get("ahead"))
+    if duels is None or ahead is None or duels <= 0:
+        return None
+    return (ahead + H2H_PRIOR_DUELS * H2H_PRIOR_RATE) / (
+        duels + H2H_PRIOR_DUELS)
+
+
+def sire_course_score(pedigree):
+    """The sire's record at today's course as one score: the
+    mean of the win rate and the top-3 rate, each shrunk toward
+    a generic 10-runner field (0.10 / 0.30) with prior strength
+    SIRE_PRIOR_STARTS. None when the pedigree block or its
+    sireCourse cell is missing, or the sire has no starts on
+    the table — no evidence, no term."""
+    if not isinstance(pedigree, dict):
+        return None
+    cell = pedigree.get("sireCourse")
+    if not isinstance(cell, dict):
+        return None
+    starts = _num(cell.get("starts"))
+    wins = _num(cell.get("wins"))
+    top3 = _num(cell.get("top3"))
+    if starts is None or wins is None or top3 is None or starts <= 0:
+        return None
+    m = SIRE_PRIOR_STARTS
+    win_rate = (wins + m * SIRE_PRIOR_WIN_RATE) / (starts + m)
+    top3_rate = (top3 + m * SIRE_PRIOR_TOP3_RATE) / (starts + m)
+    return (win_rate + top3_rate) / 2.0
+
+
+def press_points(press):
+    """The newspaper marks as one number: MARK_POINTS averaged
+    over every mark the collection saved for the horse. The
+    verbatim entry may be a bare mark string, or a dict with a
+    "mark" string and/or a "marks" mapping (source -> mark) or
+    list. Unknown marks are ignored; no readable mark at all
+    means None — no evidence, no term."""
+    marks = []
+    if isinstance(press, str):
+        marks = [press]
+    elif isinstance(press, dict):
+        single = press.get("mark")
+        if isinstance(single, str):
+            marks.append(single)
+        saved = press.get("marks")
+        if isinstance(saved, dict):
+            marks.extend(v for v in saved.values()
+                         if isinstance(v, str))
+        elif isinstance(saved, list):
+            marks.extend(v for v in saved if isinstance(v, str))
+    points = [MARK_POINTS[m] for m in marks if m in MARK_POINTS]
+    if not points:
+        return None
+    return sum(points) / len(points)
 
 
 # ------------------------------------------------- course terms
@@ -465,11 +631,20 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     or a race without course inputs — runs with the frozen
     defaults, where the course weights are 0.
 
-    The pace term (v4) is segment-independent: it contributes
-    whenever the entry carries pace-forecast positions and a
-    directional pace label (H / S), at the UNVALIDATED trial
-    weight PACE_WEIGHT; when it contributes, info["paceTrial"]
-    is set and the weights label carries NK_PACE_WEIGHTS_LABEL.
+    The v5 all-materials terms (mochitime / h2h / pedigree /
+    press, ALL_TERMS_WEIGHTS) are segment-independent: they
+    read the entry's per-horse blocks directly. When any of
+    them contributes, info["materialsTrial"] is
+    "all-materials-trial-20261117" and the weights label
+    carries NK_ALL_TERMS_LABEL with each weight — the trial is
+    on the record wherever the stamp is read from.
+
+    The pace term (v4, merged into v5) is likewise
+    segment-independent: it contributes whenever the entry
+    carries pace-forecast positions and a directional pace
+    label (H / S), at the UNVALIDATED trial weight PACE_WEIGHT;
+    when it contributes, info["paceTrial"] is set and the
+    weights label carries NK_PACE_WEIGHTS_LABEL.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -509,8 +684,17 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # integrated residual is defined on a higher-is-better
             # own-speed index — negate (see module docstring).
             "spd2": (-spd2_recent if spd2_recent is not None else None),
-            # AI pace-forecast position term (v4, UNVALIDATED
-            # trial — see the module docstring).
+            # v5 all-materials terms (see module docstring):
+            # best time in raw seconds (integrate z-scores;
+            # the negative weight carries the direction), the
+            # shrunk head-to-head rate, the shrunk sire-course
+            # score and the point-scored newspaper marks.
+            "mochitime": best_time_seconds(mat.get("bestTime")),
+            "h2h": h2h_shrunk_rate(mat.get("headToHead")),
+            "pedigree_score": sire_course_score(mat.get("pedigree")),
+            "press_pts": press_points(mat.get("press")),
+            # AI pace-forecast position term (v4, merged into
+            # v5, UNVALIDATED trial — see the module docstring).
             "pace_score": pace_score(mat.get("pace"),
                                      entry.get("paceLabel")),
         }
@@ -521,7 +705,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         horses.append(horse)
     if len(horses) < 3:
         return forecast, info
-    weights = None
+    # The v5 all-materials terms are always on trial (their
+    # weights override the frozen defaults' zeros); the course
+    # weights join them when the course side is live.
+    weights = dict(ALL_TERMS_WEIGHTS)
     course_label = None
     if course_active and (front_bias is not None or frame_bias):
         frs = [h["front_rate"] for h in horses
@@ -535,10 +722,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
                 and mean_fr is not None else None)
             h["course_frame"] = frame_bias.get(h.get("_frame_group"))
         if is_jra:
-            weights = dict(COURSE_WEIGHTS_JRA_TRIAL)
+            weights.update(COURSE_WEIGHTS_JRA_TRIAL)
             course_label = NK_COURSE_WEIGHTS_JRA_TRIAL_LABEL
         else:
-            weights = dict(COURSE_WEIGHTS_NAR)
+            weights.update(COURSE_WEIGHTS_NAR)
             course_label = NK_COURSE_WEIGHTS_LABEL
     pace_label_stamp = None
     if any(h.get("pace_score") is not None for h in horses):
@@ -549,11 +736,18 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         h.pop("_frame_group", None)
     probs, coverage, detail = integrate(horses, weights)
     info["coverage"] = coverage
-    extra_labels = []
+    # The weights label records every non-default weight family
+    # whose terms actually contributed to THIS race — the
+    # stamp-side audit trail for all the trials.
+    label_parts = [NK_WEIGHTS_LABEL]
+    if any(k in d["terms"] for d in detail
+           for k in ("mochitime", "h2h", "pedigree", "press")):
+        label_parts.append(NK_ALL_TERMS_LABEL)
+        info["materialsTrial"] = NK_ALL_TERMS_TRIAL
     if course_label is not None and any(
             k in d["terms"] for d in detail
             for k in ("course_front", "course_frame")):
-        extra_labels.append(course_label)
+        label_parts.append(course_label)
         if is_jra:
             # The trial is on the record wherever the stamp is
             # read from: the weights label above, plus this
@@ -562,14 +756,14 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             info["courseTrial"] = "jra"
     if pace_label_stamp is not None and any(
             "pace" in d["terms"] for d in detail):
-        extra_labels.append(pace_label_stamp)
+        label_parts.append(pace_label_stamp)
         # Same record-keeping as the course trial: the publish
         # lane copies this marker into the nkMaterials stamp so
         # the unvalidated pace trial's forward record stays
         # separable.
         info["paceTrial"] = "ai-pace-forecast"
-    if extra_labels:
-        info["weights"] = NK_WEIGHTS_LABEL + "+" + "+".join(extra_labels)
+    if len(label_parts) > 1:
+        info["weights"] = "+".join(label_parts)
     if not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
