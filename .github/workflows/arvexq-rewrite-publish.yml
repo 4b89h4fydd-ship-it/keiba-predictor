@@ -21,6 +21,11 @@ on:
       - arvexq/forecast/**
       - .github/workflows/arvexq-rewrite-publish.yml
       - rewrite/data/v8_extras/**
+      # Landing a date's collected netkeiba materials is also a
+      # publish attempt: the nk-materials adjustment (and its
+      # one-time upgrade of races frozen without it) can only
+      # fire once the materials file is on main.
+      - rewrite/data/nk_materials/**
   schedule:
     # Hourly :05, JST 06:05-20:05 (UTC 21:05 prev day - 11:05)
     - cron: "05 0-11,21-23 * * *"

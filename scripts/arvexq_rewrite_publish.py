@@ -43,7 +43,22 @@ runner and the post is still at least 60 minutes away; the
 re-issue is surgical (stored probabilities, marks and tickets are
 kept; only the place side and the combined-gate 注 overlay are
 added), and a race already carrying placeExpectedValues is final.
-A fifth exception of the same kind is the ticket-R24 upgrade
+A seventh exception of the same kind is the nk-materials
+upgrade (2026-11-17): the collected netkeiba materials (the
+speed page's full columns and the course analysis, normalised
+into rewrite/data/nk_materials/<date>.json) enter the forecast
+through the integrated evaluation — log(v9b probability) plus
+the materials' within-race z-scores at that evaluation's frozen
+weights — applied inside the build, after the v9b
+post-processing and before marks and tickets derive, so the
+masterAnalysis shadow is computed from the very forecast that
+carries the adjustment and its signature stays self-consistent
+(the upgrade is a full rebuild, never surgical). A v9b forecast
+frozen WITHOUT the adjustment is re-issued once — stamped kind
+"nk-materials-upgrade" — when the date's materials file carries
+an entry for the race; the re-issue stamps the nkMaterials
+marker into the lane marker, so the qualification can never
+hold again. A fifth exception of the same kind is the ticket-R24 upgrade
 (2026-11-08): the production trifecta recommendation switched
 from formation B (36 points) to R24 (24 points) by user order, so
 a forecast frozen with the B-form trifecta is re-issued once —
@@ -137,6 +152,9 @@ from rewrite.analysis.shadow_v8 import (  # noqa: E402
 from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa: E402
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
+from rewrite.analysis.nk_materials import (  # noqa: E402
+    NK_MATERIALS_VERSION, apply_nk_materials, parse_materials_payload,
+    speed_coverage as nk_speed_coverage)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
@@ -248,6 +266,60 @@ NAR_DECAY_V8_ABILITY_MODEL_VERSION = (
 # do not stop on a lead-time rule): eligibility now holds until
 # the post itself.
 NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
+
+# netkeiba materials in the forecast (2026-11-17, explicit user
+# instruction: "集めたデータは全部、予想に入れろ" — put ALL of
+# the collected data into the forecast; the user did not accept
+# a validation gate as a reason to keep the materials out). The
+# forward collection's netkeiba materials are normalised into
+# rewrite/data/nk_materials/<date>.json (see
+# scripts/arvexq_nk_materials_build.py for the format) and enter
+# the v9b probability vector through the integrated evaluation
+# (rewrite/analysis/integrated_eval.py, vendored verbatim from
+# the research tree; rewrite/analysis/nk_materials.py is the
+# adapter): log(p_v9b) + the frozen DEFAULT_WEIGHTS' z terms,
+# applied INSIDE build_publish_detail after the v9b
+# post-processing and before marks, tickets and the master
+# shadow derive — so every downstream product, the master
+# shadow included, is computed from the adjusted forecast and
+# the masterAnalysis signature (a digest over the sidecar the
+# build itself produces) stays self-consistent. The upgrade is
+# a full rebuild like the blend / decay branches, never
+# surgical, so it is NOT in SURGICAL_SIDECAR_RESTORE_KINDS and
+# no pristine-sidecar restore applies. With the frozen weights
+# the terms that can move a probability from the materials the
+# lane receives are comment 0.25 / grade 0.20 / speed 0.15; the
+# forward NAR collection carries no comments or grades (those
+# pages do not exist for NAR), so on current data the active
+# term is the speed residual — netkeiba's 5-run-average index
+# against our own spd2. The course-analysis block rides in the
+# same file and is recorded in the coverage stamp; its terms
+# are weight 0 in the frozen defaults, as the integrated
+# evaluation defines them. A race whose date has no materials
+# file, or whose entry cannot produce a term, publishes exactly
+# as before. The lane and the ability model version do NOT
+# move: the ability layer is untouched, and the adjustment is
+# recorded where the lane records its post-processing facts —
+# preparedMeta.rewritePublish.nkMaterials.
+NK_MATERIALS_DIR = ROOT / "rewrite" / "data" / "nk_materials"
+NK_MATERIALS_CUTOVER_DATE = "2026-11-17"
+# The speed z-scores need at least three horses carrying the
+# representative index before any term can exist; an entry
+# below that can never adjust, so it never qualifies a frozen
+# race for the upgrade either.
+NK_MATERIALS_MIN_SPEED_HORSES = 3
+
+# nk-materials upgrade (2026-11-17, same user instruction): the
+# adjustment above reaches races first-published after it
+# landed, but the user directed that today's still-pre-post
+# races move to the new method too. A race frozen on the v9b
+# lane WITHOUT the nkMaterials marker is therefore re-issued
+# ONCE from the current payload (see
+# _nk_materials_upgrade_info) when the date's materials file
+# carries a usable entry for it — the same one-time upgrade
+# pattern as the decay branch, with the same removed lead
+# guard: eligibility holds until the post itself.
+NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
@@ -516,6 +588,28 @@ def _load_v8_extras(date: str) -> dict:
         return {}
     races = payload.get("races") if isinstance(payload, dict) else None
     return races if isinstance(races, dict) else {}
+
+
+def _load_nk_materials(date: str) -> dict:
+    """Per-race netkeiba materials normalised for one date.
+
+    File format (written by scripts/arvexq_nk_materials_build.py
+    from the forward collection's saved outputs):
+    {"version": "nk-materials-v1", "date": ..., "races":
+    {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
+    {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
+    "courseAnalysis": {...}}}}. A missing or unreadable file
+    simply means no materials for that date; the caller publishes
+    without the adjustment. Like the extras, the file is re-read
+    for every race (no per-run cache), so a file landing mid-run
+    is picked up by the races that follow it.
+    """
+    try:
+        payload = json.loads(
+            (NK_MATERIALS_DIR / f"{date}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return parse_materials_payload(payload)
 
 
 def _v8_extras_deadline(race_date: str,
@@ -823,6 +917,60 @@ def _nar_decay_upgrade_info(old: dict, now: datetime) -> dict | None:
             "firstPublishedAt": marker.get("firstPublishedAt"),
             "previousAbilityLane": V9B_LANE,
             "reason": "nar-decay-upgrade"}
+
+
+def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time nk-materials re-issue.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - the race is dated on/after the nk-materials cutover (the
+      materials transport starts there; earlier dates have no
+      materials file by construction);
+    - it was published on the v9b lane (abilityLane
+      v9b-cal-market) — the adjustment is defined on the v9b
+      probability vector;
+    - its lane marker does NOT already carry the nkMaterials
+      stamp (a race first-published with the adjustment, and a
+      race already re-issued by this upgrade, carries it — the
+      upgrade is exactly-once by construction);
+    - the date's materials file carries an entry for this race
+      with at least NK_MATERIALS_MIN_SPEED_HORSES horses holding
+      the representative index (below that no z-score term can
+      exist, so a rebuild could not land the adjustment);
+    - the post is still at least NK_MATERIALS_UPGRADE_MIN_LEAD
+      away (the guard was removed on the user's instruction,
+      like the decay upgrade's: eligibility holds until post).
+
+    Anything unreadable does not qualify; the caller keeps the
+    frozen forecast (fail-closed). The caller still re-verifies
+    after the rebuild that the adjustment actually landed (the
+    nkMaterials stamp is present) before stamping anything.
+    """
+    race_date = str(old.get("date") or "")
+    if race_date < NK_MATERIALS_CUTOVER_DATE:
+        return None
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    stamp = marker.get("nkMaterials")
+    if isinstance(stamp, dict) and stamp.get("applied"):
+        return None
+    race_id = str(old.get("id") or "")
+    if not race_id:
+        return None
+    entry = _load_nk_materials(race_date).get(race_id)
+    if entry is None or nk_speed_coverage(entry) < NK_MATERIALS_MIN_SPEED_HORSES:
+        return None
+    post = _post_at(old)
+    if post is None or post - now < NK_MATERIALS_UPGRADE_MIN_LEAD:
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "nk-materials-upgrade"}
 
 
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
@@ -1683,6 +1831,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     blend_upgrade = None
     env_repair_upgrade = None
     decay_upgrade = None
+    nk_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -1705,7 +1854,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 # published before the decay reached this lane is
                 # re-issued once from the current payload (see
                 # _nar_decay_upgrade_info — also a full rebuild, so
-                # it too precedes the surgical upgrades); a v9b forecast frozen
+                # it too precedes the surgical upgrades); a v9b
+                # forecast frozen WITHOUT the netkeiba-materials
+                # adjustment only because it was first published
+                # before the materials reached this lane is
+                # re-issued once from the current payload when the
+                # date's materials file carries the race (see
+                # _nk_materials_upgrade_info — also a full rebuild,
+                # so it too precedes the surgical upgrades); a v9b forecast frozen
                 # WITHOUT placeExpectedValues only because the
                 # upstream sync did not carry place odds yet is
                 # re-issued once when they complete (see
@@ -1723,6 +1879,11 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 if (blend_upgrade is None
                         and env_repair_upgrade is None
                         and decay_upgrade is None):
+                    nk_upgrade = _nk_materials_upgrade_info(old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None
+                        and decay_upgrade is None
+                        and nk_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exceptions, both surgical
@@ -1814,6 +1975,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                     env_repair_upgrade["receipt"] = freeze[1]
                 elif decay_upgrade is not None:
                     decay_upgrade["receipt"] = freeze[1]
+                elif nk_upgrade is not None:
+                    nk_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -1823,6 +1986,10 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     used_v8 = False
     nar_evidence_decay = False
     v8_fallback_status = None
+    # The v8 extras as consumed by the forecast, kept for the
+    # nk-materials adapter (its speed residual needs each horse's
+    # own spd2 from the same extras the ability layer read).
+    extras_by_number: dict = {}
     if race_date >= V8_CUTOVER_DATE and segment in V8_WEIGHTS:
         entry = _load_v8_extras(race_date).get(race.race_id)
         raw_extras = entry.get("extras") if isinstance(entry, dict) else None
@@ -1832,6 +1999,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                           if isinstance(v, dict)}
             except (TypeError, ValueError):
                 extras = {}
+            extras_by_number = extras
             if extras:
                 v8_forecast = forecast_race_v8(
                     race, extras,
@@ -1846,7 +2014,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         elif reissue is None and lane_upgrade is None \
                 and blend_upgrade is None \
                 and env_repair_upgrade is None \
-                and decay_upgrade is None:
+                and decay_upgrade is None \
+                and nk_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -1903,6 +2072,19 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         else:
             used_v9b = True
             blend_applied = bool(pp_info["blendApplied"])
+    # netkeiba materials adjustment (2026-11-17, user
+    # instruction — see the NK_MATERIALS constants): applied to
+    # the v9b vector HERE, inside the build, so marks, tickets,
+    # the win/top-3 prediction and the master shadow below all
+    # derive from the adjusted probabilities. A race with no
+    # materials entry (or an entry that cannot produce a term)
+    # keeps the plain v9b vector byte-identical.
+    nk_info: dict = {"applied": False}
+    if used_v9b and race_date >= NK_MATERIALS_CUTOVER_DATE:
+        nk_entry = _load_nk_materials(race_date).get(race.race_id)
+        if nk_entry is not None:
+            forecast, nk_info = apply_nk_materials(
+                forecast, nk_entry, extras_by_number)
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -1951,6 +2133,18 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                       f"(receipt {str(decay_upgrade['receipt'])[:12]}…); "
                       f"nar-decay rebuild did not land on the "
                       f"decayed v8 layer; keeping the frozen forecast")
+    if nk_upgrade is not None and not nk_info.get("applied"):
+        # The upgrade was attempted but the adjustment did not
+        # land on the rebuilt forecast (the v9b transform passed
+        # through, or the materials entry cannot produce a term
+        # against this payload's field): re-issuing now would
+        # rewrite a forecast on sale WITHOUT the one change that
+        # justifies it. Keep the frozen forecast byte-stable; a
+        # later cycle can retry while the qualification holds.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(nk_upgrade['receipt'])[:12]}…); "
+                      f"nk-materials rebuild did not land the "
+                      f"adjustment; keeping the frozen forecast")
     # Trifecta R24 (adopted 2026-11-08 by user order after the
     # screen on the graded 194 production races: B ROI 0.7230 ->
     # R24 0.9055): formation B's mark-order skeleton with the win
@@ -2191,6 +2385,23 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "type": "evidence-runs-shrinkage",
             "k": NAR_EVIDENCE_DECAY_K,
             "scope": "nar-only"}
+    if nk_info.get("applied"):
+        # netkeiba materials adjustment (2026-11-17, user
+        # instruction): this publication's v9b probabilities were
+        # adjusted by the integrated evaluation over the collected
+        # materials (see the NK_MATERIALS constants). The stamp is
+        # the lane-side record of that fact AND the exactly-once
+        # marker for the one-time nk-materials upgrade: a stored
+        # product carrying it never qualifies again. Coverage is
+        # the integrate() coverage dict verbatim (horses per term
+        # source), so what the adjustment stood on stays auditable.
+        meta["rewritePublish"]["nkMaterials"] = {
+            "version": NK_MATERIALS_VERSION,
+            "applied": True,
+            "weights": nk_info.get("weights"),
+            "terms": nk_info.get("terms"),
+            "coverage": nk_info.get("coverage"),
+            "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
@@ -2375,6 +2586,45 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                      f"forecast is recomputed with the decay "
                      f"(runs-k{NAR_EVIDENCE_DECAY_K:g}, NAR only) "
                      f"while the race is still pre-post"),
+        }
+    if nk_upgrade is not None:
+        # nk-materials re-issue of a frozen forecast: the roster
+        # and the lane are unchanged — the only change is that
+        # the collected netkeiba materials now enter the
+        # probabilities through the integrated evaluation (this
+        # race was first published before they reached the lane).
+        # Same audit chain as the other re-issues: the first
+        # publication time is preserved and the previous receipt
+        # is recorded. The exactly-once property is structural:
+        # the rebuilt product carries the nkMaterials stamp in
+        # its lane marker, so _nk_materials_upgrade_info can
+        # never qualify this race again.
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            nk_upgrade.get("firstPublishedAt")
+            or nk_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "nk-materials-upgrade",
+            "reason": "nk-materials-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": nk_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "note": ("one-time netkeiba-materials adoption "
+                     "(user instruction 2026-11-17: put ALL of "
+                     "the collected data into the forecast): this "
+                     "race was first published before the "
+                     "collected materials reached the production "
+                     "lane, so its probabilities were computed "
+                     "from the ability layer and the market only; "
+                     "the forecast is recomputed with the "
+                     "materials adjustment while the race is "
+                     "still pre-post"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
