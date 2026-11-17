@@ -83,6 +83,11 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   distance + surface): starts / wins / top-3 finishes and the
   win rate recomputed from those counts. A sire absent from the
   table has no course record — null, never estimated.
+  The v2 label also marks the adjustment definition that
+  consumes the file (the course-analysis tables now feed the
+  weighted course terms for NAR; see
+  rewrite/analysis/nk_materials.py). The publish lane's parser
+  does not gate on the version string.
 
 Rules: values are carried verbatim from the collection (nulls
 stay null — a "-" / 未 cell is missing material, never imputed);

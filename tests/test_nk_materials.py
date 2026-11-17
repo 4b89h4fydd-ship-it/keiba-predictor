@@ -18,6 +18,14 @@ that a build stamps the nkMaterials marker, that the one-time
 upgrade rebuilds with the adjustment and the revision chain,
 and that the frozen forecast is kept when the rebuild does not
 land the adjustment.
+
+v2 (same day): the course terms are weighted in for NAR. The
+tests additionally pin the bias arithmetic read from the
+collected course-analysis tables, the validation's front_rate
+definition, that the course terms move NAR probabilities and
+stay inert for JRA / by default / without tables, and that a
+v1-stamped (speed-only) publication qualifies for exactly one
+more re-issue while a current-version stamp never does.
 """
 from __future__ import annotations
 
@@ -32,8 +40,11 @@ from zoneinfo import ZoneInfo
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
-    apply_nk_materials, parse_materials_payload, speed_coverage)
-from rewrite.data.normalize import Obs, RaceRecord, RunnerRecord, obs
+    NK_MATERIALS_VERSION, apply_nk_materials, course_biases,
+    course_inputs_from_race, front_rate_from_runs,
+    parse_materials_payload, speed_coverage)
+from rewrite.data.normalize import (
+    Obs, PastRun, RaceRecord, RunnerRecord, obs)
 from rewrite.output.api_shape import MODEL_VERSION
 from rewrite.safety.contracts import Segment
 from scripts.arvexq_nk_materials_build import (
@@ -151,8 +162,8 @@ def fresh_detail() -> dict:
     }
 
 
-def stored_detail(*, nk_stamp=False, lane=V9B_LANE, date=DATE,
-                  post=POST) -> dict:
+def stored_detail(*, nk_stamp=False, nk_stamp_version="nk-materials-v1",
+                  lane=V9B_LANE, date=DATE, post=POST) -> dict:
     horses = [{"horseNumber": n, "name": NAMES[n], "winOdds": 3.0}
               for n in (1, 2, 3, 4, 5)]
     marker = {
@@ -169,7 +180,7 @@ def stored_detail(*, nk_stamp=False, lane=V9B_LANE, date=DATE,
                           "scope": "nar-only"},
     }
     if nk_stamp:
-        marker["nkMaterials"] = {"version": "nk-materials-v1",
+        marker["nkMaterials"] = {"version": nk_stamp_version,
                                  "applied": True}
     roster = [{"horseNumber": h["horseNumber"], "name": h["name"]}
               for h in horses]
@@ -304,6 +315,157 @@ class AdapterTests(TestCase):
         self.assertFalse(info["applied"])
 
 
+TABLE_HEADERS = ["項目", "1着", "2着", "3着", "4着以下", "出走回数",
+                 "勝率", "連対率", "複勝率", "単勝回収率", "複勝回収率"]
+
+
+def _table(rows):
+    return {"見出し": TABLE_HEADERS, "行": rows}
+
+
+# A course that punishes inner frames and rewards both the
+# front styles and the outer frames (see CourseBiasTests for
+# the arithmetic).
+COURSE_ANALYSIS = {
+    "コース": "金沢1500m",
+    "有利な枠順": _table([
+        ["1枠", 10, 10, 10, 970, 1000],
+        ["2枠", 10, 10, 10, 970, 1000],
+        ["3枠", 30, 30, 30, 910, 1000],
+        ["4枠", 30, 30, 30, 910, 1000],
+        ["5枠", 30, 30, 30, 910, 1000],
+        ["6枠", 60, 60, 60, 820, 1000],
+        ["7枠", 60, 60, 60, 820, 1000],
+        ["8枠", 60, 60, 60, 820, 1000]]),
+    "有利な脚質": _table([
+        ["逃", 40, 40, 40, 880, 1000],
+        ["先", 40, 40, 40, 880, 1000],
+        ["差", 15, 15, 15, 955, 1000],
+        ["追", 15, 15, 15, 955, 1000]]),
+}
+COURSE_INPUTS = {1: {"front_rate": 0.9, "frame": 1},
+                 2: {"front_rate": 0.5, "frame": 3},
+                 3: {"front_rate": 0.5, "frame": 5},
+                 4: {"front_rate": 0.5, "frame": 7},
+                 5: {"front_rate": 0.1, "frame": 8}}
+FLAT_EXTRAS = {n: {"spd2_recent": 1.0} for n in NAMES}
+
+
+def course_entry():
+    """Materials whose speed side is flat (identical index and
+    spd2 for every horse), so only the course terms can move a
+    probability."""
+    return {"netkeibaRaceId": NK_ID, "courseAnalysis": COURSE_ANALYSIS,
+            "horses": {n: {"nk_best": None, "nk_avg5": 60,
+                           "nk_dist": None, "nk_course": None,
+                           "nk_recent": None} for n in NAMES}}
+
+
+class CourseBiasTests(TestCase):
+    def test_biases_from_tables(self):
+        front_bias, frame_bias = course_biases(COURSE_ANALYSIS)
+        # front styles 240/2000 vs back styles 90/2000
+        self.assertAlmostEqual(front_bias, 0.075, places=9)
+        # overall top-3 rate 870/8000 = 0.10875
+        self.assertAlmostEqual(frame_bias["inner"], 0.03 - 0.10875,
+                               places=9)
+        self.assertAlmostEqual(frame_bias["mid"], 0.09 - 0.10875,
+                               places=9)
+        self.assertAlmostEqual(frame_bias["outer"], 0.18 - 0.10875,
+                               places=9)
+
+    def test_missing_tables_yield_no_bias(self):
+        self.assertEqual(course_biases(None), (None, {}))
+        self.assertEqual(course_biases({"コース": "金沢1500m"}),
+                         (None, {}))
+        front_bias, frame_bias = course_biases(
+            {"有利な枠順": COURSE_ANALYSIS["有利な枠順"]})
+        self.assertIsNone(front_bias)
+        self.assertIn("outer", frame_bias)
+
+    def test_front_rate_matches_validation_definition(self):
+        missing = Obs(None, "test", "not_captured")
+
+        def run(corners, field=12):
+            return PastRun(
+                date="2026-11-03", track=missing, distance=missing,
+                surface=missing, finish=missing,
+                field_size=obs(field, "test"),
+                corner_positions=corners, margin_text=missing,
+                time_seconds=missing, jockey=missing)
+
+        # idx0: 2/12 <= 1/3 -> 1.0 (w=1); idx1: 9/12 -> 0.0
+        # (w=0.85); idx2: no corners (consumes its index);
+        # idx3: 3/9 = 1/3 -> 1.0 (w=0.85**3).
+        runs = (run((2,)), run((9,)), run(()), run((3,), field=9))
+        expected = (1.0 + 0.85 ** 3) / (1.0 + 0.85 + 0.85 ** 3)
+        self.assertAlmostEqual(front_rate_from_runs(runs), expected,
+                               places=9)
+        self.assertIsNone(front_rate_from_runs((run(()),)))
+        self.assertIsNone(front_rate_from_runs(()))
+
+
+class CourseAdapterTests(TestCase):
+    def test_course_terms_move_nar_probabilities(self):
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, course_entry(), FLAT_EXTRAS, segment="nar",
+            course_inputs=COURSE_INPUTS)
+        self.assertTrue(info["applied"])
+        self.assertIn("course_front", info["terms"])
+        self.assertIn("course_frame", info["terms"])
+        self.assertIn("course-nar", info["weights"])
+        self.assertEqual(info["coverage"]["course_frame"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        # Direction check against the hand-computed raw values
+        # (front bias +0.075, frame biases inner -0.0788 / mid
+        # -0.0188 / outer +0.0713, weights 0.10 / 0.05): the
+        # outer-frame horse 4 gains on the frame term alone; the
+        # front-running horse 1 gains net (its front z outweighs
+        # its inner-frame penalty); the closing horse 5 loses
+        # (front penalty outweighs its outer-frame gain).
+        self.assertGreater(by_number[4].p_win, STRENGTHS[4])
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+        total = sum(r.strength for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=5)
+
+    def test_course_terms_inert_for_jra_and_by_default(self):
+        entry = course_entry()
+        baseline, base_info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        for segment in ("jra", None):
+            adjusted, info = apply_nk_materials(
+                v9b_like_forecast(), entry, FLAT_EXTRAS,
+                segment=segment, course_inputs=COURSE_INPUTS)
+            self.assertEqual(
+                [r.strength for r in adjusted.runners],
+                [r.strength for r in baseline.runners], segment)
+            self.assertNotIn("course-nar", info["weights"], segment)
+
+    def test_no_course_tables_no_course_terms(self):
+        entry = course_entry()
+        entry["courseAnalysis"] = None
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS, segment="nar",
+            course_inputs=COURSE_INPUTS)
+        baseline, _ = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        self.assertEqual([r.strength for r in adjusted.runners],
+                         [r.strength for r in baseline.runners])
+        self.assertNotIn("course_front", info.get("terms") or [])
+
+    def test_course_adjustment_is_deterministic(self):
+        first, _ = apply_nk_materials(
+            v9b_like_forecast(), course_entry(), FLAT_EXTRAS,
+            segment="nar", course_inputs=COURSE_INPUTS)
+        second, _ = apply_nk_materials(
+            v9b_like_forecast(), course_entry(), FLAT_EXTRAS,
+            segment="nar", course_inputs=COURSE_INPUTS)
+        self.assertEqual([r.strength for r in first.runners],
+                         [r.strength for r in second.runners])
+
+
 class UpgradeQualificationTests(TestCase):
     def _info(self, detail, now=NOW):
         with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
@@ -316,8 +478,19 @@ class UpgradeQualificationTests(TestCase):
         self.assertEqual(info["reason"], "nk-materials-upgrade")
         self.assertEqual(info["previousAbilityLane"], V9B_LANE)
 
-    def test_already_stamped_never_qualifies(self):
-        self.assertIsNone(self._info(stored_detail(nk_stamp=True)))
+    def test_current_version_stamp_never_qualifies(self):
+        self.assertIsNone(self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION)))
+
+    def test_older_version_stamp_qualifies_once_more(self):
+        # A v1 (speed-only) publication predates the course
+        # weights: it qualifies exactly once more, and the
+        # rebuilt product — stamped at the current version —
+        # does not qualify again (see the build-level test).
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v1"))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
 
     def test_before_cutover_never_qualifies(self):
         self.assertIsNone(self._info(stored_detail(date="2026-11-16")))
@@ -347,10 +520,49 @@ class UpgradeQualificationTests(TestCase):
             stored_detail(), datetime(2026, 11, 17, 20, 41, tzinfo=JST)))
 
 
-def _build(detail, materials=MATERIALS, **patches):
+def fabricated_course_race() -> RaceRecord:
+    """A race whose runners carry frame numbers and corner
+    evidence: horse 1 is the field's only habitual front-runner
+    (first-corner ratio 1/10), horses 2-5 sit mid-pack or
+    behind (5/10, 10/10); frames are 1/3/5/7/8."""
+    missing = Obs(None, "test", "not_captured")
+
+    def run(corner):
+        return PastRun(
+            date="2026-11-03", track=missing, distance=missing,
+            surface=missing, finish=missing,
+            field_size=obs(10, "test"), corner_positions=(corner,),
+            margin_text=missing, time_seconds=missing,
+            jockey=missing)
+
+    corners = {1: 1, 2: 5, 3: 5, 4: 5, 5: 10}
+    frames = {1: 1, 2: 3, 3: 5, 4: 7, 5: 8}
+    runners = []
+    for number in (1, 2, 3, 4, 5):
+        runners.append(RunnerRecord(
+            number=number, horse_id=missing,
+            name=obs(NAMES[number], "test"),
+            frame_number=obs(frames[number], "test"),
+            age=missing, sex=missing, jockey=missing, trainer=missing,
+            carried_weight=missing, body_weight=missing,
+            body_weight_change=missing,
+            win_odds=obs(ODDS[number], "test"),
+            scratched=False,
+            past_runs=(run(corners[number]), run(corners[number]))))
+    return RaceRecord(
+        race_id=RACE_ID, date=DATE, circuit=obs("地方", "test"),
+        track="金沢", race_number=obs(1, "test"), title=missing,
+        start_time=obs(POST, "test"), distance=obs(1500, "test"),
+        surface=obs("ダート", "test"), weather=missing,
+        condition=missing, updated_at=missing, segment=Segment.NAR,
+        source="test", runners=tuple(runners))
+
+
+def _build(detail, materials=MATERIALS, race=None, **patches):
     ctx = [
         patch("scripts.arvexq_rewrite_publish.normalize_race",
-              return_value=fabricated_race()),
+              return_value=race if race is not None
+              else fabricated_race()),
         patch("scripts.arvexq_rewrite_publish.forecast_race_v8",
               return_value=v9b_like_forecast()),
         patch("scripts.arvexq_rewrite_publish._load_v8_extras",
@@ -415,6 +627,56 @@ class BuildTests(TestCase):
         with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
                    return_value=MATERIALS):
             return _nk_materials_upgrade_info(detail, NOW)
+
+    def test_v1_stamped_race_is_reissued_once_to_current_version(self):
+        new, receipt = _build(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v1"))
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        stamp = marker["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
+        self.assertEqual(marker["revision"]["kind"],
+                         "nk-materials-upgrade")
+        self.assertIsNotNone(verified_unified(new))
+        # The rebuilt detail carries the current stamp, so it
+        # never qualifies again.
+        self.assertIsNone(self._recheck(new))
+
+    def test_build_applies_course_terms_for_nar(self):
+        payload = {
+            "version": "nk-materials-v2", "date": DATE,
+            "races": {RACE_ID: {
+                "netkeibaRaceId": NK_ID,
+                "horses": {str(n): {"nk_best": None, "nk_avg5": 60,
+                                    "nk_dist": None, "nk_course": None,
+                                    "nk_recent": None}
+                           for n in NAMES},
+                "courseAnalysis": COURSE_ANALYSIS}}}
+        with_course, _ = _build(
+            fresh_detail(), materials=parse_materials_payload(payload),
+            race=fabricated_course_race())
+        self.assertIsNotNone(with_course)
+        stamp = with_course["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertIn("course_front", stamp["terms"])
+        self.assertIn("course_frame", stamp["terms"])
+        self.assertIn("course-nar", stamp["weights"])
+        self.assertEqual(stamp["coverage"]["course_frame"], 5)
+        self.assertEqual(stamp["coverage"]["course_front"], 5)
+        # Same build without the course tables: the field's only
+        # front-runner (horse 1, net course logit +0.128 — the
+        # largest in the field) must sit higher with the course
+        # terms in, and a mid-frame non-front horse (2, net
+        # -0.071) lower.
+        payload["races"][RACE_ID]["courseAnalysis"] = None
+        without_course, _ = _build(
+            fresh_detail(), materials=parse_materials_payload(payload),
+            race=fabricated_course_race())
+        win_with = with_course["prediction"]["stages"]["probability"]["value"]["win"]
+        win_without = without_course["prediction"]["stages"]["probability"]["value"]["win"]
+        self.assertGreater(win_with[1], win_without[1])
+        self.assertLess(win_with[2], win_without[2])
+        self.assertIsNotNone(verified_unified(with_course))
 
     def test_frozen_race_without_materials_stays_frozen(self):
         new, reason = _build(stored_detail(), materials={})

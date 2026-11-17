@@ -153,8 +153,8 @@ from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa:
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.nk_materials import (  # noqa: E402
-    NK_MATERIALS_VERSION, apply_nk_materials, parse_materials_payload,
-    speed_coverage as nk_speed_coverage)
+    NK_MATERIALS_VERSION, apply_nk_materials, course_inputs_from_race,
+    parse_materials_payload, speed_coverage as nk_speed_coverage)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
@@ -292,10 +292,17 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # forward NAR collection carries no comments or grades (those
 # pages do not exist for NAR), so on current data the active
 # term is the speed residual — netkeiba's 5-run-average index
-# against our own spd2. The course-analysis block rides in the
-# same file and is recorded in the coverage stamp; its terms
-# are weight 0 in the frozen defaults, as the integrated
-# evaluation defines them. A race whose date has no materials
+# against our own spd2. Since nk-materials-v2 (2026-11-17, the
+# user's follow-up instruction: a weight of zero is meaningless
+# — wire it in properly) the course-analysis block in the same
+# file also moves NAR probabilities: the adapter derives the
+# course front/frame biases from the entry's collected
+# course-analysis tables and applies the course weights the
+# validation corpus's fit+calib grid search selected
+# (course_front +0.10 / course_frame +0.05, NAR only — JRA
+# learned the opposite sign and keeps the frozen defaults; see
+# rewrite/analysis/nk_materials.py for the full provenance).
+# A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
 # as before. The lane and the ability model version do NOT
 # move: the ability layer is untouched, and the adjustment is
@@ -313,12 +320,17 @@ NK_MATERIALS_MIN_SPEED_HORSES = 3
 # adjustment above reaches races first-published after it
 # landed, but the user directed that today's still-pre-post
 # races move to the new method too. A race frozen on the v9b
-# lane WITHOUT the nkMaterials marker is therefore re-issued
-# ONCE from the current payload (see
+# lane WITHOUT the current nkMaterials marker is therefore
+# re-issued ONCE from the current payload (see
 # _nk_materials_upgrade_info) when the date's materials file
 # carries a usable entry for it — the same one-time upgrade
 # pattern as the decay branch, with the same removed lead
-# guard: eligibility holds until the post itself.
+# guard: eligibility holds until the post itself. "Current"
+# is versioned: a race stamped at an older adjustment version
+# (v1, speed-only) qualifies once more when the definition
+# moves (v2, course weights for NAR), and the rebuilt product
+# carries the new stamp, so it can never qualify twice for the
+# same definition.
 NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
@@ -595,10 +607,12 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v1", "date": ..., "races":
+    {"version": "nk-materials-v2", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
-    "courseAnalysis": {...}}}}. A missing or unreadable file
+    "courseAnalysis": {...}}}}. The version field is
+    informational (the parser does not gate on it; v1 files —
+    identical fields — load the same). A missing or unreadable file
     simply means no materials for that date; the caller publishes
     without the adjustment. Like the extras, the file is re-read
     for every race (no per-run cache), so a file landing mid-run
@@ -930,10 +944,15 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
     - it was published on the v9b lane (abilityLane
       v9b-cal-market) — the adjustment is defined on the v9b
       probability vector;
-    - its lane marker does NOT already carry the nkMaterials
-      stamp (a race first-published with the adjustment, and a
-      race already re-issued by this upgrade, carries it — the
-      upgrade is exactly-once by construction);
+    - its lane marker does NOT already carry the CURRENT
+      nkMaterials stamp: a marker stamped at the current
+      NK_MATERIALS_VERSION never qualifies again (the upgrade
+      is exactly-once per adjustment definition), while a
+      marker stamped at an older version — e.g. a v1
+      speed-only publication from before the course weights
+      landed — qualifies exactly once more, so the weighted
+      definition reaches still-pre-post races instead of only
+      tomorrow's first publications;
     - the date's materials file carries an entry for this race
       with at least NK_MATERIALS_MIN_SPEED_HORSES horses holding
       the representative index (below that no z-score term can
@@ -956,7 +975,8 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
     if marker.get("abilityLane") != V9B_LANE:
         return None
     stamp = marker.get("nkMaterials")
-    if isinstance(stamp, dict) and stamp.get("applied"):
+    if isinstance(stamp, dict) and stamp.get("applied") \
+            and stamp.get("version") == NK_MATERIALS_VERSION:
         return None
     race_id = str(old.get("id") or "")
     if not race_id:
@@ -2084,7 +2104,9 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
         nk_entry = _load_nk_materials(race_date).get(race.race_id)
         if nk_entry is not None:
             forecast, nk_info = apply_nk_materials(
-                forecast, nk_entry, extras_by_number)
+                forecast, nk_entry, extras_by_number,
+                segment=segment,
+                course_inputs=course_inputs_from_race(race))
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -2618,10 +2640,11 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "note": ("one-time netkeiba-materials adoption "
                      "(user instruction 2026-11-17: put ALL of "
                      "the collected data into the forecast): this "
-                     "race was first published before the "
-                     "collected materials reached the production "
-                     "lane, so its probabilities were computed "
-                     "from the ability layer and the market only; "
+                     "race was first published before the current "
+                     "materials adjustment (nk-materials-v2: the "
+                     "collected course analysis weighted in for "
+                     "NAR) reached the production lane, so its "
+                     "probabilities were computed without it; "
                      "the forecast is recomputed with the "
                      "materials adjustment while the race is "
                      "still pre-post"),
