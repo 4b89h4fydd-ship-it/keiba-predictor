@@ -15,12 +15,49 @@ name: ARVEXQ Result Repair
       - arvexq/results/**
       - tests/test_result_stalled_regressions.py
       - .github/workflows/arvexq-result-repair.yml
+      # Same external heartbeat that fires Realtime Sync: a VM cron
+      # rewrites this file roughly every 10 minutes (07:00-23:55 JST)
+      # purely to produce a push event. While GitHub's scheduler is
+      # degraded, the schedule below can go hours without firing
+      # (2026-11-16: only 2 firings all day, results unreflected from
+      # mid-afternoon until a manual dispatch at 21:16 JST; the same
+      # starvation recurred on 2026-11-17). Every heartbeat push must
+      # therefore also serve as a result-repair attempt.
+      - sync-heartbeat/heartbeat.txt
+      # Placing the day's v8 extras on main is a committed push event
+      # that demonstrably fires while scheduled slots are dropped
+      # (the publish lane relies on the same path). It lands in the
+      # evening, while NAR cards are still running, so use it as one
+      # more repair nudge.
+      - rewrite/data/v8_extras/**
+  workflow_run:
+    # Redundant trigger, same pattern as the publish lane: follow the
+    # completions of the two lanes that run all through racing hours.
+    # Realtime Sync completes every few minutes while races run and
+    # arvexq-rewrite-publish completes hourly and on extras pushes;
+    # each completion queues one repair attempt in the concurrency
+    # group below (at most one pending run is kept, so bursts
+    # collapse instead of piling up). This lane only writes to D1
+    # and never pushes to the repo, so following these lanes cannot
+    # loop. A failed upstream run still counts: the repair machinery
+    # is independent of why the upstream lane failed.
+    workflows: ["ARVEXQ Realtime Sync", "arvexq-rewrite-publish"]
+    types: [completed]
+    branches: [main]
   schedule:
     # Offset from realtime sync so both jobs do not hit result sources together.
+    # Kept as one layer among several: on its own it is not reliable
+    # (see the heartbeat note above).
     - cron: "2-59/5 22-23 * * *"
     - cron: "2-59/5 0-14 * * *"
 
 concurrency:
+  # Serialize every trigger source (schedule, push, workflow_run,
+  # dispatch) into one lane: runs queue instead of cancelling, and
+  # GitHub keeps at most one pending run per group, so the extra
+  # trigger paths above cannot pile up duplicate repairs. Each run
+  # re-reads the day from D1 when it starts, so a queued run is
+  # never stale.
   group: arvexq-result-repair
   cancel-in-progress: false
 
