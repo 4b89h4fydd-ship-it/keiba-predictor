@@ -25,9 +25,14 @@
    home, flags slot on venue race rows, five main tabs, the check
    column on the racecard, and the win-odds list panel. Kept in this
    inline block so the frozen stylesheet modules stay untouched. */
-.nk-venue-tags{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.nk-venue-tags::-webkit-scrollbar{display:none}
-.nk-venue-tag{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:118px;padding:14px 16px;border:1px solid #d9d9d9;border-radius:14px;background:#ffffff;color:#26303a;font-family:inherit;cursor:pointer;text-align:left}
+/* v347 (user report 2026-11-17): the v345/v346 fixed-width tags
+   (flex:0 0 auto + min-width:118px in an overflow-x:auto row) pushed
+   the last venue off the right edge of phone screens. The row now
+   wraps and each tag flexes to the available width, so every venue
+   stays on screen at the same 24px/14px type sizes; no horizontal
+   scrolling. */
+.nk-venue-tags{display:flex;flex-wrap:wrap;gap:8px;padding:12px 2px 6px;min-width:0}
+.nk-venue-tag{flex:1 1 100px;min-width:0;max-width:220px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 8px;border:1px solid #d9d9d9;border-radius:14px;background:#ffffff;color:#26303a;font-family:inherit;cursor:pointer;text-align:left}
 .nk-venue-tag b{font-size:24px;font-weight:900;line-height:1.15}
 .nk-venue-tag small{font-size:14px;font-weight:700;color:#47525c}
 .nk-venue-tag.is-live{border-color:#c0392b;background:#fdf0ec}
