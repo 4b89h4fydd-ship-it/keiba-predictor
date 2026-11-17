@@ -18,9 +18,9 @@ collection crons' saved outputs are its inputs:
   --targets           course-analysis-targets.json (the netkeiba
                       race_id <-> ARVEXQ race_id mapping)
 
-Output format (version "nk-materials-v1"):
+Output format (version "nk-materials-v2"):
 
-  {"version": "nk-materials-v1", "date": ..., "source": ...,
+  {"version": "nk-materials-v2", "date": ..., "source": ...,
    "generatedAt": ...,
    "races": {<arvexq_race_id>: {
        "netkeibaRaceId": <netkeiba race_id>,
@@ -30,6 +30,12 @@ Output format (version "nk-materials-v1"):
            "nk_recent": [int|null, ...] | null}},
        "courseAnalysis": {<the collected course-analysis entry,
                            minus its arvexq_race_id echo>} | null}}}
+
+  The v2 label marks the adjustment definition that consumes
+  the file (the course-analysis tables now feed the weighted
+  course terms for NAR; see rewrite/analysis/nk_materials.py).
+  The fields themselves are unchanged from v1, and the publish
+  lane's parser does not gate on the version string.
 
 Rules: values are carried verbatim from the collection (nulls
 stay null — a "-" / 未 cell is missing material, never imputed);
@@ -84,7 +90,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         races[aq_id] = {"netkeibaRaceId": nk_id, "horses": horses,
                         "courseAnalysis": course}
     return {
-        "version": "nk-materials-v1",
+        "version": "nk-materials-v2",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
