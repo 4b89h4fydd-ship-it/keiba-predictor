@@ -1,0 +1,1026 @@
+{
+  "flightId": "521f0ebb-f721-4818-89f2-d60bc6ec8b8b",
+  "version": 8,
+  "run": 6,
+  "status": "SUCCEEDED",
+  "developmentOnly": true,
+  "export": {
+    "status": "research-export-only",
+    "productionChanged": false,
+    "input": "verified pre-off massFeatureArchive, settled labels",
+    "counts": {
+      "exported-horses": 1725,
+      "exported-races": 152,
+      "incomplete-frozen-roster": 25,
+      "jra-races": 55,
+      "nar-races": 97
+    },
+    "output": "/tmp/arvexq-benchmark/frozen.jsonl"
+  },
+  "reports": [
+    {
+      "name": "ability",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ability",
+      "productionEligible": false
+    },
+    {
+      "name": "ana",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ana",
+      "productionEligible": false
+    },
+    {
+      "name": "pointwise",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ability",
+      "productionEligible": false
+    },
+    {
+      "name": "xgboost",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ability",
+      "productionEligible": false
+    },
+    {
+      "name": "winner",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ability",
+      "productionEligible": false
+    },
+    {
+      "name": "podium",
+      "circuit": "jra",
+      "status": "insufficient-data",
+      "reason": "insufficient independent frozen races for jra/ability",
+      "productionEligible": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 2.371,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0.75,
+        "winnerHitAt2": 0.75,
+        "mrr": 0.8125,
+        "ndcgAt1": 0.75,
+        "ndcgAt5": 0.8177,
+        "podiumCountAt3": 1.75,
+        "podiumRecallAt3": 0.5833,
+        "podiumCountAt5": 2.75,
+        "winnerHitAt3": 0.75,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.75,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.6438,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 4,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 33083,
+      "name": "ability",
+      "lightgbmLambdaMARTAlias": true
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ana",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "graded",
+      "elapsedSeconds": 2.217,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0,
+        "winnerHitAt2": 0,
+        "mrr": 0.1285,
+        "ndcgAt1": 0.2083,
+        "ndcgAt5": 0.349,
+        "podiumCountAt3": 1.25,
+        "podiumRecallAt3": 0.4167,
+        "podiumCountAt5": 1.75,
+        "winnerHitAt3": 0,
+        "winnerHitAt5": 0,
+        "top1PodiumRate": 0.5,
+        "outperformMarketAndPodiumAt1": 0.5,
+        "ndcgAt3": 0.2956,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 9,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 9,
+          "top1Finish": 5,
+          "top1Popularity": 8
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 8,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 6,
+          "top1Finish": 2,
+          "top1Popularity": 3
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 25574,
+      "name": "ana",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "pointwise",
+      "target": "graded",
+      "elapsedSeconds": 2.526,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0.75,
+        "winnerHitAt2": 1,
+        "mrr": 0.875,
+        "ndcgAt1": 0.75,
+        "ndcgAt5": 0.7879,
+        "podiumCountAt3": 1.5,
+        "podiumRecallAt3": 0.5,
+        "podiumCountAt5": 2.25,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.75,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.7044,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 2,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 99886,
+      "name": "pointwise",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "xgboost",
+      "target": "graded",
+      "elapsedSeconds": 2.428,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0.75,
+        "winnerHitAt2": 0.75,
+        "mrr": 0.8333,
+        "ndcgAt1": 0.75,
+        "ndcgAt5": 0.8317,
+        "podiumCountAt3": 2,
+        "podiumRecallAt3": 0.6667,
+        "podiumCountAt5": 2.5,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.75,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.7888,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 3,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 33326,
+      "name": "xgboost",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "win",
+      "elapsedSeconds": 2.435,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0.5,
+        "winnerHitAt2": 0.75,
+        "mrr": 0.7083,
+        "ndcgAt1": 0.5,
+        "ndcgAt5": 0.7795,
+        "podiumCountAt3": 2.25,
+        "podiumRecallAt3": 0.75,
+        "podiumCountAt5": 2.5,
+        "winnerHitAt3": 1,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.5,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.7569,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 2,
+          "top1Finish": 5,
+          "top1Popularity": 8
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 3,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 36582,
+      "name": "winner",
+      "lightgbmLambdaMARTAlias": false
+    },
+    {
+      "version": "arvexq-ranking-ability-ana-v1",
+      "circuit": "nar",
+      "head": "ability",
+      "featureMode": "baseline",
+      "learner": "lambdarank",
+      "target": "podium",
+      "elapsedSeconds": 2.458,
+      "processPeakRssKiB": 2317232,
+      "experimentFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "selectedFeatureCoverage": {
+        "races": 48,
+        "horses": 513,
+        "availability": {
+          "form": {
+            "observed": 513,
+            "fraction": 1
+          },
+          "position": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "opponent": {
+            "observed": 144,
+            "fraction": 0.2807
+          },
+          "speed": {
+            "observed": 0,
+            "fraction": 0
+          },
+          "late_speed": {
+            "observed": 0,
+            "fraction": 0
+          }
+        }
+      },
+      "researchOnly": true,
+      "productionEligible": false,
+      "featureCount": 1000,
+      "trainRaces": 44,
+      "validationRaces": 4,
+      "testRaces": 0,
+      "trainThrough": "2026-10-24",
+      "developmentOnly": true,
+      "testFrom": null,
+      "validationMetrics": {
+        "races": 4,
+        "winHitAt1": 0.75,
+        "winnerHitAt2": 0.75,
+        "mrr": 0.8125,
+        "ndcgAt1": 0.75,
+        "ndcgAt5": 0.7748,
+        "podiumCountAt3": 1.5,
+        "podiumRecallAt3": 0.5,
+        "podiumCountAt5": 2.25,
+        "winnerHitAt3": 0.75,
+        "winnerHitAt5": 1,
+        "top1PodiumRate": 0.75,
+        "outperformMarketAndPodiumAt1": 0,
+        "ndcgAt3": 0.6438,
+        "marketBaselineWinAt1": 0.75,
+        "marketBaselineWinnerAt3": 1,
+        "roi": null
+      },
+      "validationErrors": [
+        {
+          "raceId": "nar-2026-10-25-盛岡-04",
+          "date": "2026-10-25",
+          "track": "盛岡",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-02",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 9,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        },
+        {
+          "raceId": "nar-2026-10-25-金沢-03",
+          "date": "2026-10-25",
+          "track": "金沢",
+          "fieldSize": 8,
+          "winnerRank": 4,
+          "top1Finish": 7,
+          "top1Popularity": 3
+        },
+        {
+          "raceId": "nar-2026-10-25-高知-01",
+          "date": "2026-10-25",
+          "track": "高知",
+          "fieldSize": 11,
+          "winnerRank": 1,
+          "top1Finish": 1,
+          "top1Popularity": 1
+        }
+      ],
+      "metrics": {
+        "races": 0,
+        "winHitAt1": null,
+        "winnerHitAt2": null,
+        "mrr": null,
+        "ndcgAt1": null,
+        "ndcgAt5": null,
+        "podiumCountAt3": null,
+        "podiumRecallAt3": null,
+        "podiumCountAt5": null,
+        "winnerHitAt3": null,
+        "winnerHitAt5": null,
+        "top1PodiumRate": null,
+        "outperformMarketAndPodiumAt1": null,
+        "ndcgAt3": null,
+        "marketBaselineWinAt1": null,
+        "marketBaselineWinnerAt3": null,
+        "roi": null
+      },
+      "warning": "Ranking scores are not calibrated probabilities; ROI requires actual settled payouts.",
+      "modelBytes": 38587,
+      "name": "podium",
+      "lightgbmLambdaMARTAlias": false
+    }
+  ],
+  "pairedAbilityComparisons": {
+    "ability": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "ana": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": -0.75,
+      "wins": 0,
+      "losses": 3,
+      "ci95": null
+    },
+    "pointwise": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "xgboost": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    },
+    "winner": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": -0.25,
+      "wins": 0,
+      "losses": 1,
+      "ci95": null
+    },
+    "podium": {
+      "status": "insufficient-dates",
+      "days": 1,
+      "races": 4,
+      "meanDifference": 0.0,
+      "wins": 0,
+      "losses": 0,
+      "ci95": null
+    }
+  }
+}

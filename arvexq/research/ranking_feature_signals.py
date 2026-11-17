@@ -31,7 +31,7 @@ def _finite(features: dict[str, Any], key: str) -> float | None:
 
 
 def _position_feature(name: str) -> bool:
-    return any(token in name for token in ('position_quality', 'corner_position', 'corner_gain'))
+    return any(token in name for token in ('position_quality', 'corner_position', 'corner1_position', 'corner3_position', 'corner_gain'))
 
 
 def enrich_frozen_features(features: dict[str, float], *, head: str, mode: str,

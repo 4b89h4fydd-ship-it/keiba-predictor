@@ -84,6 +84,67 @@ class RankingChallengerSafety(unittest.TestCase):
             from sklearn.metrics import ndcg_score
             self.assertAlmostEqual(estimate, float(ndcg_score([values], [scores], k=3)), places=10)
 
+    def test_common_ndcg_does_not_depend_on_head_labels(self):
+        rows = sample("2026-10-01")
+        for row in rows:
+            row["features"]["market::popularity"] = 7-row["horseNumber"]
+        a = prepare_races(rows, "jra", "ability")
+        b = prepare_races(rows, "jra", "ana")
+        scores = [6, 5, 4, 3, 2, 1]
+        self.assertEqual(metrics(a, scores)["ndcgAt3"], metrics(b, scores)["ndcgAt3"])
+        self.assertEqual(metrics(b, scores)["winnerHitAt5"], 1)
+
+    def test_ingested_corner_positions_are_used_without_inventing_missing(self):
+        from arvexq.prediction.mass_feature_factory import _position, _corner_at, _late_speed
+        self.assertEqual(_corner_at({"cornerPositions": "1-2-3-4"}, 3), 3)
+        self.assertIsNone(_corner_at({"cornerPositions": "2-4"}, 3))
+        self.assertEqual(_late_speed({"last3fRank": 1, "fieldSize": 10}), 1)
+        self.assertEqual(_position({"cornerPositions": "2-3-4"}), 4)
+        self.assertEqual(_position({"cornerPositions": [2, 3, 4]}), 4)
+        self.assertIsNone(_position({"cornerPositions": ""}))
+        self.assertEqual(_position({"corner4": 2, "cornerPositions": "3-4"}), 2)
+
+    def test_position_ablation_removes_new_numbered_corners(self):
+        f = enrich_frozen_features({"history::all::w5::corner1_position::mean": 2,
+                                   "history::all::w5::corner3_position::mean": 3},
+                                  head="ability", mode="no-position", field_size=8)
+        self.assertEqual(f, {})
+
+    def test_manifest_preserves_bounded_hypotheses(self):
+        key = HISTORY_RELATIVE["form"]
+        races = [{"rows": [{"features": {key: n/10, "static::prize": n*1000000}}
+                           for n in range(5)]}]
+        self.assertEqual(feature_manifest(races, limit=1), [key])
+
+    def test_development_run_never_reuses_consumed_test_dates(self):
+        import json
+        rows = []
+        for day in ("2026-10-21", "2026-10-22", "2026-10-24", "2026-10-25", "2026-10-26", "2026-10-27"):
+            for suffix in ("a", "b"):
+                extra = sample(day)
+                for row in extra:
+                    row["raceId"] += suffix
+                rows.extend(extra)
+        with tempfile.TemporaryDirectory() as tmp:
+            report = train_one(rows, "jra", "ability", Path(tmp), min_train_races=2,
+                               development_only=True)
+            self.assertEqual(report["testRaces"], 0)
+            self.assertIsNone(report["testFrom"])
+            self.assertEqual(report["trainThrough"], "2026-10-24")
+            cards = json.loads((Path(tmp)/"jra/ability/holdout_scores.json").read_text())
+            self.assertEqual(cards["test"], [])
+            self.assertTrue(all(c["date"] == "2026-10-25" for c in cards["validation"]))
+
+    def test_matrix_distinguishes_missing_from_observed_zero(self):
+        import math
+        from sklearn.feature_extraction import DictVectorizer
+        from arvexq.research.ranking_challenger import make_matrix
+        v = DictVectorizer().fit([{ "static::age": 1 }])
+        x, _, _ = make_matrix([{"rows": [{"features": {"static::age": 0}, "label": 0},
+                                        {"features": {}, "label": 0}]}], v)
+        self.assertEqual(x[0, 0], 0)
+        self.assertTrue(math.isnan(x[1, 0]))
+
     def test_rank_metrics_market_baseline(self):
         race = prepare_races(sample("2026-10-01"), "jra", "ability")
         m = metrics(race, [6, 5, 4, 3, 2, 1])

@@ -25,6 +25,13 @@ class StreamArchiveSafety(unittest.TestCase):
         self.assertEqual(transform_item(detail['id'], json.dumps(snapshot(verified=False)))[1], 'unverified-archive')
         self.assertEqual(transform_item(detail['id'], '{')[1], 'invalid-json')
 
+    def test_partial_results_do_not_shrink_frozen_query(self):
+        detail = snapshot()
+        detail['massFeatureArchive']['horseCount'] = 2
+        with patch('scripts.export_motherduck_frozen_ranking.frozen_training_rows_from_detail',
+                   return_value=detail['_test_rows']):
+            self.assertEqual(transform_item(detail['id'],detail)[1], 'incomplete-frozen-roster')
+
     def test_banei_never_exported(self):
         detail = snapshot('nar-2026-10-24-帯広-01')
         self.assertEqual(transform_item(detail['id'], json.dumps(detail))[1], 'banei-excluded')

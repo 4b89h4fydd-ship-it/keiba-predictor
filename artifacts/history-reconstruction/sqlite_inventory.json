@@ -1,0 +1,43 @@
+[
+  {
+    "path": ".arvexq-data/bundle/day_bundle.sqlite3",
+    "tables": {
+      "day_bundles": 0
+    }
+  },
+  {
+    "path": ".arvexq-data/central/central.sqlite3",
+    "tables": {
+      "central_races": 0
+    }
+  },
+  {
+    "path": ".arvexq-data/nar/nar.sqlite3",
+    "tables": {
+      "races": 0,
+      "entries": 0,
+      "sync_log": 0
+    }
+  },
+  {
+    "path": ".arvexq-data/prepared/prepared.sqlite3",
+    "tables": {
+      "prepared_races": 0,
+      "horse_snapshots": 0
+    }
+  },
+  {
+    "path": ".arvexq-data/racedb/racedb.sqlite3",
+    "tables": {
+      "race_snapshots": 0,
+      "horse_master": 0,
+      "horse_entries": 0,
+      "past_runs": 0,
+      "odds_history": 0,
+      "race_analysis": 0,
+      "source_state": 0,
+      "field_state": 0,
+      "collector_runs": 0
+    }
+  }
+]

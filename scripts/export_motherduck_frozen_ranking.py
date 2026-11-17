@@ -46,6 +46,11 @@ def transform_item(race_id: str, raw: str | dict) -> tuple[list[dict], str]:
         rows = frozen_training_rows_from_detail(detail)
         if not rows:
             return [], 'invalid-archive-or-result'
+        expected = archive.get('horseCount')
+        if expected is not None and len(rows) != int(expected):
+            # Cancellation/DNF/partial result feeds must not silently shrink a
+            # frozen ranking query. Exclude the entire race until reconciled.
+            return [], 'incomplete-frozen-roster'
         if any(str(row.get('raceId') or '') != race_id for row in rows):
             return [], 'label-race-mismatch'
         return rows, 'exported'
