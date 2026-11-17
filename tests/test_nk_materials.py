@@ -39,17 +39,34 @@ stay inert by default / for unknown segments / without tables,
 and that a v2-stamped publication qualifies for exactly one
 more re-issue onto v3.
 
-v4 (same day): the AI pace forecast's per-horse forecast
-positions enter as a pace term at a trial weight of 0.10 —
-UNVALIDATED, because no historical pace-forecast data exists
-(the diagrams are published only around race day), so a
-retrospective validation is impossible. The tests now pin the
-builder's rank/percentile conversion and pace coverage, the
-parser's pace handling, the term's direction (high pace lifts
-the forecast back-runners, slow pace lifts the front), its
-inertness under a middling label / without pace material, the
-paceTrial stamp record, and that a v3-stamped publication
-qualifies for exactly one more re-issue onto v4.
+v4 (same day, its own branch, merged into v5): the AI pace
+forecast's per-horse forecast positions enter as a pace term
+at a trial weight of 0.10 — UNVALIDATED, because no historical
+pace-forecast data exists (the diagrams are published only
+around race day), so a retrospective validation is
+impossible. The tests pin the builder's rank/percentile
+conversion and pace coverage, the parser's pace handling, the
+term's direction (high pace lifts the forecast back-runners,
+slow pace lifts the front), its inertness under a middling
+label / without pace material, the paceTrial stamp record,
+and that a v3-stamped publication qualifies for exactly one
+more re-issue onto v4.
+
+v5 (same day): the all-materials terms join the pace term.
+The per-horse blocks the materials file has carried since the
+builder's v2 extension (bestTime / headToHead / pedigree) and
+the newspaper marks (press) become z terms at marked trial
+weights (mochitime -0.10 / h2h +0.10 / pedigree +0.10 /
+press +0.10 — NOT validated; the honesty record is in the
+adapter's docstring). The tests additionally pin the
+shrinkage arithmetic (head-to-head toward 0.5 over 3 prior
+duels; the sire-course score toward a generic field over 10
+prior starts), the research MARK_POINTS scoring of the press
+marks, that each term moves probabilities in its designed
+direction on flat speed inputs, that the stamp-side record
+carries the all-materials trial label and the materialsTrial
+marker, and that v3- and v4-stamped publications qualify for
+exactly one more re-issue onto v5.
 """
 from __future__ import annotations
 
@@ -64,9 +81,12 @@ from zoneinfo import ZoneInfo
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
-    NK_MATERIALS_VERSION, NK_PACE_WEIGHTS_LABEL, PACE_WEIGHT,
-    apply_nk_materials, course_biases, course_inputs_from_race,
-    front_rate_from_runs, pace_score, parse_materials_payload,
+    NK_ALL_TERMS_LABEL, NK_ALL_TERMS_TRIAL, NK_MATERIALS_VERSION,
+    NK_PACE_WEIGHTS_LABEL, PACE_WEIGHT,
+    apply_nk_materials, best_time_seconds, course_biases,
+    course_inputs_from_race, front_rate_from_runs, h2h_shrunk_rate,
+    pace_score, parse_materials_payload, press_points,
+    sire_course_score,
     speed_coverage)
 from rewrite.data.normalize import (
     Obs, PastRun, RaceRecord, RunnerRecord, obs)
@@ -543,6 +563,198 @@ class CourseAdapterTests(TestCase):
                          [r.strength for r in second.runners])
 
 
+class AllTermsHelperTests(TestCase):
+    def test_best_time_seconds(self):
+        self.assertEqual(best_time_seconds({"seconds": 90.2}), 90.2)
+        self.assertIsNone(best_time_seconds({"seconds": "90.2"}))
+        self.assertIsNone(best_time_seconds({}))
+        self.assertIsNone(best_time_seconds(None))
+
+    def test_h2h_shrinkage_toward_neutral(self):
+        # (ahead + 3*0.5) / (duels + 3): one lucky duel reads
+        # 0.625, not 1.0; a long record approaches its raw rate.
+        self.assertAlmostEqual(
+            h2h_shrunk_rate({"duels": 1, "ahead": 1}), 0.625)
+        self.assertAlmostEqual(
+            h2h_shrunk_rate({"duels": 10, "ahead": 9}), 10.5 / 13)
+        self.assertAlmostEqual(
+            h2h_shrunk_rate({"duels": 10, "ahead": 1}), 2.5 / 13)
+        self.assertIsNone(h2h_shrunk_rate({"duels": 0, "ahead": 0}))
+        self.assertIsNone(h2h_shrunk_rate({"meetings": 2}))
+        self.assertIsNone(h2h_shrunk_rate(None))
+
+    def test_sire_course_score_shrinkage(self):
+        # starts 10 / wins 2 / top3 4: shrunk win (2+1)/20 =
+        # 0.15, shrunk top3 (4+3)/20 = 0.35, score 0.25.
+        ped = {"sireCourse": {"starts": 10, "wins": 2, "top3": 4,
+                              "winRate": 0.2}}
+        self.assertAlmostEqual(sire_course_score(ped), 0.25)
+        self.assertIsNone(sire_course_score(
+            {"sireCourse": {"starts": 0, "wins": 0, "top3": 0}}))
+        self.assertIsNone(sire_course_score({"sireCourse": None}))
+        self.assertIsNone(sire_course_score({}))
+        self.assertIsNone(sire_course_score(None))
+
+    def test_press_points_research_scoring(self):
+        # MARK_POINTS from the research tree: ◎5 ○4 ▲3 △2 ☆1.
+        self.assertEqual(press_points("◎"), 5.0)
+        self.assertEqual(press_points({"marks": {"記者": "◎"}}), 5.0)
+        self.assertEqual(
+            press_points({"marks": {"a": "◎", "b": "△"}}), 3.5)
+        self.assertEqual(press_points({"mark": "○"}), 4.0)
+        self.assertEqual(press_points({"marks": {"a": "消"}}), 0.0)
+        self.assertIsNone(press_points({"marks": {"a": "?"}}))
+        self.assertIsNone(press_points({"marks": {}}))
+        self.assertIsNone(press_points(None))
+
+    def test_parse_carries_v2_blocks_and_drops_malformed(self):
+        payload = {"races": {RACE_ID: {"horses": {
+            "1": {"nk_avg5": 50,
+                  "bestTime": {"seconds": 90.0, "tier": 1},
+                  "headToHead": {"duels": 2, "ahead": 1},
+                  "pedigree": {"sire": "種牡馬X"},
+                  "press": {"marks": {"記者": "◎"}}},
+            "2": {"nk_avg5": 50, "bestTime": "90.0",
+                  "headToHead": [1], "pedigree": None,
+                  "press": [1, 2]}}}}}
+        parsed = parse_materials_payload(payload)
+        h1 = parsed[RACE_ID]["horses"][1]
+        self.assertEqual(h1["bestTime"], {"seconds": 90.0, "tier": 1})
+        self.assertEqual(h1["headToHead"], {"duels": 2, "ahead": 1})
+        self.assertEqual(h1["pedigree"], {"sire": "種牡馬X"})
+        self.assertEqual(h1["press"], {"marks": {"記者": "◎"}})
+        h2 = parsed[RACE_ID]["horses"][2]
+        for field in ("bestTime", "headToHead", "pedigree", "press"):
+            self.assertIsNone(h2[field], field)
+
+
+def flat_entry(**blocks):
+    """Materials whose speed side is flat (identical index for
+    every horse, no spd2 contrast), so only the v5 blocks given
+    per horse number can move a probability. Each block maps
+    horse number -> the raw materials block."""
+    horses = {}
+    for n in NAMES:
+        horse = {"nk_best": None, "nk_avg5": 60, "nk_dist": None,
+                 "nk_course": None, "nk_recent": None,
+                 "bestTime": None, "headToHead": None,
+                 "pedigree": None, "press": None}
+        for field, per_horse in blocks.items():
+            if n in per_horse:
+                horse[field] = per_horse[n]
+        horses[n] = horse
+    return {"netkeibaRaceId": NK_ID, "courseAnalysis": None,
+            "horses": horses}
+
+
+class AllTermsAdapterTests(TestCase):
+    def _apply(self, entry):
+        return apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+
+    def test_mochitime_term_rewards_the_fastest_time(self):
+        entry = flat_entry(bestTime={
+            n: {"seconds": s, "tier": 1}
+            for n, s in ((1, 88.0), (2, 92.0), (3, 92.0),
+                         (4, 92.0), (5, 96.0))})
+        adjusted, info = self._apply(entry)
+        self.assertTrue(info["applied"])
+        self.assertIn("mochitime", info["terms"])
+        self.assertEqual(info["coverage"]["mochitime"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        # Negative weight on raw seconds: fastest gains,
+        # slowest loses.
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+        total = sum(r.strength for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=5)
+
+    def test_h2h_term_rewards_the_dominant_record(self):
+        entry = flat_entry(headToHead={
+            n: {"duels": 10, "ahead": a}
+            for n, a in ((1, 5), (2, 9), (3, 5), (4, 1), (5, 5))})
+        adjusted, info = self._apply(entry)
+        self.assertTrue(info["applied"])
+        self.assertIn("h2h", info["terms"])
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[2].p_win, STRENGTHS[2])
+        self.assertLess(by_number[4].p_win, STRENGTHS[4])
+
+    def test_pedigree_term_rewards_the_sire_course_record(self):
+        def ped(wins, top3):
+            return {"sire": "種牡馬", "sireCourse": {
+                "starts": 90, "wins": wins, "top3": top3,
+                "winRate": wins / 90}}
+        entry = flat_entry(pedigree={
+            1: ped(9, 27), 2: ped(9, 27), 3: ped(18, 45),
+            4: ped(9, 27), 5: ped(0, 9)})
+        adjusted, info = self._apply(entry)
+        self.assertTrue(info["applied"])
+        self.assertIn("pedigree", info["terms"])
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[3].p_win, STRENGTHS[3])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+
+    def test_press_term_rewards_the_top_mark(self):
+        entry = flat_entry(press={
+            1: {"marks": {"記者": "○"}}, 2: {"marks": {"記者": "◎"}},
+            3: {"marks": {"記者": "○"}}, 4: {"marks": {"記者": "☆"}}})
+        adjusted, info = self._apply(entry)
+        self.assertTrue(info["applied"])
+        self.assertIn("press", info["terms"])
+        self.assertEqual(info["coverage"]["press"], 4)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[2].p_win, STRENGTHS[2])
+        self.assertLess(by_number[4].p_win, STRENGTHS[4])
+
+    def test_all_terms_together_carry_the_trial_record(self):
+        entry = flat_entry(
+            bestTime={n: {"seconds": 88.0 + n, "tier": 1}
+                      for n in NAMES},
+            headToHead={n: {"duels": 10, "ahead": n} for n in NAMES},
+            pedigree={n: {"sireCourse": {
+                "starts": 90, "wins": 3 * n, "top3": 9 * n,
+                "winRate": 0.1}} for n in NAMES},
+            press={n: {"marks": {"記者": "○"}} for n in NAMES})
+        adjusted, info = self._apply(entry)
+        self.assertTrue(info["applied"])
+        for term in ("mochitime", "h2h", "pedigree"):
+            self.assertIn(term, info["terms"])
+        # All five press entries are identical, so the press
+        # z-scores are all zero: the term exists in coverage
+        # but cannot rank the field — the trial record is
+        # carried by the terms that did contribute.
+        self.assertIn(NK_ALL_TERMS_LABEL, info["weights"])
+        self.assertIn("unvalidated", info["weights"])
+        self.assertEqual(info["materialsTrial"], NK_ALL_TERMS_TRIAL)
+        for field in ("mochitime", "h2h", "pedigree", "press"):
+            self.assertEqual(info["coverage"][field], 5, field)
+
+    def test_too_few_valued_horses_returns_same_object(self):
+        # Only two horses carry a best time and nothing else
+        # can contribute (no speed index either): the z-scores
+        # need three valued horses, so nothing may move.
+        forecast = v9b_like_forecast()
+        entry = {"netkeibaRaceId": NK_ID, "courseAnalysis": None,
+                 "horses": {
+                     1: {"bestTime": {"seconds": 88.0, "tier": 1}},
+                     2: {"bestTime": {"seconds": 96.0, "tier": 1}}}}
+        adjusted, info = apply_nk_materials(
+            forecast, entry, FLAT_EXTRAS)
+        self.assertIs(adjusted, forecast)
+        self.assertFalse(info["applied"])
+
+    def test_all_terms_adjustment_is_deterministic(self):
+        entry = flat_entry(
+            bestTime={n: {"seconds": 88.0 + n, "tier": 1}
+                      for n in NAMES},
+            headToHead={n: {"duels": 10, "ahead": n} for n in NAMES})
+        first, _ = self._apply(entry)
+        second, _ = self._apply(entry)
+        self.assertEqual([r.strength for r in first.runners],
+                         [r.strength for r in second.runners])
+
+
 class UpgradeQualificationTests(TestCase):
     def _info(self, detail, now=NOW):
         with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
@@ -580,15 +792,18 @@ class UpgradeQualificationTests(TestCase):
         self.assertIsNotNone(info)
         self.assertEqual(info["reason"], "nk-materials-upgrade")
 
-    def test_v3_stamp_qualifies_once_more_for_the_pace_term(self):
-        # A v3 publication predates the v4 definition (the AI
-        # pace-forecast term): it qualifies exactly once more,
-        # and the rebuilt product — stamped v4 — does not
-        # qualify again.
-        info = self._info(stored_detail(
-            nk_stamp=True, nk_stamp_version="nk-materials-v3"))
-        self.assertIsNotNone(info)
-        self.assertEqual(info["reason"], "nk-materials-upgrade")
+    def test_v3_and_v4_stamps_qualify_once_more_for_v5(self):
+        # v3 (course trial) and v4 (the pace term, merged from
+        # its own branch) both predate the v5 definition (the
+        # all-materials terms): each qualifies exactly once
+        # more, and the rebuilt product — stamped v5 — does not
+        # qualify again (see the build-level test). This covers
+        # the pace branch's v3-qualifies-once-more case as well.
+        for version in ("nk-materials-v3", "nk-materials-v4"):
+            info = self._info(stored_detail(
+                nk_stamp=True, nk_stamp_version=version))
+            self.assertIsNotNone(info, version)
+            self.assertEqual(info["reason"], "nk-materials-upgrade")
 
     def test_before_cutover_never_qualifies(self):
         self.assertIsNone(self._info(stored_detail(date="2026-11-16")))
@@ -741,7 +956,7 @@ class BuildTests(TestCase):
         # never qualifies again.
         self.assertIsNone(self._recheck(new))
 
-    def test_v2_stamped_race_is_reissued_once_to_current_version(self):
+    def test_v2_stamped_race_is_reissued_once_to_current(self):
         new, receipt = _build(stored_detail(
             nk_stamp=True, nk_stamp_version="nk-materials-v2"))
         self.assertIsNotNone(new, receipt)
@@ -755,6 +970,58 @@ class BuildTests(TestCase):
         # The rebuilt detail carries the current stamp, so it
         # never qualifies again.
         self.assertIsNone(self._recheck(new))
+
+    def test_v3_stamped_race_is_reissued_once_to_v5(self):
+        new, receipt = _build(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v3"))
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        stamp = marker["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertEqual(stamp["version"], "nk-materials-v5")
+        self.assertEqual(marker["revision"]["kind"],
+                         "nk-materials-upgrade")
+        self.assertIsNotNone(verified_unified(new))
+        self.assertIsNone(self._recheck(new))
+
+    def test_build_records_the_all_materials_trial(self):
+        # The published stamp must show the v5 trial on its
+        # face: the terms that fired, the trial label with each
+        # weight in the weights string, and the materialsTrial
+        # marker — separable from the validated terms forever.
+        payload = {
+            "version": "nk-materials-v5", "date": DATE,
+            "races": {RACE_ID: {
+                "netkeibaRaceId": NK_ID,
+                "horses": {str(n): {
+                    "nk_best": NK_AVG5[n] + 5, "nk_avg5": NK_AVG5[n],
+                    "nk_dist": None, "nk_course": None,
+                    "nk_recent": [NK_AVG5[n]] * 3,
+                    "bestTime": {"seconds": 88.0 + n, "tier": 1},
+                    "headToHead": {"duels": 10, "ahead": n},
+                    "pedigree": {"sire": "種牡馬", "sireCourse": {
+                        "starts": 90, "wins": 3 * n, "top3": 9 * n,
+                        "winRate": 0.1}},
+                    "press": {"marks": {"記者": "○"}}}
+                    for n in NAMES},
+                "courseAnalysis": {"コース": "金沢1500m"}}}}
+        new, receipt = _build(
+            fresh_detail(), materials=parse_materials_payload(payload))
+        self.assertIsNotNone(new, receipt)
+        stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        for term in ("mochitime", "h2h", "pedigree"):
+            self.assertIn(term, stamp["terms"])
+        self.assertIn("all-materials-trial-20261117",
+                      stamp["weights"])
+        self.assertIn("unvalidated", stamp["weights"])
+        self.assertEqual(stamp["materialsTrial"],
+                         "all-materials-trial-20261117")
+        self.assertEqual(stamp["coverage"]["mochitime"], 5)
+        self.assertEqual(stamp["coverage"]["h2h"], 5)
+        self.assertEqual(stamp["coverage"]["pedigree"], 5)
+        self.assertEqual(stamp["coverage"]["press"], 5)
+        self.assertIsNotNone(verified_unified(new))
 
     def test_build_applies_course_terms_for_nar(self):
         payload = {
@@ -877,7 +1144,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v4")
+        self.assertEqual(payload["version"], "nk-materials-v5")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
