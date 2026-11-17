@@ -450,7 +450,7 @@ def process_entry(entry: dict, ledger: dict, token: str | None,
         return outcome
 
     protect_detail = pub._load_protect()
-    if produced_kind in pub.SURGICAL_TICKET_REVISION_KINDS:
+    if produced_kind in pub.SURGICAL_SIDECAR_RESTORE_KINDS:
         _sidecar_ok, _sidecar_reason = \
             pub._restore_pristine_sidecar(new, token)
         if not _sidecar_ok:
