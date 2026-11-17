@@ -1,15 +1,39 @@
 /* ARVEXQ research evidence presentation: historical facts only, not forecasts. */
 (function(global){
 'use strict';
+function itemUsable(item){
+  return !!item&&((Array.isArray(item.measurements)&&item.measurements.length>0)||item.value!=null);
+}
 function renderHorse(r,h,escapeText){
   var esc=escapeText||function(s){return String(s)},
-      research=(h&&h.researchEvidence)||(
-        global.ARVEXQLocalEvidence&&global.ARVEXQLocalEvidence.observed(r,h)),
+      server=(h&&h.researchEvidence)||null,
+      local=(global.ARVEXQLocalEvidence&&global.ARVEXQLocalEvidence.observed(r,h))||null,
+      research=server||local,
       factors=research&&research.factors||{},items=Array.isArray(factors.items)?factors.items:[],
       sections=research&&research.sectionals||{},runs=sections.runs||[],
       bias=r&&r.biasProvenance||{},official=bias.official||{},estimate=bias.estimated||{};
+  // Per-item fallback: a server item that carries no value (the NAR
+  // observed factors currently ship value:null with no measurements)
+  // must not hide the locally observed evidence — payloads without
+  // researchEvidence at all (the JRA lane) already render it. Server
+  // items with a real value keep priority; local items only fill keys
+  // the server list does not cover or left empty.
+  if(server&&local&&local.factors&&Array.isArray(local.factors.items)){
+    var localByKey={},serverKeys={};
+    local.factors.items.forEach(function(it){if(it&&it.key!=null)localByKey[String(it.key)]=it});
+    items=items.map(function(item){
+      if(item&&item.key!=null)serverKeys[String(item.key)]=true;
+      if(itemUsable(item))return item;
+      var sub=item&&localByKey[String(item.key)];
+      return itemUsable(sub)?sub:item;
+    });
+    local.factors.items.forEach(function(it){
+      if(it&&it.key!=null&&!serverKeys[String(it.key)]&&itemUsable(it))items.push(it);
+    });
+  }
   var rows=items.map(function(item){
     var values=(item.measurements||[]).map(function(m){return esc(m.key)+': '+esc(m.value)}).join(' / ');
+    if(!values&&item.value!=null)values=esc(item.value);
     return '<div class="arv-research-item"><b>'+esc(item.label||item.key)+'</b>'
       +'<span>'+ (values||'未取得') +'</span></div>';
   }).join('');
