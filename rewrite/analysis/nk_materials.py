@@ -186,6 +186,67 @@ same order as the other material terms), stamped
 pace-trial-20261117(w=0.10;unvalidated-no-history) on every
 publication it touches, to be judged on forward racing only.
 
+v6 terms (2026-11-17, the same user instruction, after the
+full audit found them computed but weightless —
+eval-full-audit-20261117/forecast-inputs.md #7/#19/#22/#24/
+#27/#28). Four more families join, all as marked TRIALS at
+magnitude 0.10, none of them validated:
+
+    speed derived  the seven derived features integrated_eval
+        has always computed from the speed page's raw columns
+        (nk_recent / nk_avg5 / nk_best / nk_dist / nk_course —
+        carried in the materials file since v1) and reported in
+        coverage, but whose frozen weights were all 0:
+        speed_slope (index trend), speed_dev (last run vs own
+        5-run average), speed_vol (recent range), speed_sd
+        (recent spread), speed_overlap (mean+-sd band overlap
+        vs the field), speed_fit (condition fit edge) and
+        speed_bias (course-vs-distance aptitude). The signs
+        follow integrated_eval's own design notes: slope / dev
+        / fit / bias reward the higher value (+0.10); vol / sd
+        / overlap are the dispersion family whose documented
+        expected sign is negative ("erratic / non-separating
+        averages get discounted"), so they enter at -0.10.
+        No new data path was needed — the derivation lives
+        inside integrate(); v6 only supplies the weights. The
+        builder now also reports these features' coverage in
+        the materials file's fieldCoverage, computed with
+        integrated_eval's own functions.
+    combo    the jockey x horse combination record (the pair's
+        shrunk top-3 rate together, integrated_eval's
+        combo_features). Its data is NOT in the materials file:
+        it is computed from the race record itself (each past
+        run's jockey, today's jockey) and handed in by the
+        publish lane as combo_inputs, exactly like the course
+        inputs. Weight +0.10.
+    nk judgements  netkeiba's own per-horse judgements —
+        nk_form_dev (調子偏差値) and nk_ai (AI予想 score) —
+        enter at +0.10 each WHEN the materials file carries
+        them (builder fields nkFormDev / nkAiScore). As of
+        v6 NO forward collection file carries per-horse values
+        for either (the 2026-11-17 / 2026-11-18 collections are
+        NAR days, where these pages do not exist, and no JRA
+        forward collection exists yet), so today the wiring is
+        armed but dataless: the terms contribute nothing and
+        no stamp appears until values arrive.
+    odds movement  odds_drift (publish-time vs final win odds)
+        and odds_wp_gap (final win vs place-range midpoint),
+        integrated_eval's odds_movement_features, at +0.10 each
+        WHEN the materials file carries a per-horse odds block
+        (builder field odds: publishWin / finalWin / placeLow /
+        placeHigh). Same status as the judgements: no
+        collection file carries the block today (2026-11-17
+        recorded forecast odds in its status note only, with no
+        file; 2026-11-18 did not collect odds at all), so the
+        wiring is armed but dataless.
+
+    closing (上がり3F) is deliberately NOT wired in v6: the
+    production past-run record (rewrite/data/normalize.py
+    PastRun) carries no last-3F field at all, and neither does
+    the API detail shape the builder reads — there is no data
+    path to wire. The slot stays in integrate() only, and the
+    gap is recorded here rather than papered over.
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -198,7 +259,7 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v5"
+NK_MATERIALS_VERSION = "nk-materials-v6"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -254,6 +315,41 @@ PACE_WEIGHT = 0.10
 NK_PACE_WEIGHTS_LABEL = "pace-trial-20261117(w=0.10;unvalidated-no-history)"
 _PACE_SIGNS = {"H": 1.0, "S": -1.0}
 _PACE_PHASES = ("start", "corner3", "corner4")
+
+# v6 trial families (see the module docstring). All UNVALIDATED,
+# all magnitude 0.10 like the other trial terms; each family's
+# label is stamped only on publications where one of its terms
+# actually contributed, so an armed-but-dataless family leaves
+# no trace on the stamp.
+# Speed derived features: signs per integrated_eval's design
+# notes (dispersion family negative, the rest positive).
+SPEED_DERIVED_WEIGHTS = {
+    "speed_slope": 0.10, "speed_dev": 0.10, "speed_vol": -0.10,
+    "speed_sd": -0.10, "speed_overlap": -0.10, "speed_fit": 0.10,
+    "speed_bias": 0.10}
+SPEED_DERIVED_TERMS = tuple(SPEED_DERIVED_WEIGHTS)
+NK_SPEED_DERIVED_LABEL = (
+    "speed-derived-trial-20261117(slope+0.10/dev+0.10/vol-0.10/"
+    "sd-0.10/overlap-0.10/fit+0.10/bias+0.10;unvalidated)")
+NK_SPEED_DERIVED_TRIAL = "speed-derived-trial-20261117"
+# Jockey x horse combination record, from the race record.
+COMBO_WEIGHT = 0.10
+NK_COMBO_LABEL = "combo-trial-20261117(w=0.10;unvalidated)"
+NK_COMBO_TRIAL = "combo-trial-20261117"
+# netkeiba's own judgements (form deviation / AI forecast):
+# armed at trial weights; no collection data exists yet.
+JUDGEMENT_WEIGHTS = {"nk_form_dev": 0.10, "nk_ai": 0.10}
+NK_JUDGEMENT_LABEL = (
+    "nk-judgement-trial-20261117(form-dev+0.10/ai+0.10;"
+    "unvalidated)")
+NK_JUDGEMENT_TRIAL = "nk-judgement-trial-20261117"
+# Odds movement (drift / win-place gap): armed at trial
+# weights; no collection data exists yet.
+ODDS_WEIGHTS = {"odds_drift": 0.10, "odds_wp_gap": 0.10}
+NK_ODDS_LABEL = (
+    "odds-movement-trial-20261117(drift+0.10/wp-gap+0.10;"
+    "unvalidated)")
+NK_ODDS_TRIAL = "odds-movement-trial-20261117"
 
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
@@ -314,7 +410,10 @@ def parse_materials_payload(payload) -> dict:
     dicts and press (the verbatim newspaper entry) as a dict or
     string — the term helpers below read them defensively, so
     carrying an odd shape costs the horse that term, never the
-    race. Anything unreadable normalises to {} (no materials
+    race. The v6 fields ride the same way: nkFormDev /
+    nkAiScore are read as numbers, and the odds block is
+    carried as a dict (its cells are read by _odds_cells).
+    Anything unreadable normalises to {} (no materials
     for the date) or drops the offending race/horse — a
     malformed entry must never take the lane down, and a dropped
     horse simply receives no adjustment term.
@@ -352,6 +451,12 @@ def parse_materials_payload(payload) -> dict:
                 horse["press"] = (press if isinstance(press, (dict, str))
                                   else None)
                 horse["pace"] = _parse_pace(values.get("pace"))
+                horse["nkFormDev"] = _num(values.get("nkFormDev"))
+                horse["nkAiScore"] = _num(values.get("nkAiScore"))
+                odds_block = values.get("odds")
+                horse["odds"] = (odds_block
+                                 if isinstance(odds_block, dict)
+                                 else None)
                 horses[number] = horse
         course = entry.get("courseAnalysis")
         label = entry.get("paceLabel")
@@ -446,6 +551,25 @@ def press_points(press):
     if not points:
         return None
     return sum(points) / len(points)
+
+
+# ------------------------------------------- v6 wired families
+_ODDS_CELLS = (("publishWin", "publish_win_odds"),
+               ("finalWin", "final_win_odds"),
+               ("placeLow", "place_odds_low"),
+               ("placeHigh", "place_odds_high"))
+
+
+def _odds_cells(odds):
+    """The odds block's cells under integrate()'s key names:
+    {publish_win_odds, final_win_odds, place_odds_low,
+    place_odds_high}, each a number or None. An absent or
+    malformed block yields all None — no odds material, no
+    odds term (the block exists in the format so a future
+    collection can fill it; no current file does)."""
+    if not isinstance(odds, dict):
+        return {key: None for _, key in _ODDS_CELLS}
+    return {key: _num(odds.get(raw)) for raw, key in _ODDS_CELLS}
 
 
 # ------------------------------------------------- course terms
@@ -608,10 +732,49 @@ def course_inputs_from_race(race) -> dict:
     return out
 
 
+def _obs_int(cell):
+    """An Obs cell's value as an int, or None (bools and
+    non-numeric values are not data)."""
+    value = cell.value if cell is not None else None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return int(value)
+
+
+def combo_inputs_from_race(race) -> dict:
+    """{number: {"jockey": str|None, "past_rides": [...]}}
+    for the race's non-scratched runners, from the race record
+    itself — the input integrated_eval's combo_features reads:
+    each past run as {"jockey", "finish", "field_size"} (the
+    run's own jockey name, finish and field size; unknown stays
+    None) plus today's jockey name. A run whose jockey is
+    unknown simply never matches a NAMED today's jockey; and
+    when today's jockey itself is unknown the rides are
+    reported empty — an unknown pair is no pair record, never
+    an everything-matches one. Nothing is imputed."""
+    out: dict = {}
+    for r in race.runners:
+        if r.scratched:
+            continue
+        today = r.jockey.value if r.jockey is not None else None
+        rides = []
+        if today is not None:
+            for run in r.past_runs:
+                rides.append({
+                    "jockey": (run.jockey.value
+                               if run.jockey is not None else None),
+                    "finish": _obs_int(run.finish),
+                    "field_size": _obs_int(run.field_size),
+                })
+        out[r.number] = {"jockey": today, "past_rides": rides}
+    return out
+
+
 def apply_nk_materials(forecast: RaceForecast, entry,
                        extras_by_number: dict | None = None,
                        segment: str | None = None,
-                       course_inputs: dict | None = None):
+                       course_inputs: dict | None = None,
+                       combo_inputs: dict | None = None):
     """Apply the integrated-evaluation adjustment to a v9b
     RaceForecast. Returns (forecast, info); when nothing can
     contribute, the SAME forecast object is returned with
@@ -645,6 +808,22 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     label (H / S), at the UNVALIDATED trial weight PACE_WEIGHT;
     when it contributes, info["paceTrial"] is set and the
     weights label carries NK_PACE_WEIGHTS_LABEL.
+
+    The v6 families (see the module docstring) follow the same
+    pattern. The speed derived terms ride on the speed columns
+    every entry already carries, so SPEED_DERIVED_WEIGHTS are
+    always in the weight set. The combo term reads
+    combo_inputs (see combo_inputs_from_race — race-record
+    data, not materials-file data) and its weight joins only
+    when some runner actually carries past rides. The
+    judgement (nk_form_dev / nk_ai) and odds-movement
+    (odds_drift / odds_wp_gap) weights are armed the same way,
+    but their per-horse values exist only when the materials
+    file carries nkFormDev / nkAiScore / odds — no current
+    file does, so today they contribute nothing and leave no
+    stamp. Each family that does contribute sets its info
+    marker (speedDerivedTrial / comboTrial / judgementTrial /
+    oddsTrial) and appends its label to the weights string.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -697,6 +876,19 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # v5, UNVALIDATED trial — see the module docstring).
             "pace_score": pace_score(mat.get("pace"),
                                      entry.get("paceLabel")),
+            # v6 wired families (UNVALIDATED trials — see the
+            # module docstring): netkeiba's own judgements and
+            # the odds-movement cells ride the materials entry
+            # (absent from every current file, so None today);
+            # the jockey x horse combination rides the race
+            # record via combo_inputs.
+            "nk_form_dev": mat.get("nkFormDev"),
+            "nk_ai_score": mat.get("nkAiScore"),
+            **_odds_cells(mat.get("odds")),
+            "jockey": ((combo_inputs or {}).get(r.number) or {}
+                       ).get("jockey"),
+            "past_rides": ((combo_inputs or {}).get(r.number) or {}
+                           ).get("past_rides"),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -707,8 +899,21 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         return forecast, info
     # The v5 all-materials terms are always on trial (their
     # weights override the frozen defaults' zeros); the course
-    # weights join them when the course side is live.
+    # weights join them when the course side is live. The v6
+    # families join the same way: the speed derived weights
+    # (their features are computed from the speed columns every
+    # entry carries) and the armed judgement / odds weights
+    # (inert until a materials file carries their values); the
+    # combo weight joins only when the race record actually
+    # carries past rides to read.
     weights = dict(ALL_TERMS_WEIGHTS)
+    weights.update(SPEED_DERIVED_WEIGHTS)
+    weights.update(JUDGEMENT_WEIGHTS)
+    weights.update(ODDS_WEIGHTS)
+    if combo_inputs and any(
+            (ci or {}).get("past_rides")
+            for ci in combo_inputs.values()):
+        weights["combo"] = COMBO_WEIGHT
     course_label = None
     if course_active and (front_bias is not None or frame_bias):
         frs = [h["front_rate"] for h in horses
@@ -762,6 +967,23 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         # the unvalidated pace trial's forward record stays
         # separable.
         info["paceTrial"] = "ai-pace-forecast"
+    # v6 families: the same record-keeping, one marker and one
+    # label part per family that actually contributed a term.
+    if any(k in d["terms"] for d in detail
+           for k in SPEED_DERIVED_TERMS):
+        label_parts.append(NK_SPEED_DERIVED_LABEL)
+        info["speedDerivedTrial"] = NK_SPEED_DERIVED_TRIAL
+    if any("combo" in d["terms"] for d in detail):
+        label_parts.append(NK_COMBO_LABEL)
+        info["comboTrial"] = NK_COMBO_TRIAL
+    if any(k in d["terms"] for d in detail
+           for k in ("nk_form_dev", "nk_ai")):
+        label_parts.append(NK_JUDGEMENT_LABEL)
+        info["judgementTrial"] = NK_JUDGEMENT_TRIAL
+    if any(k in d["terms"] for d in detail
+           for k in ("odds_drift", "odds_wp_gap")):
+        label_parts.append(NK_ODDS_LABEL)
+        info["oddsTrial"] = NK_ODDS_TRIAL
     if len(label_parts) > 1:
         info["weights"] = "+".join(label_parts)
     if not any(d["terms"] for d in detail):
