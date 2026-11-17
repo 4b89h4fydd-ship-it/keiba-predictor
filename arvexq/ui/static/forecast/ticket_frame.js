@@ -5,6 +5,13 @@ function esc(x){
  return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;')
    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+/* v349 (user direction 2026-11-17): horse names inside the ticket
+   frame open the same horse detail page as everywhere else
+   (data-horse-open, wired by the app's global binding) instead of
+   sitting as inert text inside the ticket heads. */
+function ticketNameBtn(no,name){
+ return name?(' <button type="button" class="arv-ticket-name" data-horse-open="'+esc(no)+'" aria-label="'+esc(name)+'の詳細を開く">'+esc(name)+'</button>'):'';
+}
 function revisionStatus(r){
  var live=root.ARVEXQProductionPrediction&&root.ARVEXQProductionPrediction.current();
  var rev=r&&r._forecastRevisionView,plan=rev&&rev.betPlan;
@@ -182,7 +189,7 @@ function combinedEvSection(placeEv,picks,winByNo,names,marksByNo,evLabel,evNote)
      (mk.mark?'<span>'+esc(mk.mark)+'</span>':'')+
      '<span style="color:#e8a33d;font-weight:700">注</span></span>';
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+stack+
-      esc(no)+'番'+(names[no]?' '+esc(names[no]):'')+'</b>'+
+      esc(no)+'番'+ticketNameBtn(no,names[no])+'</b>'+
       '<span class="arv-three-count">単勝期待値 '+esc(Number(w.expectedValue).toFixed(2))+'</span></div>'+
       '<p class="arv-three-ticket-reason">勝率 '+esc((Number(w.winProbability)*100).toFixed(1))+
       '% × 単勝 '+esc(Number(w.odds).toFixed(1))+
@@ -275,7 +282,7 @@ function contents(r,p){
      (model.roster||[]).some(function(h){return h.horseNumber===x.horseNumber;});});
    var evRows=winEv.slice(0,5).map(function(x){
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
-        esc(x.horseNumber)+'番'+(rosterNames[x.horseNumber]?' '+esc(rosterNames[x.horseNumber]):'')+'</b>'+
+        esc(x.horseNumber)+'番'+ticketNameBtn(x.horseNumber,rosterNames[x.horseNumber])+'</b>'+
         '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
         '<p class="arv-three-ticket-reason">勝率 '+esc((Number(x.winProbability)*100).toFixed(1))+
         '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'</p></div>';
@@ -348,7 +355,7 @@ function contents(r,p){
    Number.isFinite(Number(x.winProbability))&&Number(x.winProbability)>=0.05;});
  var evRows=evPicks.slice(0,5).map(function(x){
    return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>単勝 '+
-      esc(x.horseNumber)+'番'+(x.name?' '+esc(x.name):'')+'</b>'+
+      esc(x.horseNumber)+'番'+ticketNameBtn(x.horseNumber,x.name)+'</b>'+
       '<span class="arv-three-count">期待値 '+esc(Number(x.expectedValue).toFixed(2))+'</span></div>'+
       '<p class="arv-three-ticket-reason">勝率 '+esc((Number(x.winProbability)*100).toFixed(1))+
       '% × 単勝オッズ '+esc(Number(x.odds).toFixed(1))+'</p></div>';
