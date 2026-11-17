@@ -8,6 +8,7 @@ from typing import Any
 
 from arvexq.prediction.sectional_profile import profile
 from arvexq.prediction.bias_provenance import provenance
+from arvexq.prediction.observed_evidence import attach_model_evidence
 
 
 def career_coverage(horse: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
@@ -29,6 +30,13 @@ def career_coverage(horse: dict[str, Any], detail: dict[str, Any]) -> dict[str, 
 def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(detail, dict):
         return detail
+    # Compute the observed mineta/margin evidence from past runs first; the
+    # factors card below only reads it. This is evidence decoration after
+    # prediction computation and never feeds marks or probabilities.
+    try:
+        attach_model_evidence(detail)
+    except Exception:
+        pass  # evidence decoration must never block delivery
     detail["biasProvenance"] = provenance(detail)
     count = 0
     for horse in detail.get("horses") or []:
