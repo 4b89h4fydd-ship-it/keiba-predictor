@@ -65,13 +65,18 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
  assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- // Entry, pace and bet are separate tabs; the bet opens a dedicated subpage.
- await t.page.locator('[data-panel="bets"]').click();
- await t.page.waitForSelector('.bet-detail-page-shell');
- assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'おすすめ買い目');
+ // Entry, pace and tickets are separate tabs; the tickets tab opens a
+ // dedicated subpage. (v349: the old 予想/bets subpage was merged into
+ // the entry table and retired.)
+ await t.page.locator('[data-panel="tickets"]').click();
+ await t.page.waitForSelector('.ticket-detail-page-shell');
+ assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'買い目');
  await t.page.locator('[data-action="close-race-subpage"]').first().click();
  await t.page.waitForSelector('.race-nav-v230-top .race-nav-v230-btn');
- await t.page.locator('.rc-horse-main[data-horse-open="2"]').click();
+ await t.page.locator('.arv-entry-table [data-horse-open="2"]').click();
+ // The tabbed horse detail (v348) opens on 基本情報; past runs live on
+ // the 過去走 tab.
+ await t.page.locator('[data-horse-tab="past"]').click();
  await t.page.waitForSelector('.horse-detail-page .recent');
  assert.equal(await t.page.locator('.horse-detail-page .recent').count(),Math.min(5,(detail.horses.find(h=>h.horseNumber===2).recentRaces||[]).length));
  // A full-career-only source must retain factual history even without recentRaces.

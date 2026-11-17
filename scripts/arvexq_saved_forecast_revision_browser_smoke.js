@@ -36,18 +36,20 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   assert.match(await page.locator('#section-aimarks').innerText(),/事後再分析の参考印/);
   assert.equal(await page.locator('#section-aimarks').count(),1);
   assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
-  // Current UI has independent entry / pace tabs and a dedicated bet subpage.
-  // Verify each real route instead of requiring all retired sections at once.
+  // Current UI has independent entry / pace tabs and a dedicated
+  // tickets subpage. Verify each real route instead of requiring all
+  // retired sections at once. (v349: the forecast/bets subpage was
+  // merged into the entry table; the marks live on the entry panel.)
   await page.locator('[data-panel="pace"]').click();
   await page.waitForSelector('#section-pace');
-  await page.locator('[data-panel="bets"]').click();
-  await page.waitForSelector('.bet-detail-page-shell');
-  assert.equal(await page.locator('.bet-detail-page-shell .bet-item').count(),0);
+  await page.locator('[data-panel="entry"]').click();
+  await page.waitForSelector('.arv-entry-table');
+  assert.equal(await page.locator('.arv-entry-table .bet-item').count(),0);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
-  await page.locator('[data-action="close-race-subpage"]').first().click();
+  await page.locator('[data-panel="pace"]').click();
   await page.waitForSelector('#section-pace');
   await page.locator('[data-panel="entry"]').click();
-  await page.waitForSelector('.racecard-row');
+  await page.waitForSelector('.arv-entry-table');
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
   assert.equal(errors.length,0,errors.join(';'));
   console.log('SAVED_FORECAST_REVISION_MOBILE_BROWSER_PASS');

@@ -97,18 +97,18 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     await page.waitForFunction(() => {
       const body = document.body.innerText || '';
       if (/表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined/i.test(body)) return true;
-      return !!document.querySelector('.racecard-table, .result-card, .accordion-panel');
+      return !!document.querySelector('.arv-entry-table, .racecard-table, .result-card, .accordion-panel');
     }, null, { timeout });
 
     const bodyText = await page.locator('body').innerText();
     if (hasFatalUiError(bodyText)) throw new Error('runtime display error: ' + bodyText.slice(0, 1000));
     if (await page.locator('.smart-loading').count()) throw new Error('race remained on loading screen: ' + bodyText.slice(0, 1000));
 
-    const racecard = page.locator('.racecard-table').first();
+    const racecard = page.locator('.arv-entry-table').first();
     await racecard.waitFor({ state: 'visible', timeout });
     try {
       // The table shell can appear before the asynchronously fetched roster.
-      await racecard.locator('.racecard-row').first().waitFor({ state: 'visible', timeout });
+      await racecard.locator('tbody tr').first().waitFor({ state: 'visible', timeout });
     } catch (err) {
       const current = await page.locator('body').innerText();
       throw new Error('racecard rows unavailable after ' + timeout + 'ms for ' + raceId +
@@ -116,11 +116,11 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
         '; pageErrors=' + JSON.stringify(pageErrors) +
         '; body=' + current.slice(0, 1400), { cause: err });
     }
-    const racecardRows = await racecard.locator('.racecard-row').count();
+    const racecardRows = await racecard.locator('tbody tr').count();
     if (racecardRows < 1) throw new Error('racecard rendered without runner rows: ' + bodyText.slice(0, 1000));
     console.log(`RACECARD_VISIBLE rows=${racecardRows} race=${raceId}`);
 
-    for (const key of ['diagnosis', 'detail', 'pace', 'bets']) {
+    for (const key of ['diagnosis', 'detail', 'pace', 'tickets']) {
       const tab = page.locator(`[data-panel="${key}"]`).first();
       if (await tab.count()) {
         await tab.click();
@@ -151,7 +151,7 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
         const snap=await page.evaluate(()=>({url:location.href,
           title:(document.querySelector('.smart-race-head-copy,.smart-race-title')||{}).textContent||'',
           subpage:!!document.querySelector('.bet-detail-page-shell'),
-          racecard:!!document.querySelector('.racecard-table'),
+          racecard:!!document.querySelector('.arv-entry-table'),
           buttons:[...document.querySelectorAll('[data-action="back"],[data-action="close-race-subpage"]')].slice(0,6).map(el=>({kind:el.getAttribute('data-action'),text:el.textContent}))
         }));
         throw new Error('race-to-venue back navigation did not complete: '+JSON.stringify(snap),{cause:err});
