@@ -47,6 +47,10 @@ from rewrite.data.normalize import (
     Obs, PastRun, RaceRecord, RunnerRecord, obs)
 from rewrite.output.api_shape import MODEL_VERSION
 from rewrite.safety.contracts import Segment
+from scripts.arvexq_nk_materials_build import (
+    build as build_materials,
+    load_race_details,
+)
 from scripts.arvexq_rewrite_publish import (
     NAR_DECAY_V9B_ABILITY_MODEL_VERSION,
     V9B_LANE,
@@ -690,6 +694,153 @@ class BuildTests(TestCase):
         self.assertIsNone(new)
         self.assertTrue(reason.startswith("frozen:"), reason)
         self.assertIn("nk-materials rebuild did not land", reason)
+
+
+def _v2_run(day, race_no, distance, finish, seconds, title="C1",
+            track="金沢", surface="ダート"):
+    return {"date": day, "track": track, "raceNumber": race_no,
+            "distance": distance, "surface": surface, "condition": "良",
+            "finish": finish, "timeSeconds": seconds, "title": title,
+            "raceId": f"nar-{day}-{track}-{race_no:02d}"}
+
+
+def _v2_inputs():
+    """One race: #1 and #2 met on 2026-11-03 (#2 in front); #1 and
+    #5 share a key whose titles disagree (dropped); #3 has only an
+    off-track timed run; #4 is a debutant."""
+    targets = {"targets": [{"netkeiba_race_id": NK_ID,
+                            "arvexq_race_id": RACE_ID}]}
+    speed = {"races": {NK_ID: {"horses": {
+        str(n): {"nk_best": 60, "nk_avg5": 55, "nk_dist": None,
+                 "nk_course": None, "nk_recent": [55, 54, 53]}
+        for n in NAMES}}}}
+    course = {NK_ID: {
+        "arvexq_race_id": RACE_ID, "コース": "金沢1500m",
+        "得意な種牡馬": {
+            "見出し": ["項目", "1着", "2着", "3着", "4着以下",
+                        "出走回数", "勝率"],
+            "行": [["種牡馬X", 2, 1, 1, 6, 10, "20%"]]}}}
+    detail = {"id": RACE_ID, "track": "金沢", "surface": "ダート",
+              "distance": 1500, "horses": [
+                  {"horseNumber": 1, "name": NAMES[1], "allPastRuns": [
+                      _v2_run("2026-11-03", 3, 1500, 2, 92.0),
+                      _v2_run("2026-10-20", 5, 1400, 1, 90.0, title="A"),
+                      _v2_run("2026-10-06", 2, 1500, 4, 93.5)]},
+                  {"horseNumber": 2, "name": NAMES[2], "allPastRuns": [
+                      _v2_run("2026-11-03", 3, 1500, 1, 91.8)]},
+                  {"horseNumber": 3, "name": NAMES[3], "allPastRuns": [
+                      _v2_run("2026-11-01", 4, 1200, 3, 75.0,
+                              track="船橋")]},
+                  {"horseNumber": 4, "name": NAMES[4], "allPastRuns": []},
+                  {"horseNumber": 5, "name": NAMES[5], "allPastRuns": [
+                      _v2_run("2026-10-20", 5, 1400, 2, 91.0, title="B")]},
+              ]}
+    profiles = {"horses": {
+        "2024000001": {"name": NAMES[1], "sire": "種牡馬X", "dam": "母1",
+                       "damSire": "母父1",
+                       "siblings": [{"name": "兄", "wins": 3},
+                                    {"name": "弟", "wins": 0}]},
+        "2024000002": {"name": NAMES[2], "sire": "種牡馬Y", "dam": "母2",
+                       "damSire": "母父2", "siblings": []}}}
+    newspaper = {"races": {NK_ID: {"horses": {
+        "1": {"marks": {"記者": "◎"}, "comment": "短評"}}}}}
+    return targets, speed, course, {RACE_ID: detail}, profiles, newspaper
+
+
+class BuilderV2Tests(TestCase):
+    def _build(self, **overrides):
+        targets, speed, course, details, profiles, newspaper = \
+            _v2_inputs()
+        kwargs = {"race_details": details, "horse_profiles": profiles,
+                  "newspaper": newspaper}
+        kwargs.update(overrides)
+        payload = build_materials(DATE, speed, course, targets, **kwargs)
+        return payload["races"][RACE_ID]["horses"]
+
+    def test_version_and_v1_fields_unchanged(self):
+        targets, speed, course, details, profiles, newspaper = \
+            _v2_inputs()
+        payload = build_materials(DATE, speed, course, targets,
+                                  race_details=details,
+                                  horse_profiles=profiles,
+                                  newspaper=newspaper)
+        self.assertEqual(payload["version"], "nk-materials-v2")
+        entry = payload["races"][RACE_ID]
+        self.assertEqual(entry["netkeibaRaceId"], NK_ID)
+        self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
+        self.assertNotIn("arvexq_race_id", entry["courseAnalysis"])
+        horse = entry["horses"]["1"]
+        self.assertEqual(horse["nk_avg5"], 55)
+        self.assertEqual(horse["nk_recent"], [55, 54, 53])
+        self.assertEqual(payload["fieldCoverage"]["horses"], 5)
+        self.assertEqual(payload["fieldCoverage"]["press"], 1)
+
+    def test_best_time_tiers(self):
+        horses = self._build()
+        best1 = horses["1"]["bestTime"]
+        self.assertEqual(best1["seconds"], 92.0)  # tier 1, not the 93.5
+        self.assertEqual(best1["tier"], 1)
+        self.assertEqual(best1["date"], "2026-11-03")
+        best3 = horses["3"]["bestTime"]
+        self.assertEqual(best3["seconds"], 75.0)
+        self.assertEqual(best3["tier"], 3)  # surface kind anywhere
+        self.assertIsNone(horses["4"]["bestTime"])  # debutant
+
+    def test_head_to_head_and_ambiguous_key_dropped(self):
+        horses = self._build()
+        h1 = horses["1"]["headToHead"]
+        self.assertEqual(h1["meetings"], 1)  # only the #2 meeting
+        self.assertEqual(h1["duels"], 1)
+        self.assertEqual(h1["ahead"], 0)
+        self.assertEqual(h1["aheadRate"], 0.0)
+        h2 = horses["2"]["headToHead"]
+        self.assertEqual(h2["ahead"], 1)
+        self.assertEqual(h2["aheadRate"], 1.0)
+        # #5's only shared key disagreed on the title: no meeting.
+        self.assertIsNone(horses["5"]["headToHead"])
+        self.assertIsNone(horses["4"]["headToHead"])
+
+    def test_pedigree_and_sire_course(self):
+        horses = self._build()
+        ped1 = horses["1"]["pedigree"]
+        self.assertEqual(ped1["sire"], "種牡馬X")
+        self.assertEqual(ped1["sireCourse"],
+                         {"starts": 10, "wins": 2, "top3": 4,
+                          "winRate": 0.2})
+        self.assertEqual(ped1["siblings"], {"count": 2, "wins": 3})
+        ped2 = horses["2"]["pedigree"]
+        self.assertIsNotNone(ped2)
+        self.assertIsNone(ped2["sireCourse"])  # sire not in the table
+        self.assertIsNone(horses["3"]["pedigree"])  # no profile
+
+    def test_press_carried_verbatim(self):
+        horses = self._build()
+        self.assertEqual(horses["1"]["press"],
+                         {"marks": {"記者": "◎"}, "comment": "短評"})
+        self.assertIsNone(horses["2"]["press"])
+
+    def test_without_optional_inputs_fields_are_null(self):
+        targets, speed, course, _, _, _ = _v2_inputs()
+        payload = build_materials(DATE, speed, course, targets)
+        horse = payload["races"][RACE_ID]["horses"]["1"]
+        self.assertEqual(horse["nk_avg5"], 55)
+        for field in ("bestTime", "headToHead", "pedigree", "press"):
+            self.assertIsNone(horse[field])
+        self.assertEqual(payload["fieldCoverage"]["bestTime"], 0)
+
+    def test_load_race_details_shapes(self):
+        detail = {"id": RACE_ID, "horses": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "a.json").write_text(
+                json.dumps({"ok": True, "detail": detail}),
+                encoding="utf-8")
+            (Path(tmp) / "b.json").write_text(
+                json.dumps({"id": "other-race", "horses": []}),
+                encoding="utf-8")
+            (Path(tmp) / "c.json").write_text("{broken",
+                                              encoding="utf-8")
+            loaded = load_race_details(tmp)
+        self.assertEqual(set(loaded), {RACE_ID, "other-race"})
 
 
 if __name__ == "__main__":
