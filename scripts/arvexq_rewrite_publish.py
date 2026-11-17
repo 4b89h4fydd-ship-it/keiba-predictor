@@ -302,6 +302,15 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # (course_front +0.10 / course_frame +0.05, NAR only — JRA
 # learned the opposite sign and keeps the frozen defaults; see
 # rewrite/analysis/nk_materials.py for the full provenance).
+# Since nk-materials-v3 (same day, the user's follow-up: you
+# cannot know without actually trying it) the same weights ALSO
+# reach JRA as a marked trial: re-measured with the production
+# feature definitions, JRA's own fit/calib offered no stable
+# weight, but the NAR weights improved the JRA test segment on
+# all three metrics post-hoc (course-weights-20261117
+# REPORT.md §7) — the stamp's weights label and its courseTrial
+# entry record the trial and its provenance, and forward JRA
+# results decide whether it stays.
 # A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
 # as before. The lane and the ability model version do NOT
@@ -328,9 +337,9 @@ NK_MATERIALS_MIN_SPEED_HORSES = 3
 # guard: eligibility holds until the post itself. "Current"
 # is versioned: a race stamped at an older adjustment version
 # (v1, speed-only) qualifies once more when the definition
-# moves (v2, course weights for NAR), and the rebuilt product
-# carries the new stamp, so it can never qualify twice for the
-# same definition.
+# moves (v2, course weights for NAR; v3, the same weights for
+# JRA as a trial), and the rebuilt product carries the new
+# stamp, so it can never qualify twice for the same definition.
 NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
@@ -607,11 +616,11 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v2", "date": ..., "races":
+    {"version": "nk-materials-v3", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
-    informational (the parser does not gate on it; v1 files —
+    informational (the parser does not gate on it; v1/v2 files —
     identical fields — load the same). A missing or unreadable file
     simply means no materials for that date; the caller publishes
     without the adjustment. Like the extras, the file is re-read
@@ -2424,6 +2433,16 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "terms": nk_info.get("terms"),
             "coverage": nk_info.get("coverage"),
             "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
+        if nk_info.get("courseTrial"):
+            # JRA course-weights trial (nk-materials-v3): the
+            # stamp records that this publication's course terms
+            # ran at the trial weights (the NAR weights, applied
+            # to JRA without a JRA-learned fit — see
+            # rewrite/analysis/nk_materials.py), so the trial's
+            # forward record stays separable from NAR's
+            # fit+calib-validated one.
+            meta["rewritePublish"]["nkMaterials"]["courseTrial"] = (
+                nk_info["courseTrial"])
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
@@ -2641,13 +2660,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                      "(user instruction 2026-11-17: put ALL of "
                      "the collected data into the forecast): this "
                      "race was first published before the current "
-                     "materials adjustment (nk-materials-v2: the "
-                     "collected course analysis weighted in for "
-                     "NAR) reached the production lane, so its "
-                     "probabilities were computed without it; "
-                     "the forecast is recomputed with the "
-                     "materials adjustment while the race is "
-                     "still pre-post"),
+                     f"materials adjustment ({NK_MATERIALS_VERSION}: "
+                     "the collected course analysis weighted in — "
+                     "NAR at its fit+calib weights, JRA at the "
+                     "same weights as a trial) reached the "
+                     "production lane, so its probabilities were "
+                     "computed without it; the forecast is "
+                     "recomputed with the materials adjustment "
+                     "while the race is still pre-post"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
