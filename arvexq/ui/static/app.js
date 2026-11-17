@@ -2366,7 +2366,7 @@ function paceDisplayPanel(r,p){
     ? paceOutcomeSection(r,p)+paceMapSection(r,p)
     : paceMapSection(r,p)+pacePanel(r,p);
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+dataTopHorsesSection(r,p)+courseAnalysisSection(r)+analysisDiagnosisHtml(r,p)+analysisRatesSection(r,p)+paceDisplayPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・買い目・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+dataTopHorsesSection(r,p)+pedigreeListSection(r,p)+bestTimeSection(r,p)+headToHeadSection(r,p)+courseAnalysisSection(r)+analysisDiagnosisHtml(r,p)+analysisRatesSection(r,p)+paceDisplayPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・買い目・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -4736,7 +4736,7 @@ function requestHorseProfiles(date){
     .then(function(payload){
       if(!payload||payload.date!==date||!payload.horses||typeof payload.horses!=='object')return;
       horseProfilesState.date=date;horseProfilesState.byKey=payload.horses;
-      if(state.race&&state.race.date===date&&state.subPage==='horse')render();
+      if(state.race&&state.race.date===date&&(state.subPage==='horse'||state.openPanel==='pace'))render();
     }).catch(function(){/* optional enrichment; absence renders as 収集中 */});
 }
 function horseProfileFor(h,r){
@@ -4857,6 +4857,103 @@ function courseAnalysisSection(r){
     +(facts.length?'<div class="arv-course-facts">'+facts.map(function(f){return '<span>'+esc(f)+'</span>'}).join('')+'</div>':'')
     +(starts?'<p>出走馬全体の当該コース実績（自前集計）：延べ'+starts+'走 '+wins+'勝、3着内'+shows+'回（3着内率'+Math.round(shows/starts*100)+'%）</p>':'<p class="muted">出走馬に当該コースの出走歴はまだありません。</p>')
     +'</section>';
+}
+/* v350 — データ分析 tab contents (user direction 2026-11-17:
+   データ上位馬／血統／持ちタイム／対戦表, then the existing course
+   analysis and diagnosis blocks). The pedigree list reads the same
+   dated /horse-profiles/<date>.json as the horse detail; best times
+   and head-to-head meetings are computed here from the past runs the
+   race detail already carries — no other source is consulted and no
+   value is invented. */
+function analysisRunnerHorses(r,p){
+  var rows=sortedHorseRows((p&&p.rows)||[]),seen={},out=[];
+  rows.forEach(function(x){if(x&&x.horse){seen[n(x.horse.horseNumber)]=1;out.push(x.horse)}});
+  ((r&&r.horses)||[]).forEach(function(h){if(h&&n(h.horseNumber)>0&&!seen[n(h.horseNumber)])out.push(h)});
+  return out.filter(function(h){return !isScratchHorse(h)}).sort(function(a,b){return n(a.horseNumber)-n(b.horseNumber)});
+}
+function pedigreeListSection(r,p){
+  var horses=analysisRunnerHorses(r,p);
+  if(!horses.length)return '';
+  var body=horses.map(function(h){
+    var prof=horseProfileFor(h,r),pg=(h&&h.pedigree)||{};
+    function val(k){return (prof&&prof[k])||pg[k]||''}
+    var sire=val('sire'),dam=val('dam'),damSire=val('damSire');
+    var head='<td>'+badge(h)+'</td><td class="l"><button type="button" class="nk-odds-name" data-horse-open="'+esc(n(h.horseNumber))+'">'+esc(horseDisplayName(r,h))+'</button></td>';
+    if(!sire&&!dam&&!damSire)return '<tr>'+head+'<td class="l muted" colspan="3">収集中</td></tr>';
+    return '<tr>'+head+'<td class="l">'+esc(sire||'—')+'</td><td class="l">'+esc(dam||'—')+'</td><td class="l">'+esc(damSire||'—')+'</td></tr>';
+  }).join('');
+  return '<section class="card"><h2>血統</h2><table class="arv-marks-table"><thead><tr><th>馬番</th><th class="l">馬名</th><th class="l">父</th><th class="l">母</th><th class="l">母父</th></tr></thead><tbody>'+body+'</tbody></table></section>';
+}
+/* Best-time pick, in the user's fallback order: (1) this course
+   (track + surface + distance), (2) this track/surface at any
+   distance, (3) this surface anywhere, (4) any timed run. The
+   winning run's own conditions are printed under the time, so a
+   fallback time is never mistaken for a same-course one. */
+function bestTimePick(r,h){
+  var runs=pastRunsForDetail(h,r).filter(function(rr){return rr&&n(rr.timeSeconds,0)>0});
+  if(!runs.length)return null;
+  var kind=runSurfaceKind(r),track=r&&r.track,dist=n(r&&r.distance,0);
+  function best(list){var b=null;(list||[]).forEach(function(rr){if(!b||n(rr.timeSeconds)<n(b.timeSeconds))b=rr});return b}
+  var tiers=[
+    runs.filter(function(rr){return !!track&&rr.track===track&&(!kind||runSurfaceKind(rr)===kind)&&!!dist&&n(rr.distance,0)===dist}),
+    runs.filter(function(rr){return !!track&&rr.track===track&&(!kind||runSurfaceKind(rr)===kind)}),
+    runs.filter(function(rr){return !kind||runSurfaceKind(rr)===kind}),
+    runs
+  ];
+  for(var i=0;i<tiers.length;i++){var picked=best(tiers[i]);if(picked)return picked}
+  return null;
+}
+function bestTimeSection(r,p){
+  var horses=analysisRunnerHorses(r,p);
+  if(!horses.length)return '';
+  var body=horses.map(function(h){
+    var head='<td>'+badge(h)+'</td><td class="l"><button type="button" class="nk-odds-name" data-horse-open="'+esc(n(h.horseNumber))+'">'+esc(horseDisplayName(r,h))+'</button></td>';
+    var b=bestTimePick(r,h);
+    if(!b)return '<tr>'+head+'<td class="muted">なし</td></tr>';
+    var sk=runSurfaceKind(b),sl=sk==='dirt'?'ダ':(sk==='turf'?'芝':'');
+    var sub=esc(b.track||'')+esc(sl)+esc(n(b.distance,0)||'')+'m · '+esc(condNorm(b.condition)||'不明')+' · '+(n(b.finish,0)?esc(n(b.finish,0))+'着':'着順不明')+' · '+esc(b.date||'');
+    return '<tr>'+head+'<td>'+esc(fmtTime(b.timeSeconds))+'<div class="arv-entry-sub">'+sub+'</div></td></tr>';
+  }).join('');
+  return '<section class="card"><h2>持ちタイム</h2><table class="arv-marks-table"><thead><tr><th>馬番</th><th class="l">馬名</th><th>持ちタイム</th></tr></thead><tbody>'+body+'</tbody></table></section>';
+}
+/* Head-to-head: two runners met when their past runs share one race.
+   Past runs carry no race id, so a meeting is keyed strictly on
+   date + track + race number + distance, and a run without a race
+   number can never join a meeting. A key whose runs disagree on the
+   race title is dropped as ambiguous — fewer meetings, no invented
+   ones. */
+function headToHeadSection(r,p){
+  var horses=analysisRunnerHorses(r,p);
+  if(horses.length<2)return '';
+  var byKey={};
+  horses.forEach(function(h){
+    var seen={};
+    pastRunsForDetail(h,r).forEach(function(rr){
+      if(!rr||!rr.date||!rr.track||!(n(rr.raceNumber,0)>0))return;
+      var key=String(rr.date)+'|'+String(rr.track)+'|'+n(rr.raceNumber,0)+'|'+n(rr.distance,0);
+      if(seen[key])return;seen[key]=1;
+      (byKey[key]=byKey[key]||[]).push({h:h,rr:rr});
+    });
+  });
+  var meets=[];
+  Object.keys(byKey).forEach(function(key){
+    var list=byKey[key];
+    if(list.length<2)return;
+    var titles={};
+    list.forEach(function(e){if(e.rr.title)titles[String(e.rr.title)]=1});
+    if(Object.keys(titles).length>1)return;
+    meets.push({list:list,date:list[0].rr.date,track:list[0].rr.track,raceNumber:n(list[0].rr.raceNumber,0),distance:n(list[0].rr.distance,0),title:list[0].rr.title||''});
+  });
+  if(!meets.length)return '<section class="card"><h2>対戦表</h2><p class="muted">出走馬同士の過去の対戦は見つかりませんでした。</p></section>';
+  meets.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:a.raceNumber-b.raceNumber)});
+  var html=meets.map(function(m){
+    var sk=runSurfaceKind(m.list[0].rr),sl=sk==='dirt'?'ダート':(sk==='turf'?'芝':'');
+    var rows=m.list.slice().sort(function(a,b){var fa=n(a.rr.finish,0)||999,fb=n(b.rr.finish,0)||999;return fa-fb||n(a.h.horseNumber)-n(b.h.horseNumber)}).map(function(e){
+      return '<div class="row">'+badge(e.h)+'<button type="button" class="nk-odds-name" data-horse-open="'+esc(n(e.h.horseNumber))+'">'+esc(horseDisplayName(r,e.h))+'</button><strong>'+(n(e.rr.finish,0)?esc(n(e.rr.finish,0))+'着':'—')+'</strong></div>';
+    }).join('');
+    return '<div class="recent"><div class="recent-head"><b>'+esc(m.date)+' '+esc(m.track)+' '+esc(m.raceNumber)+'R '+esc(sl)+esc(m.distance||'')+'m</b></div>'+(m.title?'<div class="muted">'+esc(m.title)+'</div>':'')+rows+'</div>';
+  }).join('');
+  return '<section class="card"><h2>対戦表</h2>'+html+'</section>';
 }
 installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);
 })();
