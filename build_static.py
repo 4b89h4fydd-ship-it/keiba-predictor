@@ -396,6 +396,16 @@ if v26_marks_dir.is_dir():
     for archive in v26_marks_dir.glob("????-??-??.json"):
         shutil.copy2(archive, target_dir / archive.name)
 
+# Horse pedigree/owner profiles (v348) are dated static archives with
+# the same treatment as morning-picks; the client reads them lazily
+# when a horse detail is opened.
+horse_profiles_dir = STATIC / "horse-profiles"
+if horse_profiles_dir.is_dir():
+    target_dir = DIST / "horse-profiles"
+    target_dir.mkdir(exist_ok=True)
+    for archive in horse_profiles_dir.glob("????-??-??.json"):
+        shutil.copy2(archive, target_dir / archive.name)
+
 # Lightweight, immutable factual racecard backup survives an unavailable D1.
 racecard_dir = STATIC / "racecards"
 if racecard_dir.is_dir():
