@@ -35,18 +35,33 @@ normaliser between the collection side and that file; its inputs:
                       {"horses": {<number>: <verbatim entry>}}}};
                       entries are carried through untouched as the
                       horse's "press" field.
+  --pace-forecast     (optional, v4) the forward collection's
+                      pace-forecast.json (arvexq-pace-forecast-v1:
+                      per netkeiba race_id: "pace" label (H/M/S)
+                      and "positions" — the AI pace forecast's
+                      start / corner3 / corner4 group diagrams,
+                      each a list of groups of horse numbers from
+                      the forecast front to the back). Converted
+                      per horse to forecast position rank (1 =
+                      forecast front) and percentile (rank /
+                      field size) per phase, carried as the
+                      horse's "pace" field; the race's label is
+                      carried as the entry's "paceLabel".
 
-Output format (version "nk-materials-v3"):
+Output format (version "nk-materials-v4"):
 
-  {"version": "nk-materials-v3", "date": ..., "source": ...,
+  {"version": "nk-materials-v4", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
        "netkeibaRaceId": <netkeiba race_id>,
+       "paceLabel": <"H"|"M"|"S"|null>,
        "horses": {<horse number as str>: {
            "nk_best": int|null, "nk_avg5": int|null,
            "nk_dist": int|null, "nk_course": int|null,
            "nk_recent": [int|null, ...] | null,
+           "pace": {"start": {"rank": int, "pct": float},
+                    "corner3": {...}, "corner4": {...}} | null,
            "bestTime": {<the data-analysis tab's best-time pick:
                seconds, tier (1-4 in the tab's fallback order),
                track, surface, distance, date, finish,
@@ -87,9 +102,14 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   consumes the file (the course-analysis tables feed the
   weighted course terms: NAR at its fit+calib-selected
   weights, JRA at the same weights as a trial; see
-  rewrite/analysis/nk_materials.py). The publish lane's parser
-  does not gate on the version string, so v1/v2 files load
-  the same.
+  rewrite/analysis/nk_materials.py). The v4 label adds the
+  pace fields above: the AI pace forecast's per-horse
+  positions feed the adapter's pace term — a TRIAL term,
+  UNVALIDATED because no historical pace-forecast data
+  exists to validate against (the diagrams are published
+  only around race day). The publish lane's parser
+  does not gate on the version string, so v1/v2/v3 files load
+  the same (their horses simply carry no pace field).
 
 Rules: values are carried verbatim from the collection (nulls
 stay null — a "-" / 未 cell is missing material, never imputed);
@@ -105,6 +125,7 @@ Usage:
       --speed-index <path> --course-analysis <path> \
       --targets <path> [--race-details-dir <dir>] \
       [--horse-profiles <path>] [--newspaper <path>] \
+      [--pace-forecast <path>] \
       [--out rewrite/data/nk_materials/2026-11-17.json]
 """
 from __future__ import annotations
@@ -119,6 +140,7 @@ JST = ZoneInfo("Asia/Tokyo")
 ROOT = Path(__file__).resolve().parent.parent
 SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 V2_HORSE_FIELDS = ("bestTime", "headToHead", "pedigree", "press")
+PACE_PHASES = ("start", "corner3", "corner4")
 
 
 # ------------------------------------------------------------------
@@ -341,18 +363,62 @@ def _pedigree(profile, course_entry):
 
 
 # ------------------------------------------------------------------
+# Pace forecast (v4)
+# ------------------------------------------------------------------
+
+def _pace_positions(pace_entry) -> tuple:
+    """({horse number as str: {phase: {"rank", "pct"}}}, label)
+    from one race's pace-forecast entry. Rank runs sequentially
+    through the phase's groups from the forecast front (group
+    order, then order within the group); pct = rank / field
+    size, the field size being the phase's own horse count. A
+    phase that is missing or malformed is simply absent; a
+    horse absent from a phase carries no cell for it. Nothing
+    is estimated — a group diagram that does not cover the
+    field is carried as-is."""
+    if not isinstance(pace_entry, dict):
+        return {}, None
+    positions = pace_entry.get("positions")
+    if not isinstance(positions, dict):
+        return {}, None
+    label = pace_entry.get("pace")
+    out: dict = {}
+    for phase in PACE_PHASES:
+        groups = positions.get(phase)
+        if not isinstance(groups, list):
+            continue
+        flat: list = []
+        for group in groups:
+            if not isinstance(group, list):
+                continue
+            for number in group:
+                if isinstance(number, int) and not isinstance(number, bool):
+                    flat.append(number)
+        if not flat:
+            continue
+        size = len(flat)
+        for rank, number in enumerate(flat, start=1):
+            out.setdefault(str(number), {})[phase] = {
+                "rank": rank, "pct": round(rank / size, 4)}
+    return out, (label if isinstance(label, str) else None)
+
+
+# ------------------------------------------------------------------
 # Build
 # ------------------------------------------------------------------
 
 def build(date: str, speed_index: dict, course_analysis: dict,
           targets: dict, race_details: dict | None = None,
           horse_profiles: dict | None = None,
-          newspaper: dict | None = None) -> dict:
+          newspaper: dict | None = None,
+          pace_forecast: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
     press_races = (newspaper.get("races")
                    if isinstance(newspaper, dict) else None) or {}
+    pace_races = (pace_forecast.get("races")
+                  if isinstance(pace_forecast, dict) else None) or {}
     races: dict = {}
     for target in targets.get("targets") or []:
         nk_id = str(target.get("netkeiba_race_id") or "")
@@ -398,16 +464,24 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 profiles.get(runner.get("name") or ""), course)
             press = press_horses.get(str(number))
             horse["press"] = press if isinstance(press, dict) else None
+        # --- v4 addition: AI pace-forecast positions --------
+        pace_by_number, pace_label = _pace_positions(
+            pace_races.get(nk_id))
+        for key, pace in pace_by_number.items():
+            horse = horses.setdefault(key, {
+                col: None for col in SPEED_COLUMNS} | {"nk_recent": None})
+            horse["pace"] = pace
         # Every horse carries every v2 field; a horse the detail
         # input did not cover (or a race with no detail input at
         # all) gets uniform nulls — not collected, never zero.
         for horse in horses.values():
-            for field in V2_HORSE_FIELDS:
+            for field in V2_HORSE_FIELDS + ("pace",):
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
         races[aq_id] = {"netkeibaRaceId": nk_id, "horses": horses,
-                        "courseAnalysis": course}
+                        "courseAnalysis": course,
+                        "paceLabel": pace_label}
     coverage: dict = {}
     all_horses = [h for r in races.values() for h in r["horses"].values()]
     coverage["horses"] = len(all_horses)
@@ -420,8 +494,10 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         1 for h in all_horses
         if isinstance(h.get("pedigree"), dict)
         and h["pedigree"].get("sireCourse") is not None)
+    coverage["pace"] = sum(1 for h in all_horses
+                           if h.get("pace") is not None)
     return {
-        "version": "nk-materials-v3",
+        "version": "nk-materials-v4",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
@@ -463,6 +539,7 @@ def main() -> int:
     parser.add_argument("--race-details-dir")
     parser.add_argument("--horse-profiles")
     parser.add_argument("--newspaper")
+    parser.add_argument("--pace-forecast")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -478,7 +555,8 @@ def main() -> int:
                     _load(args.course_analysis), _load(args.targets),
                     race_details=load_race_details(args.race_details_dir),
                     horse_profiles=_load(args.horse_profiles),
-                    newspaper=_load(args.newspaper))
+                    newspaper=_load(args.newspaper),
+                    pace_forecast=_load(args.pace_forecast))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)

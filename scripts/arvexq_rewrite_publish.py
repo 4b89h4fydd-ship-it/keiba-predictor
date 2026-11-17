@@ -311,6 +311,19 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # REPORT.md §7) — the stamp's weights label and its courseTrial
 # entry record the trial and its provenance, and forward JRA
 # results decide whether it stays.
+# Since nk-materials-v4 (same day, same instruction) the
+# materials file also carries the netkeiba AI pace forecast's
+# per-horse forecast positions, and the adapter's pace term
+# (trial weight 0.10) moves probabilities with them: in a
+# high-pace race the horses forecast to sit back are lifted,
+# in a slow race the forecast front-runners are. HONESTY: the
+# pace term is UNVALIDATED — the AI pace-forecast diagrams
+# exist only around race day, so no historical data exists
+# and a retrospective validation is impossible. The stamp's
+# weights label (pace-trial-20261117(w=0.10;unvalidated-
+# no-history)) and its paceTrial entry record the trial on
+# every publication it touches; forward results decide
+# whether it stays.
 # A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
 # as before. The lane and the ability model version do NOT
@@ -616,7 +629,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v3", "date": ..., "races":
+    {"version": "nk-materials-v4", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -2443,6 +2456,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # fit+calib-validated one.
             meta["rewritePublish"]["nkMaterials"]["courseTrial"] = (
                 nk_info["courseTrial"])
+        if nk_info.get("paceTrial"):
+            # AI pace-forecast trial (nk-materials-v4,
+            # UNVALIDATED — no historical pace-forecast data
+            # exists): the stamp records that this publication's
+            # pace term ran at the trial weight, so the trial's
+            # forward record stays separable (see
+            # rewrite/analysis/nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"]["paceTrial"] = (
+                nk_info["paceTrial"])
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
