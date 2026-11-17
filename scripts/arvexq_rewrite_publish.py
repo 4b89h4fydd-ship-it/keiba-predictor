@@ -376,6 +376,25 @@ def _get_admin(path: str, token: str) -> dict:
 SURGICAL_TICKET_REVISION_KINDS = ("ticket-r24-upgrade",
                                   "ticket-pool4-upgrade")
 
+# Every surgical re-issue — the ticket narrowings above and the
+# place-EV upgrade — is built by applying on top of a deep copy
+# of the stored detail, so the masterAnalysis sidecar it carries
+# is the API projection's copy, whose signed bytes the projection
+# does not preserve (see _restore_pristine_sidecar). The
+# full-rebuild re-issues (roster change, lane / blend /
+# env-repair / nar-decay upgrades) recompute and re-sign the
+# sidecar in-process and never need the restore. The pristine
+# restore in the publish loop (and in the slim reissue process)
+# therefore covers exactly the surgical kinds. Leaving the
+# place-EV upgrade out of this set stranded every
+# sidecar-carrying race that qualified for it: protect_detail
+# rejected the write with "masterAnalysis signature or capture
+# mismatch" on every cycle, the one-time qualification never
+# cleared, and the two stuck races failed every publish run's
+# exit code (Tokyo 6R/7R, 2026-11-15).
+SURGICAL_SIDECAR_RESTORE_KINDS = (
+    SURGICAL_TICKET_REVISION_KINDS + ("place-ev-upgrade",))
+
 
 def _restore_pristine_sidecar(new: dict, token: str | None):
     """Replace a surgical re-issue's masterAnalysis with the
@@ -2589,7 +2608,7 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
             _sidecar_ok, _sidecar_reason = (True, "not-surgical")
             if (revision is not None
                     and (revision.get("kind") or revision.get("reason"))
-                    in SURGICAL_TICKET_REVISION_KINDS):
+                    in SURGICAL_SIDECAR_RESTORE_KINDS):
                 _sidecar_ok, _sidecar_reason = \
                     _restore_pristine_sidecar(new, token)
             if not _sidecar_ok:
