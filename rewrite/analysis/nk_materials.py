@@ -102,6 +102,36 @@ re-issues a v2-stamped pre-post JRA race exactly once under
 the trial; NAR races re-stamped by the same bump recompute
 identically.
 
+Pace term (v4, 2026-11-17, same user instruction — put ALL of
+the collected data in): the netkeiba AI pace forecast's
+per-horse forecast positions (start / 3-corner / 4-corner group
+diagrams, collected forward into pace-forecast.json and carried
+through the materials file per horse as forecast position rank
+and percentile per phase, plus the race's pace label) enter as
+one more integrated-evaluation term:
+
+    pace_score(h) = sign(label) * (pct4(h) - 0.5) * 2
+
+with pct4 the horse's forecast 4-corner position percentile
+(0 = forecast to lead, 1 = forecast last) and sign +1 for a
+high-pace label (H), -1 for a slow label (S), and no score at
+all for any other label (M included: a middling pace forecast
+says nothing about who the shape favours). Reading: in a
+high-pace race the forecast front-runners are expected to be
+cooked by the pressure, so the score rewards the horses
+forecast to sit behind them; in a slow race it rewards the
+front. integrate() z-scores the score within the race as usual.
+
+HONESTY, recorded here and in the PR body: this term is
+UNVALIDATED. The AI pace-forecast diagrams exist only around
+race day (the pages do not persist), so NO historical pace-
+forecast data exists and a retrospective validation is
+impossible — the term ships on the user's explicit instruction
+to put all collected data in, at a trial weight of 0.10 (the
+same order as the other material terms), stamped
+pace-trial-20261117(w=0.10;unvalidated-no-history) on every
+publication it touches, to be judged on forward racing only.
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -114,7 +144,7 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v3"
+NK_MATERIALS_VERSION = "nk-materials-v4"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # Course-term weights for NAR races, selected on fit+calib only
 # (see the module docstring).
@@ -136,6 +166,16 @@ NK_COURSE_WEIGHTS_JRA_TRIAL_LABEL = (
 # (the spelling the adapter's callers and tests use for JRA).
 JRA_SEGMENTS = ("jra", "jra_flat")
 
+# Pace term (v4): TRIAL weight, UNVALIDATED — no historical AI
+# pace-forecast data exists, so no retrospective validation is
+# possible (see the module docstring). Same order of magnitude
+# as the other material terms (speed 0.15 / course_front 0.10).
+# The label is stamped on every publication the term touches.
+PACE_WEIGHT = 0.10
+NK_PACE_WEIGHTS_LABEL = "pace-trial-20261117(w=0.10;unvalidated-no-history)"
+_PACE_SIGNS = {"H": 1.0, "S": -1.0}
+_PACE_PHASES = ("start", "corner3", "corner4")
+
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
 
@@ -146,11 +186,49 @@ def _num(value):
     return value
 
 
+def _parse_pace(values) -> dict | None:
+    """One horse's pace-forecast positions from the materials
+    entry: {phase: {"rank": float, "pct": float}} over the phases
+    that carry readable numbers. None when nothing readable —
+    the horse simply carries no pace material."""
+    if not isinstance(values, dict):
+        return None
+    out: dict = {}
+    for phase in _PACE_PHASES:
+        cell = values.get(phase)
+        if not isinstance(cell, dict):
+            continue
+        rank = _num(cell.get("rank"))
+        pct = _num(cell.get("pct"))
+        if rank is None or pct is None:
+            continue
+        out[phase] = {"rank": rank, "pct": pct}
+    return out or None
+
+
+def pace_score(pace, label):
+    """The pace term's raw score in [-1, 1] (see the module
+    docstring): sign(label) * (corner4 percentile - 0.5) * 2.
+    None when the label carries no direction (M / unknown) or
+    the horse has no 4-corner forecast position."""
+    sign = _PACE_SIGNS.get(label) if isinstance(label, str) else None
+    if sign is None or not isinstance(pace, dict):
+        return None
+    cell = pace.get("corner4")
+    if not isinstance(cell, dict):
+        return None
+    pct = _num(cell.get("pct"))
+    if pct is None:
+        return None
+    return sign * (pct - 0.5) * 2.0
+
+
 def parse_materials_payload(payload) -> dict:
     """Normalise one date's nk-materials payload to
     {arvexq_race_id: {"netkeibaRaceId": str|None,
                       "horses": {int: {column: value}},
-                      "courseAnalysis": dict|None}}.
+                      "courseAnalysis": dict|None,
+                      "paceLabel": str|None}}.
 
     Anything unreadable normalises to {} (no materials for the
     date) or drops the offending race/horse — a malformed entry
@@ -182,12 +260,15 @@ def parse_materials_payload(payload) -> dict:
                 horse["nk_recent"] = (
                     [_num(v) for v in recent]
                     if isinstance(recent, list) else None)
+                horse["pace"] = _parse_pace(values.get("pace"))
                 horses[number] = horse
         course = entry.get("courseAnalysis")
+        label = entry.get("paceLabel")
         out[str(race_id)] = {
             "netkeibaRaceId": entry.get("netkeibaRaceId"),
             "horses": horses,
             "courseAnalysis": course if isinstance(course, dict) else None,
+            "paceLabel": label if isinstance(label, str) else None,
         }
     return out
 
@@ -383,6 +464,12 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     weights label carries the trial label). Any other segment —
     or a race without course inputs — runs with the frozen
     defaults, where the course weights are 0.
+
+    The pace term (v4) is segment-independent: it contributes
+    whenever the entry carries pace-forecast positions and a
+    directional pace label (H / S), at the UNVALIDATED trial
+    weight PACE_WEIGHT; when it contributes, info["paceTrial"]
+    is set and the weights label carries NK_PACE_WEIGHTS_LABEL.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -422,6 +509,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # integrated residual is defined on a higher-is-better
             # own-speed index — negate (see module docstring).
             "spd2": (-spd2_recent if spd2_recent is not None else None),
+            # AI pace-forecast position term (v4, UNVALIDATED
+            # trial — see the module docstring).
+            "pace_score": pace_score(mat.get("pace"),
+                                     entry.get("paceLabel")),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -449,20 +540,36 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         else:
             weights = dict(COURSE_WEIGHTS_NAR)
             course_label = NK_COURSE_WEIGHTS_LABEL
+    pace_label_stamp = None
+    if any(h.get("pace_score") is not None for h in horses):
+        weights = dict(weights) if weights else {}
+        weights["pace"] = PACE_WEIGHT
+        pace_label_stamp = NK_PACE_WEIGHTS_LABEL
     for h in horses:
         h.pop("_frame_group", None)
     probs, coverage, detail = integrate(horses, weights)
     info["coverage"] = coverage
+    extra_labels = []
     if course_label is not None and any(
             k in d["terms"] for d in detail
             for k in ("course_front", "course_frame")):
-        info["weights"] = NK_WEIGHTS_LABEL + "+" + course_label
+        extra_labels.append(course_label)
         if is_jra:
             # The trial is on the record wherever the stamp is
             # read from: the weights label above, plus this
             # explicit marker the publish lane copies into the
             # nkMaterials stamp.
             info["courseTrial"] = "jra"
+    if pace_label_stamp is not None and any(
+            "pace" in d["terms"] for d in detail):
+        extra_labels.append(pace_label_stamp)
+        # Same record-keeping as the course trial: the publish
+        # lane copies this marker into the nkMaterials stamp so
+        # the unvalidated pace trial's forward record stays
+        # separable.
+        info["paceTrial"] = "ai-pace-forecast"
+    if extra_labels:
+        info["weights"] = NK_WEIGHTS_LABEL + "+" + "+".join(extra_labels)
     if not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
