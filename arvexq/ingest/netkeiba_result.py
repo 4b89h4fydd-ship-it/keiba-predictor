@@ -6,6 +6,71 @@ from typing import Callable, Any
 from bs4 import BeautifulSoup
 
 
+def _clock_seconds(token: str) -> float | None:
+    m = re.fullmatch(r"(?:(\d+):)?(\d+(?:\.\d+)?)", token.strip())
+    if not m:
+        return None
+    return int(m.group(1) or 0) * 60 + float(m.group(2))
+
+
+def _parse_race_lap_times(soup) -> list[float]:
+    """Segment lap times (per 200m) from the result page's ラップタイム
+    table. Two layouts exist: the smartphone table carries
+    "<cumulative> <lap>" pairs in each cell (the lap is the second
+    number); the desktop table carries a cumulative row followed by
+    a lap row of single numbers (cross-checked against the
+    cumulative differences). Returns [] when the table is absent or
+    any cell is unparsable — partial laps are not published as
+    fact."""
+    for tb in soup.find_all("table"):
+        rows = []
+        is_lap_table = False
+        for tr in tb.find_all("tr"):
+            cells = [c.get_text(" ", strip=True)
+                     for c in tr.find_all(["th", "td"])]
+            if any(re.fullmatch(r"\d+m", c.replace(" ", "")) for c in cells):
+                is_lap_table = True
+                continue
+            if is_lap_table:
+                rows.append(cells)
+        if not is_lap_table:
+            continue
+        pair_laps: list[float] = []
+        pair_ok = True
+        single_rows: list[list[float]] = []
+        for cells in rows:
+            values = [c for c in cells if c.strip()]
+            if not values:
+                continue
+            parts = [c.replace("　", " ").split() for c in values]
+            if all(len(p) == 2 for p in parts):
+                for p in parts:
+                    lap = _clock_seconds(p[1])
+                    if lap is None or not (5.0 <= lap <= 30.0):
+                        pair_ok = False
+                        break
+                    pair_laps.append(lap)
+                if not pair_ok:
+                    break
+            elif all(len(p) == 1 for p in parts):
+                nums = [_clock_seconds(p[0]) for p in parts]
+                if all(n is not None for n in nums):
+                    single_rows.append(nums)
+        if pair_ok and len(pair_laps) >= 2:
+            return pair_laps
+        if len(single_rows) >= 2:
+            cumulative, laps = single_rows[0], single_rows[-1]
+            if (len(cumulative) == len(laps)
+                    and all(5.0 <= lap <= 30.0 for lap in laps)):
+                diffs = [cumulative[0]] + [
+                    round(cumulative[i] - cumulative[i - 1], 2)
+                    for i in range(1, len(cumulative))]
+                if all(abs(d - lap) <= 0.15
+                       for d, lap in zip(diffs, laps)):
+                    return laps
+    return []
+
+
 def parse_current_result_html(
     html: str,
     *,
@@ -29,7 +94,7 @@ def parse_current_result_html(
             for k in keys:
                 if k in v:return i
         return -1
-    i_fin=hidx("着順");i_frame=hidx("枠");i_no=hidx("馬番");i_name=hidx("馬名");i_time=hidx("タイム");i_margin=hidx("着差");i_corner=hidx("コーナー通過順");i_pop=hidx("人気");i_odds=hidx("単勝オッズ","単勝");i_bw=hidx("馬体重")
+    i_fin=hidx("着順");i_frame=hidx("枠");i_no=hidx("馬番");i_name=hidx("馬名");i_time=hidx("タイム");i_margin=hidx("着差");i_corner=hidx("コーナー通過順");i_pop=hidx("人気");i_odds=hidx("単勝オッズ","単勝");i_bw=hidx("馬体重");i_last3f=hidx("後3F","上がり","上り")
     finishers=[]
     for tr in table.find_all("tr"):
         tds=tr.find_all("td")
@@ -100,9 +165,40 @@ def parse_current_result_html(
         if mb:
             try:bw=int(mb.group(1));chg=int(mb.group(2)) if mb.group(2) is not None else None
             except Exception:pass
-        if no and name:finishers.append({"finish":fin,"finishLabel":str(fin)+"着" if fin else val(i_fin),"horseNumber":no,"frameNumber":frame,"name":name,"timeSeconds":tm,"marginText":margin,"cornerPositions":corners,"winOdds":odd,"popularity":pop,"bodyWeight":bw,"bodyWeightChange":chg})
+        # 上がり3F (last 3F): the desktop layout carries a dedicated
+        # 上がり column; the smartphone layout embeds the value in the
+        # time cell as a trailing parenthesis ("1:54.4 (39.4)" /
+        # "1:54.7 1.3/4 (39.3)") — the same parenthesis the margin
+        # fallback above already skips over. Capture it instead of
+        # discarding it; an absent or unparsable value stays absent
+        # (never estimated). Both key spellings are emitted because
+        # downstream consumers split between them (career/history use
+        # last3fSeconds; the central-run builder uses last3FSeconds).
+        last3f=None
+        if i_last3f>=0:
+            lm=re.fullmatch(r"\d{1,2}\.\d{1,2}",val(i_last3f).strip())
+            if lm:
+                try:last3f=float(lm.group())
+                except Exception:last3f=None
+        if last3f is None and i_time>=0:
+            pm=re.search(r"\((\d{1,2}\.\d{1,2})\)\s*$",val(i_time).strip())
+            if pm:
+                try:last3f=float(pm.group(1))
+                except Exception:last3f=None
+        if last3f is not None and not (15.0<=last3f<=90.0):last3f=None
+        finisher={"finish":fin,"finishLabel":str(fin)+"着" if fin else val(i_fin),"horseNumber":no,"frameNumber":frame,"name":name,"timeSeconds":tm,"marginText":margin,"cornerPositions":corners,"winOdds":odd,"popularity":pop,"bodyWeight":bw,"bodyWeightChange":chg}
+        if last3f is not None:
+            finisher["last3fSeconds"]=last3f
+            finisher["last3FSeconds"]=last3f
+        if no and name:finishers.append(finisher)
     finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
     if len(finishers)<3:return None
     payouts=parse_payouts(soup)
     status="確定" if payouts or re.search(r"確定",clean(soup.get_text(" ",strip=True))) else "速報"
-    return {"status":status,"finishers":finishers,"source":"netkeiba結果","payouts":payouts}
+    result={"status":status,"finishers":finishers,"source":"netkeiba結果","payouts":payouts}
+    laps=_parse_race_lap_times(soup)
+    if laps:
+        # Whole-race segment laps (not per-horse), same semantics as
+        # the NAR公式CSV raceLapTimes the career builder stores.
+        result["raceLapTimes"]=laps
+    return result
