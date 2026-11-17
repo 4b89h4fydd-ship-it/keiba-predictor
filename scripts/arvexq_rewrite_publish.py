@@ -311,19 +311,32 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # REPORT.md §7) — the stamp's weights label and its courseTrial
 # entry record the trial and its provenance, and forward JRA
 # results decide whether it stays.
-# Since nk-materials-v4 (same day, same instruction) the
-# materials file also carries the netkeiba AI pace forecast's
-# per-horse forecast positions, and the adapter's pace term
-# (trial weight 0.10) moves probabilities with them: in a
-# high-pace race the horses forecast to sit back are lifted,
-# in a slow race the forecast front-runners are. HONESTY: the
-# pace term is UNVALIDATED — the AI pace-forecast diagrams
-# exist only around race day, so no historical data exists
-# and a retrospective validation is impossible. The stamp's
-# weights label (pace-trial-20261117(w=0.10;unvalidated-
-# no-history)) and its paceTrial entry record the trial on
-# every publication it touches; forward results decide
-# whether it stays.
+# Since nk-materials-v5 (same day, the user's repeated
+# instruction: put everything in, now) the adapter also reads
+# the per-horse blocks the materials file has carried since the
+# builder's v2 extension — bestTime, headToHead, pedigree — and
+# the newspaper marks (press), as four more z terms
+# (mochitime -0.10 / h2h +0.10 / pedigree +0.10 / press +0.10).
+# These weights are a marked TRIAL, not a validation output:
+# no retrospective measurement of these four as overlay terms
+# exists, and the stamp's weights label plus its materialsTrial
+# entry record that on every publication they touch (see
+# rewrite/analysis/nk_materials.py for the definitions and the
+# shrinkage rules).
+# The pace term arrived as nk-materials-v4 on its own branch
+# (same day, same instruction) and is part of the merged v5:
+# the materials file also carries the netkeiba AI pace
+# forecast's per-horse forecast positions, and the adapter's
+# pace term (trial weight 0.10) moves probabilities with them:
+# in a high-pace race the horses forecast to sit back are
+# lifted, in a slow race the forecast front-runners are.
+# HONESTY: the pace term is UNVALIDATED — the AI pace-forecast
+# diagrams exist only around race day, so no historical data
+# exists and a retrospective validation is impossible. The
+# stamp's weights label (pace-trial-20261117(w=0.10;
+# unvalidated-no-history)) and its paceTrial entry record the
+# trial on every publication it touches; forward results
+# decide whether it stays.
 # A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
 # as before. The lane and the ability model version do NOT
@@ -351,7 +364,7 @@ NK_MATERIALS_MIN_SPEED_HORSES = 3
 # is versioned: a race stamped at an older adjustment version
 # (v1, speed-only) qualifies once more when the definition
 # moves (v2, course weights for NAR; v3, the same weights for
-# JRA as a trial), and the rebuilt product carries the new
+# JRA as a trial; v5, the all-materials terms), and the rebuilt product carries the new
 # stamp, so it can never qualify twice for the same definition.
 NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
@@ -629,7 +642,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v4", "date": ..., "races":
+    {"version": "nk-materials-v5", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -2456,12 +2469,22 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # fit+calib-validated one.
             meta["rewritePublish"]["nkMaterials"]["courseTrial"] = (
                 nk_info["courseTrial"])
+        if nk_info.get("materialsTrial"):
+            # All-materials trial (nk-materials-v5): the stamp
+            # records that this publication's bestTime /
+            # headToHead / pedigree / press terms ran at the
+            # trial weights — weights that have NOT passed a
+            # retrospective validation (see
+            # rewrite/analysis/nk_materials.py) — so the trial's
+            # forward record stays separable and auditable.
+            meta["rewritePublish"]["nkMaterials"]["materialsTrial"] = (
+                nk_info["materialsTrial"])
         if nk_info.get("paceTrial"):
-            # AI pace-forecast trial (nk-materials-v4,
-            # UNVALIDATED — no historical pace-forecast data
-            # exists): the stamp records that this publication's
-            # pace term ran at the trial weight, so the trial's
-            # forward record stays separable (see
+            # AI pace-forecast trial (nk-materials-v4, merged
+            # into v5; UNVALIDATED — no historical pace-forecast
+            # data exists): the stamp records that this
+            # publication's pace term ran at the trial weight,
+            # so the trial's forward record stays separable (see
             # rewrite/analysis/nk_materials.py).
             meta["rewritePublish"]["nkMaterials"]["paceTrial"] = (
                 nk_info["paceTrial"])
