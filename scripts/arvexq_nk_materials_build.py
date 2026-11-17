@@ -70,9 +70,9 @@ normaliser between the collection side and that file; its inputs:
                       only; 2026-11-18 collected no odds) — same
                       armed-but-dataless status as above.
 
-Output format (version "nk-materials-v6"):
+Output format (version "nk-materials-v7"):
 
-  {"version": "nk-materials-v6", "date": ..., "source": ...,
+  {"version": "nk-materials-v7", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
@@ -639,7 +639,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 list(race["horses"].values())).items():
             coverage[key] = coverage.get(key, 0) + count
     return {
-        "version": "nk-materials-v6",
+        "version": "nk-materials-v7",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),

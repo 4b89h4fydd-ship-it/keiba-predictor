@@ -240,12 +240,25 @@ magnitude 0.10, none of them validated:
         file; 2026-11-18 did not collect odds at all), so the
         wiring is armed but dataless.
 
-    closing (上がり3F) is deliberately NOT wired in v6: the
-    production past-run record (rewrite/data/normalize.py
-    PastRun) carries no last-3F field at all, and neither does
-    the API detail shape the builder reads — there is no data
-    path to wire. The slot stays in integrate() only, and the
-    gap is recorded here rather than papered over.
+    closing (上がり3F) — the gap recorded in v6, wired in v7
+        (2026-11-18): the production past-run record now
+        carries the observed last-3F seconds (PastRun.
+        last3f_seconds, written by the career / official-CSV /
+        result-page ingestion), and the publish lane hands
+        each runner's recent sequence in as closing_inputs
+        (see closing_inputs_from_race — race-record data, not
+        materials-file data, exactly like combo). The feature
+        is closing_dev, the horse's own latest seconds against
+        its own recent mean, so raw seconds are never compared
+        across horses; integrate() z-scores the per-horse
+        deviation within the race. Trial weight +0.10,
+        UNVALIDATED; NK_CLOSING_TRIAL and
+        NK_CLOSING_WEIGHTS_LABEL record it on every
+        publication the term touches. Runners with no observed
+        last-3F at all contribute nothing. The ability layer's
+        own closing feature (a corner-position estimate inside
+        v8) is untouched — this term is materials-only, like
+        the other trials.
 
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
@@ -259,7 +272,7 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v6"
+NK_MATERIALS_VERSION = "nk-materials-v7"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -315,6 +328,18 @@ PACE_WEIGHT = 0.10
 NK_PACE_WEIGHTS_LABEL = "pace-trial-20261117(w=0.10;unvalidated-no-history)"
 _PACE_SIGNS = {"H": 1.0, "S": -1.0}
 _PACE_PHASES = ("start", "corner3", "corner4")
+
+# Closing term (v7, 2026-11-18): TRIAL weight, UNVALIDATED. The
+# input is the horse's own observed last-3F seconds from its past
+# runs on the race record (see closing_inputs_from_race);
+# integrated_eval's closing feature is closing_dev (own recent
+# mean minus latest seconds), so a positive weight rewards a
+# horse whose latest finish was faster than its own recent norm.
+# Raw seconds are never compared across horses — integrate()
+# z-scores the per-horse deviation within the race.
+CLOSING_WEIGHT = 0.10
+NK_CLOSING_WEIGHTS_LABEL = "closing-trial-20261118(w=+0.10;unvalidated)"
+NK_CLOSING_TRIAL = "closing-observed-last3f"
 
 # v6 trial families (see the module docstring). All UNVALIDATED,
 # all magnitude 0.10 like the other trial terms; each family's
@@ -770,11 +795,34 @@ def combo_inputs_from_race(race) -> dict:
     return out
 
 
+def closing_inputs_from_race(race) -> dict:
+    """{number: [last-3F seconds, oldest -> newest]} over each
+    non-scratched runner's five most recent past runs (None where
+    a run carries no observed value), from the race record's
+    normalized past runs. Past runs are stored newest-first; the
+    integrated closing feature expects oldest -> newest. Runners
+    with no observed last-3F at all are omitted."""
+    out: dict = {}
+    for r in race.runners:
+        if r.scratched:
+            continue
+        recent = []
+        for run in (r.past_runs or ())[:5]:
+            obs = getattr(run, "last3f_seconds", None)
+            value = getattr(obs, "value", None)
+            recent.append(value if isinstance(value, (int, float))
+                          and not isinstance(value, bool) else None)
+        if any(v is not None for v in recent):
+            out[r.number] = list(reversed(recent))
+    return out
+
+
 def apply_nk_materials(forecast: RaceForecast, entry,
                        extras_by_number: dict | None = None,
                        segment: str | None = None,
                        course_inputs: dict | None = None,
-                       combo_inputs: dict | None = None):
+                       combo_inputs: dict | None = None,
+                       closing_inputs: dict | None = None):
     """Apply the integrated-evaluation adjustment to a v9b
     RaceForecast. Returns (forecast, info); when nothing can
     contribute, the SAME forecast object is returned with
@@ -824,6 +872,14 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     stamp. Each family that does contribute sets its info
     marker (speedDerivedTrial / comboTrial / judgementTrial /
     oddsTrial) and appends its label to the weights string.
+
+    The closing term (v7) follows the same pattern again: it
+    reads closing_inputs (see closing_inputs_from_race — the
+    runners' own observed last-3F seconds from the race
+    record's past runs) and its weight joins only when some
+    runner actually carries an observed value; when it
+    contributes, info["closingTrial"] is NK_CLOSING_TRIAL and
+    the weights label carries NK_CLOSING_WEIGHTS_LABEL.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -889,6 +945,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
                        ).get("jockey"),
             "past_rides": ((combo_inputs or {}).get(r.number) or {}
                            ).get("past_rides"),
+            # Observed last-3F sequence from the race record's
+            # past runs (closing trial, v7 — see
+            # closing_inputs_from_race).
+            "last3f_recent": (closing_inputs or {}).get(r.number),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -937,6 +997,12 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         weights = dict(weights) if weights else {}
         weights["pace"] = PACE_WEIGHT
         pace_label_stamp = NK_PACE_WEIGHTS_LABEL
+    closing_label_stamp = None
+    if any(h.get("last3f_recent") and
+           any(v is not None for v in h["last3f_recent"])
+           for h in horses):
+        weights["closing"] = CLOSING_WEIGHT
+        closing_label_stamp = NK_CLOSING_WEIGHTS_LABEL
     for h in horses:
         h.pop("_frame_group", None)
     probs, coverage, detail = integrate(horses, weights)
@@ -967,6 +1033,11 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         # the unvalidated pace trial's forward record stays
         # separable.
         info["paceTrial"] = "ai-pace-forecast"
+    if closing_label_stamp is not None and any(
+            "closing" in d["terms"] for d in detail):
+        label_parts.append(closing_label_stamp)
+        # Same record-keeping as the pace trial.
+        info["closingTrial"] = NK_CLOSING_TRIAL
     # v6 families: the same record-keeping, one marker and one
     # label part per family that actually contributed a term.
     if any(k in d["terms"] for d in detail

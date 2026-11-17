@@ -86,6 +86,20 @@ directions, the stamp records (speedDerivedTrial /
 comboTrial / judgementTrial / oddsTrial), the parser's
 handling of the new fields, and that a v5-stamped publication
 qualifies for exactly one more re-issue onto v6.
+
+v7 (2026-11-18): the closing term joins as a marked trial.
+The past-run record now carries the observed last-3F seconds
+(PastRun.last3f_seconds — the career / official-CSV /
+result-page ingestion writes them, and normalize / store /
+api_shape carry them through), so the adapter's closing term
+(+0.10, UNVALIDATED) reads each runner's own recent sequence
+through closing_inputs_from_race. The tests pin the
+oldest-first ordering with gaps kept as None, that the term
+lifts the horse whose latest close beat its own recent norm,
+its complete inertness without closing inputs, the stamp
+record (closingTrial), that normalize keeps the observed
+value on past runs, and that a v6-stamped publication
+qualifies for exactly one more re-issue onto v7.
 """
 from __future__ import annotations
 
@@ -100,20 +114,21 @@ from zoneinfo import ZoneInfo
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
-    COMBO_WEIGHT, NK_ALL_TERMS_LABEL, NK_ALL_TERMS_TRIAL,
+    CLOSING_WEIGHT, COMBO_WEIGHT, NK_ALL_TERMS_LABEL,
+    NK_ALL_TERMS_TRIAL, NK_CLOSING_TRIAL, NK_CLOSING_WEIGHTS_LABEL,
     NK_COMBO_LABEL, NK_COMBO_TRIAL, NK_JUDGEMENT_LABEL,
     NK_JUDGEMENT_TRIAL, NK_MATERIALS_VERSION, NK_ODDS_LABEL,
     NK_ODDS_TRIAL, NK_PACE_WEIGHTS_LABEL,
     NK_SPEED_DERIVED_LABEL, NK_SPEED_DERIVED_TRIAL, PACE_WEIGHT,
     SPEED_DERIVED_WEIGHTS,
-    apply_nk_materials, best_time_seconds, combo_inputs_from_race,
-    course_biases,
+    apply_nk_materials, best_time_seconds, closing_inputs_from_race,
+    combo_inputs_from_race, course_biases,
     course_inputs_from_race, front_rate_from_runs, h2h_shrunk_rate,
     pace_score, parse_materials_payload, press_points,
     sire_course_score,
     speed_coverage)
 from rewrite.data.normalize import (
-    Obs, PastRun, RaceRecord, RunnerRecord, obs)
+    Obs, PastRun, RaceRecord, RunnerRecord, normalize_runner, obs)
 from rewrite.output.api_shape import MODEL_VERSION
 from rewrite.safety.contracts import Segment
 from scripts.arvexq_nk_materials_build import (
@@ -841,6 +856,18 @@ class UpgradeQualificationTests(TestCase):
         self.assertIsNotNone(info)
         self.assertEqual(info["reason"], "nk-materials-upgrade")
 
+    def test_v6_stamp_qualifies_once_more_for_v7(self):
+        # A v6 publication (speed-derived / combo / judgement /
+        # odds families) predates the v7 definition (the closing
+        # term): it qualifies exactly once more, and the rebuilt
+        # product — stamped v7 — does not qualify again (see the
+        # build-level tests, which assert the rebuilt stamp
+        # carries NK_MATERIALS_VERSION).
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v6"))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
+
     def test_before_cutover_never_qualifies(self):
         self.assertIsNone(self._info(stored_detail(date="2026-11-16")))
 
@@ -1180,7 +1207,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v6")
+        self.assertEqual(payload["version"], "nk-materials-v7")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
@@ -1401,6 +1428,101 @@ class PaceAdapterTests(TestCase):
             v9b_like_forecast(), _pace_materials("H")[RACE_ID], {})
         self.assertEqual([r.p_win for r in first.runners],
                          [r.p_win for r in second.runners])
+
+
+class ClosingAdapterTests(TestCase):
+    """Closing trial (v7, 2026-11-18): the horses' own observed
+    last-3F seconds, carried on the rewrite PastRun as
+    last3f_seconds."""
+
+    def _race_with_closings(self):
+        missing = Obs(None, "test", "not_captured")
+
+        def run(seconds):
+            return PastRun(
+                date="2026-11-03", track=missing, distance=missing,
+                surface=missing, finish=missing,
+                field_size=obs(10, "test"), corner_positions=(),
+                margin_text=missing, time_seconds=missing,
+                jockey=missing,
+                last3f_seconds=(obs(seconds, "test")
+                                if seconds is not None else missing))
+
+        # Past runs are stored newest-first on the record. Horse 1
+        # closed much faster last time than its own recent mean;
+        # horse 2 is the mirror image; horse 4 has one unobserved
+        # run in between; horse 5 has no observed closing at all.
+        closings = {1: [36.0, 40.0, 40.0, 40.0],
+                    2: [40.0, 36.0, 36.0, 36.0],
+                    3: [38.0, 38.0, 38.0, 38.0],
+                    4: [38.0, None, 38.0, 38.0],
+                    5: [None, None, None, None]}
+        runners = []
+        for number in (1, 2, 3, 4, 5):
+            runners.append(RunnerRecord(
+                number=number, horse_id=missing,
+                name=obs(NAMES[number], "test"),
+                frame_number=missing, age=missing, sex=missing,
+                jockey=missing, trainer=missing,
+                carried_weight=missing, body_weight=missing,
+                body_weight_change=missing,
+                win_odds=obs(ODDS[number], "test"),
+                scratched=False,
+                past_runs=tuple(run(s) for s in closings[number])))
+        return RaceRecord(
+            race_id=RACE_ID, date=DATE, circuit=obs("地方", "test"),
+            track="金沢", race_number=obs(1, "test"), title=missing,
+            start_time=obs(POST, "test"), distance=obs(1500, "test"),
+            surface=obs("ダート", "test"), weather=missing,
+            condition=missing, updated_at=missing, segment=Segment.NAR,
+            source="test", runners=tuple(runners))
+
+    def test_closing_inputs_are_oldest_first_with_gaps_kept(self):
+        inputs = closing_inputs_from_race(self._race_with_closings())
+        self.assertEqual(inputs[1], [40.0, 40.0, 40.0, 36.0])
+        self.assertEqual(inputs[2], [36.0, 36.0, 36.0, 40.0])
+        self.assertEqual(inputs[4], [38.0, 38.0, None, 38.0])
+        self.assertNotIn(5, inputs)
+
+    def test_closing_term_lifts_the_fast_finisher(self):
+        payload = {"races": {RACE_ID: {"horses": {
+            str(n): {"nk_avg5": None} for n in NAMES}}}}
+        entry = parse_materials_payload(payload)[RACE_ID]
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, entry, {},
+            closing_inputs=closing_inputs_from_race(
+                self._race_with_closings()))
+        self.assertTrue(info["applied"])
+        self.assertEqual(info["terms"], ["closing"])
+        self.assertEqual(info["closingTrial"], NK_CLOSING_TRIAL)
+        self.assertIn(NK_CLOSING_WEIGHTS_LABEL, info["weights"])
+        self.assertEqual(info["coverage"]["closing"], 4)
+        self.assertEqual(CLOSING_WEIGHT, 0.10)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[2].p_win, STRENGTHS[2])
+        total = sum(r.p_win for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=3)
+
+    def test_no_closing_inputs_is_inert(self):
+        payload = {"races": {RACE_ID: {"horses": {
+            str(n): {"nk_avg5": None} for n in NAMES}}}}
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, parse_materials_payload(payload)[RACE_ID], {})
+        self.assertIs(adjusted, forecast)
+        self.assertFalse(info["applied"])
+
+    def test_normalize_keeps_observed_last3f_on_past_runs(self):
+        runner = {"horseNumber": 1, "name": "アアア",
+                  "allPastRuns": [past_run("2026-11-03", 2)]}
+        record = normalize_runner(runner, DATE, "test")
+        self.assertEqual(record.past_runs[0].last3f_seconds.value, 38.0)
+        runner = {"horseNumber": 1, "name": "アアア",
+                  "allPastRuns": [{"date": "2026-11-03"}]}
+        record = normalize_runner(runner, DATE, "test")
+        self.assertIsNone(record.past_runs[0].last3f_seconds.value)
 
 
 class PaceBuildTests(TestCase):

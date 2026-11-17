@@ -27,11 +27,18 @@ def run_sectional_percentile(run: dict[str, Any]) -> float | None:
     """
     if not isinstance(run, dict):
         return None
+    # Stored records split between last3F* (capital F, JRA公式 cell
+    # parser) and last3f* (lowercase f, netkeiba career builder —
+    # the spelling most stored JRA runs actually carry).
     direct = _f(run.get("last3FPercentile"))
+    if direct is None:
+        direct = _f(run.get("last3fPercentile"))
     if direct is not None:
         return _clip01(direct)
 
     rank = _f(run.get("last3FRank"))
+    if rank is None:
+        rank = _f(run.get("last3fRank"))
     field = _f(run.get("fieldSize"))
     if rank is None or rank <= 0 or field is None or field < 2 or rank > field:
         return None

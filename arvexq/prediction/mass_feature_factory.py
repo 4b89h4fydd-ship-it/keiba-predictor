@@ -124,9 +124,13 @@ def _late_speed(run: dict[str, Any]) -> float | None:
     # Prefer race-relative JRA closing evidence. Raw last3F seconds are never fed
     # directly because course/distance/going make cross-race seconds incomparable.
     direct = _f(run.get("last3FPercentile"))
+    if direct is None:
+        direct = _f(run.get("last3fPercentile"))
     if direct is not None:
         return max(0.0, min(1.0, direct))
     rank = _f(run.get("last3FRank"))
+    if rank is None:
+        rank = _f(run.get("last3fRank"))
     field = _f(run.get("fieldSize"))
     if rank is not None and field is not None and field >= 2 and 1 <= rank <= field:
         return max(0.0, min(1.0, 1.0 - (rank - 1.0) / (field - 1.0)))

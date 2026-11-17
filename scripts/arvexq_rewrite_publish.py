@@ -153,8 +153,8 @@ from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa:
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.nk_materials import (  # noqa: E402
-    NK_MATERIALS_VERSION, apply_nk_materials, combo_inputs_from_race,
-    course_inputs_from_race,
+    NK_MATERIALS_VERSION, apply_nk_materials, closing_inputs_from_race,
+    combo_inputs_from_race, course_inputs_from_race,
     parse_materials_payload, speed_coverage as nk_speed_coverage)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
@@ -352,9 +352,13 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # odds-movement terms (drift / win-place gap) at +0.10 each.
 # Each family's stamp marker (speedDerivedTrial / comboTrial
 # / judgementTrial / oddsTrial) and weights-label part record
-# it only on publications its terms actually touched; the
-# closing （上がり3F) term stays unwired because the production
-# past-run record carries no last-3F field at all (see
+# it only on publications its terms actually touched.
+# Since nk-materials-v7 (2026-11-18, same instruction) the
+# closing （上がり3F) term is wired too: the production past-run
+# record now carries the observed last-3F seconds, and the
+# adapter's closing term (trial weight +0.10) reads each
+# runner's own recent sequence via closing_inputs_from_race;
+# its stamp marker is closingTrial (see
 # rewrite/analysis/nk_materials.py for the full record).
 # A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
@@ -661,7 +665,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v6", "date": ..., "races":
+    {"version": "nk-materials-v7", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -2161,7 +2165,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
                 forecast, nk_entry, extras_by_number,
                 segment=segment,
                 course_inputs=course_inputs_from_race(race),
-                combo_inputs=combo_inputs_from_race(race))
+                combo_inputs=combo_inputs_from_race(race),
+                closing_inputs=closing_inputs_from_race(race))
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -2546,6 +2551,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # status as the judgement trial above.
             meta["rewritePublish"]["nkMaterials"]["oddsTrial"] = (
                 nk_info["oddsTrial"])
+        if nk_info.get("closingTrial"):
+            # Closing trial (nk-materials-v7; UNVALIDATED):
+            # the stamp records that this publication's closing
+            # term — the horses' own observed last-3F deviation,
+            # read from the race record's past runs — ran at the
+            # trial weight, so the trial's forward record stays
+            # separable (see rewrite/analysis/nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"]["closingTrial"] = (
+                nk_info["closingTrial"])
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
