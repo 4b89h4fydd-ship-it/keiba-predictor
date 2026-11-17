@@ -174,6 +174,7 @@ def _past_run(row: PastRun) -> dict:
         "marginText": _value(row.margin_text),
         "jockey": _value(row.jockey),
         "carriedWeight": _value(row.carried_weight),
+        "last3fSeconds": _value(row.last3f_seconds),
     }
 
 
