@@ -24,10 +24,10 @@ const renderer=new Function('window','esc','n','cinematicFooter',
   "function aiBetRecommendation(){return window.ARVEXQTicketFrame.contents();}\n"+
   extract('raceSubpageTopBar','horseDetailPage')+
   extract('betDetailPage','renderRace')+
-  '\nreturn betDetailPage;');
+  '\nreturn ticketDetailPage;');
 const html=renderer({},esc,n,()=>'')({track:'大井',raceNumber:7},{});
 assert.match(html,/smart-race-subpage-topbar/);
-assert.match(html,/bet-detail-page-shell/);
+assert.match(html,/ticket-detail-page-shell/);
 assert.match(html,/class="ai-bet-box"/);
 assert.doesNotMatch(html,/◎|【単】|【軸】|3連単チャレンジ|arv-three-combos/);
 
@@ -38,7 +38,7 @@ function extractFunction(name){
 }
 const navFactory=new Function('state',extractFunction('cinematicTabs')+'\nreturn cinematicTabs;');
 const navHtml=navFactory({openPanel:'entry'})({});
-assert.equal((navHtml.match(/data-panel="/g)||[]).length,3);
+assert.equal((navHtml.match(/data-panel="/g)||[]).length,6);
 assert.match(navHtml,/data-panel="bets"/);
 const stagePages=[
   {key:'start',visualKey:'first',label:'スタート',index:0},
@@ -75,8 +75,8 @@ async function test(type,label){
         const title=r('.smart-race-subpage-topbar .smart-race-head-copy strong');
         const left=r('.smart-race-subpage-topbar .smart-race-step');
         const right=r('.smart-race-subpage-topbar .smart-race-close');
-        const box=r('.bet-detail-page-shell .ai-bet-box');
-        const pills=[...document.querySelectorAll('.bet-detail-page-shell .ai-bet-meta>span')].map(e=>e.getBoundingClientRect());
+        const box=r('.ticket-detail-page-shell .ai-bet-box');
+        const pills=[...document.querySelectorAll('.ticket-detail-page-shell .ai-bet-meta>span')].map(e=>e.getBoundingClientRect());
         return {width:innerWidth,scroll:document.documentElement.scrollWidth,
           header:{top:header.top},title:{x:title.x,right:title.right,width:title.width},
           left:{right:left.right},right:{x:right.x},box:{x:box.x,right:box.right},
@@ -89,7 +89,7 @@ async function test(type,label){
           titleText:document.querySelector('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent};
       });
       const e=2;
-      assert.equal(result.titleText,'おすすめ買い目');
+      assert.equal(result.titleText,'買い目');
       assert.ok(result.title.width>=95,label+' '+width+' clipped title '+JSON.stringify(result));
       assert.ok(result.title.x>=result.left.right-e,label+' '+width+' title overlaps back');
       assert.ok(result.title.right<=result.right.x+e,label+' '+width+' title overlaps close');
@@ -100,7 +100,7 @@ async function test(type,label){
         label+' '+width+' independent ticket frame overflow '+JSON.stringify(result));
       assert.equal(result.markBadges.length,0,'retired marks must not reappear');
       assert.equal(result.combos.length,0,'retired tickets must not reappear');
-      // Three race tabs plus tappable formation are also checked at every width.
+      // Six race tabs plus tappable formation are also checked at every width.
       for(let stage=0;stage<4;stage++){
         const app='<div class="smart-shell"><main class="smart-main smart-race-page">'+navHtml+diagrams[stage]+'</main></div>';
         await page.setContent('<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>'+app+'</body></html>');
@@ -114,8 +114,8 @@ async function test(type,label){
             tabWidths:tabs.map(t=>t.getBoundingClientRect().width)};
         });
         assert.equal(resultStage.next,(stage+1)%4,label+' '+width+' stage cycle '+stage);
-        assert.equal(resultStage.tabWidths.length,3);
-        assert.ok(resultStage.tabWidths.every(w=>w>60),label+' '+width+' tab labels too narrow');
+        assert.equal(resultStage.tabWidths.length,6);
+        assert.ok(resultStage.tabWidths.every(w=>w>40),label+' '+width+' tab labels too narrow');
         assert.ok(resultStage.buttonWidth>200,label+' '+width+' diagram too narrow');
         assert.ok(resultStage.scroll<=resultStage.width+2,label+' '+width+' stage overflow '+JSON.stringify(resultStage));
       }

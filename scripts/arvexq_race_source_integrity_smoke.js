@@ -91,7 +91,12 @@ const runnerHtml=renderRunner({id:'test'},{
 assert.match(runnerHtml,/racecard-row/);
 assert.match(runnerHtml,/サンプル号/);
 assert.match(runnerHtml,/data-horse-open="7"/);
-assert.match(runnerHtml,/data-ai-mark=""/);
+// v348 (user direction 2026-11-17): the racecard row carries no AI
+// mark cell at all — marks live on the 予想 tab — so the old
+// "empty mark cell" assertion becomes "no mark cell, nothing
+// fabricated" (the fixture's ◎ must not leak into the row).
+assert.doesNotMatch(runnerHtml,/data-ai-mark/);
+assert.doesNotMatch(runnerHtml,/◎/);
 assert.match(src,/function minimalRacecardPanel\(/);
 assert.match(src,/function runnerStyleSection\(/);
 console.log('ARVEXQ_SINGLE_SOURCE_RACE_OPEN_AND_PERSISTENT_ALERT_OK');
