@@ -126,6 +126,41 @@
 .arv-analysis-rate-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .arv-analysis-rate-name{flex:1 1 auto;min-width:0;appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:16px;font-weight:800;color:inherit;cursor:pointer;padding:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 span.arv-analysis-rate-name{cursor:default}
+/* v348 (user directions 2026-11-17): slim one-row tab bar so the
+   entries start right under the header, the small odds refresh
+   button, the own-mark-only check column, and the new tables
+   (marks / odds / condition records / pedigree / data-top horses).
+   Kept in this inline block so the frozen stylesheet modules stay
+   untouched. */
+.race-nav-v230.nk-tabs .race-nav-v230-row{display:flex!important;flex-wrap:nowrap!important;gap:2px!important}
+.race-nav-v230.nk-tabs .race-nav-v230-btn{flex:1 1 0!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:0 1px!important;font-size:13px!important}
+.race-nav-v230.nk-tabs .race-nav-v230-label{white-space:nowrap!important}
+@media(max-width:430px){.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:12px!important}}
+.arv-refresh-mini{font-size:12px!important;padding:4px 10px!important;margin:2px 0 6px!important}
+.rc-v348-ownonly{display:flex!important;align-items:flex-start!important;justify-content:center!important}
+.rc-v348-ownonly .rc-v345-owncheck{border-top:0!important;padding:6px 0!important}
+.hd-tabs{display:flex;gap:2px;margin:10px 0 4px;border-bottom:2px solid #006636}
+.hd-tab{flex:1 1 0;appearance:none;-webkit-appearance:none;border:0;background:#eef2ee;color:#33413a;font:inherit;font-size:13.5px;font-weight:700;padding:8px 2px;cursor:pointer;border-radius:8px 8px 0 0}
+.hd-tab.active{background:#006636;color:#ffffff}
+.arv-cond-table,.arv-marks-table,.arv-odds-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.arv-cond-table th,.arv-cond-table td,.arv-marks-table th,.arv-marks-table td,.arv-odds-table th,.arv-odds-table td{padding:6px 4px;border-bottom:1px solid #e4e7ec;text-align:right}
+.arv-cond-table th.l,.arv-cond-table td.l,.arv-marks-table th.l,.arv-marks-table td.l,.arv-odds-table th.l,.arv-odds-table td.l{text-align:left}
+.arv-cond-table tr.total td{font-weight:800;background:#f2f7f3}
+.arv-marks-mark{font-size:17px;font-weight:900;text-align:center!important}
+.arv-odds-mark{font-size:15px;font-weight:900;text-align:center!important}
+.arv-odds-chips{display:flex;gap:6px;margin:2px 0 6px}
+.arv-odds-chip{font-size:12px;font-weight:700;padding:4px 10px;border:1px solid #006636;border-radius:999px;color:#006636}
+.arv-odds-chip.active{background:#006636;color:#ffffff}
+.arv-ped-table{width:100%;border-collapse:collapse;font-size:13px}
+.arv-ped-table td{border:1px solid #d8ded8;padding:6px;vertical-align:middle}
+.arv-ped-table small{display:block;color:#5b6a61;font-size:10.5px}
+.arv-ped-table .gen1{background:#eef7f0}
+.arv-sib-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #e4e7ec}
+.arv-top-horse{border-top:1px solid #e4e7ec;padding:8px 0}
+.arv-top-horse-head{display:flex;align-items:center;gap:8px}
+.arv-top-rank{font-weight:900;color:#006636;font-size:16px}
+.arv-top-reason{font-size:12.5px;color:#3c4540;margin:2px 0 0 30px}
+.arv-course-facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-bottom:6px}
 </style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
 <link rel="icon" type="image/png" href="/arvexq-icon-v362-192.png">
