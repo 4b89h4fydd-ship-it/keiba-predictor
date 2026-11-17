@@ -48,7 +48,9 @@ function functionBody(name,text=src){
   return text.slice(start,end);
 }
 const layoutBaseline={
-  "cinematicTabs": "f04fa416e3c7313b",
+  // Re-pinned 2026-11-17: user-directed sixth main tab (買い目,
+  // between 予想 and オッズ) on the race page.
+  "cinematicTabs": "7bac3f5d9fb92f83",
   "smartRaceTopBar": "6f0925af17890feb",
   // Re-pinned 2026-11-17: user-directed removal of the yellow
   // result-status box (smartInlineResult) from the race header.
@@ -57,7 +59,10 @@ const layoutBaseline={
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
   "horseDetailPage": "df827cb40bc07925",
-  "renderRace": "36c793cb7ecc4b86"
+  // Re-pinned 2026-11-17: user-directed tickets subpage routing and
+  // removal of the trailing ticket frame (the plan now lives only on
+  // the 買い目 tab, never duplicated under other tabs).
+  "renderRace": "290063adf7314d30"
 };
 const baseSource=baselineRef?baseText('arvexq/ui/static/app.js'):null;
 for(const [name,expected] of Object.entries(layoutBaseline))

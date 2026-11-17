@@ -16,8 +16,13 @@ assert.equal(label({predMark:'◎',markFrozen:true,honmeiRole:''}),'保存印：
 assert.equal(label({predMark:'',preOffAxisCandidate:true,markFrozen:false}),'');
 assert.equal(label(null),'');
 const card=src.slice(src.indexOf('function racecardEntryRow('),src.indexOf('function morningSavedMarkRows('));
-assert(card.includes('rc-honmei-role'),'visible horse-name role must render');
-assert(card.includes('markRoleLabel(x)&&!scratch'),'scratch rows must never get role label beside name');
+// v348 (user direction 2026-11-17): role badges no longer render on
+// the racecard at all — ARVEXQ marks live on the 予想 tab table, and
+// the racecard check column carries only the user's own-mark toggle.
+// markRoleLabel itself is unchanged (unit assertions above).
+assert(!card.includes('rc-honmei-role'),'role badge must not render on the racecard');
+assert(!card.includes('rc-mark-box'),'AI mark box must not render on the racecard');
+assert(card.includes('data-user-mark'),'own-mark check stays on the racecard');
 const panel=src.slice(src.indexOf('function aiMarksPanel('),src.indexOf('function betPanel('));
 assert(panel.includes('ARVEXQMarkFrame.render(r)'),'dedicated empty frame');
 require('./test_support/production_ui.cjs').assertNoForecast({horses:[{horseNumber:1,mark:'◎',honmeiRole:'win-axis'}]});

@@ -41,13 +41,17 @@ const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
   ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
   m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg',()=> '',()=>'',x=>String(visiblePredictionMark(x)||'—'));
 const html=render({},horse,x);
-assert.match(html,/class="rc-mark-box rc-ai-mark" data-ai-mark=""/);
-assert.match(html,/<span class="rc-mark-main">—<\/span>/);
+// v348 (user direction 2026-11-17): the racecard row no longer
+// renders an AI mark cell — marks live on the 予想 tab table. The
+// row keeps only the user's own-mark check, and rendering still
+// must not mutate or fabricate the underlying marks.
+assert.doesNotMatch(html,/rc-mark-box/);
+assert.doesNotMatch(html,/data-ai-mark/);
+assert.match(html,/data-user-mark="6"/);
 assert.doesNotMatch(html,/class="rc-honmei-role"/);
 assert.equal(x.predMark,'','HTML rendering cannot rewrite underlying score');
 const off=render({},horse,{...x,preOffAxisCandidate:false});
-assert.match(off,/data-ai-mark=""/);
-assert.match(off,/<span class="rc-mark-main">—<\/span>/);
+assert.doesNotMatch(off,/data-ai-mark/);
 const scratch=render({},{...horse,scratched:true},{...x,horse:{...horse,scratched:true}});
 assert.doesNotMatch(scratch,/data-ai-mark="◎"/);
 for(const target of [
