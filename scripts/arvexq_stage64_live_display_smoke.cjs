@@ -68,9 +68,11 @@ function ready(d){
       await page.locator('[data-panel="pace"]').first().click();
       await page.locator('#section-pace').waitFor({state:'visible',timeout:15000});
       assert.match(await page.locator('#section-pace').innerText(),/AI展開予想/);
-      await page.locator('[data-panel="bets"]').first().click();
-      await page.locator('.bet-detail-page-shell').waitFor({state:'visible',timeout:15000});
-      const tickets=await page.locator('.bet-detail-page-shell .arv-three-ticket').count();
+      // v349: tickets live on the dedicated 買い目 subpage (the old
+      // bets subpage was merged into the entry table).
+      await page.locator('[data-panel="tickets"]').first().click();
+      await page.locator('.ticket-detail-page-shell').waitFor({state:'visible',timeout:15000});
+      const tickets=await page.locator('.ticket-detail-page-shell .arv-three-ticket').count();
       assert(tickets>=1,'iPhone stored recommended bets missing '+d.id);
       console.log('STAGE64_PRODUCTION_IPHONE_PASS',JSON.stringify({
         id:d.id,stage64Model:d.prediction.stage64ModelVersion||d.prediction.modelVersion,

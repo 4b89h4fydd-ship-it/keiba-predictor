@@ -50,7 +50,10 @@ function functionBody(name,text=src){
 const layoutBaseline={
   // Re-pinned 2026-11-17: user-directed sixth main tab (買い目,
   // between 予想 and オッズ) on the race page.
-  "cinematicTabs": "7bac3f5d9fb92f83",
+  // Re-pinned 2026-11-17 (v349): user-directed merge of the forecast
+  // table into the racecard — five main tabs, the 予想 tab retired,
+  // the entry tab labelled 出走表.
+  "cinematicTabs": "47b27e9effd6f873",
   "smartRaceTopBar": "6f0925af17890feb",
   // Re-pinned 2026-11-17: user-directed removal of the yellow
   // result-status box (smartInlineResult) from the race header.
@@ -58,11 +61,19 @@ const layoutBaseline={
   "renderPicker": "8b81f0479683023d",
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
-  "horseDetailPage": "df827cb40bc07925",
+  // Re-pinned 2026-11-17 (v349): the tabbed horse detail now renders
+  // on every forecast lane — the legacyEngineDisabled past-runs-only
+  // stub that hid the detail is removed (user report: tapping a
+  // horse name did not open the detail).
+  "horseDetailPage": "61dbcbbe3684015f",
   // Re-pinned 2026-11-17: user-directed tickets subpage routing and
   // removal of the trailing ticket frame (the plan now lives only on
   // the 買い目 tab, never duplicated under other tabs).
-  "renderRace": "290063adf7314d30"
+  // Re-pinned 2026-11-17 (v349): the 予想 subpage routing is removed
+  // with the merged entry table, and the compact marks frame is no
+  // longer appended under the entry panel (the table carries the
+  // marks itself).
+  "renderRace": "0a51bd471302ad04"
 };
 const baseSource=baselineRef?baseText('arvexq/ui/static/app.js'):null;
 for(const [name,expected] of Object.entries(layoutBaseline))

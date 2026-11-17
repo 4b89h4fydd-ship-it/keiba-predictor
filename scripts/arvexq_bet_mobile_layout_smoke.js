@@ -23,7 +23,7 @@ const renderer=new Function('window','esc','n','cinematicFooter',
   frameSource+'\n'+
   "function aiBetRecommendation(){return window.ARVEXQTicketFrame.contents();}\n"+
   extract('raceSubpageTopBar','horseDetailPage')+
-  extract('betDetailPage','renderRace')+
+  extract('ticketDetailPage','renderRace')+
   '\nreturn ticketDetailPage;');
 const html=renderer({},esc,n,()=>'')({track:'大井',raceNumber:7},{});
 assert.match(html,/smart-race-subpage-topbar/);
@@ -38,8 +38,13 @@ function extractFunction(name){
 }
 const navFactory=new Function('state',extractFunction('cinematicTabs')+'\nreturn cinematicTabs;');
 const navHtml=navFactory({openPanel:'entry'})({});
-assert.equal((navHtml.match(/data-panel="/g)||[]).length,6);
-assert.match(navHtml,/data-panel="bets"/);
+// v349 (user direction 2026-11-17): five main tabs — the forecast
+// table merged into the racecard, so the 予想 tab (bets) is retired
+// and the entry tab is labelled 出走表.
+assert.equal((navHtml.match(/data-panel="/g)||[]).length,5);
+assert.match(navHtml,/data-panel="tickets"/);
+assert.match(navHtml,/出走表/);
+assert.doesNotMatch(navHtml,/data-panel="bets"/);
 const stagePages=[
   {key:'start',visualKey:'first',label:'スタート',index:0},
   {key:'turn3',visualKey:'turn3',label:'3C',index:1},

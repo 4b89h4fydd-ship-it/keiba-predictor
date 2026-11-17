@@ -34,7 +34,11 @@ assert.match(html,/class="recent"/);
 assert.match(html,/園田/);
 assert.equal(ARVEXQPastRunView.visible(allOnly,{date:'2026-08-01'},5).length,0);
 const app=fs.readFileSync(path.join(root,'arvexq/ui/static/app.js'),'utf8');
-assert.match(app,/ARVEXQPastRunView\.recentRows\(/,'horse detail must use standalone history presenter');
+// v349: the horse detail's past-runs tab is fed by pastRunsForDetail,
+// which delegates to the standalone presenter's visible() window. The
+// old recentRows() call site sat in the removed legacyEngineDisabled
+// stub (the past-runs-only replacement for the whole detail page).
+assert.match(app,/ARVEXQPastRunView\.visible\(h,r,1000\)/,'horse detail must use standalone history presenter');
 assert.match(app,/ARVEXQPastRunView\.visible\(/,'historical window must delegate to standalone history');
 const bundle=fs.readFileSync(path.join(root,'arvexq/ui/bundle.py'),'utf8');
 assert.match(bundle,/HISTORY_SCRIPTS/,'Web and static build must share history modules');

@@ -164,9 +164,11 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
       await check(ticketPage,archived);
       assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
-      await ticketPage.locator('[data-panel="bets"]').click();
-      await ticketPage.waitForSelector('.bet-detail-page-shell');
-      assert.equal((await ticketPage.locator('.ai-bet-box').innerText()).trim(),'','retired numbered tickets stay archival');
+      // v349: the forecast (bets) subpage was merged into the entry
+      // table; the ticket plan lives on the dedicated 買い目 subpage.
+      await ticketPage.locator('[data-panel="tickets"]').click();
+      await ticketPage.waitForSelector('.ticket-detail-page-shell');
+      assert.equal(await ticketPage.locator('.ticket-detail-page-shell .arv-three-ticket').count(),0,'retired numbered tickets stay archival');
       await ticketPage.close();
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
