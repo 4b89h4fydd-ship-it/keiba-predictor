@@ -47,10 +47,32 @@ normaliser between the collection side and that file; its inputs:
                       field size) per phase, carried as the
                       horse's "pace" field; the race's label is
                       carried as the entry's "paceLabel".
+  --nk-judgements     (optional, v6) per-horse netkeiba
+                      judgements in the shape {"races":
+                      {<netkeiba race_id>: {"horses":
+                      {<number>: {"nkFormDev": <number>,
+                      "nkAiScore": <number>}}}}}; the two values
+                      are carried verbatim per horse as the
+                      "nkFormDev" / "nkAiScore" fields. NO
+                      forward collection produces this file yet
+                      (the judgements live on JRA-side pages;
+                      the 2026-11-17/18 collections are NAR days)
+                      — the input exists so the values flow the
+                      moment a collection saves them.
+  --odds              (optional, v6) per-horse odds snapshots
+                      in the shape {"races": {<netkeiba race_id>:
+                      {"horses": {<number>: {"publishWin": ...,
+                      "finalWin": ..., "placeLow": ...,
+                      "placeHigh": ...}}}}}; carried per horse
+                      as the "odds" block. NO forward collection
+                      produces this file yet either (2026-11-17
+                      recorded forecast odds in its status note
+                      only; 2026-11-18 collected no odds) — same
+                      armed-but-dataless status as above.
 
-Output format (version "nk-materials-v5"):
+Output format (version "nk-materials-v6"):
 
-  {"version": "nk-materials-v5", "date": ..., "source": ...,
+  {"version": "nk-materials-v6", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
@@ -60,6 +82,11 @@ Output format (version "nk-materials-v5"):
            "nk_best": int|null, "nk_avg5": int|null,
            "nk_dist": int|null, "nk_course": int|null,
            "nk_recent": [int|null, ...] | null,
+           "nkFormDev": number|null, "nkAiScore": number|null,
+           "odds": {"publishWin": number|null,
+                    "finalWin": number|null,
+                    "placeLow": number|null,
+                    "placeHigh": number|null} | null,
            "pace": {"start": {"rank": int, "pct": float},
                     "corner3": {...}, "corner4": {...}} | null,
            "bestTime": {<the data-analysis tab's best-time pick:
@@ -107,9 +134,18 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   positions feed the adapter's pace term — a TRIAL term,
   UNVALIDATED because no historical pace-forecast data
   exists to validate against (the diagrams are published
-  only around race day). The publish lane's parser
-  does not gate on the version string, so v1/v2/v3 files load
-  the same (their horses simply carry no pace field).
+  only around race day). The v6 label adds the nkFormDev /
+  nkAiScore / odds fields above (null until a collection
+  supplies them) and the derived-speed coverage counts in
+  fieldCoverage (speedSlope / speedDev / speedVol / speedSd /
+  speedOverlap / speedFit / speedBias — how many horses the
+  adapter's v6 speed-derived terms can stand on, computed
+  with integrated_eval's own feature functions from the raw
+  columns; the derivation itself stays inside integrate(), so
+  no derived values are duplicated into this file). The
+  publish lane's parser does not gate on the version string,
+  so v1/v2/v3 files load the same (their horses simply carry
+  no pace field).
 
 Rules: values are carried verbatim from the collection (nulls
 stay null — a "-" / 未 cell is missing material, never imputed);
@@ -132,14 +168,23 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 JST = ZoneInfo("Asia/Tokyo")
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from rewrite.analysis.integrated_eval import (  # noqa: E402
+    band_overlap_share, speed_aptitude_features,
+    speed_trend_features)
+
 SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 V2_HORSE_FIELDS = ("bestTime", "headToHead", "pedigree", "press")
+V6_HORSE_FIELDS = ("nkFormDev", "nkAiScore", "odds")
+ODDS_CELLS = ("publishWin", "finalWin", "placeLow", "placeHigh")
 PACE_PHASES = ("start", "corner3", "corner4")
 
 
@@ -404,6 +449,45 @@ def _pace_positions(pace_entry) -> tuple:
 
 
 # ------------------------------------------------------------------
+# Derived-speed coverage (v6)
+# ------------------------------------------------------------------
+
+def _derived_coverage(race_horses: list) -> dict:
+    """Per-field horse counts for the adapter's v6 speed-derived
+    terms, computed with integrated_eval's own feature functions
+    over the same sanitised inputs integrate() will see (the
+    publish parser's _num view of the raw columns). The counts
+    answer "how many horses can this term stand on" at build
+    time; the derivation itself stays inside integrate()."""
+    trends = []
+    for h in race_horses:
+        recent = h.get("nk_recent")
+        recent = ([_num(v) for v in recent]
+                  if isinstance(recent, list) else None)
+        trends.append(speed_trend_features(
+            recent, _num(h.get("nk_avg5")), _num(h.get("nk_best"))))
+    apts = [speed_aptitude_features(
+        _num(h.get("nk_dist")), _num(h.get("nk_course")),
+        t["last"], _num(h.get("nk_avg5")))
+        for h, t in zip(race_horses, trends)]
+    overlap = band_overlap_share([
+        (t["mean_recent"], t["sd"])
+        if t["mean_recent"] is not None and t["sd"] is not None
+        else None for t in trends])
+    return {
+        "speedSlope": sum(1 for t in trends if t["slope"] is not None),
+        "speedDev": sum(1 for t in trends
+                        if t["last_minus_avg5"] is not None),
+        "speedVol": sum(1 for t in trends if t["vol"] is not None),
+        "speedSd": sum(1 for t in trends if t["sd"] is not None),
+        "speedOverlap": sum(1 for v in overlap if v is not None),
+        "speedFit": sum(1 for a in apts if a["fit_edge"] is not None),
+        "speedBias": sum(1 for a in apts
+                         if a["course_minus_dist"] is not None),
+    }
+
+
+# ------------------------------------------------------------------
 # Build
 # ------------------------------------------------------------------
 
@@ -411,7 +495,9 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           targets: dict, race_details: dict | None = None,
           horse_profiles: dict | None = None,
           newspaper: dict | None = None,
-          pace_forecast: dict | None = None) -> dict:
+          pace_forecast: dict | None = None,
+          nk_judgements: dict | None = None,
+          odds: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -419,6 +505,11 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                    if isinstance(newspaper, dict) else None) or {}
     pace_races = (pace_forecast.get("races")
                   if isinstance(pace_forecast, dict) else None) or {}
+    judgement_races = (nk_judgements.get("races")
+                       if isinstance(nk_judgements, dict)
+                       else None) or {}
+    odds_races = (odds.get("races")
+                  if isinstance(odds, dict) else None) or {}
     races: dict = {}
     for target in targets.get("targets") or []:
         nk_id = str(target.get("netkeiba_race_id") or "")
@@ -471,11 +562,41 @@ def build(date: str, speed_index: dict, course_analysis: dict,
             horse = horses.setdefault(key, {
                 col: None for col in SPEED_COLUMNS} | {"nk_recent": None})
             horse["pace"] = pace
+        # --- v6 additions: netkeiba judgements / odds -------
+        # Carried verbatim (numbers only) when a collection
+        # supplies them; no current collection does, so on
+        # today's files every horse takes the uniform nulls
+        # below and the adapter's armed terms stay inert.
+        judged = (judgement_races.get(nk_id) or {}).get("horses") or {}
+        odds_horses = (odds_races.get(nk_id) or {}).get("horses") or {}
+        for key, horse in horses.items():
+            entry_j = judged.get(key)
+            if isinstance(entry_j, dict):
+                horse["nkFormDev"] = _num(entry_j.get("nkFormDev"))
+                horse["nkAiScore"] = _num(entry_j.get("nkAiScore"))
+            entry_o = odds_horses.get(key)
+            if isinstance(entry_o, dict):
+                cells = {c: _num(entry_o.get(c)) for c in ODDS_CELLS}
+                horse["odds"] = (cells if any(
+                    v is not None for v in cells.values()) else None)
+            # The newspaper marks join on (race, horse number)
+            # alone — they never needed the race-details input.
+            # Until v6 they were assigned only inside the
+            # details runners loop above, so a build without
+            # details (the 2026-11-18 collection run) silently
+            # dropped every collected mark (press coverage 0
+            # despite 279 marked horses on file). Assign here
+            # for every horse the details loop did not reach.
+            if horse.get("press") is None:
+                entry_p = press_horses.get(key)
+                horse["press"] = (entry_p
+                                  if isinstance(entry_p, dict)
+                                  else None)
         # Every horse carries every v2 field; a horse the detail
         # input did not cover (or a race with no detail input at
         # all) gets uniform nulls — not collected, never zero.
         for horse in horses.values():
-            for field in V2_HORSE_FIELDS + ("pace",):
+            for field in V2_HORSE_FIELDS + ("pace",) + V6_HORSE_FIELDS:
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
@@ -496,8 +617,29 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         and h["pedigree"].get("sireCourse") is not None)
     coverage["pace"] = sum(1 for h in all_horses
                            if h.get("pace") is not None)
+    # v6: the judgements / odds fields (0 until a collection
+    # supplies them) and the derived-speed coverage, summed
+    # race by race (the overlap feature is a race-level
+    # computation, so it cannot be counted horse by horse).
+    coverage["nkFormDev"] = sum(1 for h in all_horses
+                                if h.get("nkFormDev") is not None)
+    coverage["nkAiScore"] = sum(1 for h in all_horses
+                                if h.get("nkAiScore") is not None)
+    coverage["oddsDrift"] = sum(
+        1 for h in all_horses if isinstance(h.get("odds"), dict)
+        and h["odds"].get("publishWin") is not None
+        and h["odds"].get("finalWin") is not None)
+    coverage["oddsWpGap"] = sum(
+        1 for h in all_horses if isinstance(h.get("odds"), dict)
+        and h["odds"].get("finalWin") is not None
+        and h["odds"].get("placeLow") is not None
+        and h["odds"].get("placeHigh") is not None)
+    for race in races.values():
+        for key, count in _derived_coverage(
+                list(race["horses"].values())).items():
+            coverage[key] = coverage.get(key, 0) + count
     return {
-        "version": "nk-materials-v5",
+        "version": "nk-materials-v6",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
@@ -540,6 +682,8 @@ def main() -> int:
     parser.add_argument("--horse-profiles")
     parser.add_argument("--newspaper")
     parser.add_argument("--pace-forecast")
+    parser.add_argument("--nk-judgements")
+    parser.add_argument("--odds")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -556,7 +700,9 @@ def main() -> int:
                     race_details=load_race_details(args.race_details_dir),
                     horse_profiles=_load(args.horse_profiles),
                     newspaper=_load(args.newspaper),
-                    pace_forecast=_load(args.pace_forecast))
+                    pace_forecast=_load(args.pace_forecast),
+                    nk_judgements=_load(args.nk_judgements),
+                    odds=_load(args.odds))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)

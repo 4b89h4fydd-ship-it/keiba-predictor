@@ -1,17 +1,28 @@
 {
- "version": "nk-materials-v5",
+ "version": "nk-materials-v6",
  "date": "2026-11-18",
  "source": "netkeiba-forward-collection",
- "generatedAt": "2026-11-17T21:56:28+09:00",
+ "generatedAt": "2026-11-17T22:15:20+09:00",
  "fieldCoverage": {
   "horses": 398,
   "speed": 392,
   "bestTime": 0,
   "headToHead": 0,
   "pedigree": 0,
-  "press": 0,
+  "press": 398,
   "sireCourse": 0,
-  "pace": 398
+  "pace": 398,
+  "nkFormDev": 0,
+  "nkAiScore": 0,
+  "oddsDrift": 0,
+  "oddsWpGap": 0,
+  "speedSlope": 386,
+  "speedDev": 392,
+  "speedVol": 386,
+  "speedSd": 386,
+  "speedOverlap": 386,
+  "speedFit": 375,
+  "speedBias": 326
  },
  "races": {
   "nar-2026-11-18-園田-01": {
@@ -41,10 +52,18 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "ニットウライズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 41,
@@ -70,10 +89,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "△",
+       "マリア": "△"
+      },
+      "name": "ギャラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 41,
@@ -99,10 +128,18 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "ワレラホシノコ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 33,
@@ -128,10 +165,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "ブルームワルツ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 46,
@@ -157,10 +202,19 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "▲"
+      },
+      "name": "ワキノグラス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 52,
@@ -186,10 +240,19 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "▲"
+      },
+      "name": "シューペルブリアン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 32,
@@ -215,10 +278,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ハイラブエナン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 24,
@@ -244,10 +313,18 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "ドナルドポーカー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 36,
@@ -273,10 +350,16 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リザンテラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 38,
@@ -302,10 +385,20 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "オールザレイジ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -1013,10 +1106,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "シュタイナー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 29,
@@ -1042,10 +1143,19 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "マリア": "△"
+      },
+      "name": "マルノミズキ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 13,
@@ -1071,10 +1181,18 @@
        "pct": 0.7778
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "ハワイアンセーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 9,
@@ -1100,10 +1218,19 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "△"
+      },
+      "name": "スミレブーケ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 43,
@@ -1129,10 +1256,20 @@
        "pct": 0.1111
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "ニッシンゲッポ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 27,
@@ -1158,10 +1295,20 @@
        "pct": 0.2222
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "グランロゼ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 26,
@@ -1187,10 +1334,18 @@
        "pct": 0.4444
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "▲"
+      },
+      "name": "ビップピュアエース"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 25,
@@ -1216,10 +1371,18 @@
        "pct": 0.8889
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "ミッドナイトフライ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 21,
@@ -1245,10 +1408,16 @@
        "pct": 0.5556
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ディヴァンカドー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -1930,10 +2099,19 @@
        "pct": 0.1111
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "マリア": "△"
+      },
+      "name": "メエメエ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 25,
@@ -1959,10 +2137,19 @@
        "pct": 0.5556
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "◎"
+      },
+      "name": "ニシノフォーリーフ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 46,
@@ -1988,10 +2175,16 @@
        "pct": 0.7778
       }
      },
+     "press": {
+      "marks": {},
+      "name": "コパノジャンピング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 33,
@@ -2017,10 +2210,19 @@
        "pct": 0.2222
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "▲"
+      },
+      "name": "チョウハクタカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 59,
@@ -2046,10 +2248,20 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "CP予想": "○",
+       "マリア": "◎"
+      },
+      "name": "サカキ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 31,
@@ -2075,10 +2287,19 @@
        "pct": 0.4444
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "△"
+      },
+      "name": "メタルメタリカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 20,
@@ -2104,10 +2325,20 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "△",
+       "マリア": "○"
+      },
+      "name": "ピエスダルジャン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 28,
@@ -2133,10 +2364,16 @@
        "pct": 0.8889
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アスクサヴァイバル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 50,
@@ -2162,10 +2399,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "グッドホース"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -2847,10 +3090,16 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リスキーウィスキー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 28,
@@ -2876,10 +3125,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ニシノグラシアス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 26,
@@ -2905,10 +3160,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎"
+      },
+      "name": "マクラガレーヌ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 41,
@@ -2934,10 +3197,18 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "メイショウコウラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 39,
@@ -2963,10 +3234,19 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "マリア": "△"
+      },
+      "name": "ワンダーカラフル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 35,
@@ -2992,10 +3272,19 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "マリア": "▲"
+      },
+      "name": "エイシンジコクテン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 25,
@@ -3021,10 +3310,18 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ヒマリン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 74,
@@ -3050,10 +3347,18 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "ホワイトラバーズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 38,
@@ -3079,10 +3384,20 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "メヘラーンガル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 38,
@@ -3108,10 +3423,19 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "ナムラデュラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 43,
@@ -3137,10 +3461,18 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎"
+      },
+      "name": "ララヴァンダンジュ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 23,
@@ -3166,10 +3498,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヒーローエフエー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -3929,10 +4267,20 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "ケイアイブラック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 52,
@@ -3958,10 +4306,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "シャークリュウセイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 54,
@@ -3987,10 +4343,18 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "ミスマラッカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 45,
@@ -4016,10 +4380,19 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "アイムアクイーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 70,
@@ -4045,10 +4418,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "◎"
+      },
+      "name": "クロカミジョウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 44,
@@ -4074,10 +4456,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "▲"
+      },
+      "name": "アサメシマエ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 26,
@@ -4103,10 +4493,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "スティールソニック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 48,
@@ -4132,10 +4528,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アクアホワイト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 39,
@@ -4161,10 +4563,18 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "キラキラリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 34,
@@ -4190,10 +4600,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ダイヤキララ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 49,
@@ -4219,10 +4635,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "CP予想": "○"
+      },
+      "name": "ハーティパーティ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 43,
@@ -4248,10 +4673,18 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆"
+      },
+      "name": "グレールール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -5011,10 +5444,18 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○"
+      },
+      "name": "ゴートゥーミジョカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 52,
@@ -5040,10 +5481,19 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "ベストマリア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 46,
@@ -5069,10 +5519,19 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "マリア": "▲"
+      },
+      "name": "ベルラフィネ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 46,
@@ -5098,10 +5557,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "リーデレ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 44,
@@ -5127,10 +5594,20 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "チヨ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 72,
@@ -5156,10 +5633,19 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "◎"
+      },
+      "name": "ファツアップ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 40,
@@ -5185,10 +5671,16 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エイシンニンバス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 46,
@@ -5214,10 +5706,18 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "サチノメグミ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 43,
@@ -5243,10 +5743,16 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エロイムエッサイム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 39,
@@ -5272,10 +5778,19 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "ホウオウライラック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -5957,10 +6472,20 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "◎",
+       "マリア": "▲"
+      },
+      "name": "アングラー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 63,
@@ -5986,10 +6511,20 @@
        "pct": 0.375
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "▲",
+       "マリア": "○"
+      },
+      "name": "ジューンコメット"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 50,
@@ -6015,10 +6550,20 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "アッケシ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 59,
@@ -6044,10 +6589,18 @@
        "pct": 0.875
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "モノノフイエロー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 75,
@@ -6073,10 +6626,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ナムラマイケル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 50,
@@ -6102,10 +6661,18 @@
        "pct": 0.625
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "ミストルティン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 54,
@@ -6131,10 +6698,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "コモリボルダー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 67,
@@ -6160,10 +6736,18 @@
        "pct": 0.125
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "スマッシュヒット"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -6806,10 +7390,16 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "レディアエラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 56,
@@ -6835,10 +7425,19 @@
        "pct": 0.5556
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○",
+       "マリア": "▲"
+      },
+      "name": "ヤクジンミョウオウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 22,
@@ -6864,10 +7463,19 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "ミアエッテ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 27,
@@ -6893,10 +7501,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆"
+      },
+      "name": "シュライフェ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 24,
@@ -6922,10 +7538,19 @@
        "pct": 0.7778
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "CP予想": "▲"
+      },
+      "name": "ドリームチェイサー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 34,
@@ -6951,10 +7576,19 @@
        "pct": 0.2222
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "コレギウム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 44,
@@ -6980,10 +7614,18 @@
        "pct": 0.8889
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "エコロアテナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 27,
@@ -7009,10 +7651,19 @@
        "pct": 0.4444
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△",
+       "マリア": "△"
+      },
+      "name": "ウィステリアダディ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 82,
@@ -7038,10 +7689,19 @@
        "pct": 0.1111
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "マリア": "◎"
+      },
+      "name": "マスターストーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -7710,10 +8370,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ウイングラドナス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 66,
@@ -7739,10 +8405,19 @@
        "pct": 0.4545
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "マリア": "▲"
+      },
+      "name": "ヤマタケボニータ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 45,
@@ -7768,10 +8443,18 @@
        "pct": 0.7273
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "ヒシカリナン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 38,
@@ -7797,10 +8480,20 @@
        "pct": 0.1818
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "シンショク"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 76,
@@ -7826,10 +8519,19 @@
        "pct": 0.3636
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "マリア": "△"
+      },
+      "name": "グランワールド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 49,
@@ -7855,10 +8557,16 @@
        "pct": 0.9091
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ディープカインズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 51,
@@ -7884,10 +8592,18 @@
        "pct": 0.5455
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "オキョンピー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 47,
@@ -7913,10 +8629,16 @@
        "pct": 0.8182
       }
      },
+     "press": {
+      "marks": {},
+      "name": "メテオレーナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 50,
@@ -7942,10 +8664,16 @@
        "pct": 0.6364
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ミヤグリフォン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 73,
@@ -7971,10 +8699,20 @@
        "pct": 0.2727
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "▲",
+       "マリア": "◎"
+      },
+      "name": "ガトー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 43,
@@ -8000,10 +8738,19 @@
        "pct": 0.0909
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "レヴァントリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -8750,10 +9497,20 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "マイフレダ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 7,
@@ -8779,10 +9536,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "マソラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": -2,
@@ -8808,10 +9571,18 @@
        "pct": 0.8889
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ガミラスブイン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": null,
@@ -8837,10 +9608,19 @@
        "pct": 0.1111
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆",
+       "マリア": "▲"
+      },
+      "name": "オーシンヒマワリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": null,
@@ -8866,10 +9646,19 @@
        "pct": 0.2222
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△",
+       "マリア": "◎"
+      },
+      "name": "ジゼルアリーナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 30,
@@ -8895,10 +9684,19 @@
        "pct": 0.7778
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "CP予想": "◎"
+      },
+      "name": "ベラジオパルーザ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 36,
@@ -8924,10 +9722,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "カクシンゴールド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": null,
@@ -8953,10 +9759,19 @@
        "pct": 0.4444
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "CP予想": "▲"
+      },
+      "name": "フランヴィア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 49,
@@ -8982,10 +9797,18 @@
        "pct": 0.5556
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○"
+      },
+      "name": "チョトツモウシン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -9654,10 +10477,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "マリア": "△"
+      },
+      "name": "グリーンシアター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 40,
@@ -9683,10 +10515,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ナムラオリビア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 40,
@@ -9712,10 +10550,16 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "プレジールミノル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 62,
@@ -9741,10 +10585,16 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エイシンケプラー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 68,
@@ -9770,10 +10620,16 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {},
+      "name": "トンボ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 80,
@@ -9799,10 +10655,16 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ビジュードネージュ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 61,
@@ -9828,10 +10690,20 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "○",
+       "マリア": "◎"
+      },
+      "name": "ゼンダンノハゲミ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 65,
@@ -9857,10 +10729,20 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "ゴーゴーツヨシ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 28,
@@ -9886,10 +10768,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヴォラヴィア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 41,
@@ -9915,10 +10803,20 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "△",
+       "マリア": "▲"
+      },
+      "name": "キングヴァージル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 58,
@@ -9944,10 +10842,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ビヨンドザシーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 45,
@@ -9973,10 +10877,20 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "アストラッド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -10762,10 +11676,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "○"
+      },
+      "name": "フェゲフォイア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 46,
@@ -10791,10 +11713,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "▲"
+      },
+      "name": "ピンクマルガリータ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 53,
@@ -10820,10 +11751,18 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○"
+      },
+      "name": "リリーオブザハート"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 41,
@@ -10849,10 +11788,18 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆"
+      },
+      "name": "エスオーライジング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 45,
@@ -10878,10 +11825,18 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ルヴァンヴェール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 54,
@@ -10907,10 +11862,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "ゼンダンスバシリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 55,
@@ -10936,10 +11899,19 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "マリア": "▲"
+      },
+      "name": "ギユウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 58,
@@ -10965,10 +11937,20 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "ラガークイン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 44,
@@ -10994,10 +11976,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "モノクロームスター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 49,
@@ -11023,10 +12011,16 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {},
+      "name": "タオロマイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 50,
@@ -11052,10 +12046,16 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エイシンビルボード"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 53,
@@ -11081,10 +12081,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△",
+       "マリア": "△"
+      },
+      "name": "グロリアスアポイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -11870,10 +12879,19 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "△"
+      },
+      "name": "オオイノオウマサン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": -33,
@@ -11899,10 +12917,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "マリア": "△"
+      },
+      "name": "インバラトゥーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": -8,
@@ -11928,10 +12955,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ユウユウプロースト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 17,
@@ -11957,10 +12990,20 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "ケンヴィント"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 5,
@@ -11986,10 +13029,16 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ラブラビ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 23,
@@ -12015,10 +13064,20 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "▲",
+       "マリア": "○"
+      },
+      "name": "タリース"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 2,
@@ -12044,10 +13103,16 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ダスマパーティ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 37,
@@ -12073,10 +13138,20 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "ヤマメセイリュウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": -47,
@@ -12102,10 +13177,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ファッツェル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 28,
@@ -12131,10 +13212,16 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ユウユウザローズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": -39,
@@ -12160,10 +13247,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ラピスラズリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 11,
@@ -12189,10 +13282,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "マリア": "▲"
+      },
+      "name": "シンティラガール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -12965,10 +14067,18 @@
        "pct": 0.5455
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "トネタロウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 77,
@@ -12994,10 +14104,20 @@
        "pct": 0.3636
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "マイネルシュラハト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 63,
@@ -13023,10 +14143,20 @@
        "pct": 0.1818
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "カリビアンダンサー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 50,
@@ -13052,10 +14182,16 @@
        "pct": 0.9091
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ニシノナスタチウム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 22,
@@ -13081,10 +14217,16 @@
        "pct": 0.8182
       }
      },
+     "press": {
+      "marks": {},
+      "name": "レッドスカイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 42,
@@ -13110,10 +14252,18 @@
        "pct": 0.4545
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "ヨロシクユウキ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 37,
@@ -13139,10 +14289,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "グレートロッタリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 76,
@@ -13168,10 +14326,20 @@
        "pct": 0.0909
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "CP予想": "△",
+       "マリア": "▲"
+      },
+      "name": "マーゴットリック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 67,
@@ -13197,10 +14365,16 @@
        "pct": 0.7273
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エトワールブルー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 78,
@@ -13226,10 +14400,19 @@
        "pct": 0.2727
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "マリア": "◎"
+      },
+      "name": "ラジャブルック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 22,
@@ -13255,10 +14438,18 @@
        "pct": 0.6364
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "サラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -14005,10 +15196,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "ベルベットオニキス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 22,
@@ -14034,10 +15233,16 @@
        "pct": 0.7692
       }
      },
+     "press": {
+      "marks": {},
+      "name": "グロリアスワールド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 56,
@@ -14063,10 +15268,20 @@
        "pct": 0.3846
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "ダノンケリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 53,
@@ -14092,10 +15307,18 @@
        "pct": 0.9231
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "クリムゾンバースト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 27,
@@ -14121,10 +15344,19 @@
        "pct": 0.4615
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "マリア": "△"
+      },
+      "name": "ローズルーチェ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 17,
@@ -14150,10 +15382,16 @@
        "pct": 0.8462
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アンジェロピッコロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 59,
@@ -14179,10 +15417,19 @@
        "pct": 0.0769
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "マリア": "△"
+      },
+      "name": "アリハム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 64,
@@ -14208,10 +15455,19 @@
        "pct": 0.6154
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "マリア": "◎"
+      },
+      "name": "トレンドマーチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 28,
@@ -14237,10 +15493,18 @@
        "pct": 0.5385
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "ホーリーモミジ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 61,
@@ -14266,10 +15530,16 @@
        "pct": 0.3077
       }
      },
+     "press": {
+      "marks": {},
+      "name": "プティシラー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 49,
@@ -14295,10 +15565,19 @@
        "pct": 0.6923
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "○"
+      },
+      "name": "マーベラスパワー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 60,
@@ -14324,10 +15603,19 @@
        "pct": 0.2308
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "マリア": "▲"
+      },
+      "name": "オンマイビート"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 64,
@@ -14353,10 +15641,16 @@
        "pct": 0.1538
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ムーンリットビーチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -15194,10 +16488,16 @@
        "pct": 0.2308
       }
      },
+     "press": {
+      "marks": {},
+      "name": "フカガワブギョー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 57,
@@ -15223,10 +16523,19 @@
        "pct": 0.1538
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "マリア": "◎"
+      },
+      "name": "テンシノトリブン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 53,
@@ -15252,10 +16561,20 @@
        "pct": 0.3846
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "ロイヤルドリーム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 64,
@@ -15281,10 +16600,16 @@
        "pct": 0.8462
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ストライドスター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 65,
@@ -15310,10 +16635,19 @@
        "pct": 0.6154
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "テンユウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 64,
@@ -15339,10 +16673,19 @@
        "pct": 0.5385
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "▲"
+      },
+      "name": "ヴォーグアルタイル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 49,
@@ -15368,10 +16711,16 @@
        "pct": 0.9231
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アウフヴィント"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 51,
@@ -15397,10 +16746,19 @@
        "pct": 0.3077
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "▲"
+      },
+      "name": "サンバフレイバー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 42,
@@ -15426,10 +16784,16 @@
        "pct": 0.4615
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ケンブリッジグレイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 50,
@@ -15455,10 +16819,16 @@
        "pct": 0.0769
       }
      },
+     "press": {
+      "marks": {},
+      "name": "コウフウセイゲツ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 45,
@@ -15484,10 +16854,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "バブリーショーコー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 51,
@@ -15513,10 +16889,19 @@
        "pct": 0.7692
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "マリア": "△"
+      },
+      "name": "コロラドフォンテン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 59,
@@ -15542,10 +16927,19 @@
        "pct": 0.6923
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "CP予想": "△"
+      },
+      "name": "カルサパラストリス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -16357,10 +17751,19 @@
        "pct": 0.8182
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "▲"
+      },
+      "name": "マクローリン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 55,
@@ -16386,10 +17789,16 @@
        "pct": 0.2727
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ファサード"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 56,
@@ -16415,10 +17824,18 @@
        "pct": 0.9091
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "オオサキサンダー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 55,
@@ -16444,10 +17861,19 @@
        "pct": 0.1818
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "マリア": "◎"
+      },
+      "name": "ブライトテラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 50,
@@ -16473,10 +17899,19 @@
        "pct": 0.0909
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "マリア": "○"
+      },
+      "name": "ブラックレッド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 61,
@@ -16502,10 +17937,18 @@
        "pct": 0.3636
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "レモンアイカー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 46,
@@ -16531,10 +17974,20 @@
        "pct": 0.4545
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "ジーティーウララ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 65,
@@ -16560,10 +18013,20 @@
        "pct": 0.6364
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "ナックジャスパー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 43,
@@ -16589,10 +18052,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ハヴィティペイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 53,
@@ -16618,10 +18087,16 @@
        "pct": 0.7273
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヴァルディ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 61,
@@ -16647,10 +18122,16 @@
        "pct": 0.5455
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヤマノリッチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -17369,10 +18850,16 @@
        "pct": 0.8571
       }
      },
+     "press": {
+      "marks": {},
+      "name": "タイセイディエティ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 70,
@@ -17398,10 +18885,19 @@
        "pct": 0.4286
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "△"
+      },
+      "name": "ラインメテオラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 54,
@@ -17427,10 +18923,16 @@
        "pct": 0.5714
       }
      },
+     "press": {
+      "marks": {},
+      "name": "シルエットライド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 51,
@@ -17456,10 +18958,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "△"
+      },
+      "name": "ザレインソング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 58,
@@ -17485,10 +18996,18 @@
        "pct": 0.0714
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "エレパイオ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 71,
@@ -17514,10 +19033,20 @@
        "pct": 0.2143
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "キタノプレミアム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": null,
@@ -17543,10 +19072,20 @@
        "pct": 0.3571
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "CP予想": "○",
+       "マリア": "▲"
+      },
+      "name": "ニシノタチアナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 54,
@@ -17572,10 +19111,16 @@
        "pct": 0.7857
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ストレートビーム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 54,
@@ -17601,10 +19146,16 @@
        "pct": 0.2857
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ブイスリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 49,
@@ -17630,10 +19181,16 @@
        "pct": 0.9286
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ラッケンブース"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 66,
@@ -17659,10 +19216,19 @@
        "pct": 0.6429
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "▲"
+      },
+      "name": "ショーンバローズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 50,
@@ -17688,10 +19254,16 @@
        "pct": 0.7143
       }
      },
+     "press": {
+      "marks": {},
+      "name": "マヒロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 56,
@@ -17717,10 +19289,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リコーステアー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "14": {
      "nk_best": 43,
@@ -17746,10 +19324,19 @@
        "pct": 0.1429
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "マリア": "○"
+      },
+      "name": "カシマショウリュウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -18587,10 +20174,19 @@
        "pct": 0.4286
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "△"
+      },
+      "name": "サブノマカナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 58,
@@ -18616,10 +20212,18 @@
        "pct": 0.2857
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎"
+      },
+      "name": "プラウドメアリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 53,
@@ -18645,10 +20249,18 @@
        "pct": 0.9286
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "ジャスミン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 56,
@@ -18674,10 +20286,16 @@
        "pct": 0.8571
       }
      },
+     "press": {
+      "marks": {},
+      "name": "フレーズボンボン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 51,
@@ -18703,10 +20321,16 @@
        "pct": 0.1429
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ポルタロマーナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 61,
@@ -18732,10 +20356,20 @@
        "pct": 0.0714
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "▲",
+       "マリア": "◎"
+      },
+      "name": "コトリノサエズリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 70,
@@ -18761,10 +20395,18 @@
        "pct": 0.7857
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆"
+      },
+      "name": "ナムラソラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 50,
@@ -18790,10 +20432,16 @@
        "pct": 0.6429
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ラスールフルール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 65,
@@ -18819,10 +20467,19 @@
        "pct": 0.3571
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "エレノアクイーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 60,
@@ -18848,10 +20505,16 @@
        "pct": 0.2143
       }
      },
+     "press": {
+      "marks": {},
+      "name": "オテモヤン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 50,
@@ -18877,10 +20540,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "パールペンダント"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 50,
@@ -18906,10 +20575,20 @@
        "pct": 0.7143
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "◎",
+       "マリア": "▲"
+      },
+      "name": "スターオブムーラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 53,
@@ -18935,10 +20614,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "クライスラー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "14": {
      "nk_best": 72,
@@ -18964,10 +20651,18 @@
        "pct": 0.5714
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "シェーンプリマー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -19831,10 +21526,16 @@
        "pct": 0.2727
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エルツ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 77,
@@ -19860,10 +21561,19 @@
        "pct": 0.5455
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "マリア": "△"
+      },
+      "name": "ワールドコネクター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 80,
@@ -19889,10 +21599,16 @@
        "pct": 0.9091
       }
      },
+     "press": {
+      "marks": {},
+      "name": "イチニチショチョウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 82,
@@ -19918,10 +21634,20 @@
        "pct": 0.1818
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "ランニングビーチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 77,
@@ -19947,10 +21673,20 @@
        "pct": 0.0909
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "○",
+       "マリア": "◎"
+      },
+      "name": "ワナハヴファン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 89,
@@ -19976,10 +21712,19 @@
        "pct": 0.6364
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "▲"
+      },
+      "name": "ショウナンヤッホー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 79,
@@ -20005,10 +21750,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ベンテイガ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 73,
@@ -20034,10 +21787,18 @@
        "pct": 0.7273
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎"
+      },
+      "name": "ハーレムシャフル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 80,
@@ -20063,10 +21824,20 @@
        "pct": 0.3636
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "ヴィルミーキスミー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 75,
@@ -20092,10 +21863,16 @@
        "pct": 0.8182
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アポロリヤム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 65,
@@ -20121,10 +21898,16 @@
        "pct": 0.4545
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ロンギングタイム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -20856,10 +22639,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "サガノオウマサン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 63,
@@ -20885,10 +22674,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ケンオーシャン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 74,
@@ -20914,10 +22709,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "マリア": "△"
+      },
+      "name": "リアンフォール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 69,
@@ -20943,10 +22747,18 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "マオノジーニー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 73,
@@ -20972,10 +22784,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "マルチライセンス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 59,
@@ -21001,10 +22819,18 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "ルセルマンダムール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 66,
@@ -21030,10 +22856,20 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "○",
+       "マリア": "▲"
+      },
+      "name": "ナインフォルド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 54,
@@ -21059,10 +22895,18 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲"
+      },
+      "name": "マウリノ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 73,
@@ -21088,10 +22932,19 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "マリア": "△"
+      },
+      "name": "ツートンショコラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 74,
@@ -21117,10 +22970,20 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "グランマローネ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 58,
@@ -21146,10 +23009,16 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "デスタン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 70,
@@ -21175,10 +23044,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "マリア": "○"
+      },
+      "name": "ロードファイター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -21938,10 +23816,21 @@
        "pct": 0.1538
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "◎",
+       "吉川": "◎",
+       "マリア": "◎"
+      },
+      "name": "マスターオブライフ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 99,
@@ -21967,10 +23856,19 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "吉川": "△"
+      },
+      "name": "カンパニョーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 78,
@@ -21996,10 +23894,16 @@
        "pct": 0.4615
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ランベリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 72,
@@ -22025,10 +23929,18 @@
        "pct": 0.6923
       }
      },
+     "press": {
+      "marks": {
+       "吉川": "△"
+      },
+      "name": "シャインフォール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 77,
@@ -22054,10 +23966,16 @@
        "pct": 0.0769
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ランプロン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 88,
@@ -22083,10 +24001,21 @@
        "pct": 0.2308
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "○",
+       "吉川": "○",
+       "マリア": "▲"
+      },
+      "name": "カガヤキテンマ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 81,
@@ -22112,10 +24041,16 @@
        "pct": 0.7692
       }
      },
+     "press": {
+      "marks": {},
+      "name": "コスモソンジュ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 88,
@@ -22141,10 +24076,16 @@
        "pct": 0.3077
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リヴェルベロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 62,
@@ -22170,10 +24111,19 @@
        "pct": 0.6154
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "ポアゾンボス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 91,
@@ -22199,10 +24149,21 @@
        "pct": 0.3846
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "△",
+       "吉川": "△",
+       "マリア": "△"
+      },
+      "name": "トーセンサンダー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 76,
@@ -22228,10 +24189,16 @@
        "pct": 0.9231
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ゴールデンブザー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 100,
@@ -22257,10 +24224,20 @@
        "pct": 0.5385
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "吉川": "▲",
+       "マリア": "○"
+      },
+      "name": "ハチメンロッピ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 63,
@@ -22286,10 +24263,19 @@
        "pct": 0.8462
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "吉川": "☆"
+      },
+      "name": "ゴールデンスイープ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -23088,10 +25074,21 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "○",
+       "吉川": "○",
+       "マリア": "◎"
+      },
+      "name": "ケテンパッション"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 65,
@@ -23117,10 +25114,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "アンタレステソーロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 64,
@@ -23146,10 +25151,18 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {
+       "吉川": "▲"
+      },
+      "name": "ノーブルモーション"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 51,
@@ -23175,10 +25188,16 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {},
+      "name": "オジャルゴン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 63,
@@ -23204,10 +25223,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "オレンジルシファー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 73,
@@ -23233,10 +25258,21 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "◎",
+       "吉川": "△",
+       "マリア": "▲"
+      },
+      "name": "タルガフローリオ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 50,
@@ -23262,10 +25298,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リアンズレーヴ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 41,
@@ -23291,10 +25333,18 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "吉川": "△"
+      },
+      "name": "シゲキング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 68,
@@ -23320,10 +25370,20 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△",
+       "吉川": "☆",
+       "マリア": "△"
+      },
+      "name": "ケンブラック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 62,
@@ -23349,10 +25409,20 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "吉川": "△",
+       "マリア": "○"
+      },
+      "name": "ユウユウヴィオラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 56,
@@ -23378,10 +25448,20 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "CP予想": "▲",
+       "吉川": "◎"
+      },
+      "name": "ブラフキャッチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 70,
@@ -23407,10 +25487,19 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "マリア": "△"
+      },
+      "name": "ケンシリウス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -24183,10 +26272,18 @@
        "pct": 0.2308
       }
      },
+     "press": {
+      "marks": {
+       "吉川": "△"
+      },
+      "name": "シビックフォイル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 60,
@@ -24212,10 +26309,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "モンゲーキララ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 78,
@@ -24241,10 +26344,21 @@
        "pct": 0.1538
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "◎",
+       "CP予想": "○",
+       "吉川": "◎",
+       "マリア": "◎"
+      },
+      "name": "サイカンサンユウ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 75,
@@ -24270,10 +26384,20 @@
        "pct": 0.3846
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "吉川": "☆",
+       "マリア": "△"
+      },
+      "name": "マジシャンガール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 60,
@@ -24299,10 +26423,16 @@
        "pct": 0.6923
       }
      },
+     "press": {
+      "marks": {},
+      "name": "プロローク"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 69,
@@ -24328,10 +26458,18 @@
        "pct": 0.8462
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△"
+      },
+      "name": "アルティメットサガ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 52,
@@ -24357,10 +26495,16 @@
        "pct": 0.6154
       }
      },
+     "press": {
+      "marks": {},
+      "name": "イイデマイヒメ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 66,
@@ -24386,10 +26530,16 @@
        "pct": 0.3077
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 71,
@@ -24415,10 +26565,20 @@
        "pct": 0.5385
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "○",
+       "吉川": "▲",
+       "マリア": "▲"
+      },
+      "name": "カセノタイガー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 71,
@@ -24444,10 +26604,16 @@
        "pct": 0.7692
       }
      },
+     "press": {
+      "marks": {},
+      "name": "フェレザ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 77,
@@ -24473,10 +26639,21 @@
        "pct": 0.0769
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "△",
+       "CP予想": "◎",
+       "吉川": "○",
+       "マリア": "○"
+      },
+      "name": "ロッソナブア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 75,
@@ -24502,10 +26679,19 @@
        "pct": 0.9231
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "☆",
+       "吉川": "△"
+      },
+      "name": "ドライブミーホーム"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "13": {
      "nk_best": 78,
@@ -24531,10 +26717,21 @@
        "pct": 0.4615
       }
      },
+     "press": {
+      "marks": {
+       "浅野": "▲",
+       "CP予想": "△",
+       "吉川": "△",
+       "マリア": "△"
+      },
+      "name": "レジェンドウェイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -25318,10 +27515,19 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "◎"
+      },
+      "name": "ミラージュノワール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 31,
@@ -25347,10 +27553,16 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {},
+      "name": "モナート"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 57,
@@ -25376,10 +27588,19 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "○"
+      },
+      "name": "ファナティカル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 5,
@@ -25405,10 +27626,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "カムバックトゥミー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 19,
@@ -25434,10 +27665,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "リアルスティンガー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 42,
@@ -25463,10 +27700,16 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アスターシャウルス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 25,
@@ -25492,10 +27735,20 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "◎",
+       "マリア": "▲"
+      },
+      "name": "カヴァティーナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 28,
@@ -25521,10 +27774,18 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "スティルアイライズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 11,
@@ -25550,10 +27811,20 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "ファンシーシェイプ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 10,
@@ -25579,10 +27850,16 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ルクリリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -26290,10 +28567,16 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {},
+      "name": "サンマルオブウォー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": -2,
@@ -26319,10 +28602,19 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "△"
+      },
+      "name": "ケンヴァルト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 23,
@@ -26348,10 +28640,20 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "シンプウミホノ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 12,
@@ -26377,10 +28679,20 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "ハナノクロコ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 2,
@@ -26406,10 +28718,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "マリア": "▲"
+      },
+      "name": "シファル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": null,
@@ -26435,10 +28756,18 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "アルミーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 28,
@@ -26464,10 +28793,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲"
+      },
+      "name": "クリノジルバ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 2,
@@ -26493,10 +28830,18 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ミスフレンド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 9,
@@ -26522,10 +28867,16 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {},
+      "name": "プリンセスリッカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 1,
@@ -26551,10 +28902,18 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎"
+      },
+      "name": "スマイリングキング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -27223,10 +29582,19 @@
        "pct": 0.0909
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "オラロア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 53,
@@ -27252,10 +29620,19 @@
        "pct": 0.4545
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "メイショウミズホ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 29,
@@ -27281,10 +29658,16 @@
        "pct": 0.6364
       }
      },
+     "press": {
+      "marks": {},
+      "name": "フォセットジェンヌ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 21,
@@ -27310,10 +29693,16 @@
        "pct": 0.9091
       }
      },
+     "press": {
+      "marks": {},
+      "name": "キタノエンブラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 10,
@@ -27339,10 +29728,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "スイモアマイモ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 34,
@@ -27368,10 +29763,20 @@
        "pct": 0.3636
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "△",
+       "マリア": "▲"
+      },
+      "name": "ウィッシュリスト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 13,
@@ -27397,10 +29802,18 @@
        "pct": 0.7273
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲"
+      },
+      "name": "ベラジオノユメ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 40,
@@ -27426,10 +29839,18 @@
        "pct": 0.5455
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○"
+      },
+      "name": "スエ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 42,
@@ -27455,10 +29876,19 @@
        "pct": 0.2727
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "マリア": "△"
+      },
+      "name": "スタールル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 8,
@@ -27484,10 +29914,16 @@
        "pct": 0.8182
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ダンストンチアーズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 43,
@@ -27513,10 +29949,20 @@
        "pct": 0.1818
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "ドロンパ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -28224,10 +30670,20 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "CP予想": "△",
+       "マリア": "▲"
+      },
+      "name": "ドローイング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 49,
@@ -28253,10 +30709,16 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {},
+      "name": "パルストリス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 52,
@@ -28282,10 +30744,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "チュッカ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 52,
@@ -28311,10 +30779,20 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "サコクノクインビー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 39,
@@ -28340,10 +30818,16 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ケファロニア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 9,
@@ -28369,10 +30853,18 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△"
+      },
+      "name": "ゴールドプロテクト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 44,
@@ -28398,10 +30890,18 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "ホウオウショパン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 31,
@@ -28427,10 +30927,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "コンダクトヲハラエ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 32,
@@ -28456,10 +30966,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎"
+      },
+      "name": "リベルタアーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 42,
@@ -28485,10 +31003,19 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "ヒロノビックバン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -29157,10 +31684,19 @@
        "pct": 0.4444
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△",
+       "CP予想": "○"
+      },
+      "name": "ニホンピロベスパー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 27,
@@ -29186,10 +31722,18 @@
        "pct": 0.5556
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲"
+      },
+      "name": "ドクターサクラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 56,
@@ -29215,10 +31759,19 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆",
+       "マリア": "◎"
+      },
+      "name": "マルリンモンロー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 46,
@@ -29244,10 +31797,20 @@
        "pct": 0.1111
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "モモイロカタオモイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 34,
@@ -29273,10 +31836,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "▲"
+      },
+      "name": "トリクシー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 30,
@@ -29302,10 +31873,18 @@
        "pct": 0.8889
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "クイーンズグリーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 46,
@@ -29331,10 +31910,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "テーオーライラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 35,
@@ -29360,10 +31945,19 @@
        "pct": 0.7778
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "CP予想": "△"
+      },
+      "name": "ホロキキ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 58,
@@ -29389,10 +31983,19 @@
        "pct": 0.2222
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "○"
+      },
+      "name": "メイショウイタマエ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -30048,10 +32651,20 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "○",
+       "マリア": "◎"
+      },
+      "name": "スウェーバック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 29,
@@ -30077,10 +32690,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "マリア": "▲"
+      },
+      "name": "エイシンイーネン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 36,
@@ -30106,10 +32728,18 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎"
+      },
+      "name": "チアフルドア"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 40,
@@ -30135,10 +32765,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "○"
+      },
+      "name": "レッツゴーファイト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 58,
@@ -30164,10 +32802,19 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "スーパーカルメン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 27,
@@ -30193,10 +32840,18 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "ルッソクイーン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 22,
@@ -30222,10 +32877,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "△"
+      },
+      "name": "イッツユー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 17,
@@ -30251,10 +32915,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "アバンサユキ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 50,
@@ -30280,10 +32950,18 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "△"
+      },
+      "name": "ヴィラロボス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 24,
@@ -30309,10 +32987,18 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "▲"
+      },
+      "name": "アーラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 28,
@@ -30338,10 +33024,16 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {},
+      "name": "カツノアッパレ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 30,
@@ -30367,10 +33059,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ナンヨーメルシー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -31143,10 +33841,19 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "CP予想": "◎"
+      },
+      "name": "コンヴェックス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 56,
@@ -31172,10 +33879,16 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エイシンエラン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 51,
@@ -31201,10 +33914,18 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "キングオブワールド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 46,
@@ -31230,10 +33951,20 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "CP予想": "○",
+       "マリア": "○"
+      },
+      "name": "ジーグフェルド"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 53,
@@ -31259,10 +33990,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "▲"
+      },
+      "name": "ユイノオトシアナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 71,
@@ -31288,10 +34028,19 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△",
+       "マリア": "△"
+      },
+      "name": "ピオニエーレ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 51,
@@ -31317,10 +34066,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "△",
+       "マリア": "△"
+      },
+      "name": "ミエルシトロン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 55,
@@ -31346,10 +34105,18 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎"
+      },
+      "name": "アンテナラスト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 45,
@@ -31375,10 +34142,16 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ペップトーク"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 72,
@@ -31404,10 +34177,16 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ジャガーバローズ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -32089,10 +34868,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "リオサラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 55,
@@ -32118,10 +34907,16 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヴォイスオブゼウス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 49,
@@ -32147,10 +34942,18 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ネオアマゾネス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 67,
@@ -32176,10 +34979,20 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "○",
+       "マリア": "▲"
+      },
+      "name": "セイカユウヒ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 58,
@@ -32205,10 +35018,18 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△"
+      },
+      "name": "シュプリームアロー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 62,
@@ -32234,10 +35055,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "プエルタアスール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 52,
@@ -32263,10 +35090,19 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆",
+       "マリア": "△"
+      },
+      "name": "ラブフォルテッシモ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 62,
@@ -32292,10 +35128,18 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎"
+      },
+      "name": "サンセットカラー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 54,
@@ -32321,10 +35165,16 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {},
+      "name": "デアルーチェ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 68,
@@ -32350,10 +35200,19 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "CP予想": "◎"
+      },
+      "name": "パレットフレイバー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -33009,10 +35868,18 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "ウインスターリング"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 43,
@@ -33038,10 +35905,19 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "▲"
+      },
+      "name": "マルキスト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 18,
@@ -33067,10 +35943,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "△"
+      },
+      "name": "オルン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 54,
@@ -33096,10 +35980,18 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎"
+      },
+      "name": "ボッチョ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 52,
@@ -33125,10 +36017,19 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "○",
+       "マリア": "○"
+      },
+      "name": "ヴェネラブル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 11,
@@ -33154,10 +36055,16 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {},
+      "name": "オーケーサイン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 27,
@@ -33183,10 +36090,16 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ゲキシン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 44,
@@ -33212,10 +36125,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "◎",
+       "CP予想": "△"
+      },
+      "name": "ミスエベレスト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 24,
@@ -33241,10 +36163,19 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "☆",
+       "CP予想": "○"
+      },
+      "name": "ハチキン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 19,
@@ -33270,10 +36201,16 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {},
+      "name": "テクスチャー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 42,
@@ -33299,10 +36236,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ケンブリッジサクラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 38,
@@ -33328,10 +36273,19 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {
+       "古澤": "▲",
+       "マリア": "△"
+      },
+      "name": "シジミノヒナコ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -34078,10 +37032,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△"
+      },
+      "name": "サンセットベリー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 60,
@@ -34107,10 +37069,18 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "ミカエル"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 62,
@@ -34136,10 +37106,19 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲",
+       "マリア": "○"
+      },
+      "name": "セイウォリアー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 60,
@@ -34165,10 +37144,19 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "◎",
+       "マリア": "◎"
+      },
+      "name": "ピンネシリ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 45,
@@ -34194,10 +37182,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆"
+      },
+      "name": "トレパーク"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 49,
@@ -34223,10 +37219,19 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "マリア": "△"
+      },
+      "name": "インティパイロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 51,
@@ -34252,10 +37257,20 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "○",
+       "マリア": "△"
+      },
+      "name": "ウフフトルンナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 58,
@@ -34281,10 +37296,16 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ハヤイモノガチ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 59,
@@ -34310,10 +37331,16 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {},
+      "name": "エコロタイタン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 48,
@@ -34339,10 +37366,19 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "マリア": "▲"
+      },
+      "name": "チュウワエース"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -35011,10 +38047,18 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△"
+      },
+      "name": "バヤシーフェイス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 46,
@@ -35040,10 +38084,16 @@
        "pct": 0.6
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ヒルノブリスベン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 68,
@@ -35069,10 +38119,18 @@
        "pct": 0.2
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "▲"
+      },
+      "name": "ピカソジャスパー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 58,
@@ -35098,10 +38156,18 @@
        "pct": 0.9
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆"
+      },
+      "name": "シャンドゥルン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 54,
@@ -35127,10 +38193,19 @@
        "pct": 0.1
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "マリア": "△"
+      },
+      "name": "エンブレイスメント"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 73,
@@ -35156,10 +38231,18 @@
        "pct": 0.4
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "○"
+      },
+      "name": "ファセット"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 45,
@@ -35185,10 +38268,18 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△"
+      },
+      "name": "エイシンパンタレイ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 72,
@@ -35214,10 +38305,20 @@
        "pct": 0.3
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "CP予想": "○",
+       "マリア": "◎"
+      },
+      "name": "ミルキープリンセス"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 66,
@@ -35243,10 +38344,20 @@
        "pct": 0.8
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○",
+       "CP予想": "▲",
+       "マリア": "△"
+      },
+      "name": "アオレレ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 60,
@@ -35272,10 +38383,18 @@
        "pct": 0.7
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎"
+      },
+      "name": "オールウェズキズナ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {
@@ -35957,10 +39076,20 @@
        "pct": 0.0833
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "△",
+       "CP予想": "◎",
+       "マリア": "△"
+      },
+      "name": "リュクスウォリアー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "2": {
      "nk_best": 60,
@@ -35986,10 +39115,18 @@
        "pct": 0.1667
       }
      },
+     "press": {
+      "marks": {
+       "マリア": "◎"
+      },
+      "name": "ホームランバッター"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "3": {
      "nk_best": 65,
@@ -36015,10 +39152,18 @@
        "pct": 0.8333
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "○"
+      },
+      "name": "ケイアイインダラ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "4": {
      "nk_best": 40,
@@ -36044,10 +39189,16 @@
        "pct": 1.0
       }
      },
+     "press": {
+      "marks": {},
+      "name": "トラストエムシー"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "5": {
      "nk_best": 69,
@@ -36073,10 +39224,16 @@
        "pct": 0.5
       }
      },
+     "press": {
+      "marks": {},
+      "name": "ゴールウェイガール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "6": {
      "nk_best": 51,
@@ -36102,10 +39259,16 @@
        "pct": 0.5833
       }
      },
+     "press": {
+      "marks": {},
+      "name": "サノノロンドン"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "7": {
      "nk_best": 68,
@@ -36131,10 +39294,19 @@
        "pct": 0.25
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "▲",
+       "マリア": "△"
+      },
+      "name": "ヴァネロペ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "8": {
      "nk_best": 57,
@@ -36160,10 +39332,18 @@
        "pct": 0.4167
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "▲"
+      },
+      "name": "スマートテンペスト"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "9": {
      "nk_best": 50,
@@ -36189,10 +39369,19 @@
        "pct": 0.75
       }
      },
+     "press": {
+      "marks": {
+       "CP予想": "△",
+       "マリア": "▲"
+      },
+      "name": "グランゲレーロ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "10": {
      "nk_best": 64,
@@ -36218,10 +39407,18 @@
        "pct": 0.9167
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "○"
+      },
+      "name": "レクランスリール"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "11": {
      "nk_best": 51,
@@ -36247,10 +39444,18 @@
        "pct": 0.6667
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "☆"
+      },
+      "name": "ホーリーホック"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     },
     "12": {
      "nk_best": 75,
@@ -36276,10 +39481,19 @@
        "pct": 0.3333
       }
      },
+     "press": {
+      "marks": {
+       "吉澤": "◎",
+       "マリア": "○"
+      },
+      "name": "コスモジョセフ"
+     },
      "bestTime": null,
      "headToHead": null,
      "pedigree": null,
-     "press": null
+     "nkFormDev": null,
+     "nkAiScore": null,
+     "odds": null
     }
    },
    "courseAnalysis": {

@@ -67,6 +67,25 @@ direction on flat speed inputs, that the stamp-side record
 carries the all-materials trial label and the materialsTrial
 marker, and that v3- and v4-stamped publications qualify for
 exactly one more re-issue onto v5.
+
+v6 (same day): the families the full audit found computed but
+weightless join as marked trials. The speed-derived terms
+(slope / dev / fit / bias at +0.10; the dispersion family vol
+/ sd / overlap at -0.10, per integrated_eval's design notes)
+ride on the speed columns every entry already carries; the
+combo term (+0.10) reads the race record through
+combo_inputs_from_race; the judgement (nk_form_dev / nk_ai)
+and odds-movement (odds_drift / odds_wp_gap) terms are armed
+at +0.10 each but have NO collection data yet, so the tests
+pin both their firing on synthetic values and their complete
+inertness on today's real-shaped (valueless) entries. The
+builder carries the new fields (nkFormDev / nkAiScore / odds)
+with uniform nulls and reports their coverage plus the
+derived-speed coverage in fieldCoverage. The tests pin the
+directions, the stamp records (speedDerivedTrial /
+comboTrial / judgementTrial / oddsTrial), the parser's
+handling of the new fields, and that a v5-stamped publication
+qualifies for exactly one more re-issue onto v6.
 """
 from __future__ import annotations
 
@@ -81,9 +100,14 @@ from zoneinfo import ZoneInfo
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
-    NK_ALL_TERMS_LABEL, NK_ALL_TERMS_TRIAL, NK_MATERIALS_VERSION,
-    NK_PACE_WEIGHTS_LABEL, PACE_WEIGHT,
-    apply_nk_materials, best_time_seconds, course_biases,
+    COMBO_WEIGHT, NK_ALL_TERMS_LABEL, NK_ALL_TERMS_TRIAL,
+    NK_COMBO_LABEL, NK_COMBO_TRIAL, NK_JUDGEMENT_LABEL,
+    NK_JUDGEMENT_TRIAL, NK_MATERIALS_VERSION, NK_ODDS_LABEL,
+    NK_ODDS_TRIAL, NK_PACE_WEIGHTS_LABEL,
+    NK_SPEED_DERIVED_LABEL, NK_SPEED_DERIVED_TRIAL, PACE_WEIGHT,
+    SPEED_DERIVED_WEIGHTS,
+    apply_nk_materials, best_time_seconds, combo_inputs_from_race,
+    course_biases,
     course_inputs_from_race, front_rate_from_runs, h2h_shrunk_rate,
     pace_score, parse_materials_payload, press_points,
     sire_course_score,
@@ -805,6 +829,18 @@ class UpgradeQualificationTests(TestCase):
             self.assertIsNotNone(info, version)
             self.assertEqual(info["reason"], "nk-materials-upgrade")
 
+    def test_v5_stamp_qualifies_once_more_for_v6(self):
+        # A v5 publication (pace + all-materials terms) predates
+        # the v6 definition (the speed-derived / combo /
+        # judgement / odds families): it qualifies exactly once
+        # more, and the rebuilt product — stamped v6 — does not
+        # qualify again (see the build-level tests, which assert
+        # the rebuilt stamp carries NK_MATERIALS_VERSION).
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v5"))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
+
     def test_before_cutover_never_qualifies(self):
         self.assertIsNone(self._info(stored_detail(date="2026-11-16")))
 
@@ -971,14 +1007,14 @@ class BuildTests(TestCase):
         # never qualifies again.
         self.assertIsNone(self._recheck(new))
 
-    def test_v3_stamped_race_is_reissued_once_to_v5(self):
+    def test_v3_stamped_race_is_reissued_once_to_current(self):
         new, receipt = _build(stored_detail(
             nk_stamp=True, nk_stamp_version="nk-materials-v3"))
         self.assertIsNotNone(new, receipt)
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], "nk-materials-v5")
+        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
         self.assertEqual(marker["revision"]["kind"],
                          "nk-materials-upgrade")
         self.assertIsNotNone(verified_unified(new))
@@ -1144,7 +1180,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v5")
+        self.assertEqual(payload["version"], "nk-materials-v6")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
@@ -1387,6 +1423,359 @@ class PaceBuildTests(TestCase):
         self.assertIn("pace-trial-20261117", stamp["weights"])
         self.assertIn("unvalidated-no-history", stamp["weights"])
         self.assertEqual(stamp["coverage"]["pace"], 5)
+        self.assertIsNotNone(verified_unified(new))
+
+
+# ------------------------------------------------------------ v6
+def derived_entry(recent=None, dist=None, course=None):
+    """Parsed-shape materials on a flat speed level (identical
+    avg5 and spd2 for every horse, so the speed residual is 0):
+    only the v6 derived features can move a probability."""
+    horses = {}
+    for n in NAMES:
+        horses[n] = {
+            "nk_best": None, "nk_avg5": 60,
+            "nk_dist": (dist or {}).get(n),
+            "nk_course": (course or {}).get(n),
+            "nk_recent": (recent or {}).get(n),
+            "bestTime": None, "headToHead": None,
+            "pedigree": None, "press": None, "pace": None,
+            "nkFormDev": None, "nkAiScore": None, "odds": None}
+    return {"netkeibaRaceId": NK_ID, "courseAnalysis": None,
+            "horses": horses}
+
+
+class SpeedDerivedAdapterTests(TestCase):
+    def test_trend_terms_reward_the_rising_horse(self):
+        # Every sequence is a permutation of {40, 55, 70}, so
+        # the dispersion features (vol / sd / overlap) are
+        # identical for the whole field and cannot differentiate
+        # anyone: only slope and dev move the probabilities.
+        # Horse 1 rises steeply into the race (slope +15, last
+        # run 10 above its average); horse 5 is the mirror.
+        entry = derived_entry(recent={
+            1: [40, 55, 70], 2: [40, 70, 55], 3: [70, 40, 55],
+            4: [55, 70, 40], 5: [70, 55, 40]})
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        self.assertTrue(info["applied"])
+        for term in ("speed_slope", "speed_dev", "speed_vol",
+                     "speed_sd"):
+            self.assertIn(term, info["terms"])
+        self.assertEqual(info["speedDerivedTrial"],
+                         NK_SPEED_DERIVED_TRIAL)
+        self.assertIn(NK_SPEED_DERIVED_LABEL, info["weights"])
+        self.assertIn("unvalidated", info["weights"])
+        self.assertEqual(info["coverage"]["speed_trend"], 5)
+        self.assertEqual(info["coverage"]["speed_dev"], 5)
+        self.assertEqual(info["coverage"]["speed_sd"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+        total = sum(r.strength for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=5)
+
+    def test_fit_term_rewards_condition_aptitude(self):
+        entry = derived_entry(
+            dist={1: 70, 2: 60, 3: 60, 4: 60, 5: 50},
+            course={1: 70, 2: 60, 3: 60, 4: 60, 5: 50})
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        self.assertTrue(info["applied"])
+        self.assertIn("speed_fit", info["terms"])
+        self.assertEqual(info["coverage"]["speed_fit"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+
+    def test_no_derived_inputs_no_derived_terms(self):
+        # Today's real shape for a horse with an index but no
+        # recent sequence and no condition columns: the derived
+        # family stays completely inert and leaves no stamp.
+        horses = {n: {"nk_best": None, "nk_avg5": NK_AVG5[n],
+                      "nk_dist": None, "nk_course": None,
+                      "nk_recent": None}
+                  for n in NAMES}
+        entry = {"netkeibaRaceId": NK_ID, "courseAnalysis": None,
+                 "horses": horses}
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry,
+            {n: {"spd2_recent": SPD2_DEFICIT[n]} for n in NAMES})
+        self.assertTrue(info["applied"])
+        self.assertEqual(info["terms"], ["speed"])
+        self.assertNotIn("speedDerivedTrial", info)
+        self.assertNotIn("speed-derived-trial", info["weights"])
+
+    def test_derived_weights_are_the_trial_values(self):
+        self.assertEqual(SPEED_DERIVED_WEIGHTS, {
+            "speed_slope": 0.10, "speed_dev": 0.10,
+            "speed_vol": -0.10, "speed_sd": -0.10,
+            "speed_overlap": -0.10, "speed_fit": 0.10,
+            "speed_bias": 0.10})
+
+
+def _combo_race() -> RaceRecord:
+    """Runners with named jockeys and past runs: horse 2's pair
+    record with today's jockey is all top-3, horse 3's is all
+    unplaced; horse 5's jockey is unknown (no pair record)."""
+    missing = Obs(None, "test", "not_captured")
+
+    def run(jockey, finish):
+        return PastRun(
+            date="2026-11-03", track=missing, distance=missing,
+            surface=missing,
+            finish=obs(finish, "test") if finish else missing,
+            field_size=obs(10, "test"), corner_positions=(),
+            margin_text=missing, time_seconds=missing,
+            jockey=obs(jockey, "test") if jockey else missing)
+
+    rides = {
+        1: [("騎手A", 2), ("騎手A", 3), ("騎手A", 2), ("騎手A", 8)],
+        2: [("騎手B", 1), ("騎手B", 1), ("騎手B", 2), ("騎手B", 1)],
+        3: [("騎手C", 5), ("騎手C", 6), ("騎手C", 7), ("騎手C", 8)],
+        4: [("騎手D", 3), ("騎手D", 4), ("騎手D", 5), ("騎手D", 6)],
+        5: [("騎手E", 1), ("騎手E", 2)],
+    }
+    today = {1: "騎手A", 2: "騎手B", 3: "騎手C", 4: "騎手D", 5: None}
+    runners = []
+    for number in (1, 2, 3, 4, 5):
+        runners.append(RunnerRecord(
+            number=number, horse_id=missing,
+            name=obs(NAMES[number], "test"), frame_number=missing,
+            age=missing, sex=missing,
+            jockey=obs(today[number], "test") if today[number]
+            else missing,
+            trainer=missing, carried_weight=missing,
+            body_weight=missing, body_weight_change=missing,
+            win_odds=obs(ODDS[number], "test"), scratched=False,
+            past_runs=tuple(run(j, f) for j, f in rides[number])))
+    return RaceRecord(
+        race_id=RACE_ID, date=DATE, circuit=obs("地方", "test"),
+        track="金沢", race_number=obs(1, "test"), title=missing,
+        start_time=obs(POST, "test"), distance=obs(1500, "test"),
+        surface=obs("ダート", "test"), weather=missing,
+        condition=missing, updated_at=missing, segment=Segment.NAR,
+        source="test", runners=tuple(runners))
+
+
+class ComboTests(TestCase):
+    def test_combo_inputs_shape_and_unknown_jockey_guard(self):
+        inputs = combo_inputs_from_race(_combo_race())
+        self.assertEqual(inputs[2]["jockey"], "騎手B")
+        self.assertEqual(inputs[2]["past_rides"][0],
+                         {"jockey": "騎手B", "finish": 1,
+                          "field_size": 10})
+        self.assertEqual(len(inputs[1]["past_rides"]), 4)
+        # Today's jockey unknown: no attributable rides at all.
+        self.assertIsNone(inputs[5]["jockey"])
+        self.assertEqual(inputs[5]["past_rides"], [])
+
+    def test_combo_term_rewards_the_proven_pair(self):
+        entry = derived_entry()
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS,
+            combo_inputs=combo_inputs_from_race(_combo_race()))
+        self.assertTrue(info["applied"])
+        self.assertIn("combo", info["terms"])
+        self.assertEqual(info["comboTrial"], NK_COMBO_TRIAL)
+        self.assertIn(NK_COMBO_LABEL, info["weights"])
+        self.assertEqual(info["coverage"]["combo"], 4)
+        self.assertEqual(COMBO_WEIGHT, 0.10)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[2].p_win, STRENGTHS[2])
+        self.assertLess(by_number[3].p_win, STRENGTHS[3])
+
+    def test_no_combo_inputs_no_combo_term(self):
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), derived_entry(), FLAT_EXTRAS)
+        self.assertNotIn("combo", info.get("terms") or [])
+        self.assertNotIn("comboTrial", info)
+
+
+class JudgementOddsTests(TestCase):
+    def _parsed(self, per_horse):
+        payload = {"version": "nk-materials-v6", "date": DATE,
+                   "races": {RACE_ID: {
+                       "netkeibaRaceId": NK_ID,
+                       "horses": {str(n): dict(
+                           {"nk_best": None, "nk_avg5": 60,
+                            "nk_dist": None, "nk_course": None,
+                            "nk_recent": None},
+                           **per_horse.get(n, {}))
+                           for n in NAMES},
+                       "courseAnalysis": None}}}
+        return parse_materials_payload(payload)[RACE_ID]
+
+    def test_parse_carries_v6_fields_and_drops_malformed(self):
+        entry = self._parsed({
+            1: {"nkFormDev": 55.5, "nkAiScore": 0.8,
+                "odds": {"publishWin": 3.0, "finalWin": 2.5,
+                         "placeLow": 1.2, "placeHigh": 1.6}},
+            2: {"nkFormDev": "55", "nkAiScore": None,
+                "odds": "not-a-dict"}})
+        h1 = entry["horses"][1]
+        self.assertEqual(h1["nkFormDev"], 55.5)
+        self.assertEqual(h1["nkAiScore"], 0.8)
+        self.assertEqual(h1["odds"]["publishWin"], 3.0)
+        h2 = entry["horses"][2]
+        self.assertIsNone(h2["nkFormDev"])
+        self.assertIsNone(h2["nkAiScore"])
+        self.assertIsNone(h2["odds"])
+
+    def test_judgement_terms_fire_on_values(self):
+        entry = self._parsed({
+            n: {"nkFormDev": v, "nkAiScore": a}
+            for n, v, a in ((1, 40, 0.2), (2, 55, 0.5),
+                            (3, 50, 0.4), (4, 45, 0.3),
+                            (5, 60, 0.9))})
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        self.assertTrue(info["applied"])
+        self.assertIn("nk_form_dev", info["terms"])
+        self.assertIn("nk_ai", info["terms"])
+        self.assertEqual(info["judgementTrial"], NK_JUDGEMENT_TRIAL)
+        self.assertIn(NK_JUDGEMENT_LABEL, info["weights"])
+        self.assertEqual(info["coverage"]["nk_form_dev"], 5)
+        self.assertEqual(info["coverage"]["nk_ai"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[5].p_win, STRENGTHS[5])
+        self.assertLess(by_number[1].p_win, STRENGTHS[1])
+
+    def test_odds_terms_fire_on_values(self):
+        # Win/place gap held constant across the field (place
+        # range proportional to the final win odds), so only
+        # the drift differentiates: horse 1's odds shortened
+        # into the race, horse 5's drifted out.
+        def odds(publish, final):
+            return {"publishWin": publish, "finalWin": final,
+                    "placeLow": final * 0.4, "placeHigh": final * 0.6}
+        entry = self._parsed({
+            1: {"odds": odds(3.0, 2.0)}, 2: {"odds": odds(3.0, 3.0)},
+            3: {"odds": odds(3.0, 3.0)}, 4: {"odds": odds(3.0, 3.0)},
+            5: {"odds": odds(2.0, 4.0)}})
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        self.assertTrue(info["applied"])
+        self.assertIn("odds_drift", info["terms"])
+        self.assertEqual(info["oddsTrial"], NK_ODDS_TRIAL)
+        self.assertIn(NK_ODDS_LABEL, info["weights"])
+        self.assertEqual(info["coverage"]["odds_drift"], 5)
+        self.assertEqual(info["coverage"]["odds_wp_gap"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+
+    def test_armed_families_inert_without_values(self):
+        # Today's real shape: the fields exist in the format but
+        # no collection has ever filled them. No judgement or
+        # odds term may fire and no trial marker may appear.
+        entry = self._parsed({})
+        adjusted, info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS)
+        for term in ("nk_form_dev", "nk_ai", "odds_drift",
+                     "odds_wp_gap"):
+            self.assertNotIn(term, info.get("terms") or [])
+        self.assertNotIn("judgementTrial", info)
+        self.assertNotIn("oddsTrial", info)
+        self.assertEqual(info["coverage"]["nk_form_dev"], 0)
+        self.assertEqual(info["coverage"]["nk_ai"], 0)
+        self.assertEqual(info["coverage"]["odds_drift"], 0)
+        self.assertEqual(info["coverage"]["odds_wp_gap"], 0)
+
+
+class BuilderV6Tests(TestCase):
+    def _build(self, **kwargs):
+        targets, speed, course, details, profiles, newspaper = \
+            _v2_inputs()
+        return build_materials(DATE, speed, course, targets,
+                               race_details=details,
+                               horse_profiles=profiles,
+                               newspaper=newspaper, **kwargs)
+
+    def test_derived_coverage_counts_from_raw_columns(self):
+        payload = self._build()
+        cov = payload["fieldCoverage"]
+        # _v2_inputs: every horse has nk_recent [55, 54, 53]
+        # (slope / dev / vol / sd computable) but no dist /
+        # course columns (no fit / bias).
+        self.assertEqual(cov["speedSlope"], 5)
+        self.assertEqual(cov["speedDev"], 5)
+        self.assertEqual(cov["speedVol"], 5)
+        self.assertEqual(cov["speedSd"], 5)
+        self.assertEqual(cov["speedOverlap"], 5)
+        self.assertEqual(cov["speedFit"], 0)
+        self.assertEqual(cov["speedBias"], 0)
+
+    def test_judgement_and_odds_fields_carried(self):
+        judgements = {"races": {NK_ID: {"horses": {
+            "1": {"nkFormDev": 55.5, "nkAiScore": 0.8},
+            "2": {"nkFormDev": "x"}}}}}
+        odds = {"races": {NK_ID: {"horses": {
+            "1": {"publishWin": 3.0, "finalWin": 2.5,
+                  "placeLow": 1.2, "placeHigh": 1.6},
+            "3": {"publishWin": None}}}}}
+        payload = self._build(nk_judgements=judgements, odds=odds)
+        horses = payload["races"][RACE_ID]["horses"]
+        self.assertEqual(horses["1"]["nkFormDev"], 55.5)
+        self.assertEqual(horses["1"]["nkAiScore"], 0.8)
+        self.assertIsNone(horses["2"]["nkFormDev"])
+        self.assertEqual(horses["1"]["odds"],
+                         {"publishWin": 3.0, "finalWin": 2.5,
+                          "placeLow": 1.2, "placeHigh": 1.6})
+        self.assertIsNone(horses["3"]["odds"])  # all cells null
+        cov = payload["fieldCoverage"]
+        self.assertEqual(cov["nkFormDev"], 1)
+        self.assertEqual(cov["nkAiScore"], 1)
+        self.assertEqual(cov["oddsDrift"], 1)
+        self.assertEqual(cov["oddsWpGap"], 1)
+
+    def test_without_v6_inputs_fields_are_null(self):
+        payload = self._build()
+        horse = payload["races"][RACE_ID]["horses"]["1"]
+        for field in ("nkFormDev", "nkAiScore", "odds"):
+            self.assertIsNone(horse[field])
+        cov = payload["fieldCoverage"]
+        self.assertEqual(cov["nkFormDev"], 0)
+        self.assertEqual(cov["nkAiScore"], 0)
+        self.assertEqual(cov["oddsDrift"], 0)
+        self.assertEqual(cov["oddsWpGap"], 0)
+
+    def test_press_flows_without_race_details(self):
+        # The marks join on (race, horse number) alone: a build
+        # with a newspaper input but NO race-details input must
+        # still carry them (the 2026-11-18 collection run lost
+        # every mark this way — press coverage 0 on file).
+        targets, speed, course, _, _, newspaper = _v2_inputs()
+        payload = build_materials(DATE, speed, course, targets,
+                                  newspaper=newspaper)
+        horses = payload["races"][RACE_ID]["horses"]
+        self.assertEqual(horses["1"]["press"],
+                         {"marks": {"記者": "◎"}, "comment": "短評"})
+        self.assertIsNone(horses["2"]["press"])
+        self.assertEqual(payload["fieldCoverage"]["press"], 1)
+
+
+class V6BuildStampTests(TestCase):
+    def test_build_stamps_derived_and_combo_trials(self):
+        new, receipt = _build(fresh_detail(), race=_combo_race())
+        self.assertIsNotNone(new, receipt)
+        stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
+        # MATERIALS horses carry nk_recent sequences, so the
+        # derived family fires (at zero contrast here) and the
+        # combo family fires on the fabricated race's pairs.
+        self.assertIn("speed_slope", stamp["terms"])
+        self.assertEqual(stamp["speedDerivedTrial"],
+                         NK_SPEED_DERIVED_TRIAL)
+        self.assertIn("combo", stamp["terms"])
+        self.assertEqual(stamp["comboTrial"], NK_COMBO_TRIAL)
+        self.assertIn("speed-derived-trial-20261117",
+                      stamp["weights"])
+        self.assertIn("combo-trial-20261117", stamp["weights"])
+        # The armed-but-dataless families leave no marker.
+        self.assertNotIn("judgementTrial", stamp)
+        self.assertNotIn("oddsTrial", stamp)
         self.assertIsNotNone(verified_unified(new))
 
 

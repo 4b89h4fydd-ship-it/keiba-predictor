@@ -153,7 +153,8 @@ from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa:
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.nk_materials import (  # noqa: E402
-    NK_MATERIALS_VERSION, apply_nk_materials, course_inputs_from_race,
+    NK_MATERIALS_VERSION, apply_nk_materials, combo_inputs_from_race,
+    course_inputs_from_race,
     parse_materials_payload, speed_coverage as nk_speed_coverage)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
@@ -337,6 +338,24 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # unvalidated-no-history)) and its paceTrial entry record the
 # trial on every publication it touches; forward results
 # decide whether it stays.
+# Since nk-materials-v6 (same day, same instruction, after the
+# full audit found them computed but weightless) four more
+# trial families join: the speed-derived terms (the trend /
+# deviation / dispersion / aptitude features integrated_eval
+# computes from the speed page's raw columns — slope / dev /
+# fit / bias at +0.10, the dispersion family vol / sd /
+# overlap at -0.10 per the evaluation's own design notes), the
+# jockey x horse combo term (+0.10, read from the race record
+# itself via combo_inputs_from_race), and — armed but with no
+# collection data yet, so inert until values arrive —
+# netkeiba's judgements (form deviation / AI forecast) and the
+# odds-movement terms (drift / win-place gap) at +0.10 each.
+# Each family's stamp marker (speedDerivedTrial / comboTrial
+# / judgementTrial / oddsTrial) and weights-label part record
+# it only on publications its terms actually touched; the
+# closing （上がり3F) term stays unwired because the production
+# past-run record carries no last-3F field at all (see
+# rewrite/analysis/nk_materials.py for the full record).
 # A race whose date has no materials
 # file, or whose entry cannot produce a term, publishes exactly
 # as before. The lane and the ability model version do NOT
@@ -642,7 +661,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v5", "date": ..., "races":
+    {"version": "nk-materials-v6", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -2141,7 +2160,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             forecast, nk_info = apply_nk_materials(
                 forecast, nk_entry, extras_by_number,
                 segment=segment,
-                course_inputs=course_inputs_from_race(race))
+                course_inputs=course_inputs_from_race(race),
+                combo_inputs=combo_inputs_from_race(race))
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -2488,6 +2508,44 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # rewrite/analysis/nk_materials.py).
             meta["rewritePublish"]["nkMaterials"]["paceTrial"] = (
                 nk_info["paceTrial"])
+        if nk_info.get("speedDerivedTrial"):
+            # Speed-derived trial (nk-materials-v6; UNVALIDATED):
+            # the stamp records that this publication's trend /
+            # deviation / dispersion / aptitude terms — computed
+            # by the integrated evaluation from the speed page's
+            # raw columns all along, weightless until v6 — ran
+            # at the trial weights, so their forward record
+            # stays separable (see rewrite/analysis/
+            # nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"][
+                "speedDerivedTrial"] = nk_info["speedDerivedTrial"]
+        if nk_info.get("comboTrial"):
+            # Jockey x horse combo trial (nk-materials-v6;
+            # UNVALIDATED): the stamp records that this
+            # publication's combination term (the pair's record
+            # together, read from the race record) ran at the
+            # trial weight, so its forward record stays
+            # separable.
+            meta["rewritePublish"]["nkMaterials"]["comboTrial"] = (
+                nk_info["comboTrial"])
+        if nk_info.get("judgementTrial"):
+            # netkeiba judgement trial (nk-materials-v6;
+            # UNVALIDATED): the stamp records that this
+            # publication's form-deviation / AI-forecast terms
+            # ran at the trial weights. No collection file
+            # carries the values yet, so this marker cannot
+            # appear until they do — its absence is the record
+            # that the terms stayed inert.
+            meta["rewritePublish"]["nkMaterials"][
+                "judgementTrial"] = nk_info["judgementTrial"]
+        if nk_info.get("oddsTrial"):
+            # Odds-movement trial (nk-materials-v6;
+            # UNVALIDATED): the stamp records that this
+            # publication's odds drift / win-place gap terms ran
+            # at the trial weights. Same armed-but-dataless
+            # status as the judgement trial above.
+            meta["rewritePublish"]["nkMaterials"]["oddsTrial"] = (
+                nk_info["oddsTrial"])
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
