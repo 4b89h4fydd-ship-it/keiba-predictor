@@ -7,6 +7,18 @@
 # validation harness's own principle). DEFAULT_WEIGHTS are the frozen
 # weights of the integrated evaluation — the publish lane does not
 # retune them.
+#
+# ONE production-only deviation, recorded honestly (2026-11-17,
+# nk-materials-v4): integrate() below carries a `pace` term the
+# research copy does not compute — the netkeiba AI pace forecast's
+# per-horse forecast positions, wired in by explicit user
+# instruction ("集めたデータは全部、予想に入れろ"). No historical
+# AI pace-forecast data exists (the forecast diagrams are only
+# published around race day), so this term is UNVALIDATED — it
+# cannot be back-tested, and it is not part of what the research
+# validation measured. Its weight stays 0 in DEFAULT_WEIGHTS; the
+# production adapter (rewrite/analysis/nk_materials.py) supplies
+# the trial weight and stamps every publication it touches.
 """ARVEXQ integrated evaluation (netkeiba premium materials + v9b).
 
 One evaluation object per race produces ALL outputs so they can never drift
@@ -29,6 +41,9 @@ Form (transparent, no black box):
               + w_speed_overlap * overlap_z(h) # mean+-sd band overlap vs field
               + w_speed_fit   * fit_z(h)     # condition (dist/course) edge
               + w_speed_bias  * bias_z(h)    # course-vs-distance aptitude bias
+              + w_pace        * pace_z(h)    # AI pace-forecast position term
+                                             # (production only, UNVALIDATED:
+                                             #  see the header note)
   p_int = softmax(logp_adj)
 
 Missing material contributes 0 and is counted in coverage. All z-scores are
@@ -411,7 +426,12 @@ NK_DATA_ANALYSIS_CANDIDATES = []  # filled from the collection inventory
 # until numbers exist. Do not confuse "slot exists" with "measured".
 
 DEFAULT_WEIGHTS = {  # smoke-only placeholders, NOT learned
-    "comment": 0.25, "grade": 0.20, "speed": 0.15, "pace": 0.0,
+    "comment": 0.25, "grade": 0.20, "speed": 0.15,
+    # pace: the AI pace-forecast position term (production-only,
+    # UNVALIDATED — no historical data exists to learn or verify a
+    # weight from). 0 here; the production adapter supplies the
+    # trial weight 0.10 and stamps it (nk-materials-v4).
+    "pace": 0.0,
     # trend terms: 0 = off until learned on the 68-race collection
     "speed_slope": 0.0, "speed_dev": 0.0, "speed_vol": 0.0,
     # dispersion terms: also 0 until learned; expected sign is negative
@@ -435,7 +455,9 @@ def integrate(horses, weights=None):
         nk_recent (recent index sequence, oldest->newest)|None,
         nk_avg5 (5-run average index)|None, nk_best (best index)|None,
         nk_dist (distance index)|None, nk_course (course index)|None,
-        front_rate|None
+        front_rate|None,
+        pace_score|None (production-only AI pace-forecast term:
+        the adapter's signed position score in [-1, 1])
     Returns (probs dict num->p, coverage dict, per-horse detail list).
     """
     w = dict(DEFAULT_WEIGHTS)
@@ -485,6 +507,12 @@ def integrate(horses, weights=None):
     nk_ai_z = _zscores([h.get("nk_ai_score") for h in horses])
     course_front_z = _zscores([h.get("course_front") for h in horses])
     course_frame_z = _zscores([h.get("course_frame") for h in horses])
+    # AI pace-forecast position term (production-only, UNVALIDATED):
+    # the adapter pre-combines the horse's forecast 4-corner
+    # position percentile with the race's pace label into
+    # `pace_score` in [-1, 1] (see nk_materials.pace_score); here it
+    # is z-scored within the race like every other term.
+    pace_z = _zscores([h.get("pace_score") for h in horses])
     odds_feats = [odds_movement_features(h.get("publish_win_odds"),
                                          h.get("final_win_odds"),
                                          h.get("place_odds_low"),
@@ -532,6 +560,8 @@ def integrate(horses, weights=None):
             terms["course_front"] = w["course_front"] * course_front_z[i]
         if course_frame_z[i] is not None and w.get("course_frame"):
             terms["course_frame"] = w["course_frame"] * course_frame_z[i]
+        if pace_z[i] is not None and w.get("pace"):
+            terms["pace"] = w["pace"] * pace_z[i]
         if odds_drift_z[i] is not None and w.get("odds_drift"):
             terms["odds_drift"] = w["odds_drift"] * odds_drift_z[i]
         if odds_wp_gap_z[i] is not None and w.get("odds_wp_gap"):
@@ -575,6 +605,7 @@ def integrate(horses, weights=None):
         "nk_ai": sum(1 for h in horses if h.get("nk_ai_score") is not None),
         "course_front": sum(1 for h in horses if h.get("course_front") is not None),
         "course_frame": sum(1 for h in horses if h.get("course_frame") is not None),
+        "pace": sum(1 for h in horses if h.get("pace_score") is not None),
         "odds_drift": sum(1 for f in odds_feats if f["odds_drift"] is not None),
         "odds_wp_gap": sum(1 for f in odds_feats if f["odds_wp_gap"] is not None),
         "h2h": sum(1 for h in horses if h.get("h2h") is not None),

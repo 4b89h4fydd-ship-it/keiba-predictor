@@ -38,6 +38,18 @@ the trial label and the courseTrial marker, that the terms
 stay inert by default / for unknown segments / without tables,
 and that a v2-stamped publication qualifies for exactly one
 more re-issue onto v3.
+
+v4 (same day): the AI pace forecast's per-horse forecast
+positions enter as a pace term at a trial weight of 0.10 —
+UNVALIDATED, because no historical pace-forecast data exists
+(the diagrams are published only around race day), so a
+retrospective validation is impossible. The tests now pin the
+builder's rank/percentile conversion and pace coverage, the
+parser's pace handling, the term's direction (high pace lifts
+the forecast back-runners, slow pace lifts the front), its
+inertness under a middling label / without pace material, the
+paceTrial stamp record, and that a v3-stamped publication
+qualifies for exactly one more re-issue onto v4.
 """
 from __future__ import annotations
 
@@ -52,9 +64,10 @@ from zoneinfo import ZoneInfo
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
-    NK_MATERIALS_VERSION, apply_nk_materials, course_biases,
-    course_inputs_from_race, front_rate_from_runs,
-    parse_materials_payload, speed_coverage)
+    NK_MATERIALS_VERSION, NK_PACE_WEIGHTS_LABEL, PACE_WEIGHT,
+    apply_nk_materials, course_biases, course_inputs_from_race,
+    front_rate_from_runs, pace_score, parse_materials_payload,
+    speed_coverage)
 from rewrite.data.normalize import (
     Obs, PastRun, RaceRecord, RunnerRecord, obs)
 from rewrite.output.api_shape import MODEL_VERSION
@@ -567,6 +580,16 @@ class UpgradeQualificationTests(TestCase):
         self.assertIsNotNone(info)
         self.assertEqual(info["reason"], "nk-materials-upgrade")
 
+    def test_v3_stamp_qualifies_once_more_for_the_pace_term(self):
+        # A v3 publication predates the v4 definition (the AI
+        # pace-forecast term): it qualifies exactly once more,
+        # and the rebuilt product — stamped v4 — does not
+        # qualify again.
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v3"))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
+
     def test_before_cutover_never_qualifies(self):
         self.assertIsNone(self._info(stored_detail(date="2026-11-16")))
 
@@ -718,19 +741,19 @@ class BuildTests(TestCase):
         # never qualifies again.
         self.assertIsNone(self._recheck(new))
 
-    def test_v2_stamped_race_is_reissued_once_to_v3(self):
+    def test_v2_stamped_race_is_reissued_once_to_current_version(self):
         new, receipt = _build(stored_detail(
             nk_stamp=True, nk_stamp_version="nk-materials-v2"))
         self.assertIsNotNone(new, receipt)
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], "nk-materials-v3")
+        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
         self.assertEqual(marker["revision"]["kind"],
                          "nk-materials-upgrade")
         self.assertIsNotNone(verified_unified(new))
-        # The rebuilt detail carries the v3 stamp, so it never
-        # qualifies again.
+        # The rebuilt detail carries the current stamp, so it
+        # never qualifies again.
         self.assertIsNone(self._recheck(new))
 
     def test_build_applies_course_terms_for_nar(self):
@@ -854,7 +877,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v3")
+        self.assertEqual(payload["version"], "nk-materials-v4")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
@@ -931,6 +954,173 @@ class BuilderV2Tests(TestCase):
                                               encoding="utf-8")
             loaded = load_race_details(tmp)
         self.assertEqual(set(loaded), {RACE_ID, "other-race"})
+
+
+def _pace_forecast_input():
+    """arvexq-pace-forecast-v1 shape for the fabricated race:
+    horse 5 is forecast to lead at the start but drop to last
+    by the 4th corner; horse 1 is the mirror image."""
+    return {"version": "arvexq-pace-forecast-v1", "date": DATE,
+            "races": {NK_ID: {
+                "track": "金沢", "race_no": 1, "pace": "H",
+                "n_runners": 5,
+                "positions": {
+                    "start": [[5], [4], [3], [2], [1]],
+                    "corner3": [[4, 5], [3], [2], [1]],
+                    "corner4": [[1], [2], [3], [4], [5]]}}}}
+
+
+def _pace_materials(label="H"):
+    """Parsed materials whose only live material is pace: the
+    4-corner forecast order is 1,2,3,4,5 (percentiles
+    .2,.4,.6,.8,1.0); no speed index anywhere."""
+    horses = {}
+    for n in NAMES:
+        horses[str(n)] = {
+            "nk_best": None, "nk_avg5": None, "nk_dist": None,
+            "nk_course": None, "nk_recent": None,
+            "pace": {ph: {"rank": n, "pct": n / 5.0}
+                     for ph in ("start", "corner3", "corner4")}}
+    return parse_materials_payload({
+        "version": "nk-materials-v4", "date": DATE,
+        "races": {RACE_ID: {"netkeibaRaceId": NK_ID,
+                            "paceLabel": label, "horses": horses,
+                            "courseAnalysis": None}}})
+
+
+class PaceBuilderTests(TestCase):
+    def _build(self, **kwargs):
+        targets, speed, course, details, profiles, newspaper = \
+            _v2_inputs()
+        return build_materials(DATE, speed, course, targets,
+                               race_details=details,
+                               horse_profiles=profiles,
+                               newspaper=newspaper, **kwargs)
+
+    def test_pace_positions_become_rank_and_percentile(self):
+        payload = self._build(pace_forecast=_pace_forecast_input())
+        entry = payload["races"][RACE_ID]
+        self.assertEqual(entry["paceLabel"], "H")
+        horses = entry["horses"]
+        self.assertEqual(horses["5"]["pace"]["start"],
+                         {"rank": 1, "pct": 0.2})
+        self.assertEqual(horses["5"]["pace"]["corner3"],
+                         {"rank": 2, "pct": 0.4})
+        self.assertEqual(horses["5"]["pace"]["corner4"],
+                         {"rank": 5, "pct": 1.0})
+        self.assertEqual(horses["1"]["pace"]["corner4"],
+                         {"rank": 1, "pct": 0.2})
+        self.assertEqual(horses["4"]["pace"]["corner3"],
+                         {"rank": 1, "pct": 0.2})
+        self.assertEqual(payload["fieldCoverage"]["pace"], 5)
+        # The v1 fields are untouched by the pace input.
+        self.assertEqual(horses["1"]["nk_avg5"], 55)
+
+    def test_without_pace_input_fields_are_null(self):
+        payload = self._build()
+        entry = payload["races"][RACE_ID]
+        self.assertIsNone(entry["paceLabel"])
+        for horse in entry["horses"].values():
+            self.assertIsNone(horse["pace"])
+        self.assertEqual(payload["fieldCoverage"]["pace"], 0)
+
+
+class PaceAdapterTests(TestCase):
+    def test_pace_score_arithmetic(self):
+        back = {"corner4": {"rank": 5, "pct": 1.0}}
+        front = {"corner4": {"rank": 1, "pct": 0.0}}
+        self.assertEqual(pace_score(back, "H"), 1.0)
+        self.assertEqual(pace_score(front, "H"), -1.0)
+        self.assertEqual(pace_score(back, "S"), -1.0)
+        self.assertEqual(pace_score(front, "S"), 1.0)
+        self.assertIsNone(pace_score(back, "M"))
+        self.assertIsNone(pace_score(back, None))
+        self.assertIsNone(pace_score(None, "H"))
+        self.assertIsNone(pace_score({"start": {"rank": 1, "pct": 0.2}},
+                                     "H"))
+
+    def test_parse_drops_malformed_pace_cells(self):
+        payload = {"races": {RACE_ID: {"horses": {"1": {
+            "pace": {"corner4": {"rank": "x", "pct": 0.5},
+                     "start": {"rank": 1, "pct": 0.2}}}}}}}
+        parsed = parse_materials_payload(payload)
+        self.assertEqual(parsed[RACE_ID]["horses"][1]["pace"],
+                         {"start": {"rank": 1, "pct": 0.2}})
+
+    def test_high_pace_lifts_forecast_back_runners(self):
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, _pace_materials("H")[RACE_ID], {})
+        self.assertTrue(info["applied"])
+        self.assertEqual(info["terms"], ["pace"])
+        self.assertEqual(info["paceTrial"], "ai-pace-forecast")
+        self.assertIn(NK_PACE_WEIGHTS_LABEL, info["weights"])
+        self.assertEqual(info["coverage"]["pace"], 5)
+        self.assertEqual(PACE_WEIGHT, 0.10)
+        by_number = {r.number: r for r in adjusted.runners}
+        # Horse 5 is forecast last at the 4th corner: in a high
+        # pace that is the advantaged seat. Horse 1 leads the
+        # forecast and is discounted.
+        self.assertGreater(by_number[5].p_win, STRENGTHS[5])
+        self.assertLess(by_number[1].p_win, STRENGTHS[1])
+        total = sum(r.p_win for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=3)
+
+    def test_slow_pace_lifts_forecast_front_runners(self):
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, _pace_materials("S")[RACE_ID], {})
+        self.assertTrue(info["applied"])
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+
+    def test_middling_label_is_inert(self):
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, _pace_materials("M")[RACE_ID], {})
+        self.assertIs(adjusted, forecast)
+        self.assertFalse(info["applied"])
+
+    def test_no_pace_material_is_inert(self):
+        payload = {"races": {RACE_ID: {"horses": {
+            str(n): {"nk_avg5": None} for n in NAMES}}}}
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, parse_materials_payload(payload)[RACE_ID], {})
+        self.assertIs(adjusted, forecast)
+        self.assertFalse(info["applied"])
+
+    def test_pace_adjustment_is_deterministic(self):
+        first, _ = apply_nk_materials(
+            v9b_like_forecast(), _pace_materials("H")[RACE_ID], {})
+        second, _ = apply_nk_materials(
+            v9b_like_forecast(), _pace_materials("H")[RACE_ID], {})
+        self.assertEqual([r.p_win for r in first.runners],
+                         [r.p_win for r in second.runners])
+
+
+class PaceBuildTests(TestCase):
+    def test_build_stamps_the_pace_trial(self):
+        payload = json.loads(json.dumps(MATERIALS_PAYLOAD))
+        entry = payload["races"][RACE_ID]
+        entry["paceLabel"] = "H"
+        for n in NAMES:
+            entry["horses"][str(n)]["pace"] = {
+                ph: {"rank": n, "pct": n / 5.0}
+                for ph in ("start", "corner3", "corner4")}
+        new, receipt = _build(
+            fresh_detail(), materials=parse_materials_payload(payload))
+        self.assertIsNotNone(new, receipt)
+        stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertIn("pace", stamp["terms"])
+        self.assertIn("speed", stamp["terms"])
+        self.assertEqual(stamp["paceTrial"], "ai-pace-forecast")
+        self.assertIn("pace-trial-20261117", stamp["weights"])
+        self.assertIn("unvalidated-no-history", stamp["weights"])
+        self.assertEqual(stamp["coverage"]["pace"], 5)
+        self.assertIsNotNone(verified_unified(new))
 
 
 if __name__ == "__main__":
