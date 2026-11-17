@@ -70,6 +70,34 @@
             forecastText:String(rev.forecastText||''),modelVersion:rev.modelVersion||'',uncalibrated:rev.probabilityModelStatus!=='calibrated'};
   }
 
+  // Display-only evidence wiring for the horse detail modal: carry the
+  // server-produced observed evidence (researchEvidence factors) and the
+  // API's precomputed running-style rates from the horse payload onto
+  // each row, verbatim. Nothing is derived or estimated here — a factor
+  // the server has not produced stays null, its coverage count stays 0,
+  // and the modal honestly keeps showing it as unevaluated.
+  function evidenceFields(h){
+    var out={researchFactors:{},narEvidence:{available:false},threeFactorCoverage:0},
+        ev=h&&h.researchEvidence,
+        items=(ev&&ev.factors&&Array.isArray(ev.factors.items))?ev.factors.items:[];
+    items.forEach(function(it){
+      if(!it||it.key==null)return;
+      var value=(it.available===true&&it.value!=null&&Number.isFinite(Number(it.value)))?Number(it.value):null;
+      out.researchFactors[String(it.key)]=value;
+      if(value!=null)out.threeFactorCoverage++;
+    });
+    out.narEvidence={available:out.threeFactorCoverage>0};
+    var st=h&&h.precomputedMetrics&&h.precomputedMetrics.style;
+    if(st&&Number(st.samples)>0){
+      out.front=Number(st.front)||0;out.stalk=Number(st.stalk)||0;
+      out.mid=Number(st.mid)||0;out.close=Number(st.close)||0;
+      out.rawFront=out.front;out.rawStalk=out.stalk;
+      out.rawMid=out.mid;out.rawClose=out.close;
+      out.styleSamples=Number(st.samples);out.styleUnknown=false;
+    }
+    return out;
+  }
+
   function build(race){
     // Do not let the previous race's six-stage receipt leak into a race that
     // has no verified unified forecast.
@@ -168,7 +196,7 @@
               // The forecast payload itself is not modified.
               winP=obj.winProbability!=null&&Number.isFinite(Number(obj.winProbability))?Number(obj.winProbability)
                 :(dg.winProbability!=null&&Number.isFinite(Number(dg.winProbability))?Number(dg.winProbability):null);
-          return {horse:h,predMark:mark,serverPreoffMark:false,
+          return Object.assign({horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             attentionMark:!!attentionMap[no],
             predRank:999,winProbability:winP,p1Probability:winP,p2Probability:null,
@@ -176,7 +204,7 @@
             overallScoreExact:score100,
             overallReasons:dg.reason?[String(dg.reason)]:[],
             forecastProbabilityRange:obj.winProbabilityRange||null,
-            forecastTop3Range:obj.top3ProbabilityRange||null,forecastReason:obj.reason||''};
+            forecastTop3Range:obj.top3ProbabilityRange||null,forecastReason:obj.reason||''},evidenceFields(h));
         });
         last={active:true,source:'arvexq-unified-preoff',scenarios:(unified.pace&&unified.pace.testedScenarios||[]),
           pace:[],forecastText:String(unified.pace&&unified.pace.text||''),
@@ -194,12 +222,12 @@
       marks.forEach(function(x){by[String(Number(x.horseNumber))]=x});
       var rows=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
         var no=Number(h.horseNumber),m=by[String(no)]||{};
-        return {horse:h,predMark:String(m.mark||''),serverPreoffMark:!!m.mark,
+        return Object.assign({horse:h,predMark:String(m.mark||''),serverPreoffMark:!!m.mark,
           originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:false,
           predRank:marks.findIndex(function(x){return Number(x.horseNumber)===no})+1,
           winProbability:prob.win&&prob.win[no]!=null?prob.win[no]:null,
           p1Probability:prob.win&&prob.win[no]!=null?prob.win[no]:null,p2Probability:null,
-          p3Probability:prob.top3&&prob.top3[no]!=null?prob.top3[no]:null,overallGrade:'',coverage:1};
+          p3Probability:prob.top3&&prob.top3[no]!=null?prob.top3[no]:null,overallGrade:'',coverage:1},evidenceFields(h));
       });
       // Historic models may contain a separate scenario array; fusion has direct observed evidence.
       // The array index is not a horse number and the correction is not a calibrated pace prediction.
@@ -224,11 +252,11 @@
       .filter(function(h){return h&&Number(h.horseNumber)>0})
       .map(function(h){
         var id=String(Number(h.horseNumber)),mark=marks&&marks[id]||'';
-        return {horse:h,predMark:mark,serverPreoffMark:false,
+        return Object.assign({horse:h,predMark:mark,serverPreoffMark:false,
           originalPreoffMark:!!mark&&!!originals,referencePostoffMark:!!mark&&!!revision&&revision.kind==='retrospective',
           revisionCandidateMark:!!mark&&!!revision&&revision.kind==='preoff-candidate',
           predRank:999,winProbability:null,p1Probability:null,p2Probability:null,
-          p3Probability:null,overallGrade:'',coverage:0};
+          p3Probability:null,overallGrade:'',coverage:0},evidenceFields(h));
       });
     last={active:!!marks,source:originals?'saved-preoff':(revision?'learned-revision-'+revision.kind:''),
       scenarios:revision?revision.scenarios:[],forecastText:revision?revision.forecastText:'',modelVersion:revision?revision.modelVersion:'',
