@@ -71,7 +71,14 @@ assert.match(home.buttons('horse'),/data-home-page="favorites"/);
 assert.doesNotMatch(home.buttons('horse'),/data-home-page="ai-stats"/);
 assert.doesNotMatch(source,/kyotei|boat|競艇/i);
 const ui=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-assert.match(ui,/ARVEXQHorsePortal\.home/);
+// The home no longer renders HorsePortal.home (PR #556: the home shows
+// venue tags only). The portal module itself must stay loaded, which
+// index.html guarantees via its script tag.
+const indexHtml=fs.readFileSync('arvexq/ui/static/index.html','utf8');
+assert.match(indexHtml,/\/sports\/horse-portal\.js/,
+  'horse-portal module must stay loaded via index.html');
+assert.doesNotMatch(ui,/ARVEXQHorsePortal\.home/,
+  'home must not render HorsePortal.home (venue-tags-only home, PR #556)');
 assert.match(ui,/syncLiveUI\('horse'/);
 assert.match(ui,/function refreshHomeOfficialStatuses\(\)/,
   'home must refetch verified official status instead of only repainting the clock');
