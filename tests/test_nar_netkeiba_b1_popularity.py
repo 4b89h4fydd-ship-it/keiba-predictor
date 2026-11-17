@@ -15,7 +15,7 @@ def test_b1_combined_cell_popularity_comes_from_ninki(monkeypatch):
     <td>4.0 3人気</td><td></td></tr>
     </table></body></html>"""
 
-    def fake_get(url, timeout, cache):
+    def fake_get(url, timeout, cache, desktop=False):
         return shutuba if "shutuba" in url else b1
 
     monkeypatch.setattr(app, "_netkeiba_get", fake_get)
