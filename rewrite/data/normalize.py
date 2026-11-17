@@ -73,6 +73,9 @@ class PastRun:
     time_behind_winner: Obs = Obs(None, "normalize", "not_captured")
     margin_seconds: Obs = Obs(None, "normalize", "not_captured")
     carried_weight: Obs = Obs(None, "normalize", "not_captured")
+    # Observed last-3F seconds (上がり) from the source record; both
+    # key spellings exist upstream (last3fSeconds / last3FSeconds).
+    last3f_seconds: Obs = Obs(None, "normalize", "not_captured")
 
 
 @dataclass(frozen=True)
@@ -160,6 +163,10 @@ def _past_run(row: dict, source: str) -> PastRun:
         time_behind_winner=obs(row.get("timeBehindWinner"), source),
         margin_seconds=obs(row.get("marginSeconds"), source),
         carried_weight=obs(row.get("carriedWeight"), source),
+        last3f_seconds=obs(_first(row.get("last3fSeconds"),
+                                  row.get("last3f"),
+                                  row.get("last3FSeconds"),
+                                  row.get("last600Seconds")), source),
         race_title=obs(row.get("title"), source),
     )
 
