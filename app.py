@@ -1619,6 +1619,29 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
                         if po:z.update(po)
         except Exception as exc:
             print('NAR netkeiba odds-page fallback failed',rid,exc)
+        # The scan above runs on the smartphone layout (the mobile UA
+        # is redirected to the SP shutuba card), which carries no
+        # place table at all — its 複勝 search can never match, so
+        # place coverage from netkeiba stayed 0 and only the official
+        # OddsTanFuku leg ever supplied ranges. The desktop b1 page
+        # carries two same-header tables — win (bare number) and
+        # place (observed range) — which the dedicated parser
+        # separates by cell content. Fetch it with the desktop layout
+        # and merge the observed place ranges (plus any win odds the
+        # card scan still lacks).
+        try:
+            b1_url=f"https://nar.netkeiba.com/odds/?race_id={rid}&type=b1"
+            if force:b1_url+=f"&t={int(time.time()*1000)}"
+            bh=_netkeiba_get(b1_url,float(os.getenv('NETKEIBA_NAR_ODDS_TIMEOUT_SEC','3.2')),0 if force else 12,desktop=True)
+            for no,z0 in _parse_nar_netkeiba_b1_html(bh).items():
+                z=out.setdefault(no,{})
+                odd=z0.get('winOdds')
+                if odd and odd>1 and not z.get('winOdds'):
+                    z['winOdds']=odd;z['oddsSource']='netkeiba実オッズ';z['oddsForecast']=False
+                if z0.get('placeOddsLow') is not None and z.get('placeOddsLow') is None:
+                    z['placeOddsLow']=z0['placeOddsLow'];z['placeOddsHigh']=z0['placeOddsHigh']
+        except Exception as exc:
+            print('NAR netkeiba b1 place fallback failed',rid,exc)
     return out
 
 _nar_odds_cache_lock=threading.Lock()
@@ -1630,6 +1653,7 @@ from arvexq.ingest.jra_fields.body_weight import extract as jra_observed_body_we
 from arvexq.ingest.jra_fields.body_weight_change import extract as jra_observed_body_weight_change
 
 from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html
+from arvexq.ingest.odds_fields.nar_netkeiba_b1 import _parse_nar_netkeiba_b1_html
 
 def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
     code=NAR_BABA_CODES.get(str(track or "").strip())
