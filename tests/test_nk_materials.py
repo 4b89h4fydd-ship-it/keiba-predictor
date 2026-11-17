@@ -26,6 +26,18 @@ definition, that the course terms move NAR probabilities and
 stay inert for JRA / by default / without tables, and that a
 v1-stamped (speed-only) publication qualifies for exactly one
 more re-issue while a current-version stamp never does.
+
+v3 (same day): the SAME course weights reach JRA as a marked
+trial (user instruction: you cannot know without actually
+trying it; provenance course-weights-20261117 REPORT.md §7 —
+the NAR weights improved the JRA test segment post-hoc, while
+no JRA-learned weight was stable). The tests now pin that the
+course terms move JRA probabilities exactly as they move NAR
+ones (identical weights), that the stamp-side record carries
+the trial label and the courseTrial marker, that the terms
+stay inert by default / for unknown segments / without tables,
+and that a v2-stamped publication qualifies for exactly one
+more re-issue onto v3.
 """
 from __future__ import annotations
 
@@ -430,11 +442,56 @@ class CourseAdapterTests(TestCase):
         total = sum(r.strength for r in adjusted.runners)
         self.assertAlmostEqual(total, 1.0, places=5)
 
-    def test_course_terms_inert_for_jra_and_by_default(self):
+    def test_course_terms_move_jra_probabilities_as_trial(self):
+        # v3 trial: JRA receives the SAME weights as NAR, so on
+        # identical inputs the movement matches the NAR test's
+        # hand-computed directions exactly — what differs is the
+        # record: the weights label carries the trial label with
+        # its provenance (REPORT.md §7), never the NAR fit+calib
+        # label, and info marks the trial explicitly.
+        forecast = v9b_like_forecast()
+        adjusted, info = apply_nk_materials(
+            forecast, course_entry(), FLAT_EXTRAS, segment="jra",
+            course_inputs=COURSE_INPUTS)
+        self.assertTrue(info["applied"])
+        self.assertIn("course_front", info["terms"])
+        self.assertIn("course_frame", info["terms"])
+        self.assertIn("course-jra-trial", info["weights"])
+        self.assertIn("sec7", info["weights"])
+        self.assertNotIn("course-nar-fitcalib", info["weights"])
+        self.assertEqual(info["courseTrial"], "jra")
+        self.assertEqual(info["coverage"]["course_frame"], 5)
+        by_number = {r.number: r for r in adjusted.runners}
+        self.assertGreater(by_number[4].p_win, STRENGTHS[4])
+        self.assertGreater(by_number[1].p_win, STRENGTHS[1])
+        self.assertLess(by_number[5].p_win, STRENGTHS[5])
+        total = sum(r.strength for r in adjusted.runners)
+        self.assertAlmostEqual(total, 1.0, places=5)
+
+    def test_jra_trial_probabilities_equal_nar(self):
+        # Identical weights => identical numbers; only the
+        # stamp-side record differs. "jra_flat" — the spelling
+        # race.segment.value carries in the publish lane — is
+        # the same trial segment.
+        entry = course_entry()
+        nar, nar_info = apply_nk_materials(
+            v9b_like_forecast(), entry, FLAT_EXTRAS, segment="nar",
+            course_inputs=COURSE_INPUTS)
+        for segment in ("jra", "jra_flat"):
+            adjusted, info = apply_nk_materials(
+                v9b_like_forecast(), entry, FLAT_EXTRAS,
+                segment=segment, course_inputs=COURSE_INPUTS)
+            self.assertEqual(
+                [r.strength for r in adjusted.runners],
+                [r.strength for r in nar.runners], segment)
+            self.assertEqual(info["courseTrial"], "jra", segment)
+        self.assertNotIn("courseTrial", nar_info)
+
+    def test_course_terms_inert_by_default_and_unknown_segment(self):
         entry = course_entry()
         baseline, base_info = apply_nk_materials(
             v9b_like_forecast(), entry, FLAT_EXTRAS)
-        for segment in ("jra", None):
+        for segment in (None, "debut"):
             adjusted, info = apply_nk_materials(
                 v9b_like_forecast(), entry, FLAT_EXTRAS,
                 segment=segment, course_inputs=COURSE_INPUTS)
@@ -442,18 +499,25 @@ class CourseAdapterTests(TestCase):
                 [r.strength for r in adjusted.runners],
                 [r.strength for r in baseline.runners], segment)
             self.assertNotIn("course-nar", info["weights"], segment)
+            self.assertNotIn("course-jra-trial", info["weights"],
+                             segment)
+            self.assertNotIn("courseTrial", info, segment)
 
     def test_no_course_tables_no_course_terms(self):
         entry = course_entry()
         entry["courseAnalysis"] = None
-        adjusted, info = apply_nk_materials(
-            v9b_like_forecast(), entry, FLAT_EXTRAS, segment="nar",
-            course_inputs=COURSE_INPUTS)
         baseline, _ = apply_nk_materials(
             v9b_like_forecast(), entry, FLAT_EXTRAS)
-        self.assertEqual([r.strength for r in adjusted.runners],
-                         [r.strength for r in baseline.runners])
-        self.assertNotIn("course_front", info.get("terms") or [])
+        for segment in ("nar", "jra"):
+            adjusted, info = apply_nk_materials(
+                v9b_like_forecast(), entry, FLAT_EXTRAS,
+                segment=segment, course_inputs=COURSE_INPUTS)
+            self.assertEqual([r.strength for r in adjusted.runners],
+                             [r.strength for r in baseline.runners],
+                             segment)
+            self.assertNotIn("course_front", info.get("terms") or [],
+                             segment)
+            self.assertNotIn("courseTrial", info, segment)
 
     def test_course_adjustment_is_deterministic(self):
         first, _ = apply_nk_materials(
@@ -489,6 +553,17 @@ class UpgradeQualificationTests(TestCase):
         # does not qualify again (see the build-level test).
         info = self._info(stored_detail(
             nk_stamp=True, nk_stamp_version="nk-materials-v1"))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
+
+    def test_v2_stamp_qualifies_once_more_for_the_jra_trial(self):
+        # A v2 publication (course weights for NAR only)
+        # predates the v3 definition (the JRA course trial): it
+        # qualifies exactly once more, and the rebuilt product —
+        # stamped v3 — does not qualify again (see the
+        # build-level test).
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v2"))
         self.assertIsNotNone(info)
         self.assertEqual(info["reason"], "nk-materials-upgrade")
 
@@ -643,6 +718,21 @@ class BuildTests(TestCase):
         # never qualifies again.
         self.assertIsNone(self._recheck(new))
 
+    def test_v2_stamped_race_is_reissued_once_to_v3(self):
+        new, receipt = _build(stored_detail(
+            nk_stamp=True, nk_stamp_version="nk-materials-v2"))
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        stamp = marker["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertEqual(stamp["version"], "nk-materials-v3")
+        self.assertEqual(marker["revision"]["kind"],
+                         "nk-materials-upgrade")
+        self.assertIsNotNone(verified_unified(new))
+        # The rebuilt detail carries the v3 stamp, so it never
+        # qualifies again.
+        self.assertIsNone(self._recheck(new))
+
     def test_build_applies_course_terms_for_nar(self):
         payload = {
             "version": "nk-materials-v2", "date": DATE,
@@ -764,7 +854,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v2")
+        self.assertEqual(payload["version"], "nk-materials-v3")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")

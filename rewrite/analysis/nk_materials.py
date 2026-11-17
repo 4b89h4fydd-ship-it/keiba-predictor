@@ -77,9 +77,30 @@ test quoted above; learned on fit alone, the same weights also
 improved the held-out calib winner log-loss (255.70 vs 257.72
 at zero). JRA learned the opposite sign on its fit+calib
 (front -0.25 / frame 0, matching its negative test result), so
-the course weights apply to NAR races only; JRA keeps the
-frozen defaults (course terms inert), exactly as the segment
-split of the measurement dictates.
+in v2 the course weights applied to NAR races only and JRA kept
+the frozen defaults (course terms inert).
+
+v3 (2026-11-17, the user's follow-up instruction: "あらたに
+やってみんとわからんやろ" — you cannot know without actually
+trying it): the NAR weights now ALSO apply to JRA, as a marked
+TRIAL. The provenance is the re-measurement of JRA with THIS
+lane's own feature definitions (course-weights-20261117
+REPORT.md §7): a JRA-specific grid search over JRA fit/calib
+found no stable weight (fit picked front +0.05, which then
+worsened the held-out calib; fit+calib flipped to -0.05 on a
+near-flat surface), so no JRA-learned weight is adopted. But
+the NAR weights (+0.10 / +0.05), applied unchanged to the JRA
+test segment (44 races, 2026-11-07/08), improved all three
+metrics over v9b (top-1 36.4% -> 40.9%, NDCG@3 +0.0129,
+winner log-loss -0.0080, non-negative on both days). That is a
+post-hoc observation on two days of test data — NOT a
+validated JRA weight — so the JRA course terms ship as a trial
+(the stamp's weights label records the trial and this
+provenance) and are to be judged on forward JRA racing. NAR is
+unchanged: same weights, same label, same numbers. The v3 bump
+re-issues a v2-stamped pre-post JRA race exactly once under
+the trial; NAR races re-stamped by the same bump recompute
+identically.
 
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
@@ -93,12 +114,27 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v2"
+NK_MATERIALS_VERSION = "nk-materials-v3"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # Course-term weights for NAR races, selected on fit+calib only
-# (see the module docstring). JRA never receives them.
+# (see the module docstring).
 COURSE_WEIGHTS_NAR = {"course_front": 0.10, "course_frame": 0.05}
 NK_COURSE_WEIGHTS_LABEL = "course-nar-fitcalib-20261117(front+0.10/frame+0.05)"
+# JRA trial (v3): the SAME weights as NAR, applied to JRA races
+# as a trial — NOT learned from JRA data (a JRA-specific search
+# found no stable weight). Provenance: course-weights-20261117
+# REPORT.md §7 — the NAR weights improved the JRA test segment
+# (44R, two days) post-hoc on all three metrics. The label
+# records the trial and its source in every stamp these terms
+# touch; forward JRA results decide whether the trial stays.
+COURSE_WEIGHTS_JRA_TRIAL = {"course_front": 0.10, "course_frame": 0.05}
+NK_COURSE_WEIGHTS_JRA_TRIAL_LABEL = (
+    "course-jra-trial-20261117(front+0.10/frame+0.05;"
+    "nar-weights;source=course-weights-report-sec7)")
+# The publish lane passes race.segment.value, whose JRA flat
+# spelling is "jra_flat"; "jra" is accepted as the same segment
+# (the spelling the adapter's callers and tests use for JRA).
+JRA_SEGMENTS = ("jra", "jra_flat")
 
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
@@ -336,12 +372,17 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     outputs (integrate() is closed-form over the runners in
     forecast order).
 
-    Course terms are computed only when segment is "nar" and
-    course_inputs (see course_inputs_from_race) are supplied:
-    the biases come from the entry's own courseAnalysis tables,
-    the per-horse front rates and frames from the race record.
-    Any other segment — or a race without course inputs — runs
-    with the frozen defaults, where the course weights are 0.
+    Course terms are computed only when segment is "nar" or a
+    JRA segment (see JRA_SEGMENTS) and course_inputs (see
+    course_inputs_from_race) are supplied: the biases come from
+    the entry's own courseAnalysis tables, the per-horse front
+    rates and frames from the race record. NAR uses the
+    fit+calib-selected weights; JRA uses the same values as a
+    marked trial (COURSE_WEIGHTS_JRA_TRIAL — when the trial's
+    terms contribute, info["courseTrial"] is "jra" and the
+    weights label carries the trial label). Any other segment —
+    or a race without course inputs — runs with the frozen
+    defaults, where the course weights are 0.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -353,7 +394,9 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     if not materials:
         return forecast, info
     extras_by_number = extras_by_number or {}
-    course_active = segment == "nar" and isinstance(course_inputs, dict)
+    is_jra = segment in JRA_SEGMENTS
+    course_active = ((segment == "nar" or is_jra)
+                     and isinstance(course_inputs, dict))
     front_bias, frame_bias = (course_biases(entry.get("courseAnalysis"))
                               if course_active else (None, {}))
     horses = []
@@ -388,6 +431,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     if len(horses) < 3:
         return forecast, info
     weights = None
+    course_label = None
     if course_active and (front_bias is not None or frame_bias):
         frs = [h["front_rate"] for h in horses
                if h.get("front_rate") is not None]
@@ -399,14 +443,26 @@ def apply_nk_materials(forecast: RaceForecast, entry,
                 if front_bias is not None and fr is not None
                 and mean_fr is not None else None)
             h["course_frame"] = frame_bias.get(h.get("_frame_group"))
-        weights = dict(COURSE_WEIGHTS_NAR)
+        if is_jra:
+            weights = dict(COURSE_WEIGHTS_JRA_TRIAL)
+            course_label = NK_COURSE_WEIGHTS_JRA_TRIAL_LABEL
+        else:
+            weights = dict(COURSE_WEIGHTS_NAR)
+            course_label = NK_COURSE_WEIGHTS_LABEL
     for h in horses:
         h.pop("_frame_group", None)
     probs, coverage, detail = integrate(horses, weights)
     info["coverage"] = coverage
-    if any(k in d["terms"] for d in detail
-           for k in ("course_front", "course_frame")):
-        info["weights"] = NK_WEIGHTS_LABEL + "+" + NK_COURSE_WEIGHTS_LABEL
+    if course_label is not None and any(
+            k in d["terms"] for d in detail
+            for k in ("course_front", "course_frame")):
+        info["weights"] = NK_WEIGHTS_LABEL + "+" + course_label
+        if is_jra:
+            # The trial is on the record wherever the stamp is
+            # read from: the weights label above, plus this
+            # explicit marker the publish lane copies into the
+            # nkMaterials stamp.
+            info["courseTrial"] = "jra"
     if not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector

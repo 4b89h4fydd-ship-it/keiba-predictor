@@ -36,9 +36,9 @@ normaliser between the collection side and that file; its inputs:
                       entries are carried through untouched as the
                       horse's "press" field.
 
-Output format (version "nk-materials-v2"):
+Output format (version "nk-materials-v3"):
 
-  {"version": "nk-materials-v2", "date": ..., "source": ...,
+  {"version": "nk-materials-v3", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
@@ -83,11 +83,13 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   distance + surface): starts / wins / top-3 finishes and the
   win rate recomputed from those counts. A sire absent from the
   table has no course record — null, never estimated.
-  The v2 label also marks the adjustment definition that
-  consumes the file (the course-analysis tables now feed the
-  weighted course terms for NAR; see
+  The v3 label also marks the adjustment definition that
+  consumes the file (the course-analysis tables feed the
+  weighted course terms: NAR at its fit+calib-selected
+  weights, JRA at the same weights as a trial; see
   rewrite/analysis/nk_materials.py). The publish lane's parser
-  does not gate on the version string.
+  does not gate on the version string, so v1/v2 files load
+  the same.
 
 Rules: values are carried verbatim from the collection (nulls
 stay null — a "-" / 未 cell is missing material, never imputed);
@@ -419,7 +421,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         if isinstance(h.get("pedigree"), dict)
         and h["pedigree"].get("sireCourse") is not None)
     return {
-        "version": "nk-materials-v2",
+        "version": "nk-materials-v3",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
