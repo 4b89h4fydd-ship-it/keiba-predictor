@@ -2366,7 +2366,48 @@ function paceDisplayPanel(r,p){
     ? paceOutcomeSection(r,p)+paceMapSection(r,p)
     : paceMapSection(r,p)+pacePanel(r,p);
 }
-function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+dataTopHorsesSection(r,p)+pedigreeListSection(r,p)+bestTimeSection(r,p)+headToHeadSection(r,p)+courseAnalysisSection(r)+analysisDiagnosisHtml(r,p)+analysisRatesSection(r,p)+paceDisplayPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・買い目・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
+function detailTabs(r,p){var key=state.openPanel;if(key==='diagnosis'){state.openPanel='entry';key='entry'}if(key==='entry')return '<div id="section-entry" class="accordion-panel">'+runnerStyleSection(r,p)+'</div>';if(key==='pace')return '<div class="accordion-panel">'+analysisTabsPanel(r,p)+'</div>';if(key==='odds')return '<div class="accordion-panel">'+oddsPanel(r,p)+'</div>';if(key==='result')return '<div class="accordion-panel">'+resultPanel(r)+'</div>';return '<div class="accordion-idle">出走表・買い目・オッズ・データ分析・結果・払戻から見たい項目を押してください。</div>'}
+/* v363 — データ分析 tab: section tags (user direction 2026-11-19:
+   「ここも各項目でタグわけして」). The sections that used to stack
+   down one long panel are now switched by a chip row at the top of
+   the tab; only the selected section is shown (initial: データ上位馬).
+   Section bodies, wording and computation are unchanged — this only
+   switches which one is displayed. A section whose body renders
+   empty for the race gets no chip. To add a future per-horse
+   analysis item (総合評価・適性など), append one entry to
+   ANALYSIS_TAG_DEFS. */
+var ANALYSIS_TAG_DEFS=[
+  {key:'top',label:'データ上位馬',body:function(r,p){return dataTopHorsesSection(r,p)}},
+  {key:'pedigree',label:'血統',body:function(r,p){return pedigreeListSection(r,p)}},
+  {key:'besttime',label:'持ちタイム',body:function(r,p){return bestTimeSection(r,p)}},
+  {key:'headtohead',label:'対戦表',body:function(r,p){return headToHeadSection(r,p)}},
+  {key:'course',label:'コース分析',body:function(r,p){return courseAnalysisSection(r)}},
+  {key:'diagnosis',label:'全頭診断',body:function(r,p){return analysisDiagnosisHtml(r,p)}},
+  {key:'rates',label:'勝率・実績率',body:function(r,p){return analysisRatesSection(r,p)}},
+  {key:'paceview',label:'展開',body:function(r,p){return paceDisplayPanel(r,p)}}
+];
+var analysisTagState={raceId:'',tag:'top'};
+function analysisTagFor(r){
+  var id=String(r&&r.id||'');
+  if(analysisTagState.raceId!==id){analysisTagState.raceId=id;analysisTagState.tag='top'}
+  return analysisTagState.tag;
+}
+function analysisTabsPanel(r,p){
+  var cur=analysisTagFor(r),rendered=[];
+  ANALYSIS_TAG_DEFS.forEach(function(d){var html=d.body(r,p);if(html)rendered.push({key:d.key,label:d.label,html:html})});
+  if(!rendered.length)return '';
+  var sel=rendered[0],i;
+  for(i=0;i<rendered.length;i++)if(rendered[i].key===cur)sel=rendered[i];
+  var chips=rendered.map(function(d){return '<button type="button" role="tab" class="da-tag'+(d.key===sel.key?' active':'')+'" data-analysis-tag="'+d.key+'" aria-selected="'+(d.key===sel.key)+'">'+esc(d.label)+'</button>'}).join('');
+  return '<div class="da-tags" role="tablist">'+chips+'</div>'+sel.html;
+}
+document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('[data-analysis-tag]'):null;
+  if(!t)return;
+  e.preventDefault();e.stopPropagation();
+  analysisTagState.tag=t.getAttribute('data-analysis-tag')||'top';
+  render();
+});
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
@@ -4810,7 +4851,15 @@ function entryTableSection(r,p){
   return '<table class="arv-marks-table arv-entry-table"><thead><tr><th>自分</th><th>馬番</th><th class="l">馬名</th><th>印</th><th>勝率</th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 /* データ分析 tab: top horses by own-data condition fit + course facts. */
-function shrunkShowRate(agg){return agg&&agg.starts?((agg.w+agg.s+agg.t)+1)/(agg.starts+4):0}
+/* v363 fix (user report 2026-11-19, 笠松1R): the shrinkage prior is
+   (shows+1)/(starts+4), so an aggregate with no starts is worth 1/4 —
+   neutral, not zero. The old starts-guard returned 0 for "no evidence",
+   which scored WORSE than a little bad evidence: a horse with one
+   losing run at today's course (1 start, 0 shows -> 3*0.2 = 0.6 on the
+   x3 course term) outranked horses with strong venue records but no
+   course start (course term 0). Return the prior for empty aggregates
+   so the ranking follows the formula on the real data. */
+function shrunkShowRate(agg){return agg?((agg.w+agg.s+agg.t)+1)/(agg.starts+4):0}
 function dataTopHorsesSection(r,p){
   var rows=(p&&p.rows)||[];
   var surfKind=runSurfaceKind(r),surfLabel=surfKind==='dirt'?'ダート':(surfKind==='turf'?'芝':'');
@@ -4832,7 +4881,11 @@ function dataTopHorsesSection(r,p){
     scored.push({h:h,score:score,reasons:reasons});
   });
   scored.sort(function(a,b){return b.score-a.score});
-  var top=scored.slice(0,3);
+  /* v363 guard: a horse with no standout condition (no reasons) must
+     not take a top-3 slot while another horse has an evidenced one.
+     Order inside each group stays the score order; reason-less horses
+     only fill slots the evidenced horses cannot. */
+  var top=scored.filter(function(x){return x.reasons.length}).concat(scored.filter(function(x){return !x.reasons.length})).slice(0,3);
   if(!top.length)return '<section class="card"><h2>データ上位馬</h2><p class="muted">集計できる過去走が不足しているため、今回は表示できません。</p></section>';
   return '<section class="card"><h2>データ上位馬</h2>'
     +top.map(function(item,idx){
