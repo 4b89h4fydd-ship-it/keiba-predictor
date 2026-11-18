@@ -190,7 +190,16 @@ def _analysis_current(detail: dict[str, Any] | None) -> bool:
         return False
     pm = detail.get("preparedMeta") if isinstance(detail.get("preparedMeta"), dict) else {}
     saved = str(pm.get("analysisInputHash") or "")
-    return bool(saved) and saved == analysis_input_hash(detail)
+    if not saved or saved != analysis_input_hash(detail):
+        return False
+    # The input hash covers prediction inputs only, never the observed
+    # evidence decoration. A thin write from another lane can strip
+    # researchEvidence while the hash and diagnosis flags stay current;
+    # without this check the analyze stage would skip the race forever
+    # and never re-attach the evidence (2026-11-19: all 36 races).
+    if _card_usable(detail) and not detail.get("researchEvidenceHorses"):
+        return False
+    return True
 
 
 def _raw_snapshot(rid: str) -> dict[str, Any] | None:
