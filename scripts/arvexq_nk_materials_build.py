@@ -70,9 +70,9 @@ normaliser between the collection side and that file; its inputs:
                       only; 2026-11-18 collected no odds) — same
                       armed-but-dataless status as above.
 
-Output format (version "nk-materials-v7"):
+Output format (version "nk-materials-v8"):
 
-  {"version": "nk-materials-v7", "date": ..., "source": ...,
+  {"version": "nk-materials-v8", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "races": {<arvexq_race_id>: {
@@ -82,6 +82,7 @@ Output format (version "nk-materials-v7"):
            "nk_best": int|null, "nk_avg5": int|null,
            "nk_dist": int|null, "nk_course": int|null,
            "nk_recent": [int|null, ...] | null,
+           "nk_recent5": [int|null, ...] | null,
            "nkFormDev": number|null, "nkAiScore": number|null,
            "odds": {"publishWin": number|null,
                     "finalWin": number|null,
@@ -523,7 +524,21 @@ def build(date: str, speed_index: dict, course_analysis: dict,
             if not isinstance(values, dict):
                 continue
             horse = {col: values.get(col) for col in SPEED_COLUMNS}
-            horse["nk_recent"] = values.get("nk_recent")
+            # nk-materials-v8 (2026-11-19, user instruction: put ALL
+            # of the collected data into the forecast): when the
+            # collection carries the 5-run sequence (nk_recent5,
+            # oldest -> newest, from the speed page's 近5走 view),
+            # the derived-feature window widens to it — nk_recent
+            # carries the 5-run sequence and nk_recent5 keeps the
+            # provenance. Horses without it keep the 3-run sequence.
+            # Weights are unchanged from v7; only the input window
+            # of the speed-derived features (slope / vol / sd /
+            # overlap) widens. Trial adoption, unvalidated (no
+            # historical 5-run corpus exists to validate against).
+            recent5 = values.get("nk_recent5")
+            horse["nk_recent"] = (recent5 if recent5
+                                  else values.get("nk_recent"))
+            horse["nk_recent5"] = recent5
             horses[str(key)] = horse
         course = None
         raw_course = (course_analysis or {}).get(nk_id)
@@ -639,7 +654,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 list(race["horses"].values())).items():
             coverage[key] = coverage.get(key, 0) + count
     return {
-        "version": "nk-materials-v7",
+        "version": "nk-materials-v8",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
