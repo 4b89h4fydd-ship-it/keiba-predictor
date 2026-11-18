@@ -588,6 +588,19 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
             out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
         else:
             out.pop('masterAnalysis', None)
+        # Observed research evidence (attach_evidence, analyze stage) is
+        # decoration the thin lanes never carry: collect decorates with
+        # include_evidence=False and live/result syncs re-send details
+        # without it. A write that lacks the evidence must not erase the
+        # stored copy, or the app shows every horse as unevaluated
+        # (2026-11-19: all 36 races lost it this way). Unlike the signed
+        # sidecar above, an incoming value is never popped here: the
+        # analyze stage legitimately introduces the evidence over a
+        # stored detail that has none yet.
+        for key in ('researchEvidenceVersion', 'researchEvidenceHorses',
+                    'biasProvenance'):
+            if key not in out and key in old:
+                out[key] = copy.deepcopy(old[key])
     elif (isinstance(stored_marker, dict) and marker == stored_marker
             and 'masterAnalysis' in old):
         # Idempotent re-send / seeded round-trip: the write carries the
@@ -690,6 +703,11 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         if isinstance(prior_eval, dict) and isinstance(current_eval, dict) and "careerProfile" in prior_eval:
             if "careerProfile" not in current_eval:
                 current.setdefault("integratedEvaluation", {})["careerProfile"] = copy.deepcopy(prior_eval["careerProfile"])
+        # Per-horse counterpart of the top-level evidence restore above.
+        # Placed after the career merge so a pack_horse rebuild
+        # (current.clear/update) cannot drop the restored value.
+        if not is_publish_write and "researchEvidence" in historical and "researchEvidence" not in current:
+            current["researchEvidence"] = copy.deepcopy(historical["researchEvidence"])
     if sealed_lock(old):
         return restore_seal(old, out)
     prior = old.get("preRacePrediction")
