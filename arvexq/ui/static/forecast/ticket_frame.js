@@ -76,7 +76,23 @@ function sealedFive(r,server){
      (rendered with a BOX badge so it is not mistaken for a single
      combination); a shared axis plus every partner combination ->
      "8-5.2.4". summarizeGroup returns {type, text} with type one of
-     'formation' | 'box' | 'axis' so the renderer can label boxes. */
+     'formation' | 'box' | 'axis' so the renderer can label boxes.
+   Readability tiers (user request 2026-11-19, display only — the
+   saved combinations themselves never change):
+   - 'box-minus': an unordered group missing only one or two
+     combinations of its full box keeps the box notation and names
+     the absent combinations in a 除く pill, instead of enumerating
+     every present combination as a chip.
+   - 'axis-multi' （馬単 only): every combination contains one
+     shared horse and the set is exactly every ordered pair from
+     the union that involves it (axis first or second); rendered
+     with an explicit 軸マルチ label so it is never mistaken for a
+     fixed-first formation.
+   - anything still unsummarized falls back to groupedCombosHtml,
+     which groups combinations by their shared head (all but the
+     last leg, in prediction-mark order) and lists the final legs
+     on one line per head. Every combination stays recoverable
+     from the rendered lines; only the layout changes. */
 var ORDERED_KINDS={'3連単':1,'馬単':1};
 var UNORDERED_KINDS={'馬連':1,'3連複':1,'ワイド':1};
 function markOrderOf(r){
@@ -126,9 +142,29 @@ function summarizeGroup(item,r){
   })(0,[],{});
   var have={};
   norm.forEach(function(c){have[c.join(',')]=1;});
-  if(Object.keys(have).length!==count)return null;
-  for(var key in have)if(!want[key])return null;
-  return {type:'formation',text:legs.map(function(leg){return sortByMark(leg,order).join('.');}).join('-')};
+  if(Object.keys(have).length===count){
+   var complete=true;
+   for(var key in have)if(!want[key])complete=false;
+   if(complete)
+    return {type:'formation',text:legs.map(function(leg){return sortByMark(leg,order).join('.');}).join('-')};
+  }
+  // 馬単 axis-multi: every combination contains one shared horse
+  // and the set is exactly every ordered pair from the union that
+  // involves it (the axis finishes first or second).
+  if(len===2){
+   var unionO=uniqNums(norm.reduce(function(a,c){return a.concat(c);},[]));
+   for(var ai=0;ai<unionO.length;ai++){
+    var axisNo=unionO[ai];
+    var partnersO=unionO.filter(function(n){return n!==axisNo;});
+    if(partnersO.length<2)continue;
+    if(Object.keys(have).length!==partnersO.length*2)continue;
+    var wantM={};
+    partnersO.forEach(function(p){wantM[axisNo+','+p]=1;wantM[p+','+axisNo]=1;});
+    var okM=Object.keys(have).every(function(k){return wantM[k];});
+    if(okM)return {type:'axis-multi',text:axisNo+' - '+sortByMark(partnersO,order).join('・')};
+   }
+  }
+  return null;
  }
  if(UNORDERED_KINDS[kind]){
   if(len<2)return null;
@@ -144,6 +180,18 @@ function summarizeGroup(item,r){
     return have2[c.slice().sort(function(a,b){return a-b;}).join(',')];
    }))
     return {type:'box',text:sortByMark(union,order).join('.')};
+   // Near-complete box: only one or two combinations of the full
+   // box are absent. Keep the box notation and name the absent
+   // combinations explicitly （除く） instead of enumerating every
+   // present one. The rendered set stays exact: box minus the
+   // named exceptions, nothing else.
+   if(box.length-haveCount>=1&&box.length-haveCount<=2){
+    var missing=box.filter(function(c){
+     return !have2[c.slice().sort(function(a,b){return a-b;}).join(',')];
+    });
+    return {type:'box-minus',text:sortByMark(union,order).join('.'),
+     missing:missing.map(function(c){return sortByMark(c,order).join(' - ');}).join('、')};
+   }
   }
   var sorted=norm.map(function(c){return c.slice().sort(function(a,b){return a-b;});});
   var axis=sorted[0].filter(function(n){
@@ -161,15 +209,78 @@ function summarizeGroup(item,r){
  }
  return null;
 }
+/* Grouped enumeration for groups that match no complete pattern:
+   combinations sharing the same head (all but the last leg) are
+   shown on one line — head first, final legs listed after it — so
+   a long chip wall becomes a few scannable lines. Horses are put
+   in prediction-mark order (unordered kinds: inside each
+   combination too; ordered kinds: position order is the meaning
+   and is kept). Returns null when no head repeats, in which case
+   the caller keeps the plain chips. Lossless: every rendered line
+   expands back to exactly the combinations it groups. */
+function groupedCombosHtml(item,r){
+ var combos=(item&&item.combos)||[];
+ if(!combos.length)return null;
+ var norm=combos.map(function(c){return (c||[]).map(Number);});
+ var len=norm[0].length;
+ if(len<2||len>3)return null;
+ if(norm.some(function(c){return c.length!==len||c.some(function(n){return !Number.isFinite(n);})||
+   uniqNums(c).length!==c.length;}))return null;
+ var order=markOrderOf(r),ordered=!!ORDERED_KINDS[item&&item.kind];
+ function rankOf(n){return order.hasOwnProperty(n)?order[n]:Number.MAX_SAFE_INTEGER;}
+ var rows=norm.map(function(c){return ordered?c.slice():sortByMark(c,order);});
+ var seen={},uniqRows=[];
+ rows.forEach(function(c){var k=c.join(',');if(!seen[k]){seen[k]=1;uniqRows.push(c);}});
+ uniqRows.sort(function(a,b){
+  for(var i=0;i<len;i++){
+   var d=rankOf(a[i])-rankOf(b[i]);
+   if(d)return d;
+   if(a[i]!==b[i])return a[i]-b[i];
+  }
+  return 0;
+ });
+ var groups=[],gIndex={};
+ uniqRows.forEach(function(c){
+  var head=c.slice(0,len-1).join(',');
+  if(!gIndex.hasOwnProperty(head)){gIndex[head]=groups.length;groups.push({head:c.slice(0,len-1),tails:[]});}
+  groups[gIndex[head]].tails.push(c[len-1]);
+ });
+ if(!groups.some(function(g){return g.tails.length>=2;}))return null;
+ var headSep=ordered?' → ':'・',tailSep=ordered?' → ':' − ';
+ return groups.map(function(g){
+  if(g.tails.length<2)
+   return '<span class="arv-three-combo">'+esc(g.head.concat(g.tails).join(' - '))+'</span>';
+  return '<span class="arv-three-combo arv-three-line"><b class="arv-three-line-head">'+
+   esc(g.head.join(headSep))+'</b><span class="arv-three-line-sep">'+tailSep+'</span>'+
+   esc(g.tails.join('、'))+'</span>';
+ }).join('');
+}
 function combosHtml(item,r){
  var summary=summarizeGroup(item,r);
  if(summary){
+  if(summary.type==='box-minus')
+   return '<span class="arv-three-box-label">BOX</span>'+
+    '<span class="arv-three-combo arv-three-summary">'+esc(summary.text)+'</span>'+
+    '<span class="arv-three-except">除く：'+esc(summary.missing)+'</span>';
+  if(summary.type==='axis-multi')
+   return '<span class="arv-three-axis-label">軸マルチ</span>'+
+    '<span class="arv-three-combo arv-three-summary">'+esc(summary.text)+'</span>';
   var badge=summary.type==='box'?'<span class="arv-three-box-label">BOX</span>':'';
   return badge+'<span class="arv-three-combo arv-three-summary">'+esc(summary.text)+'</span>';
  }
+ var grouped=groupedCombosHtml(item,r);
+ if(grouped)return grouped;
  return (item.combos||[]).map(function(c){
   return '<span class="arv-three-combo">'+esc((c||[]).join(' - '))+'</span>';
  }).join('');
+}
+/* Group total line (same 100円/点換算 convention as the betting
+   view): points are counted from the saved combinations only. */
+function budgetHtml(items){
+ var total=(items||[]).reduce(function(n,item){return n+((item&&item.combos)||[]).length;},0);
+ if(!total)return '';
+ return '<div class="arv-three-budget"><strong>合計 '+total+'点</strong><span>100円/点換算 '+
+   (total*100).toLocaleString('ja-JP')+'円</span></div>';
 }
 /* Combined EV block (user decision 2026-11-04): when the payload
    carries place （複勝） EV ranges, the EV section lists ONLY the
@@ -256,7 +367,7 @@ function contents(r,p){
      if(firstReason&&server.every(function(item){return String(item.reason||'')===firstReason;}))sharedReason=firstReason;
    }
    var rows=server.map(function(item){return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong>'+(sharedReason?'':'<p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p>')+'</div>';}).join('');
-   var ticketGroup='<div class="arv-three-group">'+rows+(sharedReason?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReason)+'</p>':'')+'</div>';
+   var ticketGroup='<div class="arv-three-group">'+rows+(sharedReason?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReason)+'</p>':'')+budgetHtml(server)+'</div>';
    // Keep the win-EV list visible alongside the full grouped bets: it
    // is part of the same verified product (unifiedForecast ticketPlan)
    // and was previously only rendered by the reference-plan branch
@@ -365,7 +476,7 @@ function contents(r,p){
    (evRows||'<p class="arv-three-ticket-reason">対象馬なし</p>')+
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  }
- var planGroup='<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+'</div>';
+ var planGroup='<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+budgetHtml(plan.items)+'</div>';
  // With the integrated recommendation primary, the reference fold
  // shows the payload's full mechanical set (recommendedBets) when
  // the payload carries one — the projected plan items above are a
@@ -378,7 +489,7 @@ function contents(r,p){
    var refRows=r.recommendedBets.map(function(item){
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong>'+(sharedR?'':'<p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p>')+'</div>';
    }).join('');
-   refInner='<div class="arv-three-group">'+refRows+(sharedR?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedR)+'</p>':'')+'</div>';
+   refInner='<div class="arv-three-group">'+refRows+(sharedR?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedR)+'</p>':'')+budgetHtml(r.recommendedBets)+'</div>';
  }
  return '<div class="ai-bet-box arv-three-bet">'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+

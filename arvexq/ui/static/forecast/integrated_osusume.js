@@ -252,7 +252,7 @@ function renderSection(detail,combosHtmlFn){
    return '<p class="arv-three-ticket-reason">'+esc(n)+'</p>';
  }).join('');
  return head+body
-   +'<div class="arv-three-budget"><strong>合計 '+rec.totalPoints+'点</strong></div>'
+   +'<div class="arv-three-budget"><strong>合計 '+rec.totalPoints+'点</strong><span>100円/点換算 '+(rec.totalPoints*100).toLocaleString('ja-JP')+'円</span></div>'
    +notes+'</section>';
 }
 root.ARVEXQIntegratedOsusume=Object.freeze({
