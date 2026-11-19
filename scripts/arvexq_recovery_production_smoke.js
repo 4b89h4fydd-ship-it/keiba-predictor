@@ -26,13 +26,33 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   const browser=await type.launch({headless:true,...(process.env.CHROMIUM_PATH&&type===chromium?{executablePath:process.env.CHROMIUM_PATH}:{})});
   const context=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
   let cursor=0;
-  async function oddsPublished(id){
+  // Independent odds reality at execution time. Historical NAR odds are
+  // backfilled on demand from the official archive, so the population of
+  // odds-carrying races grows between runs: expectations must follow what
+  // the APIs return NOW, never the archived snapshot's stored state.
+  // Two official sources feed the odds panel, in the app's merge order:
+  // the edge detail's odds rows (kraiz-api /api/race) first, then the
+  // live-odds store (this origin's /api/live-odds) overriding per horse.
+  // Both payloads carry WIN odds only; no source returns place odds, so
+  // the panel's place column is explicitly '―' unless a future feed adds
+  // placeOddsLow/High (a numeric range is then the factual display).
+  async function oddsSources(id){
+    const out={live:null,detail:null,liveScratched:new Set(),detailScratched:new Set()};
     try{const res=await fetch(base+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
-      if(!res.ok)return null;
-      const body=await res.json();
-      if(!body||body.ok!==true)return null;
-      return ((body.odds)||[]).some(o=>Number(o&&o.win_odds)>0)}
-    catch(e){return null}
+      if(res.ok){const body=await res.json();
+        if(body&&body.ok===true){out.live=new Map();
+          for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
+            if(Number.isInteger(no)&&v>0)out.live.set(no,v);
+            if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.horse_status||''))))out.liveScratched.add(no);}}}}
+    catch(e){/* source unavailable: expectation falls back to detail */}
+    try{const res=await fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/race/'+encodeURIComponent(id)+'?view=display',{signal:AbortSignal.timeout(20000)});
+      if(res.ok){const body=await res.json();
+        if(body&&body.ok===true){out.detail=new Map();
+          for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
+            if(Number.isInteger(no)&&v>0)out.detail.set(no,v);
+            if(Number.isInteger(no)&&o&&/取消|除外/.test(String(o.horse_status||'')))out.detailScratched.add(no);}}}}
+    catch(e){/* source unavailable: expectation falls back to live */}
+    return out;
   }
   async function check(page,r){
     const errors=[];const onerror=e=>errors.push(e.stack||String(e));page.on('pageerror',onerror);
@@ -50,7 +70,18 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // v363: the analysis panel is tag-switched; the saved diagnosis lives
     // behind the diagnosis tag of the pace (analysis) panel.
     await page.locator('[data-panel="pace"]').click();
-    await page.waitForSelector('.da-tags');
+    // The analysis panel is fed by live API/snapshot loads whose latency
+    // varies (cold D1, intermittent edge 503 with retries): on a main push
+    // a bare .da-tags selector wait timed out at 30s on a slow-but-healthy
+    // load. Wait longer for the terminal state, and if the panel lands in
+    // its explicit error state use its own retry control once — the same
+    // recovery pattern as odds below. The tag bar must still appear.
+    const tagsReady=()=>page.waitForSelector('.da-tags',{timeout:60000}).then(()=>true).catch(()=>false);
+    if(!await tagsReady()){
+      const retry=page.locator('[data-detail-retry]').first();
+      if(await retry.count()){console.warn('ANALYSIS_PANEL_RETRY '+r.id);await retry.click();await tagsReady();}
+    }
+    await page.waitForSelector('.da-tags',{timeout:30000});
     await page.locator('[data-analysis-tag="diagnosis"]').click();
     await page.waitForFunction(count=>document.querySelectorAll('.diagnosis-merged-row').length===count,roster.horses.length,{timeout:20000});
     const diagnosis=page.locator('details.card').filter({has:page.locator('.diagnosis-merged-list')});
@@ -69,59 +100,128 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // missing marker, or the scratched marker. When no runner carries
     // odds the table is replaced by an explicit not-acquired message.
     await page.locator('[data-panel="odds"]').click();
-    await page.waitForSelector('#section-odds');
-    const winOddsCells=()=>page.locator('.arv-odds-table tbody tr td:nth-child(5)');
-    // Ask the independent source first: whether this race's odds are
-    // published decides which settled screen state is acceptable below.
-    // (Historical NAR odds, for example, are served on demand from the
-    // official archive even when the saved snapshot stored none.)
-    const published=await oddsPublished(r.id);
-    // The odds panel renders asynchronously: the race detail renders
-    // first (a table from carried odds, or the explicit not-acquired
-    // message) and independently fetched live odds then merge and
-    // re-render it. Sampling the DOM once, mid-merge, can catch the
-    // section between generations — no table node at the count sample,
-    // yet the text already carrying acquired values by the text sample —
-    // and misread a correct screen as a missing-state violation. Wait
-    // for a settled state (a table, or the explicit message) before
-    // asserting anything about it.
-    await page.waitForFunction(()=>
-      document.querySelector('.arv-odds-table')||
-      /まだ取得できていません/.test(document.querySelector('#section-odds')?.textContent||''),
-      null,{timeout:20000});
-    let odds=(await winOddsCells().allTextContents()).map(x=>x.trim());
-    if(await page.locator('.arv-odds-table').count()===0)
-      assert.match(await page.locator('#section-odds').innerText(),/まだ取得できていません/,'odds missing state must be explicit '+r.id);
-    odds.forEach(x=>assert.ok(/^(?:\d+\.\d|―|取消)$/.test(x),'invalid odds text '+x));
-    // Before the official source publishes (e.g. NAR overnight) no acquired odds can exist;
-    // the roster must then show only the explicit missing status. Once the source has
-    // odds the screen must show some acquired value.
-    if(published===true){
-      // Published odds update independently of the base racecard request.
-      // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
-      const numericOddsVisible=()=>Array.from(document.querySelectorAll('.arv-odds-table tbody tr td:nth-child(5)'))
-        .some(el=>/^\d/.test(el.textContent.trim()));
-      try {
-        await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
-      } catch (error) {
-        // Published odds may arrive after the page's initial request.
-        // Re-query through the existing user-visible refresh control.
-        console.warn('ODDS_INITIAL_DISPLAY_DELAY '+r.id+' initial='+JSON.stringify(odds));
-        const update=page.locator('[data-action="odds-update"]');
-        assert.ok(await update.count(),'odds refresh control missing '+r.id);
+    // Ask the independent sources first and build the per-horse win-odds
+    // expectation from what they return at execution time (live store
+    // overrides detail rows, mirroring the app's merge order). The
+    // archived snapshot is never an expectation source: its stored odds
+    // state predates the on-demand official backfill, and its carried
+    // winOdds are forecast odds, not acquired official odds.
+    let sources=await oddsSources(r.id);
+    const buildExpected=()=>{
+      const map=new Map();
+      if(sources.detail)for(const [no,v] of sources.detail)map.set(no,v);
+      if(sources.live)for(const [no,v] of sources.live)map.set(no,v);
+      return map;
+    };
+    let expected=buildExpected();
+    const sourcesResponded=()=>sources.live!==null||sources.detail!==null;
+    // The odds panel re-renders as each independent source lands (detail,
+    // live odds, result refresh), and a replacement race object can move
+    // it back through the pending generation ('取得中です', which has
+    // neither the table nor the not-acquired message nor even
+    // #section-odds). One-shot samples — and even a settled wait followed
+    // by separate count/text reads — can straddle such a re-render and
+    // misread a correct screen. Instead, sample the whole section in one
+    // in-page evaluation and require two identical consecutive terminal
+    // samples before asserting anything.
+    const sampleOdds=()=>page.evaluate(()=>{
+      const sec=document.querySelector('#section-odds');
+      if(!sec){
+        const pending=[...document.querySelectorAll('section.card')]
+          .some(s=>/取得中です/.test(s.textContent||''));
+        return {state:pending?'pending':'absent',rows:[]};
+      }
+      const table=sec.querySelector('.arv-odds-table');
+      if(!table){
+        if(/まだ取得できていません/.test(sec.textContent||''))return {state:'message',rows:[]};
+        return {state:'pending',rows:[]};
+      }
+      const rows=[...table.querySelectorAll('tbody tr')].map(tr=>{
+        const td=tr.querySelectorAll('td');
+        return {name:(tr.querySelector('.nk-odds-name')?.textContent||'').trim(),
+          win:(td[4]?.textContent||'').trim(),place:(td[5]?.textContent||'').trim()};
+      });
+      const wellFormed=rows.length>0&&rows.every(x=>
+        /^(?:\d+\.\d|―|取消)$/.test(x.win)&&/^(?:\d+\.\d-\d+\.\d|―)$/.test(x.place));
+      return {state:wellFormed?'table':'malformed',rows};
+    });
+    async function waitSettledOdds(timeoutMs){
+      const deadline=Date.now()+timeoutMs;let prev='';
+      while(Date.now()<deadline){
+        const s=await sampleOdds();
+        // When sources publish win odds, the message generation is not
+        // terminal: the live merge is still owed. When no source does,
+        // the explicit message is the terminal guarantee.
+        const terminal=s.state==='table'||(s.state==='message'&&expected.size===0);
+        if(terminal){
+          const ser=JSON.stringify(s);
+          if(ser===prev)return s;
+          prev=ser;
+        }else prev='';
+        await page.waitForTimeout(1000);
+      }
+      return null;
+    }
+    const fmtOdds=v=>(Math.round(v*10)/10).toFixed(1);
+    function assertOdds(s,id){
+      if(s.state==='message'){
+        assert.equal(expected.size,0,'odds missing state must be explicit '+id+' (panel shows not-acquired but sources publish win odds '+JSON.stringify([...expected]) +')');
+        return;
+      }
+      assert.equal(s.state,'table','odds panel must settle to a table or an explicit missing message '+id+' last='+JSON.stringify(s).slice(0,200));
+      assert.equal(s.rows.length,roster.horses.length,'odds rows must cover the full roster '+id);
+      const byName=new Map(roster.horses.map(h=>[h.name,h]));
+      for(const row of s.rows){
+        const h=byName.get(row.name);
+        assert.ok(h,'odds row identity missing '+id+' '+row.name);
+        const no=Number(h.horseNumber),exp=expected.get(no);
+        const scratched=sources.liveScratched.has(no)||sources.detailScratched.has(no);
+        if(row.win==='取消'){
+          // An explicit factual state; the place cell must then be the
+          // explicit missing marker, never a number.
+          assert.equal(row.place,'―','scratched place cell must be explicit '+id+' '+row.name);
+        }else if(exp!=null){
+          assert.equal(row.win,fmtOdds(exp),'win odds must follow the execution-time source '+id+' '+row.name+' expected='+fmtOdds(exp)+' shown='+row.win);
+        }else{
+          // The sources return no win odds for this runner: the cell must
+          // stay the explicit missing marker. (The place column follows
+          // the same rule for every runner — no source returns place
+          // odds, so it is '―' or a factual range, never blank.)
+          assert.equal(row.win,'―','unpublished win odds must be explicit '+id+' '+row.name+' shown='+row.win);
+        }
+        assert.ok(/^(?:\d+\.\d-\d+\.\d|―)$/.test(row.place),'place odds must be a range or explicit missing '+id+' '+row.name+' shown='+row.place);
+      }
+    }
+    let settled=await waitSettledOdds(45000);
+    let oddsProblem=null;
+    if(!settled)oddsProblem='did not settle';
+    else{try{assertOdds(settled,r.id)}catch(e){oddsProblem=e.message}}
+    if(oddsProblem){
+      // Sources may have been backfilled mid-check (the node-side fetch
+      // itself can trigger the on-demand official fetch), or the page's
+      // initial odds request raced ahead of the backfill. Re-read the
+      // sources and re-query through the existing user-visible refresh
+      // control once — the same bounded recovery as before — then assert
+      // against the refreshed reality. A still-broken screen fails here.
+      console.warn('ODDS_RECOVERY '+r.id+' '+oddsProblem);
+      sources=await oddsSources(r.id);
+      expected=buildExpected();
+      const update=page.locator('[data-action="odds-update"]');
+      if(await update.count()){
         const refreshResponse=page.waitForResponse(res=>
           res.url().includes('/api/live-odds/') && res.url().includes('force=1'),
-          {timeout:20000});
+          {timeout:20000}).catch(()=>null);
         await update.click();
-        assert.equal((await refreshResponse).status(),200,'odds source refresh failed '+r.id);
-        await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
-        console.log('ODDS_MANUAL_RECOVERY_PASS '+r.id);
+        assert.equal((await refreshResponse)?.status(),200,'odds source refresh failed '+r.id);
       }
-      odds=(await winOddsCells().allTextContents()).map(x=>x.trim());
-      assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
+      settled=await waitSettledOdds(30000);
+      assert.ok(settled,'odds panel did not settle after refresh '+r.id);
+      assertOdds(settled,r.id);
+      console.log('ODDS_RECOVERY_PASS '+r.id);
     }
-    else if(published===false)console.log('ODDS_NOT_YET_PUBLISHED '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
-    else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
+    if(expected.size>0)console.log('ODDS_SOURCE_MATCH '+r.id+' horses='+expected.size+' live='+(sources.live?sources.live.size:'n/a')+' detail='+(sources.detail?sources.detail.size:'n/a'));
+    else if(sourcesResponded())console.log('ODDS_NOT_YET_PUBLISHED '+r.id);
+    else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id);
     // The retired racecard rows coloured single-digit odds red via
     // .odd.single; the current odds/entry tables render win odds as
     // plain text with no single-digit class, so that styling check has
