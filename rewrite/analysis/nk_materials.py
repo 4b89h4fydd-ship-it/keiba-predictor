@@ -299,6 +299,41 @@ magnitude 0.10, none of them validated:
         pedigree term's sireCourse fallback in the builder —
         a different landing spot for a different table.)
 
+    bias pace (the same-day track bias, read from today's
+        finished races and overlaid on the pace forecast) —
+        wired 2026-11-19 (nk-materials-v12) by the user's
+        instruction "バイアスを読んでネット競馬の展開予想に
+        あわせてだせばええやん" (read the bias and issue the
+        forecast matched to netkeiba's pace forecast). At
+        publish time the lane reads the day's bias at this
+        race's track from the races already final on the same
+        card (rewrite/analysis/bias_pace.py — the bias
+        DEFINITION is the 2026-11-16 validation's, unchanged:
+        the front/back and inside/outside top-3 rate
+        differences of the first-corner / frame groups, shrunk
+        by S/(S+2) over S qualifying source races) and overlays
+        it on this race's netkeiba pace-forecast positions:
+
+            adjustment(h) = FB * frontness(h) + IO * frame(h)
+
+        The lane hands the finished overlay in as bias_overlay
+        (publish-time data, not materials-file data, exactly
+        like combo / closing); the adapter applies it as ONE
+        post-integrate logit shift at the trial weight cap
+        BIAS_PACE_WEIGHT (+0.10) times the RAW adjustment — no
+        z-scoring, because the adjustment already carries the
+        shrinkage: early on a card (few source races) the bias
+        is weak by construction and the term barely moves,
+        and it strengthens only as the day's evidence does. A
+        horse with no forecast position carries no adjustment
+        and is never shifted; a card with no qualifying source
+        race produces an all-zero overlay and shifts nothing.
+        UNVALIDATED as a probability term (the 2026-11-16
+        same-day-bias overlay validation did not pass on its
+        thin corpus — the forward record is the judge);
+        stamped bias-pace-trial-20261119 on every publication
+        it touches, with the day's sampleRaces on the stamp.
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -332,7 +367,16 @@ from .integrated_eval import DEFAULT_WEIGHTS, integrate
 # are identical to v10. The bump re-issues v10-stamped pre-race races
 # once so the completed horse-analysis collection (all 395 horses,
 # was 1 in the v10 file) reaches them through the horse_analysis term.
-NK_MATERIALS_VERSION = "nk-materials-v11"
+# nk-materials-v12 (2026-11-19): the same-day bias read joins as
+# the bias_pace term (see the module docstring): the publish lane
+# computes the day's bias from the card's already-final races
+# (rewrite/analysis/bias_pace.py) and overlays it on the race's
+# pace forecast; the adapter applies it as a post-integrate logit
+# shift at the +0.10 cap times the (already strength-shrunk)
+# adjustment. The bump re-issues v11-stamped pre-race races once
+# so the term can reach them; a race whose card has no qualifying
+# source race yet recomputes with the term inert.
+NK_MATERIALS_VERSION = "nk-materials-v12"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -470,6 +514,24 @@ NK_COURSE_PERSONS_TRIAL = "course-persons-trial-20261119"
 PERSON_PRIOR_STARTS = 10.0
 PERSON_PRIOR_WIN_RATE = 0.10
 PERSON_PRIOR_TOP3_RATE = 0.30
+
+# Same-day bias pace term (2026-11-19, nk-materials-v12):
+# TRIAL weight cap, UNVALIDATED — see the module docstring.
+# The publish lane computes the overlay with
+# rewrite/analysis/bias_pace.py (the day's bias, read from the
+# card's already-final races, overlaid on the netkeiba pace
+# forecast) and hands it in as bias_overlay; the adapter
+# applies each horse's adjustment as a post-integrate logit
+# shift at BIAS_PACE_WEIGHT times the raw adjustment. The
+# adjustment already carries the bias module's S/(S+2)
+# shrinkage, so the effective weight weakens automatically
+# when the day has produced few source races — this weight is
+# a cap, not a constant.
+BIAS_PACE_WEIGHT = 0.10
+NK_BIAS_PACE_LABEL = (
+    "bias-pace-trial-20261119(w-cap=+0.10;strength-shrunk;"
+    "unvalidated)")
+NK_BIAS_PACE_TRIAL = "bias-pace-trial-20261119"
 
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
@@ -991,7 +1053,8 @@ def apply_nk_materials(forecast: RaceForecast, entry,
                        segment: str | None = None,
                        course_inputs: dict | None = None,
                        combo_inputs: dict | None = None,
-                       closing_inputs: dict | None = None):
+                       closing_inputs: dict | None = None,
+                       bias_overlay: dict | None = None):
     """Apply the integrated-evaluation adjustment to a v9b
     RaceForecast. Returns (forecast, info); when nothing can
     contribute, the SAME forecast object is returned with
@@ -1071,6 +1134,22 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     NK_COURSE_PERSONS_LABEL, and "course_jockey" /
     "course_trainer" join info["terms"] for the kinds that
     contributed.
+
+    The bias-pace term (2026-11-19, nk-materials-v12) reads
+    bias_overlay — the publish lane's same-day bias overlay
+    (rewrite/analysis/bias_pace.py's overlay_bias_on_pace
+    output over this race's materials pace positions; see the
+    module docstring) — and applies each horse's adjustment
+    as a post-integrate logit shift at BIAS_PACE_WEIGHT times
+    the raw adjustment when at least three runners carry one
+    and the adjustments differ. When it contributes,
+    info["biasPaceTrial"] is NK_BIAS_PACE_TRIAL, the weights
+    label carries NK_BIAS_PACE_LABEL and "bias_pace" joins
+    info["terms"]. Whenever an overlay was handed in,
+    info["biasPace"] records the day's bias read (available /
+    frontBack / insideOutside / sampleRaces / strength)
+    whether or not the term itself shifted anything, so the
+    lane can stamp the read and its sample size.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -1254,6 +1333,52 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         total = sum(shifted.values())
         probs = {n: p / total for n, p in shifted.items()}
         cp_applied.append(kind)
+    # Same-day bias pace term (2026-11-19 trial — see the
+    # module docstring): the publish lane's overlay of the
+    # day's bias read on this race's pace forecast, applied
+    # as a post-integrate logit shift at BIAS_PACE_WEIGHT
+    # times each horse's RAW adjustment. The adjustment
+    # already carries the bias module's S/(S+2) shrinkage,
+    # so there is deliberately no z-scoring: the term is
+    # weak exactly when the day's evidence is. Live only
+    # when at least three runners carry an adjustment and
+    # the adjustments differ — a card with no qualifying
+    # source race yields an all-zero overlay (max == min)
+    # and shifts nothing, and a horse with no forecast
+    # position carries no adjustment and is never shifted.
+    bp_values: list = [None] * len(horses)
+    if isinstance(bias_overlay, dict):
+        bp_horses = bias_overlay.get("horses")
+        if isinstance(bp_horses, dict):
+            for i, h in enumerate(horses):
+                cell = bp_horses.get(h["num"])
+                if cell is None:
+                    cell = bp_horses.get(str(h["num"]))
+                if isinstance(cell, dict):
+                    bp_values[i] = _num(cell.get("adjustment"))
+        bias_block = bias_overlay.get("bias")
+        bias_block = bias_block if isinstance(bias_block, dict) else {}
+        info["biasPace"] = {
+            "available": bool(bias_overlay.get("available")),
+            "frontBack": bias_block.get("frontBack"),
+            "insideOutside": bias_block.get("insideOutside"),
+            "sampleRaces": bias_block.get("sampleRaces", 0),
+            "strength": bias_block.get("strength", 0.0),
+        }
+    coverage["bias_pace"] = sum(
+        1 for v in bp_values if v is not None)
+    bp_present = [v for v in bp_values if v is not None]
+    bp_applied = (len(bp_present) >= 3
+                  and max(bp_present) != min(bp_present))
+    if bp_applied:
+        shifted = {}
+        for h, v in zip(horses, bp_values):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(BIAS_PACE_WEIGHT * v)
+                if v is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
     info["coverage"] = coverage
     # The weights label records every non-default weight family
     # whose terms actually contributed to THIS race — the
@@ -1309,9 +1434,12 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     if cp_applied:
         label_parts.append(NK_COURSE_PERSONS_LABEL)
         info["coursePersonsTrial"] = NK_COURSE_PERSONS_TRIAL
+    if bp_applied:
+        label_parts.append(NK_BIAS_PACE_LABEL)
+        info["biasPaceTrial"] = NK_BIAS_PACE_TRIAL
     if len(label_parts) > 1:
         info["weights"] = "+".join(label_parts)
-    if not ha_applied and not cp_applied \
+    if not ha_applied and not cp_applied and not bp_applied \
             and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
@@ -1349,6 +1477,8 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         post_terms.add("horse_analysis")
     for kind in cp_applied:
         post_terms.add(f"course_{kind}")
+    if bp_applied:
+        post_terms.add("bias_pace")
     if post_terms:
         info["terms"] = sorted(set(info["terms"]) | post_terms)
     return RaceForecast(forecast.race_id, forecast.beta,
