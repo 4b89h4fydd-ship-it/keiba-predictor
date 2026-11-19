@@ -22,6 +22,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 from arvexq.pipeline.fingerprints import analysis_input_hash
+from arvexq.prediction.race_intelligence import RESEARCH_EVIDENCE_VERSION
 from scripts import arvexq_prefetch as prefetch
 from scripts.arvexq_protect_sync import protect_detail
 
@@ -110,7 +111,7 @@ def _analyzed_detail(with_evidence: bool) -> dict:
         "preparedMeta": {"diagnosisReady": True},
     }
     if with_evidence:
-        detail["researchEvidenceVersion"] = "arvexq-race-intelligence-v1"
+        detail["researchEvidenceVersion"] = RESEARCH_EVIDENCE_VERSION
         detail["researchEvidenceHorses"] = 3
     detail["preparedMeta"]["analysisInputHash"] = analysis_input_hash(detail)
     return detail

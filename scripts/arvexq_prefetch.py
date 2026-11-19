@@ -30,7 +30,10 @@ from arvexq.ingest.banei import is_banei
 from arvexq.pipeline.fingerprints import active_horses, analysis_input_hash
 from arvexq.prediction.career_readiness import assess_career_readiness, attach_career_readiness
 from arvexq.prediction.observed_model import model_version
-from arvexq.prediction.race_intelligence import attach_evidence
+from arvexq.prediction.race_intelligence import (
+    RESEARCH_EVIDENCE_VERSION,
+    attach_evidence,
+)
 from arvexq.ingest.fallback_enrichment import enrich_race_missing_sync
 from arvexq.ingest.full_career import merge_career
 from arvexq.databanks.nar_official_csv import (
@@ -199,6 +202,12 @@ def _analysis_current(detail: dict[str, Any] | None) -> bool:
     # and never re-attach the evidence (2026-11-19: all 36 races).
     if _card_usable(detail) and not detail.get("researchEvidenceHorses"):
         return False
+    # The version stamp records which evidence logic produced the stored
+    # decoration. Evidence attached before margin completion existed
+    # (v1) can hold margins that are computable now, so a stale stamp
+    # means "not current" even when the evidence block itself is present.
+    if _card_usable(detail) and str(detail.get("researchEvidenceVersion") or "") != RESEARCH_EVIDENCE_VERSION:
+        return False
     return True
 
 
@@ -216,6 +225,108 @@ def _snapshot(rid: str) -> dict[str, Any] | None:
         return compact if isinstance(compact, dict) else detail
     except Exception:
         return detail
+
+
+_MARGIN_RACE_CACHE: dict[str, dict[str, Any] | None] = {}
+_MARGIN_DAY_IDS_CACHE: dict[str, list[str]] = {}
+
+
+def _margin_store_race(rid: str) -> dict[str, Any] | None:
+    """Stored detail for a past race, for margin completion.
+
+    Local stores first (the same accessors as _raw_snapshot); the D1
+    readback API is the fallback so a result already stored in D1 is
+    found even when the local caches lag behind it.
+    """
+    if rid in _MARGIN_RACE_CACHE:
+        return _MARGIN_RACE_CACHE[rid]
+    detail = _raw_snapshot(rid)
+    if not isinstance(detail, dict):
+        base = str(os.getenv("CLOUDFLARE_API_BASE") or "").rstrip("/")
+        if base:
+            try:
+                import urllib.parse
+                import urllib.request
+
+                url = f"{base}/api/race/{urllib.parse.quote(rid, safe='')}"
+                req = urllib.request.Request(
+                    url, headers={"accept": "application/json",
+                                  "user-agent": "ARVEXQ-Prefetch-Margin/1"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    value = json.loads(resp.read().decode("utf-8"))
+                for candidate in (value, value.get("detail"), value.get("race")):
+                    if isinstance(candidate, dict) and str(candidate.get("id") or "") == rid:
+                        detail = candidate
+                        break
+            except Exception:
+                detail = None
+    if len(_MARGIN_RACE_CACHE) > 512:
+        _MARGIN_RACE_CACHE.clear()
+    _MARGIN_RACE_CACHE[rid] = detail if isinstance(detail, dict) else None
+    return _MARGIN_RACE_CACHE[rid]
+
+
+def _margin_store_day_ids(date: str) -> list[str]:
+    """Race IDs stored for a date: local prepared store, else the D1 API."""
+    if date in _MARGIN_DAY_IDS_CACHE:
+        return _MARGIN_DAY_IDS_CACHE[date]
+    ids: list[str] = []
+    try:
+        import sqlite3
+
+        path = app.PREPARED_DB_PATH
+        if path and Path(path).exists():
+            conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=2)
+            try:
+                rows = conn.execute(
+                    "SELECT race_id FROM prepared_races WHERE race_date=?",
+                    (date,)).fetchall()
+                ids = [str(r[0]) for r in rows if r and r[0]]
+            finally:
+                conn.close()
+    except Exception:
+        ids = []
+    if not ids:
+        base = str(os.getenv("CLOUDFLARE_API_BASE") or "").rstrip("/")
+        if base:
+            try:
+                import urllib.parse
+                import urllib.request
+
+                url = f"{base}/api/day?date={urllib.parse.quote(date)}&details=0"
+                req = urllib.request.Request(
+                    url, headers={"accept": "application/json",
+                                  "user-agent": "ARVEXQ-Prefetch-Margin/1"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    day = json.loads(resp.read().decode("utf-8"))
+                ids = [str(r["id"]) for r in (day.get("races") or [])
+                       if isinstance(r, dict) and r.get("id")]
+            except Exception:
+                ids = []
+    if len(_MARGIN_DAY_IDS_CACHE) > 64:
+        _MARGIN_DAY_IDS_CACHE.clear()
+    _MARGIN_DAY_IDS_CACHE[date] = ids
+    return ids
+
+
+def _complete_margins_from_store(detail: dict[str, Any]) -> None:
+    """Heal missing past-run margins from stored result records.
+
+    Analyze-stage input assembly only: the completion consults the result
+    store as it stands now, so a result stored after the card was
+    collected is still picked up. Failures never block decoration.
+    """
+    if str(os.getenv("ARVEXQ_MARGIN_COMPLETION", "1")).strip().lower() in {"0", "false", "off", "no"}:
+        return
+    try:
+        from arvexq.prediction.margin_completion import complete_detail_margins
+
+        stats = complete_detail_margins(detail, _margin_store_race, _margin_store_day_ids)
+        if stats.get("completed"):
+            print("FULL_PREFETCH_MARGIN_COMPLETED", detail.get("id"), stats, flush=True)
+    except Exception as exc:
+        print("FULL_PREFETCH_MARGIN_WARN", detail.get("id"),
+              type(exc).__name__, exc, flush=True)
 
 
 def _seed_snapshot(detail: dict[str, Any] | None) -> None:
@@ -329,7 +440,12 @@ def _decorate(detail: dict[str, Any], *, include_evidence: bool = True) -> dict[
     out["preparedMeta"] = pm
     # Collection stays source-only; attach computed evidence only after a
     # verified D1 readback. No new marks, rankings, or scores before storage.
-    return attach_evidence(out) if include_evidence else out
+    if include_evidence:
+        # Heal past-run margins from the system's own stored results
+        # before the evidence is computed from those runs.
+        _complete_margins_from_store(out)
+        return attach_evidence(out)
+    return out
 
 
 def prepare(
