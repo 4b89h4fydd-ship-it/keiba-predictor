@@ -1,8 +1,8 @@
 {
- "version": "nk-materials-v7",
+ "version": "nk-materials-v8",
  "date": "2026-11-19",
  "source": "netkeiba-forward-collection",
- "generatedAt": "2026-11-19T01:46:56+09:00",
+ "generatedAt": "2026-11-19T08:57:03+09:00",
  "fieldCoverage": {
   "horses": 395,
   "speed": 394,
@@ -34,6 +34,15 @@
      "nk_dist": 44,
      "nk_course": 45,
      "nk_recent": [
+      9,
+      16,
+      22,
+      21,
+      -15
+     ],
+     "nk_recent5": [
+      9,
+      16,
       22,
       21,
       -15
@@ -72,6 +81,15 @@
      "nk_dist": 18,
      "nk_course": 27,
      "nk_recent": [
+      15,
+      -19,
+      -5,
+      22,
+      -8
+     ],
+     "nk_recent5": [
+      15,
+      -19,
       -5,
       22,
       -8
@@ -109,6 +127,15 @@
      "nk_dist": 72,
      "nk_course": 29,
      "nk_recent": [
+      16,
+      22,
+      18,
+      16,
+      14
+     ],
+     "nk_recent5": [
+      16,
+      22,
       18,
       16,
       14
@@ -147,6 +174,15 @@
      "nk_dist": 23,
      "nk_course": 23,
      "nk_recent": [
+      -27,
+      3,
+      16,
+      -30,
+      -1
+     ],
+     "nk_recent5": [
+      -27,
+      3,
       16,
       -30,
       -1
@@ -182,6 +218,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      31,
+      -38,
+      32,
+      15,
+      7
+     ],
+     "nk_recent5": [
+      31,
+      -38,
       32,
       15,
       7
@@ -220,6 +265,15 @@
      "nk_dist": 41,
      "nk_course": 41,
      "nk_recent": [
+      41,
+      5,
+      32,
+      15,
+      22
+     ],
+     "nk_recent5": [
+      41,
+      5,
       32,
       15,
       22
@@ -259,6 +313,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -5,
+      21,
+      24,
+      17,
+      -27
+     ],
+     "nk_recent5": [
+      -5,
+      21,
       24,
       17,
       -27
@@ -294,6 +357,15 @@
      "nk_dist": 49,
      "nk_course": 37,
      "nk_recent": [
+      6,
+      16,
+      -5,
+      9,
+      7
+     ],
+     "nk_recent5": [
+      6,
+      16,
       -5,
       9,
       7
@@ -331,6 +403,15 @@
      "nk_dist": 41,
      "nk_course": 41,
      "nk_recent": [
+      22,
+      41,
+      15,
+      38,
+      6
+     ],
+     "nk_recent5": [
+      22,
+      41,
       15,
       38,
       6
@@ -369,6 +450,15 @@
      "nk_dist": 54,
      "nk_course": 33,
      "nk_recent": [
+      26,
+      25,
+      -8,
+      16,
+      20
+     ],
+     "nk_recent5": [
+      26,
+      25,
       -8,
       16,
       20
@@ -657,6 +747,15 @@
      "nk_dist": -8,
      "nk_course": -1,
      "nk_recent": [
+      -8,
+      -1,
+      -23,
+      -34,
+      -8
+     ],
+     "nk_recent5": [
+      -8,
+      -1,
       -23,
       -34,
       -8
@@ -697,6 +796,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      -25
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       -25
      ],
      "pace": {
@@ -730,6 +838,15 @@
      "nk_dist": null,
      "nk_course": 11,
      "nk_recent": [
+      -23,
+      11,
+      -37,
+      0,
+      -15
+     ],
+     "nk_recent5": [
+      -23,
+      11,
       -37,
       0,
       -15
@@ -769,6 +886,15 @@
      "nk_dist": null,
      "nk_course": -27,
      "nk_recent": [
+      null,
+      null,
+      -53,
+      -40,
+      -27
+     ],
+     "nk_recent5": [
+      null,
+      null,
       -53,
       -40,
       -27
@@ -807,6 +933,15 @@
      "nk_dist": -10,
      "nk_course": 9,
      "nk_recent": [
+      null,
+      null,
+      9,
+      -23,
+      -10
+     ],
+     "nk_recent5": [
+      null,
+      null,
       9,
       -23,
       -10
@@ -846,6 +981,15 @@
      "nk_dist": -66,
      "nk_course": 13,
      "nk_recent": [
+      null,
+      13,
+      -66,
+      -59,
+      -18
+     ],
+     "nk_recent5": [
+      null,
+      13,
       -66,
       -59,
       -18
@@ -886,6 +1030,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      -18
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       -18
      ],
      "pace": {
@@ -922,6 +1075,15 @@
      "nk_course": null,
      "nk_recent": [
       null,
+      -75,
+      null,
+      -64,
+      -30
+     ],
+     "nk_recent5": [
+      null,
+      -75,
+      null,
       -64,
       -30
      ],
@@ -956,6 +1118,15 @@
      "nk_dist": -13,
      "nk_course": -13,
      "nk_recent": [
+      -57,
+      -22,
+      -22,
+      -45,
+      -25
+     ],
+     "nk_recent5": [
+      -57,
+      -22,
       -22,
       -45,
       -25
@@ -993,6 +1164,15 @@
      "nk_dist": null,
      "nk_course": -28,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      -28
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       -28
@@ -1279,6 +1459,15 @@
      "nk_dist": 33,
      "nk_course": 38,
      "nk_recent": [
+      10,
+      4,
+      -2,
+      10,
+      9
+     ],
+     "nk_recent5": [
+      10,
+      4,
       -2,
       10,
       9
@@ -1316,6 +1505,15 @@
      "nk_dist": 60,
      "nk_course": 57,
      "nk_recent": [
+      36,
+      53,
+      45,
+      25,
+      10
+     ],
+     "nk_recent5": [
+      36,
+      53,
       45,
       25,
       10
@@ -1355,6 +1553,15 @@
      "nk_dist": 43,
      "nk_course": 43,
      "nk_recent": [
+      2,
+      25,
+      29,
+      26,
+      28
+     ],
+     "nk_recent5": [
+      2,
+      25,
       29,
       26,
       28
@@ -1394,6 +1601,15 @@
      "nk_dist": 38,
      "nk_course": 38,
      "nk_recent": [
+      61,
+      45,
+      60,
+      55,
+      38
+     ],
+     "nk_recent5": [
+      61,
+      45,
       60,
       55,
       38
@@ -1431,6 +1647,15 @@
      "nk_dist": 61,
      "nk_course": 55,
      "nk_recent": [
+      1,
+      16,
+      22,
+      12,
+      7
+     ],
+     "nk_recent5": [
+      1,
+      16,
       22,
       12,
       7
@@ -1468,6 +1693,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -6,
+      29,
+      -14,
+      17,
+      11
+     ],
+     "nk_recent5": [
+      -6,
+      29,
       -14,
       17,
       11
@@ -1505,6 +1739,15 @@
      "nk_dist": 63,
      "nk_course": 38,
      "nk_recent": [
+      51,
+      63,
+      59,
+      58,
+      38
+     ],
+     "nk_recent5": [
+      51,
+      63,
       59,
       58,
       38
@@ -1543,6 +1786,15 @@
      "nk_dist": 61,
      "nk_course": 16,
      "nk_recent": [
+      53,
+      92,
+      87,
+      51,
+      16
+     ],
+     "nk_recent5": [
+      53,
+      92,
       87,
       51,
       16
@@ -1832,6 +2084,15 @@
      "nk_dist": 58,
      "nk_course": 58,
      "nk_recent": [
+      7,
+      14,
+      10,
+      22,
+      6
+     ],
+     "nk_recent5": [
+      7,
+      14,
       10,
       22,
       6
@@ -1871,6 +2132,15 @@
      "nk_course": 46,
      "nk_recent": [
       24,
+      9,
+      24,
+      -12,
+      11
+     ],
+     "nk_recent5": [
+      24,
+      9,
+      24,
       -12,
       11
      ],
@@ -1905,6 +2175,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      31,
+      37,
+      44,
+      40,
+      null
+     ],
+     "nk_recent5": [
+      31,
+      37,
       44,
       40,
       null
@@ -1944,6 +2223,15 @@
      "nk_dist": 51,
      "nk_course": 22,
      "nk_recent": [
+      null,
+      51,
+      22,
+      11,
+      -2
+     ],
+     "nk_recent5": [
+      null,
+      51,
       22,
       11,
       -2
@@ -1982,6 +2270,15 @@
      "nk_dist": 26,
      "nk_course": 26,
      "nk_recent": [
+      14,
+      -1,
+      -9,
+      7,
+      -20
+     ],
+     "nk_recent5": [
+      14,
+      -1,
       -9,
       7,
       -20
@@ -2017,6 +2314,15 @@
      "nk_dist": 43,
      "nk_course": 43,
      "nk_recent": [
+      0,
+      10,
+      20,
+      12,
+      6
+     ],
+     "nk_recent5": [
+      0,
+      10,
       20,
       12,
       6
@@ -2055,6 +2361,15 @@
      "nk_dist": 58,
      "nk_course": 58,
      "nk_recent": [
+      31,
+      -14,
+      18,
+      19,
+      -33
+     ],
+     "nk_recent5": [
+      31,
+      -14,
       18,
       19,
       -33
@@ -2092,6 +2407,15 @@
      "nk_dist": 48,
      "nk_course": 48,
      "nk_recent": [
+      -49,
+      2,
+      -14,
+      11,
+      -5
+     ],
+     "nk_recent5": [
+      -49,
+      2,
       -14,
       11,
       -5
@@ -2127,6 +2451,15 @@
      "nk_dist": 63,
      "nk_course": 35,
      "nk_recent": [
+      15,
+      6,
+      20,
+      -5,
+      22
+     ],
+     "nk_recent5": [
+      15,
+      6,
       20,
       -5,
       22
@@ -2166,6 +2499,15 @@
      "nk_dist": 27,
      "nk_course": 27,
      "nk_recent": [
+      -6,
+      20,
+      14,
+      27,
+      19
+     ],
+     "nk_recent5": [
+      -6,
+      20,
       14,
       27,
       19
@@ -2454,6 +2796,15 @@
      "nk_dist": null,
      "nk_course": 62,
      "nk_recent": [
+      14,
+      22,
+      25,
+      20,
+      -19
+     ],
+     "nk_recent5": [
+      14,
+      22,
       25,
       20,
       -19
@@ -2492,6 +2843,15 @@
      "nk_dist": 31,
      "nk_course": 33,
      "nk_recent": [
+      31,
+      9,
+      -9,
+      15,
+      21
+     ],
+     "nk_recent5": [
+      31,
+      9,
       -9,
       15,
       21
@@ -2530,6 +2890,15 @@
      "nk_dist": 36,
      "nk_course": 36,
      "nk_recent": [
+      25,
+      30,
+      36,
+      24,
+      21
+     ],
+     "nk_recent5": [
+      25,
+      30,
       36,
       24,
       21
@@ -2568,6 +2937,15 @@
      "nk_dist": 25,
      "nk_course": 43,
      "nk_recent": [
+      16,
+      12,
+      14,
+      -13,
+      14
+     ],
+     "nk_recent5": [
+      16,
+      12,
       14,
       -13,
       14
@@ -2603,6 +2981,15 @@
      "nk_dist": 27,
      "nk_course": 37,
      "nk_recent": [
+      5,
+      31,
+      12,
+      -8,
+      -3
+     ],
+     "nk_recent5": [
+      5,
+      31,
       12,
       -8,
       -3
@@ -2638,6 +3025,15 @@
      "nk_dist": 7,
      "nk_course": 59,
      "nk_recent": [
+      17,
+      -30,
+      -13,
+      -59,
+      -12
+     ],
+     "nk_recent5": [
+      17,
+      -30,
       -13,
       -59,
       -12
@@ -2675,6 +3071,15 @@
      "nk_dist": 28,
      "nk_course": 29,
      "nk_recent": [
+      7,
+      -2,
+      23,
+      6,
+      7
+     ],
+     "nk_recent5": [
+      7,
+      -2,
       23,
       6,
       7
@@ -2712,6 +3117,15 @@
      "nk_dist": 29,
      "nk_course": 42,
      "nk_recent": [
+      33,
+      23,
+      12,
+      15,
+      -9
+     ],
+     "nk_recent5": [
+      33,
+      23,
       12,
       15,
       -9
@@ -2750,6 +3164,15 @@
      "nk_dist": 46,
      "nk_course": 46,
      "nk_recent": [
+      24,
+      21,
+      1,
+      25,
+      8
+     ],
+     "nk_recent5": [
+      24,
+      21,
       1,
       25,
       8
@@ -2787,6 +3210,15 @@
      "nk_dist": -8,
      "nk_course": 25,
      "nk_recent": [
+      -5,
+      -22,
+      0,
+      -13,
+      -8
+     ],
+     "nk_recent5": [
+      -5,
+      -22,
       0,
       -13,
       -8
@@ -2822,6 +3254,15 @@
      "nk_dist": 17,
      "nk_course": 17,
      "nk_recent": [
+      62,
+      56,
+      -12,
+      17,
+      7
+     ],
+     "nk_recent5": [
+      62,
+      56,
       -12,
       17,
       7
@@ -2859,6 +3300,15 @@
      "nk_dist": 7,
      "nk_course": 59,
      "nk_recent": [
+      14,
+      8,
+      17,
+      2,
+      7
+     ],
+     "nk_recent5": [
+      14,
+      8,
       17,
       2,
       7
@@ -3148,6 +3598,15 @@
      "nk_dist": 54,
      "nk_course": 54,
      "nk_recent": [
+      1,
+      30,
+      43,
+      39,
+      17
+     ],
+     "nk_recent5": [
+      1,
+      30,
       43,
       39,
       17
@@ -3186,6 +3645,15 @@
      "nk_dist": 19,
      "nk_course": 56,
      "nk_recent": [
+      5,
+      -2,
+      -10,
+      5,
+      8
+     ],
+     "nk_recent5": [
+      5,
+      -2,
       -10,
       5,
       8
@@ -3225,6 +3693,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      31,
+      42,
+      47,
+      7,
+      -5
+     ],
+     "nk_recent5": [
+      31,
+      42,
       47,
       7,
       -5
@@ -3263,6 +3740,15 @@
      "nk_dist": 26,
      "nk_course": 26,
      "nk_recent": [
+      1,
+      12,
+      26,
+      18,
+      4
+     ],
+     "nk_recent5": [
+      1,
+      12,
       26,
       18,
       4
@@ -3301,6 +3787,15 @@
      "nk_dist": 56,
      "nk_course": 56,
      "nk_recent": [
+      24,
+      32,
+      16,
+      56,
+      23
+     ],
+     "nk_recent5": [
+      24,
+      32,
       16,
       56,
       23
@@ -3338,6 +3833,15 @@
      "nk_dist": -10,
      "nk_course": -10,
      "nk_recent": [
+      -3,
+      -15,
+      -27,
+      -38,
+      -10
+     ],
+     "nk_recent5": [
+      -3,
+      -15,
       -27,
       -38,
       -10
@@ -3373,6 +3877,15 @@
      "nk_dist": 34,
      "nk_course": 39,
      "nk_recent": [
+      15,
+      -46,
+      -1,
+      -3,
+      -36
+     ],
+     "nk_recent5": [
+      15,
+      -46,
       -1,
       -3,
       -36
@@ -3408,6 +3921,15 @@
      "nk_dist": 40,
      "nk_course": 56,
      "nk_recent": [
+      11,
+      29,
+      17,
+      24,
+      0
+     ],
+     "nk_recent5": [
+      11,
+      29,
       17,
       24,
       0
@@ -3445,6 +3967,15 @@
      "nk_dist": 28,
      "nk_course": 44,
      "nk_recent": [
+      -9,
+      -1,
+      -14,
+      28,
+      22
+     ],
+     "nk_recent5": [
+      -9,
+      -1,
       -14,
       28,
       22
@@ -3482,6 +4013,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -35,
+      29,
+      24,
+      2,
+      -4
+     ],
+     "nk_recent5": [
+      -35,
+      29,
       24,
       2,
       -4
@@ -3519,6 +4059,15 @@
      "nk_dist": 11,
      "nk_course": 11,
      "nk_recent": [
+      54,
+      64,
+      49,
+      -38,
+      11
+     ],
+     "nk_recent5": [
+      54,
+      64,
       49,
       -38,
       11
@@ -3556,6 +4105,15 @@
      "nk_dist": -4,
      "nk_course": -4,
      "nk_recent": [
+      -19,
+      -45,
+      -44,
+      -35,
+      -31
+     ],
+     "nk_recent5": [
+      -19,
+      -45,
       -44,
       -35,
       -31
@@ -3855,6 +4413,15 @@
      "nk_dist": -10,
      "nk_course": -9,
      "nk_recent": [
+      -31,
+      -10,
+      -68,
+      -25,
+      -24
+     ],
+     "nk_recent5": [
+      -31,
+      -10,
       -68,
       -25,
       -24
@@ -3890,6 +4457,15 @@
      "nk_dist": 14,
      "nk_course": 14,
      "nk_recent": [
+      null,
+      null,
+      14,
+      4,
+      14
+     ],
+     "nk_recent5": [
+      null,
+      null,
       14,
       4,
       14
@@ -3929,6 +4505,15 @@
      "nk_dist": 10,
      "nk_course": 26,
      "nk_recent": [
+      1,
+      -23,
+      21,
+      26,
+      10
+     ],
+     "nk_recent5": [
+      1,
+      -23,
       21,
       26,
       10
@@ -3967,6 +4552,15 @@
      "nk_course": 13,
      "nk_recent": [
       null,
+      null,
+      null,
+      13,
+      5
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       13,
       5
      ],
@@ -4004,6 +4598,15 @@
      "nk_dist": 1,
      "nk_course": 1,
      "nk_recent": [
+      -15,
+      -26,
+      -16,
+      -11,
+      1
+     ],
+     "nk_recent5": [
+      -15,
+      -26,
       -16,
       -11,
       1
@@ -4039,6 +4642,15 @@
      "nk_dist": null,
      "nk_course": 48,
      "nk_recent": [
+      null,
+      null,
+      null,
+      48,
+      -9
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       48,
       -9
@@ -4077,6 +4689,15 @@
      "nk_course": -21,
      "nk_recent": [
       null,
+      null,
+      null,
+      -29,
+      -21
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       -29,
       -21
      ],
@@ -4111,6 +4732,15 @@
      "nk_dist": 19,
      "nk_course": 26,
      "nk_recent": [
+      3,
+      26,
+      17,
+      17,
+      19
+     ],
+     "nk_recent5": [
+      3,
+      26,
       17,
       17,
       19
@@ -4150,6 +4780,15 @@
      "nk_dist": null,
      "nk_course": 28,
      "nk_recent": [
+      null,
+      16,
+      28,
+      26,
+      0
+     ],
+     "nk_recent5": [
+      null,
+      16,
       28,
       26,
       0
@@ -4188,6 +4827,15 @@
      "nk_dist": 13,
      "nk_course": 33,
      "nk_recent": [
+      null,
+      -3,
+      14,
+      33,
+      13
+     ],
+     "nk_recent5": [
+      null,
+      -3,
       14,
       33,
       13
@@ -4477,6 +5125,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      66,
+      74,
+      62,
+      71,
+      67
+     ],
+     "nk_recent5": [
+      66,
+      74,
       62,
       71,
       67
@@ -4515,6 +5172,15 @@
      "nk_dist": 55,
      "nk_course": 55,
      "nk_recent": [
+      34,
+      13,
+      31,
+      30,
+      35
+     ],
+     "nk_recent5": [
+      34,
+      13,
       31,
       30,
       35
@@ -4553,6 +5219,15 @@
      "nk_dist": 27,
      "nk_course": 27,
      "nk_recent": [
+      11,
+      22,
+      18,
+      27,
+      18
+     ],
+     "nk_recent5": [
+      11,
+      22,
       18,
       27,
       18
@@ -4590,6 +5265,15 @@
      "nk_dist": 47,
      "nk_course": 47,
      "nk_recent": [
+      43,
+      47,
+      46,
+      41,
+      34
+     ],
+     "nk_recent5": [
+      43,
+      47,
       46,
       41,
       34
@@ -4629,6 +5313,15 @@
      "nk_dist": 77,
      "nk_course": 51,
      "nk_recent": [
+      -6,
+      2,
+      34,
+      34,
+      3
+     ],
+     "nk_recent5": [
+      -6,
+      2,
       34,
       34,
       3
@@ -4666,6 +5359,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      10,
+      24,
+      26,
+      26,
+      18
+     ],
+     "nk_recent5": [
+      10,
+      24,
       26,
       26,
       18
@@ -4704,6 +5406,15 @@
      "nk_dist": 54,
      "nk_course": 54,
      "nk_recent": [
+      13,
+      36,
+      29,
+      1,
+      16
+     ],
+     "nk_recent5": [
+      13,
+      36,
       29,
       1,
       16
@@ -4739,6 +5450,15 @@
      "nk_dist": 51,
      "nk_course": 51,
      "nk_recent": [
+      43,
+      21,
+      43,
+      51,
+      30
+     ],
+     "nk_recent5": [
+      43,
+      21,
       43,
       51,
       30
@@ -5029,6 +5749,15 @@
      "nk_dist": 28,
      "nk_course": 28,
      "nk_recent": [
+      -2,
+      28,
+      -8,
+      -7,
+      -1
+     ],
+     "nk_recent5": [
+      -2,
+      28,
       -8,
       -7,
       -1
@@ -5066,6 +5795,15 @@
      "nk_dist": 41,
      "nk_course": 41,
      "nk_recent": [
+      16,
+      22,
+      -3,
+      -7,
+      9
+     ],
+     "nk_recent5": [
+      16,
+      22,
       -3,
       -7,
       9
@@ -5104,6 +5842,15 @@
      "nk_dist": 58,
      "nk_course": 58,
      "nk_recent": [
+      16,
+      4,
+      14,
+      -1,
+      18
+     ],
+     "nk_recent5": [
+      16,
+      4,
       14,
       -1,
       18
@@ -5143,6 +5890,15 @@
      "nk_dist": 45,
      "nk_course": 45,
      "nk_recent": [
+      -2,
+      -7,
+      10,
+      -7,
+      -9
+     ],
+     "nk_recent5": [
+      -2,
+      -7,
       10,
       -7,
       -9
@@ -5180,6 +5936,15 @@
      "nk_dist": 38,
      "nk_course": -3,
      "nk_recent": [
+      15,
+      23,
+      38,
+      -15,
+      -3
+     ],
+     "nk_recent5": [
+      15,
+      23,
       38,
       -15,
       -3
@@ -5215,6 +5980,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -8,
+      -10,
+      8,
+      -14,
+      4
+     ],
+     "nk_recent5": [
+      -8,
+      -10,
       8,
       -14,
       4
@@ -5250,6 +6024,15 @@
      "nk_dist": 48,
      "nk_course": 48,
      "nk_recent": [
+      8,
+      -1,
+      12,
+      5,
+      1
+     ],
+     "nk_recent5": [
+      8,
+      -1,
       12,
       5,
       1
@@ -5288,6 +6071,15 @@
      "nk_dist": 54,
      "nk_course": 54,
      "nk_recent": [
+      16,
+      24,
+      13,
+      21,
+      9
+     ],
+     "nk_recent5": [
+      16,
+      24,
       13,
       21,
       9
@@ -5327,6 +6119,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -38,
+      26,
+      3,
+      29,
+      15
+     ],
+     "nk_recent5": [
+      -38,
+      26,
       3,
       29,
       15
@@ -5616,6 +6417,15 @@
      "nk_dist": 45,
      "nk_course": 45,
      "nk_recent": [
+      69,
+      63,
+      62,
+      45,
+      41
+     ],
+     "nk_recent5": [
+      69,
+      63,
       62,
       45,
       41
@@ -5653,6 +6463,15 @@
      "nk_dist": 50,
      "nk_course": 34,
      "nk_recent": [
+      34,
+      20,
+      28,
+      32,
+      32
+     ],
+     "nk_recent5": [
+      34,
+      20,
       28,
       32,
       32
@@ -5692,6 +6511,15 @@
      "nk_dist": 55,
      "nk_course": 55,
      "nk_recent": [
+      5,
+      42,
+      22,
+      20,
+      9
+     ],
+     "nk_recent5": [
+      5,
+      42,
       22,
       20,
       9
@@ -5727,6 +6555,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      0,
+      24,
+      15,
+      32,
+      44
+     ],
+     "nk_recent5": [
+      0,
+      24,
       15,
       32,
       44
@@ -5762,6 +6599,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      53,
+      30,
+      53,
+      34,
+      33
+     ],
+     "nk_recent5": [
+      53,
+      30,
       53,
       34,
       33
@@ -5800,6 +6646,15 @@
      "nk_dist": 55,
      "nk_course": 33,
      "nk_recent": [
+      -9,
+      33,
+      -3,
+      12,
+      8
+     ],
+     "nk_recent5": [
+      -9,
+      33,
       -3,
       12,
       8
@@ -5835,6 +6690,15 @@
      "nk_dist": 57,
      "nk_course": 57,
      "nk_recent": [
+      75,
+      60,
+      48,
+      45,
+      57
+     ],
+     "nk_recent5": [
+      75,
+      60,
       48,
       45,
       57
@@ -5874,6 +6738,15 @@
      "nk_dist": 36,
      "nk_course": 38,
      "nk_recent": [
+      50,
+      36,
+      36,
+      21,
+      38
+     ],
+     "nk_recent5": [
+      50,
+      36,
       36,
       21,
       38
@@ -5912,6 +6785,15 @@
      "nk_dist": 57,
      "nk_course": 54,
      "nk_recent": [
+      78,
+      65,
+      30,
+      54,
+      54
+     ],
+     "nk_recent5": [
+      78,
+      65,
       30,
       54,
       54
@@ -6202,6 +7084,15 @@
      "nk_dist": 70,
      "nk_course": 89,
      "nk_recent": [
+      56,
+      70,
+      47,
+      50,
+      60
+     ],
+     "nk_recent5": [
+      56,
+      70,
       47,
       50,
       60
@@ -6240,6 +7131,15 @@
      "nk_dist": 70,
      "nk_course": 89,
      "nk_recent": [
+      55,
+      57,
+      66,
+      58,
+      48
+     ],
+     "nk_recent5": [
+      55,
+      57,
       66,
       58,
       48
@@ -6278,6 +7178,15 @@
      "nk_dist": 66,
      "nk_course": 66,
      "nk_recent": [
+      49,
+      35,
+      55,
+      56,
+      60
+     ],
+     "nk_recent5": [
+      49,
+      35,
       55,
       56,
       60
@@ -6315,6 +7224,15 @@
      "nk_dist": 59,
      "nk_course": 59,
      "nk_recent": [
+      37,
+      76,
+      88,
+      67,
+      59
+     ],
+     "nk_recent5": [
+      37,
+      76,
       88,
       67,
       59
@@ -6352,6 +7270,15 @@
      "nk_dist": null,
      "nk_course": 67,
      "nk_recent": [
+      82,
+      75,
+      67,
+      65,
+      -11
+     ],
+     "nk_recent5": [
+      82,
+      75,
       67,
       65,
       -11
@@ -6387,6 +7314,15 @@
      "nk_dist": 76,
      "nk_course": 76,
      "nk_recent": [
+      21,
+      27,
+      47,
+      45,
+      24
+     ],
+     "nk_recent5": [
+      21,
+      27,
       47,
       45,
       24
@@ -6424,6 +7360,15 @@
      "nk_dist": 75,
      "nk_course": 75,
      "nk_recent": [
+      49,
+      75,
+      53,
+      59,
+      62
+     ],
+     "nk_recent5": [
+      49,
+      75,
       53,
       59,
       62
@@ -6463,6 +7408,15 @@
      "nk_dist": 55,
      "nk_course": 72,
      "nk_recent": [
+      41,
+      59,
+      39,
+      49,
+      32
+     ],
+     "nk_recent5": [
+      41,
+      59,
       39,
       49,
       32
@@ -6498,6 +7452,15 @@
      "nk_dist": 63,
      "nk_course": 63,
      "nk_recent": [
+      38,
+      57,
+      63,
+      48,
+      48
+     ],
+     "nk_recent5": [
+      38,
+      57,
       63,
       48,
       48
@@ -6535,6 +7498,15 @@
      "nk_dist": 67,
      "nk_course": 71,
      "nk_recent": [
+      58,
+      47,
+      22,
+      58,
+      49
+     ],
+     "nk_recent5": [
+      58,
+      47,
       22,
       58,
       49
@@ -6572,6 +7544,15 @@
      "nk_dist": 60,
      "nk_course": 79,
      "nk_recent": [
+      49,
+      60,
+      56,
+      55,
+      73
+     ],
+     "nk_recent5": [
+      49,
+      60,
       56,
       55,
       73
@@ -6609,6 +7590,15 @@
      "nk_dist": null,
      "nk_course": 62,
      "nk_recent": [
+      97,
+      54,
+      80,
+      71,
+      62
+     ],
+     "nk_recent5": [
+      97,
+      54,
       80,
       71,
       62
@@ -6897,6 +7887,15 @@
      "nk_dist": 74,
      "nk_course": 23,
      "nk_recent": [
+      74,
+      54,
+      79,
+      22,
+      23
+     ],
+     "nk_recent5": [
+      74,
+      54,
       79,
       22,
       23
@@ -6934,6 +7933,15 @@
      "nk_dist": 17,
      "nk_course": 31,
      "nk_recent": [
+      null,
+      null,
+      6,
+      31,
+      17
+     ],
+     "nk_recent5": [
+      null,
+      null,
       6,
       31,
       17
@@ -6971,6 +7979,15 @@
      "nk_dist": 81,
      "nk_course": null,
      "nk_recent": [
+      50,
+      66,
+      54,
+      68,
+      70
+     ],
+     "nk_recent5": [
+      50,
+      66,
       54,
       68,
       70
@@ -7009,6 +8026,15 @@
      "nk_dist": 28,
      "nk_course": 45,
      "nk_recent": [
+      29,
+      40,
+      28,
+      25,
+      26
+     ],
+     "nk_recent5": [
+      29,
+      40,
       28,
       25,
       26
@@ -7046,6 +8072,15 @@
      "nk_dist": 34,
      "nk_course": 34,
      "nk_recent": [
+      44,
+      56,
+      34,
+      18,
+      24
+     ],
+     "nk_recent5": [
+      44,
+      56,
       34,
       18,
       24
@@ -7084,6 +8119,15 @@
      "nk_dist": 64,
      "nk_course": 35,
      "nk_recent": [
+      55,
+      64,
+      48,
+      35,
+      10
+     ],
+     "nk_recent5": [
+      55,
+      64,
       48,
       35,
       10
@@ -7121,6 +8165,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      68,
+      61,
+      59,
+      60,
+      46
+     ],
+     "nk_recent5": [
+      68,
+      61,
       59,
       60,
       46
@@ -7158,6 +8211,15 @@
      "nk_dist": 73,
      "nk_course": 48,
      "nk_recent": [
+      71,
+      66,
+      48,
+      46,
+      33
+     ],
+     "nk_recent5": [
+      71,
+      66,
       48,
       46,
       33
@@ -7196,6 +8258,15 @@
      "nk_dist": 16,
      "nk_course": 41,
      "nk_recent": [
+      39,
+      8,
+      12,
+      29,
+      19
+     ],
+     "nk_recent5": [
+      39,
+      8,
       12,
       29,
       19
@@ -7231,6 +8302,15 @@
      "nk_dist": 60,
      "nk_course": 49,
      "nk_recent": [
+      36,
+      27,
+      49,
+      30,
+      28
+     ],
+     "nk_recent5": [
+      36,
+      27,
       49,
       30,
       28
@@ -7269,6 +8349,15 @@
      "nk_dist": 52,
      "nk_course": 27,
      "nk_recent": [
+      40,
+      45,
+      27,
+      27,
+      25
+     ],
+     "nk_recent5": [
+      40,
+      45,
       27,
       27,
       25
@@ -7304,6 +8393,15 @@
      "nk_dist": 32,
      "nk_course": 51,
      "nk_recent": [
+      13,
+      26,
+      32,
+      9,
+      27
+     ],
+     "nk_recent5": [
+      13,
+      26,
       32,
       9,
       27
@@ -7592,6 +8690,15 @@
      "nk_dist": 23,
      "nk_course": 23,
      "nk_recent": [
+      null,
+      -10,
+      22,
+      14,
+      23
+     ],
+     "nk_recent5": [
+      null,
+      -10,
       22,
       14,
       23
@@ -7627,6 +8734,15 @@
      "nk_dist": 12,
      "nk_course": 12,
      "nk_recent": [
+      null,
+      null,
+      -6,
+      -15,
+      12
+     ],
+     "nk_recent5": [
+      null,
+      null,
       -6,
       -15,
       12
@@ -7662,6 +8778,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      0,
+      -9,
+      -8,
+      11,
+      35
+     ],
+     "nk_recent5": [
+      0,
+      -9,
       -8,
       11,
       35
@@ -7702,6 +8827,15 @@
      "nk_course": 40,
      "nk_recent": [
       null,
+      null,
+      null,
+      40,
+      -16
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       40,
       -16
      ],
@@ -7740,6 +8874,15 @@
      "nk_course": 8,
      "nk_recent": [
       null,
+      null,
+      null,
+      8,
+      7
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       8,
       7
      ],
@@ -7774,6 +8917,15 @@
      "nk_dist": 26,
      "nk_course": 26,
      "nk_recent": [
+      null,
+      18,
+      19,
+      17,
+      26
+     ],
+     "nk_recent5": [
+      null,
+      18,
       19,
       17,
       26
@@ -7814,6 +8966,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      23
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       23
      ],
      "pace": {
@@ -7849,6 +9010,15 @@
      "nk_dist": 25,
      "nk_course": 25,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      25
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       25
@@ -7889,6 +9059,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      -4
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       -4
      ],
      "pace": {
@@ -7922,6 +9101,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      null,
+      null,
+      null,
+      14,
+      29
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       14,
       29
@@ -7961,6 +9149,15 @@
      "nk_course": 19,
      "nk_recent": [
       null,
+      null,
+      null,
+      19,
+      -51
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       19,
       -51
      ],
@@ -7999,6 +9196,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      22
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       22
      ],
      "pace": {
@@ -8035,6 +9241,15 @@
      "nk_dist": null,
      "nk_course": -16,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      -16
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       -16
@@ -8321,6 +9536,15 @@
      "nk_dist": -21,
      "nk_course": -21,
      "nk_recent": [
+      null,
+      -25,
+      -31,
+      -37,
+      -21
+     ],
+     "nk_recent5": [
+      null,
+      -25,
       -31,
       -37,
       -21
@@ -8356,6 +9580,15 @@
      "nk_dist": 19,
      "nk_course": 19,
      "nk_recent": [
+      null,
+      19,
+      -32,
+      6,
+      -15
+     ],
+     "nk_recent5": [
+      null,
+      19,
       -32,
       6,
       -15
@@ -8393,6 +9626,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      -71
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       -71
      ],
      "pace": {
@@ -8426,6 +9668,15 @@
      "nk_dist": 19,
      "nk_course": 19,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      19
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       19
@@ -8464,6 +9715,15 @@
      "nk_dist": 19,
      "nk_course": 28,
      "nk_recent": [
+      null,
+      null,
+      null,
+      19,
+      28
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       19,
       28
@@ -8505,6 +9765,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      13
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       13
      ],
      "pace": {
@@ -8542,6 +9811,15 @@
      "nk_course": 7,
      "nk_recent": [
       null,
+      null,
+      null,
+      7,
+      -4
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       7,
       -4
      ],
@@ -8576,6 +9854,15 @@
      "nk_dist": 25,
      "nk_course": 25,
      "nk_recent": [
+      null,
+      25,
+      -17,
+      15,
+      -25
+     ],
+     "nk_recent5": [
+      null,
+      25,
       -17,
       15,
       -25
@@ -8613,6 +9900,15 @@
      "nk_dist": 30,
      "nk_course": 30,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      30
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       30
@@ -8654,6 +9950,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      19
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       19
      ],
      "pace": {
@@ -8690,6 +9995,15 @@
      "nk_dist": 16,
      "nk_course": 16,
      "nk_recent": [
+      null,
+      null,
+      null,
+      11,
+      16
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       11,
       16
@@ -8728,6 +10042,15 @@
      "nk_dist": -10,
      "nk_course": -10,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      -10
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       -10
@@ -9014,6 +10337,15 @@
      "nk_dist": null,
      "nk_course": 37,
      "nk_recent": [
+      29,
+      13,
+      19,
+      20,
+      37
+     ],
+     "nk_recent5": [
+      29,
+      13,
       19,
       20,
       37
@@ -9052,6 +10384,15 @@
      "nk_dist": 23,
      "nk_course": 23,
      "nk_recent": [
+      null,
+      null,
+      17,
+      23,
+      23
+     ],
+     "nk_recent5": [
+      null,
+      null,
       17,
       23,
       23
@@ -9089,6 +10430,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      null,
+      null,
+      null,
+      29,
+      42
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       29,
       42
@@ -9128,6 +10478,15 @@
      "nk_dist": 3,
      "nk_course": 25,
      "nk_recent": [
+      null,
+      null,
+      24,
+      25,
+      3
+     ],
+     "nk_recent5": [
+      null,
+      null,
       24,
       25,
       3
@@ -9163,6 +10522,15 @@
      "nk_dist": null,
      "nk_course": 44,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      44
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       44
@@ -9201,6 +10569,15 @@
      "nk_dist": null,
      "nk_course": 34,
      "nk_recent": [
+      null,
+      null,
+      null,
+      19,
+      34
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       19,
       34
@@ -9241,6 +10618,15 @@
      "nk_course": 36,
      "nk_recent": [
       null,
+      null,
+      null,
+      -14,
+      36
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       -14,
       36
      ],
@@ -9277,6 +10663,15 @@
      "nk_dist": null,
      "nk_course": 31,
      "nk_recent": [
+      null,
+      null,
+      null,
+      31,
+      26
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       31,
       26
@@ -9315,6 +10710,15 @@
      "nk_course": 36,
      "nk_recent": [
       null,
+      null,
+      null,
+      36,
+      27
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       36,
       27
      ],
@@ -9351,6 +10755,15 @@
      "nk_dist": null,
      "nk_course": 29,
      "nk_recent": [
+      5,
+      16,
+      -23,
+      4,
+      29
+     ],
+     "nk_recent5": [
+      5,
+      16,
       -23,
       4,
       29
@@ -9388,6 +10801,15 @@
      "nk_dist": null,
      "nk_course": 27,
      "nk_recent": [
+      null,
+      -3,
+      27,
+      17,
+      4
+     ],
+     "nk_recent5": [
+      null,
+      -3,
       27,
       17,
       4
@@ -9688,6 +11110,15 @@
      "nk_course": 26,
      "nk_recent": [
       null,
+      null,
+      null,
+      30,
+      26
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
       30,
       26
      ],
@@ -9725,6 +11156,15 @@
      "nk_dist": 20,
      "nk_course": 22,
      "nk_recent": [
+      12,
+      -3,
+      13,
+      20,
+      9
+     ],
+     "nk_recent5": [
+      12,
+      -3,
       13,
       20,
       9
@@ -9760,6 +11200,15 @@
      "nk_dist": 34,
      "nk_course": 53,
      "nk_recent": [
+      null,
+      null,
+      31,
+      34,
+      53
+     ],
+     "nk_recent5": [
+      null,
+      null,
       31,
       34,
       53
@@ -9797,6 +11246,15 @@
      "nk_dist": 25,
      "nk_course": 25,
      "nk_recent": [
+      15,
+      22,
+      19,
+      23,
+      25
+     ],
+     "nk_recent5": [
+      15,
+      22,
       19,
       23,
       25
@@ -9832,6 +11290,15 @@
      "nk_dist": 37,
      "nk_course": 37,
      "nk_recent": [
+      null,
+      37,
+      2,
+      31,
+      34
+     ],
+     "nk_recent5": [
+      null,
+      37,
       2,
       31,
       34
@@ -9869,6 +11336,15 @@
      "nk_dist": 41,
      "nk_course": null,
      "nk_recent": [
+      6,
+      41,
+      41,
+      32,
+      33
+     ],
+     "nk_recent5": [
+      6,
+      41,
       41,
       32,
       33
@@ -9907,6 +11383,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      70,
+      49,
+      53,
+      58,
+      44
+     ],
+     "nk_recent5": [
+      70,
+      49,
       53,
       58,
       44
@@ -9946,6 +11431,15 @@
      "nk_recent": [
       null,
       null,
+      null,
+      null,
+      50
+     ],
+     "nk_recent5": [
+      null,
+      null,
+      null,
+      null,
       50
      ],
      "pace": {
@@ -9983,6 +11477,15 @@
      "nk_course": 17,
      "nk_recent": [
       -15,
+      4,
+      -15,
+      1,
+      17
+     ],
+     "nk_recent5": [
+      -15,
+      4,
+      -15,
       1,
       17
      ],
@@ -10017,6 +11520,15 @@
      "nk_dist": 28,
      "nk_course": null,
      "nk_recent": [
+      22,
+      26,
+      34,
+      39,
+      28
+     ],
+     "nk_recent5": [
+      22,
+      26,
       34,
       39,
       28
@@ -10055,6 +11567,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      31,
+      -34,
+      -4,
+      6,
+      12
+     ],
+     "nk_recent5": [
+      31,
+      -34,
       -4,
       6,
       12
@@ -10090,6 +11611,15 @@
      "nk_dist": 25,
      "nk_course": null,
      "nk_recent": [
+      11,
+      8,
+      17,
+      25,
+      20
+     ],
+     "nk_recent5": [
+      11,
+      8,
       17,
       25,
       20
@@ -10127,6 +11657,15 @@
      "nk_dist": 17,
      "nk_course": 23,
      "nk_recent": [
+      25,
+      18,
+      17,
+      23,
+      11
+     ],
+     "nk_recent5": [
+      25,
+      18,
       17,
       23,
       11
@@ -10162,6 +11701,15 @@
      "nk_dist": 68,
      "nk_course": 68,
      "nk_recent": [
+      null,
+      null,
+      null,
+      null,
+      68
+     ],
+     "nk_recent5": [
+      null,
+      null,
       null,
       null,
       68
@@ -10452,6 +12000,15 @@
      "nk_dist": 42,
      "nk_course": 47,
      "nk_recent": [
+      35,
+      47,
+      32,
+      25,
+      40
+     ],
+     "nk_recent5": [
+      35,
+      47,
       32,
       25,
       40
@@ -10487,6 +12044,15 @@
      "nk_dist": null,
      "nk_course": 44,
      "nk_recent": [
+      44,
+      24,
+      38,
+      36,
+      21
+     ],
+     "nk_recent5": [
+      44,
+      24,
       38,
       36,
       21
@@ -10524,6 +12090,15 @@
      "nk_dist": 57,
      "nk_course": 60,
      "nk_recent": [
+      57,
+      60,
+      53,
+      36,
+      33
+     ],
+     "nk_recent5": [
+      57,
+      60,
       53,
       36,
       33
@@ -10563,6 +12138,15 @@
      "nk_dist": 36,
      "nk_course": 54,
      "nk_recent": [
+      null,
+      54,
+      54,
+      43,
+      42
+     ],
+     "nk_recent5": [
+      null,
+      54,
       54,
       43,
       42
@@ -10602,6 +12186,15 @@
      "nk_dist": 35,
      "nk_course": 57,
      "nk_recent": [
+      35,
+      27,
+      27,
+      57,
+      31
+     ],
+     "nk_recent5": [
+      35,
+      27,
       27,
       57,
       31
@@ -10640,6 +12233,15 @@
      "nk_dist": -6,
      "nk_course": -6,
      "nk_recent": [
+      83,
+      45,
+      42,
+      69,
+      -6
+     ],
+     "nk_recent5": [
+      83,
+      45,
       42,
       69,
       -6
@@ -10675,6 +12277,15 @@
      "nk_dist": 53,
      "nk_course": 63,
      "nk_recent": [
+      41,
+      46,
+      31,
+      41,
+      42
+     ],
+     "nk_recent5": [
+      41,
+      46,
       31,
       41,
       42
@@ -10714,6 +12325,15 @@
      "nk_dist": 57,
      "nk_course": 61,
      "nk_recent": [
+      27,
+      28,
+      44,
+      41,
+      31
+     ],
+     "nk_recent5": [
+      27,
+      28,
       44,
       41,
       31
@@ -10752,6 +12372,15 @@
      "nk_course": 56,
      "nk_recent": [
       40,
+      56,
+      40,
+      45,
+      11
+     ],
+     "nk_recent5": [
+      40,
+      56,
+      40,
       45,
       11
      ],
@@ -10788,6 +12417,15 @@
      "nk_dist": 48,
      "nk_course": 50,
      "nk_recent": [
+      50,
+      47,
+      49,
+      24,
+      37
+     ],
+     "nk_recent5": [
+      50,
+      47,
       49,
       24,
       37
@@ -11087,6 +12725,15 @@
      "nk_dist": 71,
      "nk_course": 71,
      "nk_recent": [
+      62,
+      61,
+      61,
+      71,
+      61
+     ],
+     "nk_recent5": [
+      62,
+      61,
       61,
       71,
       61
@@ -11126,6 +12773,15 @@
      "nk_dist": 50,
      "nk_course": null,
      "nk_recent": [
+      50,
+      42,
+      10,
+      46,
+      27
+     ],
+     "nk_recent5": [
+      50,
+      42,
       10,
       46,
       27
@@ -11164,6 +12820,15 @@
      "nk_dist": 61,
      "nk_course": 61,
      "nk_recent": [
+      9,
+      38,
+      25,
+      null,
+      48
+     ],
+     "nk_recent5": [
+      9,
+      38,
       25,
       null,
       48
@@ -11199,6 +12864,15 @@
      "nk_dist": 25,
      "nk_course": 48,
      "nk_recent": [
+      29,
+      23,
+      17,
+      35,
+      25
+     ],
+     "nk_recent5": [
+      29,
+      23,
       17,
       35,
       25
@@ -11234,6 +12908,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      69,
+      65,
+      84,
+      16,
+      58
+     ],
+     "nk_recent5": [
+      69,
+      65,
       84,
       16,
       58
@@ -11272,6 +12955,15 @@
      "nk_dist": 66,
      "nk_course": 66,
      "nk_recent": [
+      44,
+      66,
+      58,
+      51,
+      52
+     ],
+     "nk_recent5": [
+      44,
+      66,
       58,
       51,
       52
@@ -11309,6 +13001,15 @@
      "nk_dist": 66,
      "nk_course": 66,
      "nk_recent": [
+      64,
+      56,
+      22,
+      66,
+      36
+     ],
+     "nk_recent5": [
+      64,
+      56,
       22,
       66,
       36
@@ -11347,6 +13048,15 @@
      "nk_dist": 57,
      "nk_course": 57,
      "nk_recent": [
+      46,
+      40,
+      55,
+      46,
+      38
+     ],
+     "nk_recent5": [
+      46,
+      40,
       55,
       46,
       38
@@ -11385,6 +13095,15 @@
      "nk_dist": 71,
      "nk_course": 71,
      "nk_recent": [
+      39,
+      38,
+      47,
+      37,
+      35
+     ],
+     "nk_recent5": [
+      39,
+      38,
       47,
       37,
       35
@@ -11420,6 +13139,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      44,
+      46,
+      40,
+      21,
+      22
+     ],
+     "nk_recent5": [
+      44,
+      46,
       40,
       21,
       22
@@ -11455,6 +13183,15 @@
      "nk_dist": -35,
      "nk_course": -35,
      "nk_recent": [
+      80,
+      81,
+      87,
+      82,
+      -35
+     ],
+     "nk_recent5": [
+      80,
+      81,
       87,
       82,
       -35
@@ -11492,6 +13229,15 @@
      "nk_dist": null,
      "nk_course": 65,
      "nk_recent": [
+      null,
+      65,
+      51,
+      43,
+      -23
+     ],
+     "nk_recent5": [
+      null,
+      65,
       51,
       43,
       -23
@@ -11527,6 +13273,15 @@
      "nk_dist": 45,
      "nk_course": 64,
      "nk_recent": [
+      64,
+      58,
+      28,
+      49,
+      41
+     ],
+     "nk_recent5": [
+      64,
+      58,
       28,
       49,
       41
@@ -11562,6 +13317,15 @@
      "nk_dist": 66,
      "nk_course": 63,
      "nk_recent": [
+      33,
+      66,
+      59,
+      63,
+      49
+     ],
+     "nk_recent5": [
+      33,
+      66,
       59,
       63,
       49
@@ -11852,6 +13616,15 @@
      "nk_course": 52,
      "nk_recent": [
       42,
+      51,
+      42,
+      45,
+      47
+     ],
+     "nk_recent5": [
+      42,
+      51,
+      42,
       45,
       47
      ],
@@ -11888,6 +13661,15 @@
      "nk_dist": 50,
      "nk_course": 62,
      "nk_recent": [
+      56,
+      22,
+      50,
+      62,
+      47
+     ],
+     "nk_recent5": [
+      56,
+      22,
       50,
       62,
       47
@@ -11926,6 +13708,15 @@
      "nk_dist": 66,
      "nk_course": 69,
      "nk_recent": [
+      69,
+      47,
+      45,
+      48,
+      23
+     ],
+     "nk_recent5": [
+      69,
+      47,
       45,
       48,
       23
@@ -11963,6 +13754,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      44,
+      69,
+      57,
+      80,
+      90
+     ],
+     "nk_recent5": [
+      44,
+      69,
       57,
       80,
       90
@@ -12002,6 +13802,15 @@
      "nk_dist": 73,
      "nk_course": 54,
      "nk_recent": [
+      -1,
+      34,
+      1,
+      50,
+      44
+     ],
+     "nk_recent5": [
+      -1,
+      34,
       1,
       50,
       44
@@ -12039,6 +13848,15 @@
      "nk_dist": 49,
      "nk_course": 49,
      "nk_recent": [
+      62,
+      59,
+      85,
+      96,
+      49
+     ],
+     "nk_recent5": [
+      62,
+      59,
       85,
       96,
       49
@@ -12077,6 +13895,15 @@
      "nk_dist": 62,
      "nk_course": 62,
      "nk_recent": [
+      53,
+      39,
+      null,
+      30,
+      11
+     ],
+     "nk_recent5": [
+      53,
+      39,
       null,
       30,
       11
@@ -12115,6 +13942,15 @@
      "nk_dist": 45,
      "nk_course": 65,
      "nk_recent": [
+      45,
+      64,
+      32,
+      47,
+      24
+     ],
+     "nk_recent5": [
+      45,
+      64,
       32,
       47,
       24
@@ -12150,6 +13986,15 @@
      "nk_dist": 57,
      "nk_course": 57,
      "nk_recent": [
+      24,
+      49,
+      23,
+      39,
+      34
+     ],
+     "nk_recent5": [
+      24,
+      49,
       23,
       39,
       34
@@ -12187,6 +14032,15 @@
      "nk_dist": 24,
      "nk_course": 52,
      "nk_recent": [
+      24,
+      52,
+      46,
+      51,
+      44
+     ],
+     "nk_recent5": [
+      24,
+      52,
       46,
       51,
       44
@@ -12225,6 +14079,15 @@
      "nk_dist": 63,
      "nk_course": 63,
      "nk_recent": [
+      24,
+      36,
+      38,
+      47,
+      52
+     ],
+     "nk_recent5": [
+      24,
+      36,
       38,
       47,
       52
@@ -12260,6 +14123,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      25,
+      48,
+      16,
+      33,
+      34
+     ],
+     "nk_recent5": [
+      25,
+      48,
       16,
       33,
       34
@@ -12559,6 +14431,15 @@
      "nk_dist": 61,
      "nk_course": 61,
      "nk_recent": [
+      31,
+      46,
+      40,
+      50,
+      61
+     ],
+     "nk_recent5": [
+      31,
+      46,
       40,
       50,
       61
@@ -12596,6 +14477,15 @@
      "nk_dist": 63,
      "nk_course": 63,
      "nk_recent": [
+      54,
+      38,
+      35,
+      63,
+      55
+     ],
+     "nk_recent5": [
+      54,
+      38,
       35,
       63,
       55
@@ -12633,6 +14523,15 @@
      "nk_dist": 62,
      "nk_course": 62,
      "nk_recent": [
+      45,
+      53,
+      47,
+      39,
+      62
+     ],
+     "nk_recent5": [
+      45,
+      53,
       47,
       39,
       62
@@ -12670,6 +14569,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      39,
+      49,
+      58,
+      46,
+      71
+     ],
+     "nk_recent5": [
+      39,
+      49,
       58,
       46,
       71
@@ -12709,6 +14617,15 @@
      "nk_dist": 50,
      "nk_course": 67,
      "nk_recent": [
+      49,
+      67,
+      65,
+      48,
+      39
+     ],
+     "nk_recent5": [
+      49,
+      67,
       65,
       48,
       39
@@ -12744,6 +14661,15 @@
      "nk_dist": 72,
      "nk_course": 72,
      "nk_recent": [
+      null,
+      58,
+      49,
+      72,
+      70
+     ],
+     "nk_recent5": [
+      null,
+      58,
       49,
       72,
       70
@@ -12782,6 +14708,15 @@
      "nk_dist": 75,
      "nk_course": 75,
      "nk_recent": [
+      48,
+      55,
+      65,
+      66,
+      46
+     ],
+     "nk_recent5": [
+      48,
+      55,
       65,
       66,
       46
@@ -12819,6 +14754,15 @@
      "nk_dist": 71,
      "nk_course": 55,
      "nk_recent": [
+      29,
+      37,
+      3,
+      23,
+      47
+     ],
+     "nk_recent5": [
+      29,
+      37,
       3,
       23,
       47
@@ -12854,6 +14798,15 @@
      "nk_dist": 62,
      "nk_course": 62,
      "nk_recent": [
+      null,
+      62,
+      60,
+      58,
+      46
+     ],
+     "nk_recent5": [
+      null,
+      62,
       60,
       58,
       46
@@ -12889,6 +14842,15 @@
      "nk_dist": 64,
      "nk_course": 64,
      "nk_recent": [
+      52,
+      48,
+      64,
+      56,
+      47
+     ],
+     "nk_recent5": [
+      52,
+      48,
       64,
       56,
       47
@@ -12926,6 +14888,15 @@
      "nk_dist": 60,
      "nk_course": 58,
      "nk_recent": [
+      90,
+      79,
+      64,
+      93,
+      58
+     ],
+     "nk_recent5": [
+      90,
+      79,
       64,
       93,
       58
@@ -12965,6 +14936,15 @@
      "nk_dist": 67,
      "nk_course": 55,
      "nk_recent": [
+      34,
+      53,
+      55,
+      49,
+      46
+     ],
+     "nk_recent5": [
+      34,
+      53,
       55,
       49,
       46
@@ -13001,6 +14981,15 @@
      "nk_course": 66,
      "nk_recent": [
       51,
+      38,
+      51,
+      36,
+      50
+     ],
+     "nk_recent5": [
+      51,
+      38,
+      51,
       36,
       50
      ],
@@ -13035,6 +15024,15 @@
      "nk_dist": 38,
      "nk_course": 38,
      "nk_recent": [
+      71,
+      78,
+      69,
+      81,
+      38
+     ],
+     "nk_recent5": [
+      71,
+      78,
       69,
       81,
       38
@@ -13324,6 +15322,15 @@
      "nk_dist": 68,
      "nk_course": null,
      "nk_recent": [
+      62,
+      68,
+      65,
+      48,
+      51
+     ],
+     "nk_recent5": [
+      62,
+      68,
       65,
       48,
       51
@@ -13361,6 +15368,15 @@
      "nk_dist": 74,
      "nk_course": 74,
      "nk_recent": [
+      48,
+      64,
+      72,
+      74,
+      64
+     ],
+     "nk_recent5": [
+      48,
+      64,
       72,
       74,
       64
@@ -13399,6 +15415,15 @@
      "nk_dist": 46,
      "nk_course": 60,
      "nk_recent": [
+      60,
+      22,
+      52,
+      42,
+      18
+     ],
+     "nk_recent5": [
+      60,
+      22,
       52,
       42,
       18
@@ -13434,6 +15459,15 @@
      "nk_dist": 72,
      "nk_course": 72,
      "nk_recent": [
+      45,
+      53,
+      38,
+      56,
+      39
+     ],
+     "nk_recent5": [
+      45,
+      53,
       38,
       56,
       39
@@ -13469,6 +15503,15 @@
      "nk_dist": 56,
      "nk_course": 63,
      "nk_recent": [
+      41,
+      56,
+      38,
+      63,
+      38
+     ],
+     "nk_recent5": [
+      41,
+      56,
       38,
       63,
       38
@@ -13507,6 +15550,15 @@
      "nk_dist": 69,
      "nk_course": 69,
      "nk_recent": [
+      50,
+      62,
+      21,
+      50,
+      43
+     ],
+     "nk_recent5": [
+      50,
+      62,
       21,
       50,
       43
@@ -13544,6 +15596,15 @@
      "nk_dist": 83,
      "nk_course": 59,
      "nk_recent": [
+      51,
+      47,
+      34,
+      11,
+      5
+     ],
+     "nk_recent5": [
+      51,
+      47,
       34,
       11,
       5
@@ -13579,6 +15640,15 @@
      "nk_dist": 64,
      "nk_course": 64,
      "nk_recent": [
+      58,
+      58,
+      60,
+      41,
+      44
+     ],
+     "nk_recent5": [
+      58,
+      58,
       60,
       41,
       44
@@ -13617,6 +15687,15 @@
      "nk_dist": 62,
      "nk_course": 62,
      "nk_recent": [
+      76,
+      65,
+      36,
+      55,
+      62
+     ],
+     "nk_recent5": [
+      76,
+      65,
       36,
       55,
       62
@@ -13655,6 +15734,15 @@
      "nk_dist": 39,
      "nk_course": 39,
      "nk_recent": [
+      53,
+      52,
+      58,
+      71,
+      39
+     ],
+     "nk_recent5": [
+      53,
+      52,
       58,
       71,
       39
@@ -13693,6 +15781,15 @@
      "nk_dist": 79,
      "nk_course": 60,
      "nk_recent": [
+      38,
+      40,
+      40,
+      23,
+      31
+     ],
+     "nk_recent5": [
+      38,
+      40,
       40,
       23,
       31
@@ -13728,6 +15825,15 @@
      "nk_dist": 92,
      "nk_course": 33,
      "nk_recent": [
+      63,
+      67,
+      54,
+      64,
+      33
+     ],
+     "nk_recent5": [
+      63,
+      67,
       54,
       64,
       33
@@ -13763,6 +15869,15 @@
      "nk_dist": 75,
      "nk_course": 63,
      "nk_recent": [
+      38,
+      51,
+      28,
+      52,
+      42
+     ],
+     "nk_recent5": [
+      38,
+      51,
       28,
       52,
       42
@@ -13800,6 +15915,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      36,
+      51,
+      30,
+      34,
+      47
+     ],
+     "nk_recent5": [
+      36,
+      51,
       30,
       34,
       47
@@ -13837,6 +15961,15 @@
      "nk_dist": 63,
      "nk_course": 63,
      "nk_recent": [
+      8,
+      28,
+      63,
+      43,
+      34
+     ],
+     "nk_recent5": [
+      8,
+      28,
       63,
       43,
       34
@@ -14125,6 +16258,15 @@
      "nk_dist": 70,
      "nk_course": 76,
      "nk_recent": [
+      61,
+      54,
+      76,
+      46,
+      50
+     ],
+     "nk_recent5": [
+      61,
+      54,
       76,
       46,
       50
@@ -14160,6 +16302,15 @@
      "nk_dist": 66,
      "nk_course": 79,
      "nk_recent": [
+      68,
+      64,
+      76,
+      67,
+      48
+     ],
+     "nk_recent5": [
+      68,
+      64,
       76,
       67,
       48
@@ -14198,6 +16349,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      70,
+      79,
+      86,
+      91,
+      53
+     ],
+     "nk_recent5": [
+      70,
+      79,
       86,
       91,
       53
@@ -14238,6 +16398,15 @@
      "nk_dist": 66,
      "nk_course": 79,
      "nk_recent": [
+      64,
+      49,
+      65,
+      50,
+      54
+     ],
+     "nk_recent5": [
+      64,
+      49,
       65,
       50,
       54
@@ -14273,6 +16442,15 @@
      "nk_dist": 65,
      "nk_course": 72,
      "nk_recent": [
+      59,
+      56,
+      72,
+      69,
+      65
+     ],
+     "nk_recent5": [
+      59,
+      56,
       72,
       69,
       65
@@ -14311,6 +16489,15 @@
      "nk_dist": 80,
      "nk_course": 80,
      "nk_recent": [
+      52,
+      54,
+      80,
+      66,
+      56
+     ],
+     "nk_recent5": [
+      52,
+      54,
       80,
       66,
       56
@@ -14351,6 +16538,15 @@
      "nk_dist": 39,
      "nk_course": null,
      "nk_recent": [
+      29,
+      39,
+      46,
+      49,
+      57
+     ],
+     "nk_recent5": [
+      29,
+      39,
       46,
       49,
       57
@@ -14389,6 +16585,15 @@
      "nk_dist": 71,
      "nk_course": 71,
      "nk_recent": [
+      70,
+      71,
+      61,
+      69,
+      49
+     ],
+     "nk_recent5": [
+      70,
+      71,
       61,
       69,
       49
@@ -14428,6 +16633,15 @@
      "nk_dist": 63,
      "nk_course": 13,
      "nk_recent": [
+      30,
+      31,
+      49,
+      -10,
+      13
+     ],
+     "nk_recent5": [
+      30,
+      31,
       49,
       -10,
       13
@@ -14463,6 +16677,15 @@
      "nk_dist": 72,
      "nk_course": 72,
      "nk_recent": [
+      65,
+      72,
+      53,
+      41,
+      46
+     ],
+     "nk_recent5": [
+      65,
+      72,
       53,
       41,
       46
@@ -14500,6 +16723,15 @@
      "nk_dist": 73,
      "nk_course": 76,
      "nk_recent": [
+      55,
+      73,
+      30,
+      40,
+      72
+     ],
+     "nk_recent5": [
+      55,
+      73,
       30,
       40,
       72
@@ -14540,6 +16772,15 @@
      "nk_dist": 48,
      "nk_course": 57,
      "nk_recent": [
+      33,
+      36,
+      1,
+      15,
+      28
+     ],
+     "nk_recent5": [
+      33,
+      36,
       1,
       15,
       28
@@ -14839,6 +17080,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      78,
+      68,
+      74,
+      87,
+      91
+     ],
+     "nk_recent5": [
+      78,
+      68,
       74,
       87,
       91
@@ -14879,6 +17129,15 @@
      "nk_dist": 70,
      "nk_course": 60,
      "nk_recent": [
+      52,
+      49,
+      60,
+      37,
+      32
+     ],
+     "nk_recent5": [
+      52,
+      49,
       60,
       37,
       32
@@ -14914,6 +17173,15 @@
      "nk_dist": null,
      "nk_course": null,
      "nk_recent": [
+      97,
+      97,
+      106,
+      88,
+      84
+     ],
+     "nk_recent5": [
+      97,
+      97,
       106,
       88,
       84
@@ -14953,6 +17221,15 @@
      "nk_dist": null,
      "nk_course": 87,
      "nk_recent": [
+      80,
+      69,
+      87,
+      79,
+      46
+     ],
+     "nk_recent5": [
+      80,
+      69,
       87,
       79,
       46
@@ -14992,6 +17269,15 @@
      "nk_dist": 68,
      "nk_course": 77,
      "nk_recent": [
+      71,
+      49,
+      61,
+      61,
+      79
+     ],
+     "nk_recent5": [
+      71,
+      49,
       61,
       61,
       79
@@ -15031,6 +17317,15 @@
      "nk_dist": 93,
      "nk_course": 75,
      "nk_recent": [
+      49,
+      57,
+      62,
+      75,
+      66
+     ],
+     "nk_recent5": [
+      49,
+      57,
       62,
       75,
       66
@@ -15066,6 +17361,15 @@
      "nk_dist": 92,
      "nk_course": 77,
      "nk_recent": [
+      60,
+      83,
+      54,
+      62,
+      87
+     ],
+     "nk_recent5": [
+      60,
+      83,
       54,
       62,
       87
@@ -15104,6 +17408,15 @@
      "nk_dist": 76,
      "nk_course": 75,
      "nk_recent": [
+      75,
+      71,
+      75,
+      76,
+      67
+     ],
+     "nk_recent5": [
+      75,
+      71,
       75,
       76,
       67
@@ -15144,6 +17457,15 @@
      "nk_dist": 69,
      "nk_course": 86,
      "nk_recent": [
+      66,
+      42,
+      58,
+      71,
+      69
+     ],
+     "nk_recent5": [
+      66,
+      42,
       58,
       71,
       69
@@ -15446,6 +17768,15 @@
      "nk_dist": 50,
      "nk_course": 50,
      "nk_recent": [
+      18,
+      50,
+      38,
+      47,
+      20
+     ],
+     "nk_recent5": [
+      18,
+      50,
       38,
       47,
       20
@@ -15481,6 +17812,15 @@
      "nk_dist": 57,
      "nk_course": 57,
      "nk_recent": [
+      55,
+      55,
+      45,
+      48,
+      57
+     ],
+     "nk_recent5": [
+      55,
+      55,
       45,
       48,
       57
@@ -15521,6 +17861,15 @@
      "nk_dist": 62,
      "nk_course": 67,
      "nk_recent": [
+      37,
+      53,
+      42,
+      49,
+      48
+     ],
+     "nk_recent5": [
+      37,
+      53,
       42,
       49,
       48
@@ -15556,6 +17905,15 @@
      "nk_dist": null,
      "nk_course": 25,
      "nk_recent": [
+      19,
+      20,
+      5,
+      20,
+      25
+     ],
+     "nk_recent5": [
+      19,
+      20,
       5,
       20,
       25
@@ -15591,6 +17949,15 @@
      "nk_dist": 57,
      "nk_course": 64,
      "nk_recent": [
+      56,
+      64,
+      34,
+      57,
+      57
+     ],
+     "nk_recent5": [
+      56,
+      64,
       34,
       57,
       57
@@ -15630,6 +17997,15 @@
      "nk_dist": 55,
      "nk_course": 71,
      "nk_recent": [
+      51,
+      54,
+      38,
+      55,
+      45
+     ],
+     "nk_recent5": [
+      51,
+      54,
       38,
       55,
       45
@@ -15667,6 +18043,15 @@
      "nk_dist": null,
      "nk_course": 65,
      "nk_recent": [
+      33,
+      41,
+      0,
+      40,
+      9
+     ],
+     "nk_recent5": [
+      33,
+      41,
       0,
       40,
       9
@@ -15702,6 +18087,15 @@
      "nk_dist": null,
      "nk_course": 60,
      "nk_recent": [
+      54,
+      55,
+      53,
+      42,
+      46
+     ],
+     "nk_recent5": [
+      54,
+      55,
       53,
       42,
       46
@@ -15742,6 +18136,15 @@
      "nk_dist": null,
      "nk_course": 62,
      "nk_recent": [
+      34,
+      52,
+      36,
+      46,
+      46
+     ],
+     "nk_recent5": [
+      34,
+      52,
       36,
       46,
       46
@@ -15781,6 +18184,15 @@
      "nk_dist": 63,
      "nk_course": 66,
      "nk_recent": [
+      30,
+      53,
+      40,
+      57,
+      55
+     ],
+     "nk_recent5": [
+      30,
+      53,
       40,
       57,
       55
@@ -15818,6 +18230,15 @@
      "nk_dist": null,
      "nk_course": 55,
      "nk_recent": [
+      48,
+      54,
+      66,
+      62,
+      42
+     ],
+     "nk_recent5": [
+      48,
+      54,
       66,
       62,
       42
@@ -15856,6 +18277,15 @@
      "nk_dist": null,
      "nk_course": 90,
      "nk_recent": [
+      69,
+      55,
+      55,
+      36,
+      44
+     ],
+     "nk_recent5": [
+      69,
+      55,
       55,
       36,
       44
@@ -16160,6 +18590,15 @@
      "nk_dist": null,
      "nk_course": 54,
      "nk_recent": [
+      2,
+      null,
+      31,
+      20,
+      54
+     ],
+     "nk_recent5": [
+      2,
+      null,
       31,
       20,
       54
@@ -16197,6 +18636,15 @@
      "nk_dist": null,
      "nk_course": 55,
      "nk_recent": [
+      47,
+      -14,
+      5,
+      -21,
+      55
+     ],
+     "nk_recent5": [
+      47,
+      -14,
       5,
       -21,
       55
@@ -16234,6 +18682,15 @@
      "nk_dist": null,
      "nk_course": 16,
      "nk_recent": [
+      -32,
+      -17,
+      0,
+      13,
+      -14
+     ],
+     "nk_recent5": [
+      -32,
+      -17,
       0,
       13,
       -14
@@ -16269,6 +18726,15 @@
      "nk_dist": null,
      "nk_course": 40,
      "nk_recent": [
+      -3,
+      40,
+      40,
+      31,
+      34
+     ],
+     "nk_recent5": [
+      -3,
+      40,
       40,
       31,
       34
@@ -16307,6 +18773,15 @@
      "nk_dist": null,
      "nk_course": 35,
      "nk_recent": [
+      34,
+      80,
+      72,
+      35,
+      28
+     ],
+     "nk_recent5": [
+      34,
+      80,
       72,
       35,
       28
@@ -16346,6 +18821,15 @@
      "nk_dist": null,
      "nk_course": 47,
      "nk_recent": [
+      null,
+      81,
+      59,
+      47,
+      47
+     ],
+     "nk_recent5": [
+      null,
+      81,
       59,
       47,
       47
@@ -16384,6 +18868,15 @@
      "nk_dist": null,
      "nk_course": 37,
      "nk_recent": [
+      3,
+      21,
+      -7,
+      -3,
+      37
+     ],
+     "nk_recent5": [
+      3,
+      21,
       -7,
       -3,
       37
@@ -16422,6 +18915,15 @@
      "nk_dist": null,
      "nk_course": 52,
      "nk_recent": [
+      54,
+      54,
+      23,
+      52,
+      42
+     ],
+     "nk_recent5": [
+      54,
+      54,
       23,
       52,
       42
@@ -16461,6 +18963,15 @@
      "nk_dist": null,
      "nk_course": 43,
      "nk_recent": [
+      1,
+      31,
+      33,
+      42,
+      43
+     ],
+     "nk_recent5": [
+      1,
+      31,
       33,
       42,
       43
@@ -16496,6 +19007,15 @@
      "nk_dist": 9,
      "nk_course": 9,
      "nk_recent": [
+      45,
+      31,
+      27,
+      9,
+      -2
+     ],
+     "nk_recent5": [
+      45,
+      31,
       27,
       9,
       -2
@@ -16782,6 +19302,15 @@
      "nk_dist": 30,
      "nk_course": 24,
      "nk_recent": [
+      -3,
+      11,
+      18,
+      -39,
+      -16
+     ],
+     "nk_recent5": [
+      -3,
+      11,
       18,
       -39,
       -16
@@ -16817,6 +19346,15 @@
      "nk_dist": 21,
      "nk_course": 23,
      "nk_recent": [
+      21,
+      -18,
+      -14,
+      23,
+      13
+     ],
+     "nk_recent5": [
+      21,
+      -18,
       -14,
       23,
       13
@@ -16854,6 +19392,15 @@
      "nk_dist": 38,
      "nk_course": 38,
      "nk_recent": [
+      10,
+      18,
+      38,
+      31,
+      35
+     ],
+     "nk_recent5": [
+      10,
+      18,
       38,
       31,
       35
@@ -16893,6 +19440,15 @@
      "nk_dist": 47,
      "nk_course": 47,
      "nk_recent": [
+      null,
+      40,
+      26,
+      42,
+      47
+     ],
+     "nk_recent5": [
+      null,
+      40,
       26,
       42,
       47
@@ -16932,6 +19488,15 @@
      "nk_dist": 11,
      "nk_course": 18,
      "nk_recent": [
+      -12,
+      8,
+      5,
+      8,
+      -1
+     ],
+     "nk_recent5": [
+      -12,
+      8,
       5,
       8,
       -1
@@ -16969,6 +19534,15 @@
      "nk_dist": 25,
      "nk_course": 22,
      "nk_recent": [
+      -2,
+      12,
+      null,
+      10,
+      -18
+     ],
+     "nk_recent5": [
+      -2,
+      12,
       null,
       10,
       -18
@@ -17006,6 +19580,15 @@
      "nk_dist": 42,
      "nk_course": 42,
      "nk_recent": [
+      43,
+      29,
+      42,
+      26,
+      11
+     ],
+     "nk_recent5": [
+      43,
+      29,
       42,
       26,
       11
@@ -17043,6 +19626,15 @@
      "nk_dist": 42,
      "nk_course": 42,
      "nk_recent": [
+      -23,
+      8,
+      3,
+      42,
+      16
+     ],
+     "nk_recent5": [
+      -23,
+      8,
       3,
       42,
       16
@@ -17081,6 +19673,15 @@
      "nk_dist": 42,
      "nk_course": 42,
      "nk_recent": [
+      6,
+      -15,
+      5,
+      13,
+      12
+     ],
+     "nk_recent5": [
+      6,
+      -15,
       5,
       13,
       12
@@ -17118,6 +19719,15 @@
      "nk_dist": 52,
      "nk_course": 46,
      "nk_recent": [
+      17,
+      8,
+      -18,
+      33,
+      16
+     ],
+     "nk_recent5": [
+      17,
+      8,
       -18,
       33,
       16
@@ -17153,6 +19763,15 @@
      "nk_dist": 49,
      "nk_course": 49,
      "nk_recent": [
+      -18,
+      -1,
+      10,
+      26,
+      12
+     ],
+     "nk_recent5": [
+      -18,
+      -1,
       10,
       26,
       12
@@ -17190,6 +19809,15 @@
      "nk_dist": 56,
      "nk_course": 56,
      "nk_recent": [
+      -32,
+      -2,
+      -9,
+      23,
+      8
+     ],
+     "nk_recent5": [
+      -32,
+      -2,
       -9,
       23,
       8
@@ -17476,6 +20104,15 @@
      "nk_dist": 29,
      "nk_course": 23,
      "nk_recent": [
+      18,
+      23,
+      15,
+      20,
+      20
+     ],
+     "nk_recent5": [
+      18,
+      23,
       15,
       20,
       20
@@ -17515,6 +20152,15 @@
      "nk_dist": 39,
      "nk_course": 37,
      "nk_recent": [
+      -2,
+      -90,
+      22,
+      37,
+      16
+     ],
+     "nk_recent5": [
+      -2,
+      -90,
       22,
       37,
       16
@@ -17553,6 +20199,15 @@
      "nk_dist": 46,
      "nk_course": 46,
      "nk_recent": [
+      23,
+      16,
+      3,
+      -28,
+      11
+     ],
+     "nk_recent5": [
+      23,
+      16,
       3,
       -28,
       11
@@ -17588,6 +20243,15 @@
      "nk_dist": 53,
      "nk_course": 53,
      "nk_recent": [
+      55,
+      41,
+      31,
+      53,
+      45
+     ],
+     "nk_recent5": [
+      55,
+      41,
       31,
       53,
       45
@@ -17626,6 +20290,15 @@
      "nk_dist": 11,
      "nk_course": 13,
      "nk_recent": [
+      -28,
+      -21,
+      -2,
+      11,
+      13
+     ],
+     "nk_recent5": [
+      -28,
+      -21,
       -2,
       11,
       13
@@ -17661,6 +20334,15 @@
      "nk_dist": 23,
      "nk_course": null,
      "nk_recent": [
+      26,
+      27,
+      -15,
+      19,
+      32
+     ],
+     "nk_recent5": [
+      26,
+      27,
       -15,
       19,
       32
@@ -17698,6 +20380,15 @@
      "nk_dist": 54,
      "nk_course": 54,
      "nk_recent": [
+      null,
+      33,
+      11,
+      7,
+      13
+     ],
+     "nk_recent5": [
+      null,
+      33,
       11,
       7,
       13
@@ -17735,6 +20426,15 @@
      "nk_dist": 21,
      "nk_course": 29,
      "nk_recent": [
+      -22,
+      1,
+      29,
+      1,
+      9
+     ],
+     "nk_recent5": [
+      -22,
+      1,
       29,
       1,
       9
@@ -17770,6 +20470,15 @@
      "nk_dist": 61,
      "nk_course": 29,
      "nk_recent": [
+      -13,
+      5,
+      22,
+      12,
+      9
+     ],
+     "nk_recent5": [
+      -13,
+      5,
       22,
       12,
       9
@@ -17807,6 +20516,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      14,
+      37,
+      42,
+      42,
+      44
+     ],
+     "nk_recent5": [
+      14,
+      37,
       42,
       42,
       44
@@ -18097,6 +20815,15 @@
      "nk_dist": 10,
      "nk_course": 25,
      "nk_recent": [
+      6,
+      9,
+      14,
+      17,
+      25
+     ],
+     "nk_recent5": [
+      6,
+      9,
       14,
       17,
       25
@@ -18134,6 +20861,15 @@
      "nk_dist": -6,
      "nk_course": 30,
      "nk_recent": [
+      -14,
+      4,
+      22,
+      -6,
+      26
+     ],
+     "nk_recent5": [
+      -14,
+      4,
       22,
       -6,
       26
@@ -18169,6 +20905,15 @@
      "nk_dist": 29,
      "nk_course": 30,
      "nk_recent": [
+      15,
+      14,
+      29,
+      18,
+      27
+     ],
+     "nk_recent5": [
+      15,
+      14,
       29,
       18,
       27
@@ -18207,6 +20952,15 @@
      "nk_dist": null,
      "nk_course": 55,
      "nk_recent": [
+      54,
+      13,
+      48,
+      55,
+      34
+     ],
+     "nk_recent5": [
+      54,
+      13,
       48,
       55,
       34
@@ -18246,6 +21000,15 @@
      "nk_dist": 18,
      "nk_course": 48,
      "nk_recent": [
+      28,
+      11,
+      14,
+      18,
+      13
+     ],
+     "nk_recent5": [
+      28,
+      11,
       14,
       18,
       13
@@ -18284,6 +21047,15 @@
      "nk_dist": 27,
      "nk_course": 27,
      "nk_recent": [
+      11,
+      -11,
+      null,
+      17,
+      18
+     ],
+     "nk_recent5": [
+      11,
+      -11,
       null,
       17,
       18
@@ -18319,6 +21091,15 @@
      "nk_dist": 12,
      "nk_course": 48,
      "nk_recent": [
+      -6,
+      3,
+      30,
+      3,
+      9
+     ],
+     "nk_recent5": [
+      -6,
+      3,
       30,
       3,
       9
@@ -18354,6 +21135,15 @@
      "nk_dist": null,
      "nk_course": 47,
      "nk_recent": [
+      null,
+      16,
+      47,
+      13,
+      23
+     ],
+     "nk_recent5": [
+      null,
+      16,
       47,
       13,
       23
@@ -18392,6 +21182,15 @@
      "nk_dist": null,
      "nk_course": 28,
      "nk_recent": [
+      76,
+      92,
+      56,
+      28,
+      25
+     ],
+     "nk_recent5": [
+      76,
+      92,
       56,
       28,
       25
@@ -18431,6 +21230,15 @@
      "nk_dist": 22,
      "nk_course": 22,
      "nk_recent": [
+      10,
+      9,
+      7,
+      22,
+      17
+     ],
+     "nk_recent5": [
+      10,
+      9,
       7,
       22,
       17
@@ -18719,6 +21527,15 @@
      "nk_dist": 72,
      "nk_course": 72,
      "nk_recent": [
+      -18,
+      51,
+      69,
+      72,
+      68
+     ],
+     "nk_recent5": [
+      -18,
+      51,
       69,
       72,
       68
@@ -18757,6 +21574,15 @@
      "nk_dist": 93,
      "nk_course": 26,
      "nk_recent": [
+      20,
+      3,
+      4,
+      13,
+      26
+     ],
+     "nk_recent5": [
+      20,
+      3,
       4,
       13,
       26
@@ -18792,6 +21618,15 @@
      "nk_dist": 75,
      "nk_course": 75,
      "nk_recent": [
+      63,
+      37,
+      67,
+      64,
+      75
+     ],
+     "nk_recent5": [
+      63,
+      37,
       67,
       64,
       75
@@ -18831,6 +21666,15 @@
      "nk_dist": 94,
      "nk_course": null,
      "nk_recent": [
+      88,
+      74,
+      65,
+      80,
+      51
+     ],
+     "nk_recent5": [
+      88,
+      74,
       65,
       80,
       51
@@ -18869,6 +21713,15 @@
      "nk_dist": 65,
      "nk_course": 65,
      "nk_recent": [
+      65,
+      45,
+      44,
+      58,
+      58
+     ],
+     "nk_recent5": [
+      65,
+      45,
       44,
       58,
       58
@@ -18906,6 +21759,15 @@
      "nk_dist": 68,
      "nk_course": 69,
      "nk_recent": [
+      32,
+      11,
+      38,
+      62,
+      57
+     ],
+     "nk_recent5": [
+      32,
+      11,
       38,
       62,
       57
@@ -18941,6 +21803,15 @@
      "nk_dist": 77,
      "nk_course": 77,
      "nk_recent": [
+      19,
+      51,
+      42,
+      65,
+      60
+     ],
+     "nk_recent5": [
+      19,
+      51,
       42,
       65,
       60
@@ -18980,6 +21851,15 @@
      "nk_dist": 77,
      "nk_course": null,
      "nk_recent": [
+      79,
+      88,
+      71,
+      74,
+      50
+     ],
+     "nk_recent5": [
+      79,
+      88,
       71,
       74,
       50
@@ -19018,6 +21898,15 @@
      "nk_dist": 67,
      "nk_course": 67,
      "nk_recent": [
+      35,
+      67,
+      59,
+      64,
+      62
+     ],
+     "nk_recent5": [
+      35,
+      67,
       59,
       64,
       62
@@ -19055,6 +21944,15 @@
      "nk_dist": 93,
      "nk_course": 79,
      "nk_recent": [
+      52,
+      13,
+      57,
+      62,
+      68
+     ],
+     "nk_recent5": [
+      52,
+      13,
       57,
       62,
       68
@@ -19341,6 +22239,15 @@
      "nk_dist": 38,
      "nk_course": 38,
      "nk_recent": [
+      75,
+      -16,
+      38,
+      36,
+      37
+     ],
+     "nk_recent5": [
+      75,
+      -16,
       38,
       36,
       37
@@ -19380,6 +22287,15 @@
      "nk_dist": 51,
      "nk_course": 51,
      "nk_recent": [
+      -12,
+      9,
+      31,
+      18,
+      28
+     ],
+     "nk_recent5": [
+      -12,
+      9,
       31,
       18,
       28
@@ -19417,6 +22333,15 @@
      "nk_dist": 27,
      "nk_course": 27,
      "nk_recent": [
+      -14,
+      21,
+      18,
+      16,
+      20
+     ],
+     "nk_recent5": [
+      -14,
+      21,
       18,
       16,
       20
@@ -19454,6 +22379,15 @@
      "nk_dist": 46,
      "nk_course": 46,
      "nk_recent": [
+      23,
+      46,
+      44,
+      35,
+      29
+     ],
+     "nk_recent5": [
+      23,
+      46,
       44,
       35,
       29
@@ -19493,6 +22427,15 @@
      "nk_dist": 51,
      "nk_course": 34,
      "nk_recent": [
+      26,
+      21,
+      28,
+      34,
+      31
+     ],
+     "nk_recent5": [
+      26,
+      21,
       28,
       34,
       31
@@ -19531,6 +22474,15 @@
      "nk_dist": 43,
      "nk_course": 43,
      "nk_recent": [
+      -7,
+      88,
+      91,
+      87,
+      43
+     ],
+     "nk_recent5": [
+      -7,
+      88,
       91,
       87,
       43
@@ -19569,6 +22521,15 @@
      "nk_dist": 35,
      "nk_course": 26,
      "nk_recent": [
+      26,
+      -4,
+      null,
+      20,
+      24
+     ],
+     "nk_recent5": [
+      26,
+      -4,
       null,
       20,
       24
@@ -19604,6 +22565,15 @@
      "nk_dist": 51,
      "nk_course": 51,
      "nk_recent": [
+      -7,
+      32,
+      28,
+      23,
+      34
+     ],
+     "nk_recent5": [
+      -7,
+      32,
       28,
       23,
       34
@@ -19642,6 +22612,15 @@
      "nk_dist": 18,
      "nk_course": 18,
      "nk_recent": [
+      4,
+      null,
+      15,
+      null,
+      -15
+     ],
+     "nk_recent5": [
+      4,
+      null,
       15,
       null,
       -15
@@ -19677,6 +22656,15 @@
      "nk_dist": 28,
      "nk_course": 28,
      "nk_recent": [
+      -15,
+      6,
+      18,
+      12,
+      13
+     ],
+     "nk_recent5": [
+      -15,
+      6,
       18,
       12,
       13
@@ -19963,6 +22951,15 @@
      "nk_dist": 52,
      "nk_course": 52,
      "nk_recent": [
+      7,
+      13,
+      9,
+      13,
+      21
+     ],
+     "nk_recent5": [
+      7,
+      13,
       9,
       13,
       21
@@ -20000,6 +22997,15 @@
      "nk_dist": 21,
      "nk_course": 36,
      "nk_recent": [
+      61,
+      82,
+      21,
+      32,
+      36
+     ],
+     "nk_recent5": [
+      61,
+      82,
       21,
       32,
       36
@@ -20038,6 +23044,15 @@
      "nk_dist": 30,
      "nk_course": 30,
      "nk_recent": [
+      -11,
+      20,
+      25,
+      11,
+      19
+     ],
+     "nk_recent5": [
+      -11,
+      20,
       25,
       11,
       19
@@ -20075,6 +23090,15 @@
      "nk_dist": 71,
      "nk_course": 53,
      "nk_recent": [
+      27,
+      21,
+      14,
+      53,
+      50
+     ],
+     "nk_recent5": [
+      27,
+      21,
       14,
       53,
       50
@@ -20114,6 +23138,15 @@
      "nk_dist": 51,
      "nk_course": 51,
      "nk_recent": [
+      15,
+      7,
+      32,
+      21,
+      23
+     ],
+     "nk_recent5": [
+      15,
+      7,
       32,
       21,
       23
@@ -20151,6 +23184,15 @@
      "nk_dist": 39,
      "nk_course": 39,
      "nk_recent": [
+      7,
+      17,
+      29,
+      25,
+      20
+     ],
+     "nk_recent5": [
+      7,
+      17,
       29,
       25,
       20
@@ -20189,6 +23231,15 @@
      "nk_dist": null,
      "nk_course": 34,
      "nk_recent": [
+      60,
+      80,
+      76,
+      66,
+      34
+     ],
+     "nk_recent5": [
+      60,
+      80,
       76,
       66,
       34
@@ -20227,6 +23278,15 @@
      "nk_dist": 39,
      "nk_course": 39,
      "nk_recent": [
+      21,
+      -12,
+      14,
+      34,
+      25
+     ],
+     "nk_recent5": [
+      21,
+      -12,
       14,
       34,
       25
@@ -20262,6 +23322,15 @@
      "nk_dist": 50,
      "nk_course": 36,
      "nk_recent": [
+      -1,
+      12,
+      -35,
+      14,
+      11
+     ],
+     "nk_recent5": [
+      -1,
+      12,
       -35,
       14,
       11
@@ -20297,6 +23366,15 @@
      "nk_dist": 44,
      "nk_course": 47,
      "nk_recent": [
+      43,
+      65,
+      62,
+      44,
+      47
+     ],
+     "nk_recent5": [
+      43,
+      65,
       62,
       44,
       47
@@ -20586,6 +23664,15 @@
      "nk_dist": 30,
      "nk_course": 39,
      "nk_recent": [
+      -6,
+      21,
+      39,
+      30,
+      25
+     ],
+     "nk_recent5": [
+      -6,
+      21,
       39,
       30,
       25
@@ -20621,6 +23708,15 @@
      "nk_dist": 72,
      "nk_course": 72,
      "nk_recent": [
+      42,
+      61,
+      50,
+      72,
+      37
+     ],
+     "nk_recent5": [
+      42,
+      61,
       50,
       72,
       37
@@ -20660,6 +23756,15 @@
      "nk_dist": 73,
      "nk_course": 36,
      "nk_recent": [
+      9,
+      33,
+      24,
+      36,
+      30
+     ],
+     "nk_recent5": [
+      9,
+      33,
       24,
       36,
       30
@@ -20697,6 +23802,15 @@
      "nk_dist": 42,
      "nk_course": 48,
      "nk_recent": [
+      34,
+      40,
+      42,
+      41,
+      48
+     ],
+     "nk_recent5": [
+      34,
+      40,
       42,
       41,
       48
@@ -20735,6 +23849,15 @@
      "nk_dist": 45,
      "nk_course": 45,
      "nk_recent": [
+      4,
+      31,
+      45,
+      45,
+      21
+     ],
+     "nk_recent5": [
+      4,
+      31,
       45,
       45,
       21
@@ -20773,6 +23896,15 @@
      "nk_dist": 40,
      "nk_course": 40,
      "nk_recent": [
+      12,
+      19,
+      8,
+      null,
+      40
+     ],
+     "nk_recent5": [
+      12,
+      19,
       8,
       null,
       40
@@ -20808,6 +23940,15 @@
      "nk_dist": 64,
      "nk_course": 64,
      "nk_recent": [
+      22,
+      46,
+      64,
+      39,
+      43
+     ],
+     "nk_recent5": [
+      22,
+      46,
       64,
       39,
       43
@@ -20847,6 +23988,15 @@
      "nk_dist": 43,
      "nk_course": 43,
      "nk_recent": [
+      21,
+      1,
+      28,
+      43,
+      41
+     ],
+     "nk_recent5": [
+      21,
+      1,
       28,
       43,
       41
@@ -20885,6 +24035,15 @@
      "nk_dist": 59,
      "nk_course": 59,
      "nk_recent": [
+      25,
+      20,
+      20,
+      24,
+      14
+     ],
+     "nk_recent5": [
+      25,
+      20,
       20,
       24,
       14
@@ -20922,6 +24081,15 @@
      "nk_dist": 48,
      "nk_course": 46,
      "nk_recent": [
+      null,
+      20,
+      42,
+      30,
+      27
+     ],
+     "nk_recent5": [
+      null,
+      20,
       42,
       30,
       27
@@ -20957,6 +24125,15 @@
      "nk_dist": 50,
      "nk_course": 46,
      "nk_recent": [
+      17,
+      -2,
+      30,
+      41,
+      6
+     ],
+     "nk_recent5": [
+      17,
+      -2,
       30,
       41,
       6
@@ -20992,6 +24169,15 @@
      "nk_dist": 34,
      "nk_course": 34,
      "nk_recent": [
+      21,
+      7,
+      20,
+      30,
+      28
+     ],
+     "nk_recent5": [
+      21,
+      7,
       20,
       30,
       28
@@ -21278,6 +24464,15 @@
      "nk_dist": 18,
      "nk_course": 25,
      "nk_recent": [
+      -3,
+      20,
+      24,
+      16,
+      7
+     ],
+     "nk_recent5": [
+      -3,
+      20,
       24,
       16,
       7
@@ -21313,6 +24508,15 @@
      "nk_dist": 22,
      "nk_course": 34,
      "nk_recent": [
+      -15,
+      29,
+      34,
+      22,
+      26
+     ],
+     "nk_recent5": [
+      -15,
+      29,
       34,
       22,
       26
@@ -21348,6 +24552,15 @@
      "nk_dist": 38,
      "nk_course": 38,
      "nk_recent": [
+      null,
+      14,
+      38,
+      20,
+      11
+     ],
+     "nk_recent5": [
+      null,
+      14,
       38,
       20,
       11
@@ -21385,6 +24598,15 @@
      "nk_dist": 30,
      "nk_course": 34,
      "nk_recent": [
+      -8,
+      29,
+      30,
+      34,
+      18
+     ],
+     "nk_recent5": [
+      -8,
+      29,
       30,
       34,
       18
@@ -21423,6 +24645,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      2,
+      7,
+      20,
+      29,
+      24
+     ],
+     "nk_recent5": [
+      2,
+      7,
       20,
       29,
       24
@@ -21461,6 +24692,15 @@
      "nk_dist": 61,
      "nk_course": 61,
      "nk_recent": [
+      35,
+      27,
+      30,
+      61,
+      45
+     ],
+     "nk_recent5": [
+      35,
+      27,
       30,
       61,
       45
@@ -21500,6 +24740,15 @@
      "nk_dist": 20,
      "nk_course": 70,
      "nk_recent": [
+      24,
+      19,
+      11,
+      34,
+      8
+     ],
+     "nk_recent5": [
+      24,
+      19,
       11,
       34,
       8
@@ -21535,6 +24784,15 @@
      "nk_dist": null,
      "nk_course": 61,
      "nk_recent": [
+      40,
+      24,
+      25,
+      51,
+      61
+     ],
+     "nk_recent5": [
+      40,
+      24,
       25,
       51,
       61
@@ -21574,6 +24832,15 @@
      "nk_dist": 29,
      "nk_course": 46,
      "nk_recent": [
+      2,
+      null,
+      46,
+      40,
+      29
+     ],
+     "nk_recent5": [
+      2,
+      null,
       46,
       40,
       29
@@ -21612,6 +24879,15 @@
      "nk_dist": 27,
      "nk_course": 35,
      "nk_recent": [
+      23,
+      15,
+      14,
+      27,
+      null
+     ],
+     "nk_recent5": [
+      23,
+      15,
       14,
       27,
       null
@@ -21900,6 +25176,15 @@
      "nk_dist": 60,
      "nk_course": 68,
      "nk_recent": [
+      60,
+      34,
+      68,
+      42,
+      28
+     ],
+     "nk_recent5": [
+      60,
+      34,
       68,
       42,
       28
@@ -21938,6 +25223,15 @@
      "nk_dist": 53,
      "nk_course": 69,
      "nk_recent": [
+      42,
+      48,
+      56,
+      44,
+      50
+     ],
+     "nk_recent5": [
+      42,
+      48,
       56,
       44,
       50
@@ -21977,6 +25271,15 @@
      "nk_dist": 54,
      "nk_course": 70,
      "nk_recent": [
+      50,
+      54,
+      42,
+      44,
+      52
+     ],
+     "nk_recent5": [
+      50,
+      54,
       42,
       44,
       52
@@ -22015,6 +25318,15 @@
      "nk_dist": 25,
      "nk_course": 58,
      "nk_recent": [
+      54,
+      28,
+      58,
+      49,
+      47
+     ],
+     "nk_recent5": [
+      54,
+      28,
       58,
       49,
       47
@@ -22054,6 +25366,15 @@
      "nk_dist": 47,
      "nk_course": 67,
      "nk_recent": [
+      45,
+      47,
+      56,
+      31,
+      47
+     ],
+     "nk_recent5": [
+      45,
+      47,
       56,
       31,
       47
@@ -22089,6 +25410,15 @@
      "nk_dist": 53,
      "nk_course": 67,
      "nk_recent": [
+      26,
+      47,
+      53,
+      21,
+      42
+     ],
+     "nk_recent5": [
+      26,
+      47,
       53,
       21,
       42
@@ -22124,6 +25454,15 @@
      "nk_dist": 55,
      "nk_course": 72,
      "nk_recent": [
+      35,
+      54,
+      50,
+      38,
+      55
+     ],
+     "nk_recent5": [
+      35,
+      54,
       50,
       38,
       55
@@ -22162,6 +25501,15 @@
      "nk_dist": null,
      "nk_course": 41,
      "nk_recent": [
+      9,
+      29,
+      38,
+      34,
+      27
+     ],
+     "nk_recent5": [
+      9,
+      29,
       38,
       34,
       27
@@ -22199,6 +25547,15 @@
      "nk_dist": 55,
      "nk_course": 65,
      "nk_recent": [
+      52,
+      48,
+      42,
+      55,
+      47
+     ],
+     "nk_recent5": [
+      52,
+      48,
       42,
       55,
       47
@@ -22487,6 +25844,15 @@
      "nk_dist": 80,
      "nk_course": 80,
      "nk_recent": [
+      54,
+      46,
+      72,
+      70,
+      80
+     ],
+     "nk_recent5": [
+      54,
+      46,
       72,
       70,
       80
@@ -22522,6 +25888,15 @@
      "nk_dist": 96,
      "nk_course": null,
      "nk_recent": [
+      85,
+      94,
+      81,
+      89,
+      91
+     ],
+     "nk_recent5": [
+      85,
+      94,
       81,
       89,
       91
@@ -22560,6 +25935,15 @@
      "nk_dist": 98,
      "nk_course": 98,
      "nk_recent": [
+      53,
+      89,
+      43,
+      77,
+      98
+     ],
+     "nk_recent5": [
+      53,
+      89,
       43,
       77,
       98
@@ -22598,6 +25982,15 @@
      "nk_dist": 80,
      "nk_course": 80,
      "nk_recent": [
+      47,
+      70,
+      52,
+      75,
+      80
+     ],
+     "nk_recent5": [
+      47,
+      70,
       52,
       75,
       80
@@ -22633,6 +26026,15 @@
      "nk_dist": 101,
      "nk_course": null,
      "nk_recent": [
+      89,
+      68,
+      88,
+      89,
+      null
+     ],
+     "nk_recent5": [
+      89,
+      68,
       88,
       89,
       null
@@ -22670,6 +26072,15 @@
      "nk_dist": 83,
      "nk_course": 83,
      "nk_recent": [
+      63,
+      52,
+      78,
+      57,
+      73
+     ],
+     "nk_recent5": [
+      63,
+      52,
       78,
       57,
       73
@@ -22705,6 +26116,15 @@
      "nk_dist": 90,
      "nk_course": null,
      "nk_recent": [
+      45,
+      75,
+      94,
+      76,
+      85
+     ],
+     "nk_recent5": [
+      45,
+      75,
       94,
       76,
       85
@@ -22744,6 +26164,15 @@
      "nk_dist": 86,
      "nk_course": 86,
      "nk_recent": [
+      74,
+      38,
+      63,
+      81,
+      69
+     ],
+     "nk_recent5": [
+      74,
+      38,
       63,
       81,
       69
@@ -22779,6 +26208,15 @@
      "nk_dist": 95,
      "nk_course": 90,
      "nk_recent": [
+      104,
+      87,
+      90,
+      60,
+      85
+     ],
+     "nk_recent5": [
+      104,
+      87,
       90,
       60,
       85
@@ -22818,6 +26256,15 @@
      "nk_dist": 114,
      "nk_course": null,
      "nk_recent": [
+      100,
+      101,
+      83,
+      93,
+      35
+     ],
+     "nk_recent5": [
+      100,
+      101,
       83,
       93,
       35
@@ -22853,6 +26300,15 @@
      "nk_dist": 96,
      "nk_course": 96,
      "nk_recent": [
+      68,
+      66,
+      64,
+      58,
+      64
+     ],
+     "nk_recent5": [
+      68,
+      66,
       64,
       58,
       64
@@ -22891,6 +26347,15 @@
      "nk_dist": 86,
      "nk_course": 86,
      "nk_recent": [
+      60,
+      71,
+      62,
+      61,
+      48
+     ],
+     "nk_recent5": [
+      60,
+      71,
       62,
       61,
       48
@@ -23179,6 +26644,15 @@
      "nk_dist": 44,
      "nk_course": 44,
      "nk_recent": [
+      -24,
+      -2,
+      6,
+      27,
+      12
+     ],
+     "nk_recent5": [
+      -24,
+      -2,
       6,
       27,
       12
@@ -23216,6 +26690,15 @@
      "nk_dist": 36,
      "nk_course": 36,
      "nk_recent": [
+      5,
+      24,
+      25,
+      25,
+      20
+     ],
+     "nk_recent5": [
+      5,
+      24,
       25,
       25,
       20
@@ -23255,6 +26738,15 @@
      "nk_dist": 73,
      "nk_course": 73,
      "nk_recent": [
+      -26,
+      -5,
+      15,
+      24,
+      -4
+     ],
+     "nk_recent5": [
+      -26,
+      -5,
       15,
       24,
       -4
@@ -23292,6 +26784,15 @@
      "nk_dist": 29,
      "nk_course": 29,
      "nk_recent": [
+      -28,
+      -17,
+      17,
+      19,
+      14
+     ],
+     "nk_recent5": [
+      -28,
+      -17,
       17,
       19,
       14
@@ -23329,6 +26830,15 @@
      "nk_dist": 36,
      "nk_course": 36,
      "nk_recent": [
+      -32,
+      -11,
+      4,
+      14,
+      -1
+     ],
+     "nk_recent5": [
+      -32,
+      -11,
       4,
       14,
       -1
@@ -23366,6 +26876,15 @@
      "nk_dist": 44,
      "nk_course": 25,
      "nk_recent": [
+      -1,
+      8,
+      16,
+      17,
+      2
+     ],
+     "nk_recent5": [
+      -1,
+      8,
       16,
       17,
       2
@@ -23405,6 +26924,15 @@
      "nk_dist": 30,
      "nk_course": 13,
      "nk_recent": [
+      -65,
+      13,
+      -2,
+      -4,
+      -6
+     ],
+     "nk_recent5": [
+      -65,
+      13,
       -2,
       -4,
       -6
@@ -23440,6 +26968,15 @@
      "nk_dist": 28,
      "nk_course": 28,
      "nk_recent": [
+      -24,
+      -12,
+      10,
+      3,
+      -6
+     ],
+     "nk_recent5": [
+      -24,
+      -12,
       10,
       3,
       -6
@@ -23477,6 +27014,15 @@
      "nk_dist": 17,
      "nk_course": 17,
      "nk_recent": [
+      -49,
+      10,
+      15,
+      -20,
+      8
+     ],
+     "nk_recent5": [
+      -49,
+      10,
       15,
       -20,
       8
@@ -23512,6 +27058,15 @@
      "nk_dist": 30,
      "nk_course": 30,
      "nk_recent": [
+      -16,
+      21,
+      23,
+      21,
+      26
+     ],
+     "nk_recent5": [
+      -16,
+      21,
       23,
       21,
       26
