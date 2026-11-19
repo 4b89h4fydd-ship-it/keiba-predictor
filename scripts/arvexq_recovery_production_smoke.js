@@ -39,13 +39,20 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await page.goto(base+'/race?date='+day+'&race_id='+encodeURIComponent(r.id)+'&recovery='+Date.now(),{waitUntil:'domcontentloaded',timeout:45000});
     // Public roster readiness is independent of any retired pre-off opinions.
     const roster=cards.find(c=>c.id===r.id)||r;
-    await page.waitForFunction(count=>document.querySelectorAll('.racecard-row').length===count,roster.horses.length,{timeout:20000});
-    assert.equal(await page.locator('.racecard-row').count(),roster.horses.length,'complete official roster '+r.id);
-    // .rc-horse-name includes the optional new ◎【単】/◎【軸】 role suffix.
-    // Compare the horse-name element alone, not its explanatory mark label.
-    const names=await page.locator('.rc-horse-title').allTextContents();
+    // v349: the roster body is the integrated entry table; the retired
+    // .racecard-row list survives only in the error-fallback panel.
+    await page.waitForFunction(count=>document.querySelectorAll('.arv-entry-table tbody tr').length===count,roster.horses.length,{timeout:20000});
+    assert.equal(await page.locator('.arv-entry-table tbody tr').count(),roster.horses.length,'complete official roster '+r.id);
+    // Entry-table name buttons carry the plain horse name alone; compare
+    // those, not any mark or role label.
+    const names=(await page.locator('.arv-entry-table .nk-odds-name').allTextContents()).map(x=>x.trim());
     roster.horses.forEach(h=>assert.ok(names.includes(h.name),'runner identity missing '+r.id+' '+h.name));
-    await page.waitForFunction(()=>document.querySelectorAll('.diagnosis-merged-row').length===document.querySelectorAll('.racecard-row').length,null,{timeout:20000});
+    // v363: the analysis panel is tag-switched; the saved diagnosis lives
+    // behind the diagnosis tag of the pace (analysis) panel.
+    await page.locator('[data-panel="pace"]').click();
+    await page.waitForSelector('.da-tags');
+    await page.locator('[data-analysis-tag="diagnosis"]').click();
+    await page.waitForFunction(count=>document.querySelectorAll('.diagnosis-merged-row').length===count,roster.horses.length,{timeout:20000});
     const diagnosis=page.locator('details.card').filter({has:page.locator('.diagnosis-merged-list')});
     // The live result refresh can replace this details node while Playwright
     // waits for a stable click; open via DOM on the currently matched node.
@@ -57,16 +64,42 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       return d.querySelectorAll('.diagnosis-merged-row').length===count;
     },roster.horses.length,{timeout:30000});
     // Only factual acquired odds or an explicit missing status can appear.
-    let odds=await page.locator('.rc-odds .odd').allTextContents();
-    odds.forEach(x=>assert.ok(/^(?:\d+\.\d|未取得|取消)$/.test(x),'invalid odds text '+x));
+    // v345: win odds live in the dedicated odds panel table (popularity
+    // order); the win cell is a plain one-decimal number, the explicit
+    // missing marker, or the scratched marker. When no runner carries
+    // odds the table is replaced by an explicit not-acquired message.
+    await page.locator('[data-panel="odds"]').click();
+    await page.waitForSelector('#section-odds');
+    const winOddsCells=()=>page.locator('.arv-odds-table tbody tr td:nth-child(5)');
+    // Ask the independent source first: whether this race's odds are
+    // published decides which settled screen state is acceptable below.
+    // (Historical NAR odds, for example, are served on demand from the
+    // official archive even when the saved snapshot stored none.)
+    const published=await oddsPublished(r.id);
+    // The odds panel renders asynchronously: the race detail renders
+    // first (a table from carried odds, or the explicit not-acquired
+    // message) and independently fetched live odds then merge and
+    // re-render it. Sampling the DOM once, mid-merge, can catch the
+    // section between generations — no table node at the count sample,
+    // yet the text already carrying acquired values by the text sample —
+    // and misread a correct screen as a missing-state violation. Wait
+    // for a settled state (a table, or the explicit message) before
+    // asserting anything about it.
+    await page.waitForFunction(()=>
+      document.querySelector('.arv-odds-table')||
+      /まだ取得できていません/.test(document.querySelector('#section-odds')?.textContent||''),
+      null,{timeout:20000});
+    let odds=(await winOddsCells().allTextContents()).map(x=>x.trim());
+    if(await page.locator('.arv-odds-table').count()===0)
+      assert.match(await page.locator('#section-odds').innerText(),/まだ取得できていません/,'odds missing state must be explicit '+r.id);
+    odds.forEach(x=>assert.ok(/^(?:\d+\.\d|―|取消)$/.test(x),'invalid odds text '+x));
     // Before the official source publishes (e.g. NAR overnight) no acquired odds can exist;
     // the roster must then show only the explicit missing status. Once the source has
     // odds the screen must show some acquired value.
-    const published=await oddsPublished(r.id);
     if(published===true){
       // Published odds update independently of the base racecard request.
       // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
-      const numericOddsVisible=()=>Array.from(document.querySelectorAll('.rc-odds .odd'))
+      const numericOddsVisible=()=>Array.from(document.querySelectorAll('.arv-odds-table tbody tr td:nth-child(5)'))
         .some(el=>/^\d/.test(el.textContent.trim()));
       try {
         await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
@@ -84,17 +117,27 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
         await page.waitForFunction(numericOddsVisible,null,{timeout:15000});
         console.log('ODDS_MANUAL_RECOVERY_PASS '+r.id);
       }
-      odds=await page.locator('.rc-odds .odd').allTextContents();
+      odds=(await winOddsCells().allTextContents()).map(x=>x.trim());
       assert.ok(odds.some(x=>/^\d/.test(x)),'no acquired odds for '+r.id);
     }
     else if(published===false)console.log('ODDS_NOT_YET_PUBLISHED '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
     else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id+' shown='+JSON.stringify(Array.from(new Set(odds))));
-    const red=await page.evaluate(()=>Array.from(document.querySelectorAll('.rc-odds .odd.single')).map(x=>({value:Number(x.textContent),color:getComputedStyle(x).color})));
-    red.forEach(x=>{assert.ok(x.value>0&&x.value<10);const c=x.color.match(/\d+/g).map(Number);assert.ok(c[0]>c[1]*1.25&&c[0]>c[2]*1.15,'single digit odds must be red')});
-    const roles=await page.locator('.racecard-row').evaluateAll(rows=>rows.map(row=>({
-      mark:row.querySelector('.rc-ai-mark')?.getAttribute('data-ai-mark')||'',
+    // The retired racecard rows coloured single-digit odds red via
+    // .odd.single; the current odds/entry tables render win odds as
+    // plain text with no single-digit class, so that styling check has
+    // no DOM counterpart and is not carried over. The one-decimal
+    // format assertions above remain the odds-text guarantee.
+    // Marks and honmei roles live only in the entry table; return to it.
+    await page.locator('[data-panel="entry"]').click();
+    await page.waitForSelector('.arv-entry-table');
+    const roles=await page.locator('.arv-entry-table tbody tr').evaluateAll(rows=>rows.map(row=>({
+      mark:row.querySelector('.arv-marks-mark')?.getAttribute('data-ai-mark')||'',
       horseNumber:Number(row.querySelector('[data-horse-open]')?.getAttribute('data-horse-open')||0),
-      win:!!row.querySelector('.arv-role-win'),axis:!!row.querySelector('.arv-role-axis')
+      // unified-win-axis-v1 renders no separate win/axis DOM roles
+      // (.arv-role-win/.arv-role-axis exist nowhere in the current UI):
+      // the single visible honmei is both roles at once, and the
+      // contract below verifies exactly that unified invariant.
+      win:false,axis:false
     })));
     const deployedPolicy=await page.evaluate(()=>window.ARVEXQ_HONMEI_POLICY||'legacy');
     const originalHonmei=(r.preRacePrediction?.horses||[]).filter(h=>h.mark==='◎').map(h=>Number(h.horseNumber));
@@ -149,12 +192,12 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       assert.equal(firstSource?.status(),200,'independent initial source request');
     }
     await page.waitForTimeout(250);
-    const before=await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
+    const before=await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
     const response=page.waitForResponse(res=>res.url().includes('/api/live-odds/')&&res.url().includes('force=1'),{timeout:20000}).catch(()=>null);
     await page.locator('[data-action="odds-update"]').click();
     assert.equal((await response)?.status(),200,'manual source update with D1 API aborted');
     await page.waitForTimeout(300);
-    assert.deepEqual(await page.locator('.rc-ai-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
+    assert.deepEqual(await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
     await Promise.all([worker(),worker(),worker()]);
     // Archived opinions cannot reappear on a fresh device, including API outage.
@@ -163,7 +206,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       ticketPage._arvexqIntentionalApiOutage=true;
       await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
       await check(ticketPage,archived);
-      assert.equal(await ticketPage.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
+      assert.equal(await ticketPage.locator('.arv-entry-table .arv-marks-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
       // v349: the forecast (bets) subpage was merged into the entry
       // table; the ticket plan lives on the dedicated 買い目 subpage.
       await ticketPage.locator('[data-panel="tickets"]').click();
@@ -185,14 +228,20 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       if(!tracks.length){console.log('PRODUCTION_NO_SCHEDULED_CIRCUIT',circuit,day);continue;}
       await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
       for(const track of tracks){
-        await home.locator('.arv-all-panel [data-track="'+track+'"][data-circuit="'+circuit+'"]').first()
+        // v346: the home is venue tags only; the all-venues grid
+        // (.arv-all-panel) is no longer rendered on the home.
+        await home.locator('.nk-venue-tags [data-track="'+track+'"][data-circuit="'+circuit+'"]').first()
           .waitFor({state:'visible',timeout:30000});
       }
       console.log('PRODUCTION_VERIFIED_VENUE_HOME',circuit,JSON.stringify(tracks));
     }
-    // No disabled-engine tickets may become actionable through selected pages.
-    await home.locator('button[data-home-page="selected"]').click();
-    assert.equal(await home.locator('.ai-bet-box .bet-item').count(),0);
+    // No disabled-engine tickets may become actionable through home
+    // pages. The selected page itself is retired in the current home
+    // (only the favorites entry remains), and the retired .bet-item
+    // class exists nowhere; the current ticket element is
+    // .arv-three-ticket inside .ai-bet-box.
+    assert.equal(await home.locator('[data-home-page="selected"]').count(),0,'retired selected page must not be offered');
+    assert.equal(await home.locator('.ai-bet-box .arv-three-ticket').count(),0);
     await fresh.close();
     console.log('PRODUCTION_FRESH_HOME_API_OUTAGE_ALL_VENUES_PASS');
     console.log('PRODUCTION_API_OUTAGE_MANUAL_ODDS_SAVED_MARKS_PASS '+process.env.ARVEXQ_BROWSER+' date='+day+' checked='+chosen.length);

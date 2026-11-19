@@ -156,6 +156,8 @@ from rewrite.analysis.nk_materials import (  # noqa: E402
     NK_MATERIALS_VERSION, apply_nk_materials, closing_inputs_from_race,
     combo_inputs_from_race, course_inputs_from_race,
     parse_materials_payload, speed_coverage as nk_speed_coverage)
+from rewrite.analysis.bias_pace import (  # noqa: E402
+    BIAS_PACE_VERSION, compute_same_day_bias, overlay_bias_on_pace)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
@@ -665,7 +667,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v10", "date": ..., "races":
+    {"version": "nk-materials-v12", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -682,6 +684,92 @@ def _load_nk_materials(date: str) -> dict:
     except (OSError, ValueError):
         return {}
     return parse_materials_payload(payload)
+
+
+# Result statuses that read as final for the same-day bias
+# source pool: a provisional （速報） result carries partial
+# finishers (the top finishers only), which would corrupt the
+# bias pools' field sizes, so it never qualifies as a source.
+_BIAS_FINAL_STATUSES = ("finished", "確定", "結果確定")
+
+
+def _day_race_snapshot(summary: dict, detail_raw: dict) -> dict | None:
+    """One race's same-day-bias snapshot from its stored detail,
+    in the plain shape rewrite/analysis/bias_pace.py consumes:
+    {date, track, raceNo, startTime, finishers}.
+
+    Only a race whose result is FINAL (see _BIAS_FINAL_STATUSES)
+    with recorded finishers produces a snapshot; anything else
+    returns None and simply never feeds another race's bias
+    read. The finishers are carried verbatim (their
+    cornerPositions are the bias module's input)."""
+    from arvexq.ingest.full_snapshot_codec import unpack_detail
+
+    if not isinstance(detail_raw, dict):
+        return None
+    try:
+        detail = unpack_detail(detail_raw)
+    except Exception:
+        return None
+    if not isinstance(detail, dict):
+        return None
+    result = detail.get("result")
+    if not isinstance(result, dict):
+        return None
+    if result.get("status") not in _BIAS_FINAL_STATUSES:
+        return None
+    finishers = result.get("finishers")
+    if not isinstance(finishers, list) or not finishers:
+        return None
+    return {
+        "date": str(summary.get("race_date") or summary.get("date")
+                    or detail.get("date") or ""),
+        "track": summary.get("track") or detail.get("track"),
+        "raceNo": summary.get("race_no") or detail.get("raceNumber"),
+        "startTime": (summary.get("start_time")
+                      or detail.get("startTime")),
+        "finishers": finishers,
+    }
+
+
+def _bias_pace_overlay(summary: dict, old: dict, race_date: str,
+                       entry: dict, day_races: list | None,
+                       field_size: int):
+    """The same-day bias overlay for one race being published
+    (nk-materials-v12, bias-pace trial — see
+    rewrite/analysis/bias_pace.py and nk_materials.py).
+
+    The bias is computed from day_races — the snapshots of the
+    date's races this run has already fetched, in post order —
+    and the bias module itself filters to the same date / same
+    track / provably earlier races with qualifying corner
+    coverage, so a later race can never leak into an earlier
+    race's read. The overlay runs over the materials entry's
+    per-horse pace-forecast positions (the materials form the
+    bias module consumes). Returns None when the run supplied
+    no snapshots or the entry carries no pace positions — the
+    adapter then behaves exactly as v11."""
+    if not day_races or not isinstance(entry, dict):
+        return None
+    positions = {}
+    for number, horse in (entry.get("horses") or {}).items():
+        if not isinstance(horse, dict):
+            continue
+        pace = horse.get("pace")
+        if isinstance(pace, dict) and pace:
+            positions[number] = pace
+    if not positions:
+        return None
+    target = {
+        "date": race_date,
+        "track": summary.get("track") or old.get("track"),
+        "raceNo": summary.get("race_no") or old.get("raceNumber"),
+        "startTime": (summary.get("start_time")
+                      or old.get("startTime")
+                      or old.get("scheduledStartTime")),
+    }
+    bias = compute_same_day_bias(target, day_races)
+    return overlay_bias_on_pace(bias, positions, field_size)
 
 
 def _v8_extras_deadline(race_date: str,
@@ -1870,8 +1958,14 @@ def _build_mass_feature_archive(old: dict):
                       "error": f"{type(exc).__name__}: {exc}"}
 
 
-def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
-    """Return (new_detail, receipt) or (None, reason) when not publishable."""
+def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
+                         day_races: list | None = None):
+    """Return (new_detail, receipt) or (None, reason) when not publishable.
+
+    day_races: the date's same-day-bias snapshots (see
+    _day_race_snapshot) the caller has accumulated so far this
+    run, in post order — the bias-pace term's source pool.
+    None (the default) leaves the term exactly as v11."""
     from arvexq.ingest.full_snapshot_codec import unpack_detail
     from arvexq.prediction.unified_product import race_family
 
@@ -2158,15 +2252,27 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
     # materials entry (or an entry that cannot produce a term)
     # keeps the plain v9b vector byte-identical.
     nk_info: dict = {"applied": False}
+    bias_overlay = None
     if used_v9b and race_date >= NK_MATERIALS_CUTOVER_DATE:
         nk_entry = _load_nk_materials(race_date).get(race.race_id)
         if nk_entry is not None:
+            # Same-day bias pace (nk-materials-v12): read the
+            # day's bias from the card's already-final races
+            # (the caller's snapshots) and overlay it on this
+            # race's pace forecast, for the adapter to apply
+            # as the bias_pace term. Computed here, at publish
+            # time, because the source pool is whatever has
+            # finished by now — never precomputed.
+            bias_overlay = _bias_pace_overlay(
+                summary, old, race_date, nk_entry, day_races,
+                len(race.runners))
             forecast, nk_info = apply_nk_materials(
                 forecast, nk_entry, extras_by_number,
                 segment=segment,
                 course_inputs=course_inputs_from_race(race),
                 combo_inputs=combo_inputs_from_race(race),
-                closing_inputs=closing_inputs_from_race(race))
+                closing_inputs=closing_inputs_from_race(race),
+                bias_overlay=bias_overlay)
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -2430,6 +2536,42 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             "schemaVersion"]
         new["massFeatureSnapshotVersion"] = mass_archive_status[
             "snapshotVersion"]
+    if isinstance(bias_overlay, dict):
+        # Same-day bias display data (nk-materials-v12): the
+        # overlay's race summary (tendency tags, the most
+        # advantaged / disadvantaged runners) and the per-horse
+        # adjustments ride as a sibling block on the detail —
+        # the unified forecast and its receipt are untouched,
+        # and no Web-app change is needed for the data to be
+        # carried. When the bias was actually measurable, the
+        # read also lands in aiTrackBias (the bias-provenance
+        # input) and the detail's biasProvenance.estimated is
+        # rebuilt from it, so the display surface shows real
+        # values instead of the standing nulls; an
+        # unmeasurable read leaves the provenance exactly as
+        # it was (null = unmeasured, never an estimate).
+        new["biasPace"] = {
+            "version": BIAS_PACE_VERSION,
+            "available": bool(bias_overlay.get("available")),
+            "bias": bias_overlay.get("bias"),
+            "summary": bias_overlay.get("summary"),
+            "adjustments": {
+                str(number): (cell or {}).get("adjustment")
+                for number, cell in
+                (bias_overlay.get("horses") or {}).items()},
+        }
+        if bias_overlay.get("available"):
+            from arvexq.prediction.bias_provenance import provenance
+
+            bias_block = bias_overlay.get("bias") or {}
+            new["aiTrackBias"] = {
+                "frontBack": bias_block.get("frontBack"),
+                "insideOutside": bias_block.get("insideOutside"),
+                "sampleRaces": bias_block.get("sampleRaces"),
+                "strength": bias_block.get("strength"),
+                "source": BIAS_PACE_VERSION,
+            }
+            new["biasProvenance"] = provenance(new)
     by_no = {m["horseNumber"]: m["mark"] for m in marks}
     horses = []
     for h in old.get("horses") or []:
@@ -2581,6 +2723,25 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # rewrite/analysis/nk_materials.py).
             meta["rewritePublish"]["nkMaterials"][
                 "coursePersonsTrial"] = nk_info["coursePersonsTrial"]
+        if nk_info.get("biasPaceTrial"):
+            # Bias-pace trial (2026-11-19, nk-materials-v12;
+            # UNVALIDATED): the stamp records that this
+            # publication's bias_pace term — the same-day bias
+            # read overlaid on the pace forecast — ran at the
+            # trial weight cap, so the trial's forward record
+            # stays separable (see rewrite/analysis/
+            # nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"][
+                "biasPaceTrial"] = nk_info["biasPaceTrial"]
+        if isinstance(nk_info.get("biasPace"), dict):
+            # The day's bias read itself (frontBack /
+            # insideOutside / sampleRaces / strength), stamped
+            # whenever an overlay was computed — including the
+            # reads that shifted nothing (no qualifying source
+            # race yet), so the day's evidence growth stays
+            # auditable from the stamp alone.
+            meta["rewritePublish"]["nkMaterials"]["biasPace"] = (
+                nk_info["biasPace"])
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
@@ -2972,6 +3133,14 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     # Banei exclusion); _supply_report needs it to tell a quiet day
     # apart from a total outage where nothing was served at all.
     targets = 0
+    # Same-day-bias source pool (nk-materials-v12): snapshots of
+    # the date's races as this run fetches them, in post order.
+    # A race's snapshot joins the pool when its detail is fetched
+    # — before its own build — so every later build reads the
+    # bias from exactly the races whose final results were on
+    # record at that point of the run, and the bias module's
+    # own ordering filter keeps any later race out regardless.
+    day_snapshots: list[dict] = []
     for summary in summaries:
         race_id = summary.get("race_id") or summary.get("id")
         if not race_id or is_banei(summary.get("track"), race_id):
@@ -2984,8 +3153,12 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
         try:
             resp = _get("/api/race/" + urllib.parse.quote(str(race_id), safe=""))
             old_raw = resp.get("detail") or {}
+            snapshot = _day_race_snapshot(summary, old_raw)
+            if snapshot is not None:
+                day_snapshots.append(snapshot)
             now = datetime.now(JST)
-            new, receipt = build_publish_detail(old_raw, summary, now)
+            new, receipt = build_publish_detail(
+                old_raw, summary, now, day_races=day_snapshots)
             if new is None:
                 if isinstance(receipt, str) and receipt.startswith("frozen:"):
                     counts["frozen"] += 1

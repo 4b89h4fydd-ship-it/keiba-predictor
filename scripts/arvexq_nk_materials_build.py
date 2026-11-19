@@ -115,9 +115,9 @@ normaliser between the collection side and that file; its inputs:
                       read as a second source, with this file
                       winning on a duplicate.
 
-Output format (version "nk-materials-v10"):
+Output format (version "nk-materials-v12"):
 
-  {"version": "nk-materials-v10", "date": ..., "source": ...,
+  {"version": "nk-materials-v12", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "zeroCoverage": [<names of the expected fields whose count
@@ -1016,7 +1016,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     zero_coverage = [field for field, count in coverage.items()
                      if field != "horses" and count == 0]
     return {
-        "version": "nk-materials-v10",
+        "version": "nk-materials-v12",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
