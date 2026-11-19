@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script>try{if(window.navigator.standalone===true)document.documentElement.classList.add("pwa-standalone")}catch(e){}</script>
-<meta name="theme-color" content="#ffffff">
-<meta name="arvexq-paper-theme" content="20261117-ffffff">
+<meta name="theme-color" content="#f6f2e8">
+<meta name="arvexq-paper-theme" content="20261014-f6f2e8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ARVEXQ">
@@ -21,162 +21,11 @@
 /* The complete ◎【単】/◎【軸】 labels belong beside the horse name, not in the 25-30px mark cell. */
 .rc-racecard-v339 .rc-v336-mark{overflow:hidden!important}
 .rc-racecard-v339 .rc-v336-mark .rc-mark-box>small{display:none!important}
-/* v345 netkeiba-form UI (user decision 2026-11-16): venue tags on the
-   home, flags slot on venue race rows, five main tabs, the check
-   column on the racecard, and the win-odds list panel. Kept in this
-   inline block so the frozen stylesheet modules stay untouched. */
-/* v347 (user report 2026-11-17): the v345/v346 fixed-width tags
-   (flex:0 0 auto + min-width:118px in an overflow-x:auto row) pushed
-   the last venue off the right edge of phone screens. The row now
-   wraps and each tag flexes to the available width, so every venue
-   stays on screen at the same 24px/14px type sizes; no horizontal
-   scrolling. */
-.nk-venue-tags{display:flex;flex-wrap:wrap;gap:8px;padding:12px 2px 6px;min-width:0}
-.nk-venue-tag{flex:1 1 100px;min-width:0;max-width:220px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 8px;border:1px solid #d9d9d9;border-radius:14px;background:#ffffff;color:#26303a;font-family:inherit;cursor:pointer;text-align:left}
-.nk-venue-tag b{font-size:24px;font-weight:900;line-height:1.15}
-.nk-venue-tag small{font-size:14px;font-weight:700;color:#47525c}
-.nk-venue-tag.is-live{border-color:#c0392b;background:#fdf0ec}
-.nk-venue-tag.is-live small{color:#b02a20}
-.nk-venue-tag.is-next{border-color:#006636;background:#eef7f0}
-.nk-venue-tag.is-done{opacity:.55}
-.smart-race-flags{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
-.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:15px!important;padding:0 4px!important}
-@media(max-width:430px){.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:13.5px!important}}
-.racecard-row.rc-racecard-v339 .rc-v336-mark.rc-v345-checkcol{flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;padding:0!important}
-.racecard-row.rc-racecard-v339 .rc-v345-checkcol .rc-mark-box{flex:1 1 auto!important;height:auto!important}
-.rc-v345-owncheck{appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:1px;width:100%;margin:0;padding:3px 0 4px;border:0;border-top:1px dashed #9aa39c;background:transparent;color:#55606a;font-family:inherit;cursor:pointer;line-height:1}
-.rc-v345-owncheck .rc-v345-ownbox{font-size:13px;line-height:1}
-.rc-v345-owncheck small{font-size:8.5px;font-weight:700;line-height:1}
-.rc-v345-owncheck.is-on{color:#14532d;background:#e8f5ec}
-.rc-v345-owncheck:active{filter:brightness(1.25)}
-.nk-odds-list{display:flex;flex-direction:column}
-.nk-odds-row{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #e4e7ec}
-.nk-odds-row.scratched{opacity:.55}
-.nk-odds-name{flex:1 1 auto;min-width:0;appearance:none;-webkit-appearance:none;border:0;background:transparent;color:inherit;font-family:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nk-odds-value{flex:0 0 auto;text-align:right}
-/* v346 netkeiba-form light theme (user decision 2026-11-16, supersedes
-   the #554 dark band/chip pins): light backgrounds with dark text
-   everywhere; dark green (#006636) headers/tabs with white text;
-   堅/普/荒 and 荒れ度 keep text labels, colour is a secondary cue.
-   Every pair below is WCAG AA for its text size. These overrides pin
-   each element — including nested badges and the reasons line — so no
-   inherited colour can leak in. Do not soften these values. */
-.arv-upset-band{background:#ffffff!important;border-color:#9aa39c!important;color:#1c1c1c!important}
-.arv-upset-band.upset-high{background:#fdeceb!important;border-color:#c0392b!important;color:#5f130d!important}
-.arv-upset-band.upset-low{background:#e8f5ec!important;border-color:#1e7a46!important;color:#0e3520!important}
-.arv-upset-band .arv-upset-band-title{color:inherit!important;font-size:14px!important}
-.arv-upset-band .arv-upset-band-level,.arv-upset-band .arv-upset-band-score{color:inherit!important}
-.arv-upset-band .arv-upset-band-level b,.arv-upset-band .arv-upset-band-score b{color:#1c1c1c!important;font-size:18px!important}
-.arv-upset-band.upset-high .arv-upset-band-level b,.arv-upset-band.upset-high .arv-upset-band-score b{color:#b02a20!important}
-.arv-upset-band.upset-low .arv-upset-band-level b,.arv-upset-band.upset-low .arv-upset-band-score b{color:#14532d!important}
-.arv-upset-band .arv-upset-band-reasons{color:#3c4540!important;font-size:12.5px!important;opacity:1!important}
-.arv-upset-band.upset-high .arv-upset-band-reasons{color:#6e1f18!important}
-.arv-upset-band.upset-low .arv-upset-band-reasons{color:#1e4630!important}
-.arv-upset-band .arv-risk-badge{background:#ffffff!important;border-color:#9aa39c!important;color:#1c1c1c!important}
-.arv-upset-chip{background:#ffffff!important;border-color:#9aa39c!important;color:#1c1c1c!important}
-.arv-upset-chip.upset-high{background:#fdeceb!important;border-color:#c0392b!important;color:#5f130d!important}
-.arv-upset-chip.upset-low{background:#e8f5ec!important;border-color:#1e7a46!important;color:#0e3520!important}
-.arv-upset-chip small,.arv-upset-chip i{opacity:1!important}
-/* Risk label badges （堅/普/荒）: light tints, dark text, coloured border. */
-.arv-risk-badge{background:#f1f1ee!important;border-color:#8a8f88!important;color:#2e2e2e!important}
-.arv-risk-badge.risk-solid{background:#e8f5ec!important;border-color:#1e7a46!important;color:#14532d!important}
-.arv-risk-badge.risk-normal{background:#f1f1ee!important;border-color:#8a8f88!important;color:#2e2e2e!important}
-.arv-risk-badge.risk-rough{background:#fdeceb!important;border-color:#c0392b!important;color:#8f1d17!important}
-/* Main tabs: white panel, dark text, selected tab dark green / white. */
-.race-nav-v230.nk-tabs{background:#ffffff!important;border-color:#c3ccc3!important}
-.race-nav-v230.nk-tabs .race-nav-v230-btn{background:#f2f4f2!important;border-color:#c3ccc3!important;color:#1c1c1c!important;box-shadow:none!important}
-.race-nav-v230.nk-tabs .race-nav-v230-btn.active{background:#006636!important;border-color:#004d27!important;color:#ffffff!important;box-shadow:inset 0 -4px 0 #f2c230!important}
-/* Top bar: netkeiba-style dark green header, white text. */
-.smart-topbar{background:#005826!important;border-bottom:2px solid #003d1a!important;color:#ffffff!important}
-.smart-brand small{color:#bfe3cc!important}
-.smart-head-copy small{color:#cfe8d8!important}
-/* Central/local switch on light ground; active side dark green. */
-.smart-circuit-switch{background:#eef1ee!important;border-color:#006636!important}
-.smart-circuit-switch button{background:transparent!important;color:#3c4540!important}
-.smart-circuit-switch button+button{border-left-color:#c3ccc3!important}
-.smart-circuit-switch button.active{background:#006636!important;color:#ffffff!important;box-shadow:none!important}
-/* Horse detail panel and buy-list guide: white cards, dark text. */
-.detail-panel-v239 .detail-simple-section-v239{background:#ffffff!important;border-color:#cfd6cf!important}
-.detail-panel-v239 .detail-simple-section-v239 h3{color:#172033!important}
-.bet-mark-guide{background:#fbfaf6!important;border-color:#cfd6cf!important}
-.bet-mark-guide>b{color:#172033!important}
-.bet-mark-grid>span{color:#3c4540!important}
-.bet-mark-grid>span>i{background:#ffffff!important;border-color:#9aa39c!important;color:#172033!important}
-/* v347 (user decisions 2026-11-17): bigger upset/risk chips on the
-   venue race list and a roomier upset band in the race header, so the
-   荒れ予想 and 堅・普・荒 labels read at a glance. Colours stay the
-   v346 white-ground pairs (WCAG AA); the text labels remain the
-   primary cue, colour secondary. */
-.arv-upset-band{font-size:13.5px!important;padding:10px 12px!important;gap:8px 12px!important}
-.arv-risk-badge{font-size:12.5px!important;padding:5px 10px!important}
-.arv-upset-chip{font-size:12.5px!important;padding:5px 10px!important;gap:5px!important}
-.arv-upset-chip small{font-size:11.5px!important}
-.arv-upset-chip b{font-size:16px!important}
-.arv-upset-chip i{font-size:12.5px!important}
-.smart-race-flags .arv-risk-badge{font-size:14px!important;padding:6px 11px!important}
-.smart-race-flags .arv-upset-chip{font-size:13px!important;padding:6px 11px!important}
-.smart-race-flags .arv-upset-chip b{font-size:17px!important}
-/* Result-row horse names and mark-frame items are buttons that open
-   the horse detail page (data-horse-open); keep their plain look. */
-.result-name-btn{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-weight:700;color:inherit;cursor:pointer;padding:0;text-align:left;text-decoration:underline;text-underline-offset:3px}
-.ai-mark-list button.ai-mark-item{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;color:inherit;cursor:pointer;padding:2px 0;text-align:left;text-decoration:underline;text-underline-offset:3px}
-/* Analysis-tab rates rows （勝率・実績率, moved from the racecard). */
-.arv-analysis-rate-row{border-top:1px solid #e4e7ec;padding:9px 0}
-.arv-analysis-rate-row:first-of-type{border-top:0}
-.arv-analysis-rate-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.arv-analysis-rate-name{flex:1 1 auto;min-width:0;appearance:none;-webkit-appearance:none;border:0;background:transparent;font:inherit;font-size:16px;font-weight:800;color:inherit;cursor:pointer;padding:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-span.arv-analysis-rate-name{cursor:default}
-/* v348 (user directions 2026-11-17): slim one-row tab bar so the
-   entries start right under the header, the small odds refresh
-   button, the own-mark-only check column, and the new tables
-   (marks / odds / condition records / pedigree / data-top horses).
-   Kept in this inline block so the frozen stylesheet modules stay
-   untouched. */
-.race-nav-v230.nk-tabs .race-nav-v230-row{display:flex!important;flex-wrap:nowrap!important;gap:2px!important}
-.race-nav-v230.nk-tabs .race-nav-v230-btn{flex:1 1 0!important;min-width:0!important;height:36px!important;min-height:36px!important;padding:0 1px!important;font-size:13px!important}
-.race-nav-v230.nk-tabs .race-nav-v230-label{white-space:nowrap!important}
-@media(max-width:430px){.race-nav-v230.nk-tabs .race-nav-v230-btn{font-size:12px!important}}
-.arv-refresh-mini{font-size:12px!important;padding:4px 10px!important;margin:2px 0 6px!important}
-.rc-v348-ownonly{display:flex!important;align-items:flex-start!important;justify-content:center!important}
-.rc-v348-ownonly .rc-v345-owncheck{border-top:0!important;padding:6px 0!important}
-.hd-tabs{display:flex;gap:2px;margin:10px 0 4px;border-bottom:2px solid #006636}
-.hd-tab{flex:1 1 0;appearance:none;-webkit-appearance:none;border:0;background:#eef2ee;color:#33413a;font:inherit;font-size:13.5px;font-weight:700;padding:8px 2px;cursor:pointer;border-radius:8px 8px 0 0}
-.hd-tab.active{background:#006636;color:#ffffff}
-.da-tags{display:flex;gap:6px;margin:0 0 10px;padding:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.da-tags::-webkit-scrollbar{display:none}
-.da-tag{flex:0 0 auto;appearance:none;-webkit-appearance:none;border:1px solid #c3ccc3;background:#f2f4f2;color:#1c1c1c;font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
-.da-tag.active{background:#006636;border-color:#004d27;color:#ffffff;box-shadow:inset 0 -3px 0 #f2c230}
-.arv-cond-table,.arv-marks-table,.arv-odds-table{width:100%;border-collapse:collapse;font-size:13.5px}
-.arv-cond-table th,.arv-cond-table td,.arv-marks-table th,.arv-marks-table td,.arv-odds-table th,.arv-odds-table td{padding:6px 4px;border-bottom:1px solid #e4e7ec;text-align:right}
-.arv-cond-table th.l,.arv-cond-table td.l,.arv-marks-table th.l,.arv-marks-table td.l,.arv-odds-table th.l,.arv-odds-table td.l{text-align:left}
-.arv-cond-table tr.total td{font-weight:800;background:#f2f7f3}
-.arv-marks-mark{font-size:17px;font-weight:900;text-align:center!important}
-.arv-odds-mark{font-size:15px;font-weight:900;text-align:center!important}
-.arv-odds-chips{display:flex;gap:6px;margin:2px 0 6px}
-.arv-odds-chip{font-size:12px;font-weight:700;padding:4px 10px;border:1px solid #006636;border-radius:999px;color:#006636}
-.arv-odds-chip.active{background:#006636;color:#ffffff}
-.arv-ped-table{width:100%;border-collapse:collapse;font-size:13px}
-.arv-ped-table td{border:1px solid #d8ded8;padding:6px;vertical-align:middle}
-.arv-ped-table small{display:block;color:#5b6a61;font-size:10.5px}
-.arv-ped-table .gen1{background:#eef7f0}
-.arv-sib-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #e4e7ec}
-.arv-top-horse{border-top:1px solid #e4e7ec;padding:8px 0}
-.arv-top-horse-head{display:flex;align-items:center;gap:8px}
-.arv-top-rank{font-weight:900;color:#006636;font-size:16px}
-.arv-top-reason{font-size:12.5px;color:#3c4540;margin:2px 0 0 30px}
-.arv-course-facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-bottom:6px}
-/* v349: integrated entry table sub-lines (sex/age, weight, jockey,
-   body weight under the name; win odds / popularity under the win
-   probability) and tappable horse names inside ticket heads. */
-.arv-entry-sub{font-size:11px;font-weight:400;color:#667085;line-height:1.35;margin-top:1px}
-.arv-entry-table td{vertical-align:top}
-.arv-ticket-name{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:inherit;font:inherit;padding:0;cursor:pointer;text-align:left}
-.pace-map-node[data-horse-open],.pace-map-unknown-chip[data-horse-open]{cursor:pointer}
 </style>
 <title>ARVEXQ | RACE INTELLIGENCE</title>
-<link rel="icon" type="image/png" href="/arvexq-icon-v362-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v362.png?v=362">
-<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v362.png?v=362">
+<link rel="icon" type="image/png" href="/arvexq-icon-v363-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/arvexq-touch-v363.png?v=363">
+<link rel="apple-touch-icon-precomposed" sizes="180x180" href="/arvexq-touch-v363.png?v=363">
 
 <link rel="stylesheet" href="/sports/all-races.css?v=__ARVEXQ_SPORT_HASH__">
 <link rel="stylesheet" href="/sports/unified-home.css?v=__ARVEXQ_SPORT_HASH__">
