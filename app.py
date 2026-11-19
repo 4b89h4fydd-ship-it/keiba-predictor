@@ -4479,6 +4479,58 @@ def _nar_race_lap_times(soup)->list:
     return []
 
 
+def _nar_official_corner_positions(soup)->dict[int,list]:
+    """Per-horse corner positions from the official page's corner table.
+
+    The RaceMarkTable's per-horse コーナー通過順 cells are empty in the
+    raw HTML (the site fills them in with JavaScript), so reading only
+    that column left every finisher's cornerPositions empty even though
+    the same page carries the full passing order in its 全馬コーナー
+    通過順 section (class cornerPassTable): one row per corner, the
+    order written in the same notation as netkeiba's corner table.
+    Conversion reuses netkeiba_result._corner_order_ranks, so ties and
+    separators mean exactly what the netkeiba path takes them to mean.
+    A horse missing from one corner's order gets None at that slot (the
+    NAR公式CSV convention); a horse absent from every row is not in
+    the map, and nothing is ever estimated.
+    """
+    from arvexq.ingest.netkeiba_result import _corner_order_ranks
+    section=soup.find("section",class_="cornerPassTable")
+    rows=[]
+    if section is not None:
+        # The section is dedicated to the passing order, and its row
+        # labels vary by venue (大井 "１角", 園田 "１コーナー", 笠松
+        # "最初の直線" then "第２コーナー"…). Only corner rows count:
+        # a straight row (笠松's 最初の直線) is a passing point but not
+        # a corner, and netkeiba's table — whose semantics the stored
+        # cornerPositions follow — omits it.
+        for tr in section.find_all("tr"):
+            cells=tr.find_all(["th","td"],recursive=False)
+            if len(cells)<2:continue
+            label=unicodedata.normalize("NFKC",_clean(cells[0].get_text(" ",strip=True)))
+            if "角" not in label and "コーナー" not in label:continue
+            order=" ".join(_clean(c.get_text(" ",strip=True)) for c in cells[1:])
+            if re.search(r"\d",order):rows.append(_corner_order_ranks(order))
+    else:
+        for table in soup.find_all("table"):
+            found=[]
+            for tr in table.find_all("tr"):
+                cells=tr.find_all(["th","td"],recursive=False)
+                if len(cells)<2:continue
+                label=unicodedata.normalize("NFKC",_clean(cells[0].get_text(" ",strip=True)))
+                if not re.fullmatch(r"第?\d+\s*(角|コーナー)",label):continue
+                order=" ".join(_clean(c.get_text(" ",strip=True)) for c in cells[1:])
+                if re.search(r"\d",order):found.append(_corner_order_ranks(order))
+            if found:
+                rows=found;break
+    out:dict[int,list]={}
+    for idx,ranks in enumerate(rows):
+        for no in ranks:
+            if no not in out:out[no]=[None]*len(rows)
+            out[no][idx]=ranks[no]
+    return out
+
+
 def _nar_official_result_fast(detail:dict)->dict|None:
     """Fetch NAR official RaceMarkTable directly; includes result, body weight and corner order."""
     code=NAR_BABA_CODES.get(str(detail.get("track") or "").strip())
@@ -4631,6 +4683,17 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 })
             if finishers:break
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
+        # The per-horse corner column above is empty in the raw page
+        # (see _nar_official_corner_positions), so fill any finisher it
+        # left blank from the page's corner passing-order table. A
+        # value the column itself produced always wins.
+        if any(not f.get("cornerPositions") for f in finishers):
+            corner_map=_nar_official_corner_positions(soup)
+            if corner_map:
+                for f in finishers:
+                    if not f.get("cornerPositions"):
+                        positions=corner_map.get(int(f.get("horseNumber") or 0))
+                        if positions:f["cornerPositions"]=positions
         # Do not call a partial page final until at least the podium is visible.
         classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
         if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
