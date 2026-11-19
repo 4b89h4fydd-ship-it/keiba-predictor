@@ -272,7 +272,13 @@ from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .integrated_eval import DEFAULT_WEIGHTS, integrate
 
-NK_MATERIALS_VERSION = "nk-materials-v7"
+# nk-materials-v8 (2026-11-19): the builder widens the speed-derived
+# features' input window from the recent 3 runs to the collected 5-run
+# sequence (nk_recent5) where available. Weights are unchanged from
+# v7 — only the input window moved. Trial adoption per the user's
+# standing instruction to put all collected data into the forecast;
+# unvalidated (no historical 5-run corpus exists).
+NK_MATERIALS_VERSION = "nk-materials-v8"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
