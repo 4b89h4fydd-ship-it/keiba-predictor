@@ -10,6 +10,14 @@ from arvexq.prediction.sectional_profile import profile
 from arvexq.prediction.bias_provenance import provenance
 from arvexq.prediction.observed_evidence import attach_model_evidence
 
+# Bumped whenever the evidence computation changes, so the analyze stage
+# can tell a detail decorated by older logic apart from a current one and
+# re-analyze it once (scripts/arvexq_prefetch._analysis_current).
+# v2: past-run margins are first completed from the system's own stored
+# result records (arvexq.prediction.margin_completion), so details whose
+# evidence was attached under v1 can hold margins that are now computable.
+RESEARCH_EVIDENCE_VERSION = "arvexq-race-intelligence-v2"
+
 
 def career_coverage(horse: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
     """Compact, read-only acquisition/completeness state shared with the UI."""
@@ -67,6 +75,6 @@ def attach_evidence(detail: dict[str, Any]) -> dict[str, Any]:
             "status": "jra-observed-official-proofs" if str(detail.get("circuit") or "") in ("中央", "JRA", "central") else "nar-observed-only",
         }
         count += 1
-    detail["researchEvidenceVersion"] = "arvexq-race-intelligence-v1"
+    detail["researchEvidenceVersion"] = RESEARCH_EVIDENCE_VERSION
     detail["researchEvidenceHorses"] = count
     return detail
