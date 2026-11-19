@@ -59,22 +59,71 @@ normaliser between the collection side and that file; its inputs:
                       the 2026-11-17/18 collections are NAR days)
                       — the input exists so the values flow the
                       moment a collection saves them.
-  --odds              (optional, v6) per-horse odds snapshots
-                      in the shape {"races": {<netkeiba race_id>:
-                      {"horses": {<number>: {"publishWin": ...,
-                      "finalWin": ..., "placeLow": ...,
-                      "placeHigh": ...}}}}}; carried per horse
-                      as the "odds" block. NO forward collection
-                      produces this file yet either (2026-11-17
-                      recorded forecast odds in its status note
-                      only; 2026-11-18 collected no odds) — same
-                      armed-but-dataless status as above.
+  --odds              (optional, v6) per-horse odds snapshots.
+                      Two collected shapes are accepted (see
+                      _normalise_odds_races): the dict shape
+                      {"races": {<netkeiba race_id>: {"horses":
+                      {<number>: {"publishWin": ..., "finalWin":
+                      ..., "placeLow": ..., "placeHigh": ...}}}}}
+                      (the 2026-11-18 collection's shape, produced
+                      from the actual odds pages), and the list
+                      shape {"races": {<netkeiba race_id>:
+                      {"kind": ..., "horses": [{"no": ...,
+                      "win_odds": ..., "place_min": ...,
+                      "place_max": ...}]}}} (the 2026-11-19
+                      collection's shape). Provenance is never
+                      blurred: a "forecast" race's win line is
+                      netkeiba's published forecast odds and is
+                      carried as "forecastWin" only — it is NOT
+                      promoted to finalWin (the market's actual
+                      odds), so the odds-movement terms keep
+                      yesterday's definitions and simply stay
+                      unlit on a forecast-only file.
+  --horse-analysis    (optional, 2026-11-19) the forward
+                      collection's per-horse data-analysis
+                      judgements (horse-analysis.json:
+                      {"races": {<netkeiba race_id>: {"horses":
+                      {<number>: {"総合評価": <grade>, <section>:
+                      {"判定": <mark>, ...}}}}}}). Only the
+                      judgements are carried — the overall grade
+                      and each section's 判定, verbatim, as the
+                      horse's "horseAnalysis" block
+                      ({"overall": ..., "sections": {<section>:
+                      <mark>}}); the sections' inner tables
+                      restate the course aggregates and the
+                      horse's own past runs, which reach the
+                      file through the other inputs already.
+  --course-persons    (optional, 2026-11-19) the forward
+                      collection's course-persons.json (the
+                      course-analysis persons tables — 得意な
+                      騎手・調教師・種牡馬 — as per-entered-horse
+                      rows). Its sire rows are a FALLBACK source
+                      for pedigree.sireCourse when the race's
+                      course entry carries no full sire table
+                      (得意な種牡馬): the row is the same
+                      course's record for the horse's own sire,
+                      collected per horse, so the conversion is
+                      a reshape, never an estimate. The full
+                      table's record wins whenever both exist.
+                      The jockey / trainer rows are carried as
+                      each horse's "coursePersons" block
+                      ({"jockey": {...}, "trainer": {...}} —
+                      the person's name and course record) for
+                      the adapter's course-persons trial terms
+                      (nk-materials-v10); same-shaped rows on
+                      the course-analysis race entry itself are
+                      read as a second source, with this file
+                      winning on a duplicate.
 
-Output format (version "nk-materials-v8"):
+Output format (version "nk-materials-v10"):
 
-  {"version": "nk-materials-v8", "date": ..., "source": ...,
+  {"version": "nk-materials-v10", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
+   "zeroCoverage": [<names of the expected fields whose count
+                    is 0 — the uncollected list, on the record
+                    in the file itself and in the build log, so
+                    a zero can never pass silently>],
    "races": {<arvexq_race_id>: {
        "netkeibaRaceId": <netkeiba race_id>,
        "paceLabel": <"H"|"M"|"S"|null>,
@@ -87,7 +136,12 @@ Output format (version "nk-materials-v8"):
            "odds": {"publishWin": number|null,
                     "finalWin": number|null,
                     "placeLow": number|null,
-                    "placeHigh": number|null} | null,
+                    "placeHigh": number|null,
+                    "forecastWin": number (present only when
+                    the collection carried netkeiba's forecast
+                    win odds for the horse)} | null,
+           "horseAnalysis": {"overall": <grade str>|null,
+                    "sections": {<section>: <mark str>}} | null,
            "pace": {"start": {"rank": int, "pct": float},
                     "corner3": {...}, "corner4": {...}} | null,
            "bestTime": {<the data-analysis tab's best-time pick:
@@ -450,6 +504,221 @@ def _pace_positions(pace_entry) -> tuple:
 
 
 # ------------------------------------------------------------------
+# Odds normalisation (2026-11-19: the second collected shape)
+# ------------------------------------------------------------------
+
+def _normalise_odds_races(odds) -> dict:
+    """{netkeiba race_id: {horse number as str: odds cells}} from
+    either collected odds shape (see the module docstring).
+
+    The dict shape (2026-11-18) passes its four cells through
+    verbatim. The list shape (2026-11-19) is converted by the
+    race's own "kind" label, which is the collection's
+    provenance statement:
+
+      "actual"      the values are the market's actual odds as
+                    read from the odds page: win_odds ->
+                    finalWin, place_min / place_max -> placeLow
+                    / placeHigh (exactly the cells the dict
+                    shape carries from the same pages).
+      "forecast"    the values are netkeiba's published
+                    FORECAST odds: the win line is carried as
+                    forecastWin under its own name and the place
+                    range is not carried at all — none of it may
+                    wear the actual-odds cells' names.
+      "actual_zero" the odds page showed 0.0 for every horse
+                    (not yet published): no data, nothing carried.
+      anything else an unlabelled list is treated like
+                    "forecast" — unknown provenance is never
+                    promoted to actual odds.
+
+    A win line of 0.0 is "not published", never an odds value,
+    in every shape. Cells a race cannot supply stay absent, so
+    the odds-movement features keep their definitions and a
+    forecast-only file lights neither of them."""
+    races = (odds.get("races") if isinstance(odds, dict)
+             else None) or {}
+    out: dict = {}
+    for nk_id, entry in races.items():
+        if not isinstance(entry, dict):
+            continue
+        raw = entry.get("horses")
+        cells_by_number: dict = {}
+        if isinstance(raw, dict):
+            for key, values in raw.items():
+                if not isinstance(values, dict):
+                    continue
+                cells = {c: _num(values.get(c)) for c in ODDS_CELLS}
+                forecast = _num(values.get("forecastWin"))
+                if forecast is not None:
+                    cells["forecastWin"] = forecast
+                if any(v is not None for v in cells.values()):
+                    cells_by_number[str(key)] = cells
+        elif isinstance(raw, list):
+            kind = entry.get("kind")
+            for row in raw:
+                if not isinstance(row, dict):
+                    continue
+                number = row.get("no")
+                if not isinstance(number, int) \
+                        or isinstance(number, bool):
+                    continue
+                win = _num(row.get("win_odds"))
+                if win is not None and win <= 0:
+                    win = None  # 0.0 = not published, not odds
+                cells: dict = {}
+                if kind == "actual":
+                    if win is not None:
+                        cells["finalWin"] = win
+                    low = _num(row.get("place_min"))
+                    high = _num(row.get("place_max"))
+                    if low is not None and low > 0:
+                        cells["placeLow"] = low
+                    if high is not None and high > 0:
+                        cells["placeHigh"] = high
+                elif kind == "actual_zero":
+                    pass  # the page showed 0.0 throughout: no data
+                else:
+                    if win is not None:
+                        cells["forecastWin"] = win
+                if cells:
+                    cells_by_number[str(number)] = cells
+        if cells_by_number:
+            out[str(nk_id)] = cells_by_number
+    return out
+
+
+# ------------------------------------------------------------------
+# Horse analysis (each horse's data-analysis judgements, 2026-11-19)
+# ------------------------------------------------------------------
+
+def _horse_analysis_block(entry):
+    """{"overall": grade|None, "sections": {section: mark}} from
+    one horse's collected horse-analysis entry: the overall
+    grade (総合評価) and each section's judgement (判定),
+    verbatim. A section is any dict-valued key carrying a 判定 —
+    the section set is the page's, not a hardcoded list. The
+    sections' inner tables are not carried (see the module
+    docstring). None when the entry carries no readable
+    judgement at all."""
+    if not isinstance(entry, dict):
+        return None
+    overall = entry.get("総合評価")
+    if not isinstance(overall, str) or not overall:
+        overall = None
+    sections: dict = {}
+    for name, section in entry.items():
+        if not isinstance(section, dict):
+            continue
+        mark = section.get("判定")
+        if isinstance(mark, str) and mark:
+            sections[name] = mark
+    if overall is None and not sections:
+        return None
+    return {"overall": overall, "sections": sections}
+
+
+# ------------------------------------------------------------------
+# Course persons (sire-row fallback for sireCourse; jockey /
+# trainer rows for the course-persons terms, 2026-11-19)
+# ------------------------------------------------------------------
+
+
+def _person_record(row):
+    """{"name", "starts", "wins", "top3", "winRate"} from one
+    course-persons row — the page's counts (past-3-years window,
+    as the page states) for that person at today's course, in
+    the same counts the full persons tables carry. A row whose
+    counts cannot be read is dropped, never repaired."""
+    if not isinstance(row, dict):
+        return None
+    finishes = row.get("finishes")
+    starts = _int_cell(row.get("starts"))
+    if not isinstance(finishes, dict) \
+            or starts is None or starts <= 0:
+        return None
+    first = _int_cell(finishes.get("1st"))
+    second = _int_cell(finishes.get("2nd"))
+    third = _int_cell(finishes.get("3rd"))
+    if first is None:
+        return None
+    return {"name": row.get("name"), "starts": starts,
+            "wins": first,
+            "top3": first + (second or 0) + (third or 0),
+            "winRate": round(first / starts, 4)}
+
+
+def _persons_kind_index(course_persons, course_analysis, kind):
+    """{(netkeiba race_id, horse number as str): record} for
+    one persons kind ("jockeys" / "trainers") from the
+    course-persons collection's per-horse rows. The
+    course-analysis race entry's own same-shaped rows (a
+    collection may store them there instead) are a second
+    source; the dedicated course-persons file wins on a
+    duplicate."""
+    out: dict = {}
+    for source in (course_analysis, course_persons):
+        races = (source.get("races")
+                 if isinstance(source, dict) else None)
+        if not isinstance(races, dict):
+            # course_analysis is keyed by race id directly.
+            races = source if isinstance(source, dict) else {}
+        for nk_id, entry in races.items():
+            if not isinstance(entry, dict):
+                continue
+            for row in entry.get(kind) or []:
+                if not isinstance(row, dict):
+                    continue
+                number = row.get("no")
+                if not isinstance(number, int) \
+                        or isinstance(number, bool):
+                    continue
+                record = _person_record(row)
+                if record is not None:
+                    out[(str(nk_id), str(number))] = record
+    return out
+
+def _persons_sire_index(course_persons) -> dict:
+    """{(netkeiba race_id, horse number as str): {"sire": name,
+    "sireCourse": {starts, wins, top3, winRate}}} from the
+    course-persons collection's per-horse sire rows — each row
+    is today's course's record (past-3-years window, as the
+    page states) for that horse's own sire, in the same counts
+    the full sire table （得意な種牡馬） carries. A row whose
+    counts cannot be read is dropped, never repaired."""
+    races = (course_persons.get("races")
+             if isinstance(course_persons, dict) else None) or {}
+    out: dict = {}
+    for nk_id, entry in races.items():
+        if not isinstance(entry, dict):
+            continue
+        for row in entry.get("sires") or []:
+            if not isinstance(row, dict):
+                continue
+            number = row.get("no")
+            finishes = row.get("finishes")
+            starts = _int_cell(row.get("starts"))
+            if not isinstance(number, int) \
+                    or isinstance(number, bool):
+                continue
+            if not isinstance(finishes, dict) \
+                    or starts is None or starts <= 0:
+                continue
+            first = _int_cell(finishes.get("1st"))
+            second = _int_cell(finishes.get("2nd"))
+            third = _int_cell(finishes.get("3rd"))
+            if first is None:
+                continue
+            out[(str(nk_id), str(number))] = {
+                "sire": row.get("name"),
+                "sireCourse": {
+                    "starts": starts, "wins": first,
+                    "top3": first + (second or 0) + (third or 0),
+                    "winRate": round(first / starts, 4)}}
+    return out
+
+
+# ------------------------------------------------------------------
 # Derived-speed coverage (v6)
 # ------------------------------------------------------------------
 
@@ -498,7 +767,9 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           newspaper: dict | None = None,
           pace_forecast: dict | None = None,
           nk_judgements: dict | None = None,
-          odds: dict | None = None) -> dict:
+          odds: dict | None = None,
+          horse_analysis: dict | None = None,
+          course_persons: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -509,8 +780,15 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     judgement_races = (nk_judgements.get("races")
                        if isinstance(nk_judgements, dict)
                        else None) or {}
-    odds_races = (odds.get("races")
-                  if isinstance(odds, dict) else None) or {}
+    odds_races = _normalise_odds_races(odds)
+    analysis_races = (horse_analysis.get("races")
+                      if isinstance(horse_analysis, dict)
+                      else None) or {}
+    persons_sires = _persons_sire_index(course_persons)
+    persons_jockeys = _persons_kind_index(
+        course_persons, course_analysis, "jockeys")
+    persons_trainers = _persons_kind_index(
+        course_persons, course_analysis, "trainers")
     races: dict = {}
     for target in targets.get("targets") or []:
         nk_id = str(target.get("netkeiba_race_id") or "")
@@ -581,9 +859,11 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         # Carried verbatim (numbers only) when a collection
         # supplies them; no current collection does, so on
         # today's files every horse takes the uniform nulls
-        # below and the adapter's armed terms stay inert.
+        # below and the adapter's armed terms stay inert. The
+        # odds side reads the normalised map (either collected
+        # shape — see _normalise_odds_races).
         judged = (judgement_races.get(nk_id) or {}).get("horses") or {}
-        odds_horses = (odds_races.get(nk_id) or {}).get("horses") or {}
+        odds_horses = odds_races.get(nk_id) or {}
         for key, horse in horses.items():
             entry_j = judged.get(key)
             if isinstance(entry_j, dict):
@@ -591,7 +871,9 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 horse["nkAiScore"] = _num(entry_j.get("nkAiScore"))
             entry_o = odds_horses.get(key)
             if isinstance(entry_o, dict):
-                cells = {c: _num(entry_o.get(c)) for c in ODDS_CELLS}
+                cells = {c: entry_o.get(c) for c in ODDS_CELLS}
+                if entry_o.get("forecastWin") is not None:
+                    cells["forecastWin"] = entry_o["forecastWin"]
                 horse["odds"] = (cells if any(
                     v is not None for v in cells.values()) else None)
             # The newspaper marks join on (race, horse number)
@@ -607,11 +889,66 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 horse["press"] = (entry_p
                                   if isinstance(entry_p, dict)
                                   else None)
+        # --- 2026-11-19: each horse's data-analysis judgements
+        # Join on (race, horse number) like the pace positions:
+        # the judgements never needed the race-details input.
+        analysis_horses = (analysis_races.get(nk_id)
+                           or {}).get("horses") or {}
+        if isinstance(analysis_horses, dict):
+            for key, entry_a in analysis_horses.items():
+                block = _horse_analysis_block(entry_a)
+                if block is None:
+                    continue
+                horse = horses.setdefault(str(key), {
+                    col: None for col in SPEED_COLUMNS}
+                    | {"nk_recent": None})
+                horse["horseAnalysis"] = block
+        # --- 2026-11-19: course-persons sire rows as the
+        # sireCourse fallback. The full sire table's record
+        # (already inside pedigree, from _pedigree) wins; a
+        # persons row fills only a horse whose sireCourse is
+        # still missing. A horse with no profile at all gains a
+        # minimal pedigree block carrying the row's sire name
+        # and record (the rest stays null — not collected).
+        for key, horse in horses.items():
+            record = persons_sires.get((nk_id, key))
+            if record is None:
+                continue
+            pedigree = horse.get("pedigree")
+            if isinstance(pedigree, dict):
+                if pedigree.get("sireCourse") is not None:
+                    continue
+                pedigree = dict(pedigree)
+                pedigree["sireCourse"] = record["sireCourse"]
+                horse["pedigree"] = pedigree
+            else:
+                horse["pedigree"] = {
+                    "sire": record["sire"], "dam": None,
+                    "damSire": None,
+                    "sireCourse": record["sireCourse"],
+                    "siblings": None}
+        # --- 2026-11-19: course persons — this race's jockey /
+        # trainer and their records at today's course, carried
+        # verbatim for the adapter's course-persons trial terms.
+        # A horse with no collected row for a kind simply lacks
+        # that kind (not collected, never estimated).
+        for key, horse in horses.items():
+            block: dict = {}
+            jockey = persons_jockeys.get((nk_id, key))
+            if jockey is not None:
+                block["jockey"] = jockey
+            trainer = persons_trainers.get((nk_id, key))
+            if trainer is not None:
+                block["trainer"] = trainer
+            if block:
+                horse["coursePersons"] = block
         # Every horse carries every v2 field; a horse the detail
         # input did not cover (or a race with no detail input at
         # all) gets uniform nulls — not collected, never zero.
         for horse in horses.values():
-            for field in V2_HORSE_FIELDS + ("pace",) + V6_HORSE_FIELDS:
+            for field in V2_HORSE_FIELDS \
+                    + ("pace", "horseAnalysis", "coursePersons") \
+                    + V6_HORSE_FIELDS:
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
@@ -649,16 +986,42 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         and h["odds"].get("finalWin") is not None
         and h["odds"].get("placeLow") is not None
         and h["odds"].get("placeHigh") is not None)
+    # 2026-11-19 additions: the forecast-odds lines (carried
+    # under their own name; they light no odds-movement term)
+    # and the per-horse data-analysis judgements.
+    coverage["oddsForecast"] = sum(
+        1 for h in all_horses if isinstance(h.get("odds"), dict)
+        and h["odds"].get("forecastWin") is not None)
+    coverage["horseAnalysis"] = sum(
+        1 for h in all_horses if h.get("horseAnalysis") is not None)
+    # 2026-11-19 additions: the course persons (this race's
+    # jockey / trainer records at today's course).
+    coverage["courseJockey"] = sum(
+        1 for h in all_horses
+        if isinstance(h.get("coursePersons"), dict)
+        and h["coursePersons"].get("jockey") is not None)
+    coverage["courseTrainer"] = sum(
+        1 for h in all_horses
+        if isinstance(h.get("coursePersons"), dict)
+        and h["coursePersons"].get("trainer") is not None)
     for race in races.values():
         for key, count in _derived_coverage(
                 list(race["horses"].values())).items():
             coverage[key] = coverage.get(key, 0) + count
+    # Zero detection (2026-11-19, the user's standing
+    # instruction: collected material must ALL reach the
+    # forecast): every expected field whose count is 0 is named
+    # in the output itself, so a missing material is an
+    # on-the-record "uncollected", never a silent zero.
+    zero_coverage = [field for field, count in coverage.items()
+                     if field != "horses" and count == 0]
     return {
-        "version": "nk-materials-v8",
+        "version": "nk-materials-v10",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
         "fieldCoverage": coverage,
+        "zeroCoverage": zero_coverage,
         "races": races,
     }
 
@@ -699,6 +1062,8 @@ def main() -> int:
     parser.add_argument("--pace-forecast")
     parser.add_argument("--nk-judgements")
     parser.add_argument("--odds")
+    parser.add_argument("--horse-analysis")
+    parser.add_argument("--course-persons")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -717,7 +1082,9 @@ def main() -> int:
                     newspaper=_load(args.newspaper),
                     pace_forecast=_load(args.pace_forecast),
                     nk_judgements=_load(args.nk_judgements),
-                    odds=_load(args.odds))
+                    odds=_load(args.odds),
+                    horse_analysis=_load(args.horse_analysis),
+                    course_persons=_load(args.course_persons))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -726,6 +1093,10 @@ def main() -> int:
     coverage = payload["fieldCoverage"]
     print(f"wrote {out}: {len(payload['races'])} races, "
           f"{coverage['horses']} horses, coverage={coverage}")
+    if payload["zeroCoverage"]:
+        print("ZERO COVERAGE (expected fields with no data — "
+              "uncollected, never silently zero): "
+              + ", ".join(payload["zeroCoverage"]))
     return 0
 
 

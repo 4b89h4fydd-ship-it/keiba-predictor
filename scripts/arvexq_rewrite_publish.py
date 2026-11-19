@@ -665,7 +665,7 @@ def _load_nk_materials(date: str) -> dict:
 
     File format (written by scripts/arvexq_nk_materials_build.py
     from the forward collection's saved outputs):
-    {"version": "nk-materials-v8", "date": ..., "races":
+    {"version": "nk-materials-v10", "date": ..., "races":
     {race_id: {"netkeibaRaceId": ..., "horses": {str(number):
     {nk_best/nk_avg5/nk_dist/nk_course/nk_recent}},
     "courseAnalysis": {...}}}}. The version field is
@@ -2560,6 +2560,27 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime):
             # separable (see rewrite/analysis/nk_materials.py).
             meta["rewritePublish"]["nkMaterials"]["closingTrial"] = (
                 nk_info["closingTrial"])
+        if nk_info.get("horseAnalysisTrial"):
+            # Horse-analysis trial (2026-11-19; UNVALIDATED):
+            # the stamp records that this publication's
+            # horse-analysis term — netkeiba's per-horse
+            # data-analysis judgements (overall grade + section
+            # suitability marks) — ran at the trial weight, so
+            # the trial's forward record stays separable (see
+            # rewrite/analysis/nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"][
+                "horseAnalysisTrial"] = nk_info["horseAnalysisTrial"]
+        if nk_info.get("coursePersonsTrial"):
+            # Course-persons trial (2026-11-19, nk-materials-v10;
+            # UNVALIDATED): the stamp records that this
+            # publication's course-persons terms — this race's
+            # jockey's / trainer's records at today's course,
+            # from the course-analysis persons tables' per-horse
+            # rows — ran at the trial weights, so the trial's
+            # forward record stays separable (see
+            # rewrite/analysis/nk_materials.py).
+            meta["rewritePublish"]["nkMaterials"][
+                "coursePersonsTrial"] = nk_info["coursePersonsTrial"]
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
