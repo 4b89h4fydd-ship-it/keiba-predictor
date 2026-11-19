@@ -328,7 +328,11 @@ from .integrated_eval import DEFAULT_WEIGHTS, integrate
 # course-persons sire fallback, zero-coverage record) and the new
 # course-persons jockey/trainer trial terms. The bump re-issues
 # v9-stamped pre-race races once so the new terms reach them.
-NK_MATERIALS_VERSION = "nk-materials-v10"
+# nk-materials-v11 (2026-11-19): version bump only — weights and terms
+# are identical to v10. The bump re-issues v10-stamped pre-race races
+# once so the completed horse-analysis collection (all 395 horses,
+# was 1 in the v10 file) reaches them through the horse_analysis term.
+NK_MATERIALS_VERSION = "nk-materials-v11"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
