@@ -2166,16 +2166,78 @@ def _attach_nar_payouts(detail: dict) -> dict:
 from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_netkeiba_result_html
 
 
+def _netkeiba_result_urls(detail:dict,rid:str)->list[tuple[str,bool]]:
+    """Result-page URLs for a netkeiba race id, best layout first.
+
+    The JRA result lives on race.netkeiba.com (its smartphone layout
+    carries every field the parser reads). NAR races are NOT served
+    there — that host returns a fixed error page for NAR ids — so
+    the NAR desktop site (nar.netkeiba.com; the PC layout parses
+    with clean names and body weights) is primary and the NAR
+    smartphone page is the fallback. The circuit is judged from the
+    detail's own identity first, then from the race id's track code
+    (JRA codes are exactly the NETKEIBA_TRACK_CODES keys, 01-10;
+    NAR codes are 30 and above).
+    """
+    code=rid[4:6] if len(rid)>=6 else ""
+    nar=(str(detail.get("id") or "").startswith("nar-")
+         or str(detail.get("circuit") or "")=="地方"
+         or (bool(code) and code not in NETKEIBA_TRACK_CODES))
+    if nar:
+        return [
+            (f"https://nar.netkeiba.com/race/result.html?race_id={rid}",True),
+            (f"https://nar.sp.netkeiba.com/race/race_result.html?race_id={rid}",False),
+        ]
+    return [(f"https://race.netkeiba.com/race/result.html?race_id={rid}",False)]
+
+
 def _netkeiba_current_result(detail:dict)->dict|None:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
     if not rid:return None
-    try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
+    timeout=float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0"))
+    # One retry per URL: the site intermittently truncates responses
+    # (IncompleteRead), and a single attempt silently lost the whole
+    # second source for that race.
+    for url,desktop in _netkeiba_result_urls(detail,rid):
+        for _attempt in range(2):
+            try:html=_netkeiba_get(url,timeout,20,desktop=desktop)
+            except Exception as exc:
+                print("netkeiba result failed",rid,exc);continue
+            parsed=_parse_netkeiba_result_html(
+                html, clean=_clean, parse_time_seconds=_jra_parse_time_seconds,
+                parse_payouts=_parse_payouts,
+            )
+            if parsed:return parsed
+    return None
+
+
+from arvexq.ingest.result_dual_source import (
+    merge_result_sources as _merge_result_sources,
+    result_gaps as _result_gaps,
+)
+
+
+def _dual_source_result(detail:dict,primary:dict|None,*,skip_fields:tuple=())->dict|None:
+    """Merge the netkeiba parse into a fresh official result block.
+
+    The dual-source rule (official + netkeiba, both circuits): the
+    official block stays authoritative, netkeiba fills the fields
+    it leaves empty, and disagreements are recorded in the merged
+    block's dualSource meta instead of being silently picked over.
+    A failed netkeiba fetch leaves the official block untouched.
+    """
+    if not primary or not (primary.get("finishers") or []):return primary
+    try:nk=_netkeiba_current_result(detail)
     except Exception as exc:
-        print("netkeiba result failed",rid,exc);return None
-    return _parse_netkeiba_result_html(
-        html, clean=_clean, parse_time_seconds=_jra_parse_time_seconds,
-        parse_payouts=_parse_payouts,
-    )
+        print("dual-source netkeiba fetch failed",detail.get("id"),exc);return primary
+    if not nk:return primary
+    merged=_merge_result_sources(primary,nk,skip_fields=skip_fields)
+    meta=(merged or {}).get("dualSource") or {}
+    if meta.get("filledTotal") or meta.get("conflictCount"):
+        print("RESULT_DUAL_SOURCE",detail.get("id"),
+              "filled",meta.get("filled"),"conflicts",meta.get("conflictCount"),
+              (meta.get("conflicts") or [])[:5])
+    return merged or primary
 
 def _jra_result_cname_from_card(cname:str)->str:
     if not cname:return ""
@@ -2484,6 +2546,18 @@ def central_race_detail(race_id: str) -> dict | None:
                 official=_jra_parse_result(rc,detail)
                 if official:detail=_merge_official_result(detail,official)
         except Exception as exc:print("JRA official result hydrate failed",race_id,exc)
+    # Dual-source rule on the read path too, but gap-triggered so a
+    # complete official result costs no second fetch: netkeiba fills
+    # what the official block leaves empty (race laps above all —
+    # the official parse carries none). Win odds stay out of the
+    # central result finishers by this path's existing policy.
+    if should_result and (detail.get("result") or {}).get("finishers"):
+        _gaps=[g for g in _result_gaps(detail["result"]) if g!="winOdds"]
+        if _gaps:
+            try:
+                merged=_dual_source_result(detail,detail["result"],skip_fields=("winOdds",))
+                if merged:detail["result"]=merged
+            except Exception as exc:print("central dual-source result merge failed",race_id,exc)
     # Official JRA card is primary for the pre-race card and live body data.
     malformed=(not (detail.get("horses") or []) or bool(JRA_BAD_TITLE_RE.search(str(detail.get("title") or ""))) or int(detail.get("distance") or 0)<=0)
     if cname:
@@ -3996,6 +4070,7 @@ def _refresh_result_fast(race_id: str) -> dict | None:
         try:official=_nar_official_result_fast(detail)
         except Exception as exc:print("NAR fast result refresh failed",race_id,exc)
         if official:
+            official=_dual_source_result(detail,official)
             detail["result"]=official
             if official.get("weather") not in (None,"","不明"):detail["weather"]=official["weather"]
             if official.get("condition") not in (None,"","不明"):detail["condition"]=official["condition"]
@@ -4004,8 +4079,14 @@ def _refresh_result_fast(race_id: str) -> dict | None:
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
-                    detail["result"]=nk
-                    detail=_merge_result_fields(detail,nk)
+                    # A stored result keeps its values; the fresh
+                    # netkeiba parse only fills what it leaves empty
+                    # (dual-source merge), instead of replacing the
+                    # block wholesale as the old fallback did.
+                    stored=detail.get("result") or {}
+                    merged=_merge_result_sources(stored,nk) if stored.get("finishers") else nk
+                    detail["result"]=merged or nk
+                    detail=_merge_result_fields(detail,detail["result"])
             except Exception as exc:print("NAR result fallback failed",race_id,exc)
         if _result_has_podium(detail):
             try:detail=_attach_nar_payouts(detail)
@@ -4024,7 +4105,10 @@ def _refresh_result_fast(race_id: str) -> dict | None:
                 cname=_jra_find_cname(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
                 if cname:result_cname=_jra_result_cname_from_card(cname)
             parsed=_jra_parse_result(result_cname,detail) if result_cname else None
-            if parsed:detail=_merge_official_result(detail,parsed)
+            if parsed:
+                detail=_merge_official_result(detail,parsed)
+                if _race_should_have_result(detail):
+                    detail["result"]=_dual_source_result(detail,detail.get("result"))
         except Exception as exc:print("JRA fast result refresh failed",race_id,exc)
         # The fallback must also fire when a podium-shaped but partial
         # result is already stored and the official token route could
@@ -4904,6 +4988,7 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
                 try:official_result=_nar_official_result_fast(q)
                 except Exception as exc:print("fast NAR official result failed",race_id,exc)
             if official_result:
+                official_result=_dual_source_result(q,official_result)
                 q["result"]=official_result
                 if official_result.get("weather") not in (None,"","不明"):q["weather"]=official_result["weather"]
                 if official_result.get("condition") not in (None,"","不明"):q["condition"]=official_result["condition"]
