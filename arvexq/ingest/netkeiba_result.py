@@ -71,6 +71,85 @@ def _parse_race_lap_times(soup) -> list[float]:
     return []
 
 
+def _corner_order_ranks(order_text: str) -> dict[int, int]:
+    """Horse-number -> position at one corner, from the result page's
+    corner passing-order string (e.g. "(2,6),8,(3,7),9,1,(4,10)-5").
+    Parenthesised horses share a position and the next position
+    advances by the size of the group (the convention of
+    arvexq.databanks.nar_official_csv.ranks); ",", "-" and "=" are
+    only separators. One refinement, verified against the desktop
+    layout's per-horse column on real JRA result pages: a horse
+    marked "*" inside a group is slightly ahead of its groupmates,
+    so it takes the group's position while the rest share the next
+    one (e.g. "(1,*2)" -> 2 is 1st, 1 is 2nd)."""
+    result: dict[int, int] = {}
+    place = 1
+    for group in re.finditer(r"\(([^()]+)\)|(\d+)", order_text or ""):
+        if group[1] is None:
+            members = [(int(group[2]), False)]
+        else:
+            members = []
+            for token in group[1].split(","):
+                num = re.search(r"\d+", token)
+                if num:
+                    members.append((int(num.group()), "*" in token))
+        unique: list[tuple[int, bool]] = []
+        for no, starred in members:
+            if no and no not in result and no not in [u[0] for u in unique]:
+                unique.append((no, starred))
+        starred_nos = [no for no, s in unique if s]
+        plain_nos = [no for no, s in unique if not s]
+        if starred_nos and plain_nos:
+            for no in starred_nos:
+                result[no] = place
+            for no in plain_nos:
+                result[no] = place + 1
+        else:
+            for no, _ in unique:
+                result[no] = place
+        place += len(unique)
+    return result
+
+
+def _parse_corner_table(soup) -> dict[int, list]:
+    """Per-horse corner positions from the コーナー通過順位 table.
+
+    The smartphone result layout has no per-horse corner column in
+    the result table; both layouts instead carry a race-level table
+    (class Corner_Num) whose rows are "<n> コーナー" plus the passing
+    order string. Rows with an empty order (corners the course never
+    passes, e.g. 1-2 corners of a 1400m race) are skipped so the list
+    aligns with the per-horse column's semantics: one entry per
+    corner actually passed, in race order. A horse missing from one
+    corner's order (e.g. pulled up mid-race) gets None at that slot —
+    the same convention as the NAR公式CSV positions — and a horse
+    absent from every row is not in the map at all."""
+    rows: list[dict[int, int]] = []
+    for tb in soup.find_all("table"):
+        found = []
+        for tr in tb.find_all("tr"):
+            cells = [c.get_text(" ", strip=True)
+                     for c in tr.find_all(["th", "td"])]
+            if len(cells) < 2:
+                continue
+            if not re.fullmatch(r"\d+\s*コーナー",
+                                cells[0].replace("　", " ")):
+                continue
+            order = " ".join(cells[1:])
+            if re.search(r"\d", order):
+                found.append(_corner_order_ranks(order))
+        if found:
+            rows = found
+            break
+    out: dict[int, list] = {}
+    for idx, ranks in enumerate(rows):
+        for no in ranks:
+            if no not in out:
+                out[no] = [None] * len(rows)
+            out[no][idx] = ranks[no]
+    return out
+
+
 def parse_current_result_html(
     html: str,
     *,
@@ -193,6 +272,17 @@ def parse_current_result_html(
         if no and name:finishers.append(finisher)
     finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
     if len(finishers)<3:return None
+    # Corner positions: the desktop layout's per-horse コーナー通過順
+    # column (parsed above) wins. Where it is absent — the smartphone
+    # layout has no such column — fill from the race-level
+    # コーナー通過順位 table instead of storing an empty list. Horses
+    # the table does not mention keep [] (never estimated).
+    corner_map=_parse_corner_table(soup)
+    if corner_map:
+        for f in finishers:
+            if not f.get("cornerPositions"):
+                pos=corner_map.get(int(f.get("horseNumber") or 0))
+                if pos:f["cornerPositions"]=pos
     payouts=parse_payouts(soup)
     status="確定" if payouts or re.search(r"確定",clean(soup.get_text(" ",strip=True))) else "速報"
     result={"status":status,"finishers":finishers,"source":"netkeiba結果","payouts":payouts}
