@@ -105,7 +105,7 @@ async function test(type,label){
         label+' '+width+' independent ticket frame overflow '+JSON.stringify(result));
       assert.equal(result.markBadges.length,0,'retired marks must not reappear');
       assert.equal(result.combos.length,0,'retired tickets must not reappear');
-      // Six race tabs plus tappable formation are also checked at every width.
+      // Five race tabs plus tappable formation are also checked at every width.
       for(let stage=0;stage<4;stage++){
         const app='<div class="smart-shell"><main class="smart-main smart-race-page">'+navHtml+diagrams[stage]+'</main></div>';
         await page.setContent('<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>'+app+'</body></html>');
@@ -119,7 +119,7 @@ async function test(type,label){
             tabWidths:tabs.map(t=>t.getBoundingClientRect().width)};
         });
         assert.equal(resultStage.next,(stage+1)%4,label+' '+width+' stage cycle '+stage);
-        assert.equal(resultStage.tabWidths.length,6);
+        assert.equal(resultStage.tabWidths.length,5);
         assert.ok(resultStage.tabWidths.every(w=>w>40),label+' '+width+' tab labels too narrow');
         assert.ok(resultStage.buttonWidth>200,label+' '+width+' diagram too narrow');
         assert.ok(resultStage.scroll<=resultStage.width+2,label+' '+width+' stage overflow '+JSON.stringify(resultStage));
