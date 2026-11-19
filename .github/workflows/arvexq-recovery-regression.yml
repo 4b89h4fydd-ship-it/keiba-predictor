@@ -32,7 +32,20 @@ jobs:
           Acquire::https::Timeout "15";
           Acquire::ForceIPv4 "true";
           APT
-      - run: npx playwright install --with-deps chromium webkit
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          # Keyed by the pinned Playwright version installed above; bump
+          # the trailing revision if the browser set ever changes.
+          key: ${{ runner.os }}-playwright-1.56.1-chromium-webkit-v1
+      - name: Install Playwright browsers and OS dependencies (browser cache miss)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium webkit
+      - name: Install Playwright OS dependencies only (browser cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium webkit
       - name: Build and start exact candidate assets
         run: |
           python build_static.py
@@ -66,7 +79,20 @@ jobs:
           Acquire::https::Timeout "15";
           Acquire::ForceIPv4 "true";
           APT
-      - run: npx playwright install --with-deps chromium webkit
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          # Keyed by the pinned Playwright version installed above; bump
+          # the trailing revision if the browser set ever changes.
+          key: ${{ runner.os }}-playwright-1.56.1-chromium-webkit-v1
+      - name: Install Playwright browsers and OS dependencies (browser cache miss)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium webkit
+      - name: Install Playwright OS dependencies only (browser cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium webkit
       - name: Independent win and axis role DOM contract
         run: node scripts/arvexq_honmei_dom_contract_test.js
       - name: Production full card, original receipts and API-outage checks
