@@ -39,8 +39,90 @@ const frame=context.ARVEXQTicketFrame.contents(race);
 // in-contents titles; contents itself carries no heading any more.
 assert.match(context.ARVEXQTicketFrame.render(race),/おすすめ買い目/);
 assert.doesNotMatch(frame,/おすすめ買い目/);
-assert.match(frame,/1-2\.3/);
-assert.match(frame,/1\.2\.3-1\.2\.3-1\.2\.3/);
+// The aggregated display (2026-11-19) no longer enumerates every
+// combination as a chip: a group may render as a formation, a box, a
+// box with named exceptions (BOX minus the 除く combinations), an
+// axis flow, an axis-multi, grouped head lines, or plain chips. The
+// guarantee protected here is not a notation but the set itself:
+// decoding each rendered ticket block must reproduce exactly the
+// sealed original's combinations for that kind. (The retired literal
+// checks /1-2\.3/ and /1\.2\.3-1\.2\.3-1\.2\.3/ pinned the pre-
+// aggregation axis/formation spellings of these two groups.)
+const KIND_LEN={'馬連':2,'ワイド':2,'馬単':2,'3連複':3,'3連単':3};
+const ORDERED_KIND={'3連単':1,'馬単':1};
+function chooseFrom(arr,k){
+  const out=[];
+  (function rec(s,cur){if(cur.length===k){out.push(cur.slice());return;}
+    for(let i=s;i<arr.length;i++){cur.push(arr[i]);rec(i+1,cur);cur.pop();}})(0,[]);
+  return out;
+}
+function decodeCombosHtml(html,kind){
+  const len=KIND_LEN[kind],ordered=!!ORDERED_KIND[kind];
+  const summary=html.match(/<span class="arv-three-combo arv-three-summary">([^<]+)<\/span>/);
+  if(summary){
+    const text=summary[1];
+    if(html.includes('arv-three-box-label')){
+      const members=text.split('.').map(Number);
+      let combos=chooseFrom(members,len);
+      const except=html.match(/<span class="arv-three-except">除く：([^<]+)<\/span>/);
+      if(except){
+        const missing=new Set(except[1].split('、').map(s=>
+          s.split(' - ').map(Number).sort((a,b)=>a-b).join(',')));
+        combos=combos.filter(c=>!missing.has(c.slice().sort((a,b)=>a-b).join(',')));
+      }
+      return combos;
+    }
+    if(html.includes('arv-three-axis-label')){
+      const [axisText,partnerText]=text.split(' - ');
+      const axis=Number(axisText);
+      return partnerText.split('・').map(Number).flatMap(p=>[[axis,p],[p,axis]]);
+    }
+    if(ordered){
+      const legs=text.split('-').map(part=>part.split('.').map(Number));
+      const out=[];
+      (function gen(pos,cur,used){
+        if(pos===legs.length){out.push(cur.slice());return;}
+        legs[pos].forEach(n=>{if(!used[n]){used[n]=1;cur.push(n);
+          gen(pos+1,cur,used);cur.pop();used[n]=0;}});
+      })(0,[],{});
+      return out;
+    }
+    const [axisText,partnerText]=text.split('-');
+    const axis=axisText.split('.').map(Number);
+    const partners=partnerText.split('.').map(Number);
+    return chooseFrom(partners,len-axis.length).map(rest=>axis.concat(rest));
+  }
+  const combos=[];
+  const spanRe=/<span class="arv-three-combo[^"]*">([\s\S]*?)<\/span>/g;
+  let m;
+  while((m=spanRe.exec(html))!==null){
+    const inner=m[1];
+    const line=inner.match(/<b class="arv-three-line-head">([^<]+)<\/b><span class="arv-three-line-sep">[^<]*<\/span>([^<]+)$/);
+    if(line){
+      const head=line[1].split(ordered?' → ':'・').map(Number);
+      line[2].split('、').map(Number).forEach(t=>combos.push(head.concat(t)));
+    }else combos.push(inner.split(' - ').map(Number));
+  }
+  return combos;
+}
+function renderedCombosByKind(frameHtml){
+  const byKind={};
+  for(const segment of frameHtml.split('<div class="arv-three-ticket">').slice(1)){
+    const head=segment.match(/<div class="arv-three-ticket-head"><b>([^<]+)<\/b>/);
+    const strong=segment.match(/<strong class="arv-three-combos">([\s\S]*?)<\/strong>/);
+    if(head&&strong)byKind[head[1]]=decodeCombosHtml(strong[1],head[1]);
+  }
+  return byKind;
+}
+const renderedByKind=renderedCombosByKind(frame);
+for(const item of receipt.items){
+  const keyOf=ORDERED_KIND[item.kind]
+    ? (c=>c.join(','))
+    : (c=>c.slice().sort((a,b)=>a-b).join(','));
+  const want=item.combos.map(keyOf).sort();
+  const got=(renderedByKind[item.kind]||[]).map(keyOf).sort();
+  assert.deepEqual(got,want,'rendered '+item.kind+' must decode to the sealed original combinations');
+}
 assert.match(frame,/8点|2点/);
 assert.doesNotMatch(frame,/<unsafe>/);
 assert.equal(JSON.stringify(race),original);
