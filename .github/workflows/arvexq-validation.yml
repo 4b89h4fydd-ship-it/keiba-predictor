@@ -358,6 +358,7 @@ jobs:
             'preparedMeta':{'diagnosisReady':True,'careerReady':True},'preRacePrediction':{'mark':'◎','score':88},'predictionAudit':{'locked':True},
             'predictionModelVersion':prefetch.model_version({'circuit':'地方'}),
             'predictionStatus':'ready', 'observedModelCoverage':{'allObserved':True},
+            'researchEvidenceVersion':prefetch.RESEARCH_EVIDENCE_VERSION,'researchEvidenceHorses':3,
           }
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
           fresh={'id':base['id'],'weather':'曇','condition':'稍重','horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}]}
