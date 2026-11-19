@@ -31,7 +31,9 @@ const styleBaseline={
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
-  "arvexq/ui/static/betting/bet_ui.css": "ef2cb6dbeafbfef3"
+  // Re-pinned 2026-11-19: user-directed bet summary display
+  // (grouped tickets, easier to read; PR #591).
+  "arvexq/ui/static/betting/bet_ui.css": "43e9cec1b8c1e6a1"
 };
 for(const [name,expected] of Object.entries(styleBaseline)){
   const actual=fingerprint(fs.readFileSync(path.join(root,name),'utf8'));
