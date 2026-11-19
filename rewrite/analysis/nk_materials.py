@@ -260,12 +260,53 @@ magnitude 0.10, none of them validated:
         v8) is untouched — this term is materials-only, like
         the other trials.
 
+    horse-analysis (each horse's netkeiba data-analysis
+        judgements) — wired 2026-11-19 by the same user
+        instruction, after the full audit found the collection
+        starting that day (horse-analysis.json: the data-analysis
+        tab's per-horse 総合評価 letter grade and each section's
+        suitability judgement — コース / 距離 / 産駒 / ローテ /
+        枠順 / その他） with NO receptacle anywhere in the lane.
+        The adapter scores the judgements (the grade and the
+        section marks, each on a 0..1 scale, averaged over the
+        components the collection actually saved) and applies
+        ONE more z term at the trial weight +0.10, as a
+        post-integrate logit adjustment: integrated_eval is a
+        frozen verbatim vendor copy with no slot for this
+        family, and a softmax logit shift is exactly the
+        operation integrate() performs per term, so the result
+        is identical to an in-formula term while the frozen
+        file stays untouched. UNVALIDATED; stamped
+        horse-analysis-trial-20261119 on every publication it
+        touches, to be judged on forward racing only.
+
+    course persons (the course-analysis persons tables'
+        per-horse rows) — wired 2026-11-19 (nk-materials-v10)
+        by the same instruction, after the audit found the
+        collected jockey / trainer rows （得意な騎手・調教師，
+        per entered horse) with no receptacle: each row is
+        THIS race's jockey's / trainer's record at today's
+        course (past-3-years window, as the page states). The
+        adapter scores a record the way it scores the sire's
+        course record (the mean of the win rate and the top-3
+        rate, shrunk toward a generic field) and applies one
+        post-integrate logit z term per person kind at the
+        trial weight +0.10, by the same frozen-file reasoning
+        as horse-analysis. UNVALIDATED; stamped
+        course-persons-trial-20261119 on every publication
+        either kind touches, to be judged on forward racing
+        only. (The sire rows of the same collection feed the
+        pedigree term's sireCourse fallback in the builder —
+        a different landing spot for a different table.)
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
 never invents a value and never partially applies.
 """
 from __future__ import annotations
+
+import math
 
 from ..safety.probability import distribution, marginals
 from .ability import RECENCY_DECAY
@@ -278,7 +319,16 @@ from .integrated_eval import DEFAULT_WEIGHTS, integrate
 # v7 — only the input window moved. Trial adoption per the user's
 # standing instruction to put all collected data into the forecast;
 # unvalidated (no historical 5-run corpus exists).
-NK_MATERIALS_VERSION = "nk-materials-v8"
+# nk-materials-v9 (2026-11-19): version bump only — weights and terms
+# are identical to v8. The bump re-issues pre-race races with the
+# complete materials file (pedigree / bestTime / headToHead populated)
+# now that the full pedigree collection (siblings included) finished.
+# nk-materials-v10 (2026-11-19): the all-wiring final form — v9 plus
+# the audit-driven wiring (horse-analysis term, odds list shape,
+# course-persons sire fallback, zero-coverage record) and the new
+# course-persons jockey/trainer trial terms. The bump re-issues
+# v9-stamped pre-race races once so the new terms reach them.
+NK_MATERIALS_VERSION = "nk-materials-v10"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -382,6 +432,41 @@ NK_ODDS_LABEL = (
     "unvalidated)")
 NK_ODDS_TRIAL = "odds-movement-trial-20261117"
 
+# Horse-analysis judgements (the netkeiba data-analysis tab's
+# per-horse overall grade + section suitability marks): TRIAL
+# weight, UNVALIDATED — see the module docstring. The score is
+# the mean of the components the collection saved, each on a
+# 0..1 scale (grade S=1.0, A=0.8, B=0.6, C=0.4, D=0.2, E=0.0;
+# section marks ◎=1.0, ○=0.75, ▲=0.5, △=0.25, ×=0.0). Unknown
+# symbols are ignored, never guessed.
+HORSE_ANALYSIS_WEIGHT = 0.10
+NK_HORSE_ANALYSIS_LABEL = (
+    "horse-analysis-trial-20261119(w=+0.10;unvalidated)")
+NK_HORSE_ANALYSIS_TRIAL = "horse-analysis-trial-20261119"
+_HA_GRADE_POINTS = {"S": 1.0, "A": 0.8, "B": 0.6, "C": 0.4,
+                    "D": 0.2, "E": 0.0}
+_HA_MARK_POINTS = {"◎": 1.0, "○": 0.75, "▲": 0.5, "△": 0.25,
+                   "×": 0.0}
+
+# Course persons (the course-analysis persons tables — 得意な
+# 騎手 / 得意な調教師 — as per-entered-horse rows: THIS race's
+# jockey's and trainer's records at today's course): TRIAL
+# weight, UNVALIDATED — see the module docstring. The score
+# mirrors sire_course_score: the mean of the win rate and the
+# top-3 rate, each shrunk toward a generic 10-runner field
+# (0.10 / 0.30) with prior strength PERSON_PRIOR_STARTS.
+# Applied like the horse-analysis term (adapter-side
+# post-integrate logit shifts, one per person kind) because
+# integrated_eval is frozen and has no slot for them.
+COURSE_PERSONS_WEIGHT = 0.10
+NK_COURSE_PERSONS_LABEL = (
+    "course-persons-trial-20261119(jockey+0.10/trainer+0.10;"
+    "unvalidated)")
+NK_COURSE_PERSONS_TRIAL = "course-persons-trial-20261119"
+PERSON_PRIOR_STARTS = 10.0
+PERSON_PRIOR_WIN_RATE = 0.10
+PERSON_PRIOR_TOP3_RATE = 0.30
+
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
 
@@ -444,6 +529,11 @@ def parse_materials_payload(payload) -> dict:
     race. The v6 fields ride the same way: nkFormDev /
     nkAiScore are read as numbers, and the odds block is
     carried as a dict (its cells are read by _odds_cells).
+    The horseAnalysis block (the per-horse data-analysis
+    judgements) is carried as a dict the same way and read by
+    horse_analysis_score. The coursePersons block (this
+    race's jockey / trainer records at today's course) rides
+    as a dict the same way and is read by person_course_score.
     Anything unreadable normalises to {} (no materials
     for the date) or drops the offending race/horse — a
     malformed entry must never take the lane down, and a dropped
@@ -488,6 +578,12 @@ def parse_materials_payload(payload) -> dict:
                 horse["odds"] = (odds_block
                                  if isinstance(odds_block, dict)
                                  else None)
+                ha_block = values.get("horseAnalysis")
+                horse["horseAnalysis"] = (
+                    ha_block if isinstance(ha_block, dict) else None)
+                cp_block = values.get("coursePersons")
+                horse["coursePersons"] = (
+                    cp_block if isinstance(cp_block, dict) else None)
                 horses[number] = horse
         course = entry.get("courseAnalysis")
         label = entry.get("paceLabel")
@@ -558,6 +654,27 @@ def sire_course_score(pedigree):
     return (win_rate + top3_rate) / 2.0
 
 
+def person_course_score(record):
+    """One person's (jockey's / trainer's) record at today's
+    course as one score: the mean of the win rate and the
+    top-3 rate, each shrunk toward a generic 10-runner field
+    (0.10 / 0.30) with prior strength PERSON_PRIOR_STARTS —
+    the same construction as sire_course_score. None when the
+    record is missing or carries no starts — no evidence, no
+    term."""
+    if not isinstance(record, dict):
+        return None
+    starts = _num(record.get("starts"))
+    wins = _num(record.get("wins"))
+    top3 = _num(record.get("top3"))
+    if starts is None or wins is None or top3 is None or starts <= 0:
+        return None
+    m = PERSON_PRIOR_STARTS
+    win_rate = (wins + m * PERSON_PRIOR_WIN_RATE) / (starts + m)
+    top3_rate = (top3 + m * PERSON_PRIOR_TOP3_RATE) / (starts + m)
+    return (win_rate + top3_rate) / 2.0
+
+
 def press_points(press):
     """The newspaper marks as one number: MARK_POINTS averaged
     over every mark the collection saved for the horse. The
@@ -582,6 +699,48 @@ def press_points(press):
     if not points:
         return None
     return sum(points) / len(points)
+
+
+def horse_analysis_score(block):
+    """One number in [0, 1] from a horse's collected
+    horse-analysis judgements (see HORSE_ANALYSIS_WEIGHT): the
+    mean of the overall grade's points and each saved section
+    judgement's points. None when the block carries no readable
+    component — no evidence, no term."""
+    if not isinstance(block, dict):
+        return None
+    points = []
+    grade = _HA_GRADE_POINTS.get(block.get("overall"))
+    if grade is not None:
+        points.append(grade)
+    sections = block.get("sections")
+    if isinstance(sections, dict):
+        for mark in sections.values():
+            value = _HA_MARK_POINTS.get(mark)
+            if value is not None:
+                points.append(value)
+    if not points:
+        return None
+    return sum(points) / len(points)
+
+
+def _zscores(values):
+    """Within-race z-scores with integrated_eval's own
+    semantics (at least three values, population sd, a flat
+    field scores 0.0); None stays None. A local copy because
+    integrated_eval is a frozen verbatim vendor file and the
+    horse-analysis term is applied by this adapter,
+    post-integrate."""
+    xs = [v for v in values if v is not None]
+    if len(xs) < 3:
+        return [None] * len(values)
+    mean = sum(xs) / len(xs)
+    var = sum((x - mean) ** 2 for x in xs) / len(xs)
+    sd = math.sqrt(var)
+    if sd < 1e-9:
+        return [0.0 if v is not None else None for v in values]
+    return [((v - mean) / sd) if v is not None else None
+            for v in values]
 
 
 # ------------------------------------------- v6 wired families
@@ -886,6 +1045,28 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     runner actually carries an observed value; when it
     contributes, info["closingTrial"] is NK_CLOSING_TRIAL and
     the weights label carries NK_CLOSING_WEIGHTS_LABEL.
+
+    The horse-analysis term (2026-11-19) reads the entry's
+    per-horse horseAnalysis blocks (the netkeiba data-analysis
+    tab's judgements, scored by horse_analysis_score) and
+    applies as a post-integrate logit shift at
+    HORSE_ANALYSIS_WEIGHT when at least three runners carry a
+    score and the scores differ; when it contributes,
+    info["horseAnalysisTrial"] is NK_HORSE_ANALYSIS_TRIAL,
+    the weights label carries NK_HORSE_ANALYSIS_LABEL, and
+    "horse_analysis" joins info["terms"].
+
+    The course-persons terms (2026-11-19, nk-materials-v10)
+    follow the same pattern once per person kind: each reads
+    the entry's per-horse coursePersons records (this race's
+    jockey's / trainer's record at today's course, scored by
+    person_course_score) and applies as a post-integrate logit
+    shift at COURSE_PERSONS_WEIGHT under the same liveness
+    rule; when either contributes, info["coursePersonsTrial"]
+    is NK_COURSE_PERSONS_TRIAL, the weights label carries
+    NK_COURSE_PERSONS_LABEL, and "course_jockey" /
+    "course_trainer" join info["terms"] for the kinds that
+    contributed.
     """
     info = {"applied": False, "version": NK_MATERIALS_VERSION,
             "weights": NK_WEIGHTS_LABEL, "coverage": None,
@@ -955,6 +1136,20 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # past runs (closing trial, v7 — see
             # closing_inputs_from_race).
             "last3f_recent": (closing_inputs or {}).get(r.number),
+            # The horse's netkeiba data-analysis judgements,
+            # scored (horse-analysis trial, 2026-11-19 — see
+            # the module docstring); applied below as a
+            # post-integrate logit shift.
+            "ha_score": horse_analysis_score(
+                mat.get("horseAnalysis")),
+            # This race's jockey's / trainer's records at
+            # today's course, scored (course-persons trial,
+            # 2026-11-19 — see the docstring above); applied
+            # below as post-integrate logit shifts.
+            "cp_jockey": person_course_score(
+                (mat.get("coursePersons") or {}).get("jockey")),
+            "cp_trainer": person_course_score(
+                (mat.get("coursePersons") or {}).get("trainer")),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -1012,6 +1207,49 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     for h in horses:
         h.pop("_frame_group", None)
     probs, coverage, detail = integrate(horses, weights)
+    # Horse-analysis term (2026-11-19 trial — see the module
+    # docstring): a post-integrate logit shift by the z-scored
+    # judgement score, renormalised — identical in effect to
+    # an in-formula z term, with integrated_eval untouched.
+    # The term is live only when at least three horses carry a
+    # score and the scores actually differ (a flat field's
+    # z-scores are all 0.0 and shift nothing).
+    ha_scores = [h.get("ha_score") for h in horses]
+    ha_z = _zscores(ha_scores)
+    ha_applied = any(z is not None and z != 0.0 for z in ha_z)
+    if ha_applied:
+        shifted = {}
+        for h, z in zip(horses, ha_z):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(HORSE_ANALYSIS_WEIGHT * z)
+                if z is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
+    coverage["horse_analysis"] = sum(
+        1 for s in ha_scores if s is not None)
+    # Course-persons terms (2026-11-19 trial — see the
+    # docstring above): the same post-integrate logit shift,
+    # once per person kind, under the same liveness rule (at
+    # least three scored runners and differing scores). A kind
+    # with no collected rows simply never shifts.
+    cp_applied: list = []
+    for kind in ("jockey", "trainer"):
+        cp_scores = [h.get(f"cp_{kind}") for h in horses]
+        coverage[f"course_{kind}"] = sum(
+            1 for s in cp_scores if s is not None)
+        cp_z = _zscores(cp_scores)
+        if not any(z is not None and z != 0.0 for z in cp_z):
+            continue
+        shifted = {}
+        for h, z in zip(horses, cp_z):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(COURSE_PERSONS_WEIGHT * z)
+                if z is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
+        cp_applied.append(kind)
     info["coverage"] = coverage
     # The weights label records every non-default weight family
     # whose terms actually contributed to THIS race — the
@@ -1061,9 +1299,16 @@ def apply_nk_materials(forecast: RaceForecast, entry,
            for k in ("odds_drift", "odds_wp_gap")):
         label_parts.append(NK_ODDS_LABEL)
         info["oddsTrial"] = NK_ODDS_TRIAL
+    if ha_applied:
+        label_parts.append(NK_HORSE_ANALYSIS_LABEL)
+        info["horseAnalysisTrial"] = NK_HORSE_ANALYSIS_TRIAL
+    if cp_applied:
+        label_parts.append(NK_COURSE_PERSONS_LABEL)
+        info["coursePersonsTrial"] = NK_COURSE_PERSONS_TRIAL
     if len(label_parts) > 1:
         info["weights"] = "+".join(label_parts)
-    if not any(d["terms"] for d in detail):
+    if not ha_applied and not cp_applied \
+            and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
         # would come back identical — report not-applied and keep
@@ -1095,6 +1340,13 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             runners.append(r)
     info["applied"] = True
     info["terms"] = sorted({k for d in detail for k in d["terms"]})
+    post_terms = set()
+    if ha_applied:
+        post_terms.add("horse_analysis")
+    for kind in cp_applied:
+        post_terms.add(f"course_{kind}")
+    if post_terms:
+        info["terms"] = sorted(set(info["terms"]) | post_terms)
     return RaceForecast(forecast.race_id, forecast.beta,
                         forecast.probability_status, tuple(runners),
                         "ok"), info
