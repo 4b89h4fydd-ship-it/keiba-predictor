@@ -61,7 +61,7 @@ def _forecast() -> RaceForecast:
 
 
 def _parsed(per_horse, avg5=60):
-    payload = {"version": "nk-materials-v10", "date": DATE,
+    payload = {"version": "nk-materials-v11", "date": DATE,
                "races": {RACE_ID: {
                    "netkeibaRaceId": NK_ID,
                    "horses": {str(n): dict(
