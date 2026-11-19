@@ -71,6 +71,24 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await page.locator('[data-panel="odds"]').click();
     await page.waitForSelector('#section-odds');
     const winOddsCells=()=>page.locator('.arv-odds-table tbody tr td:nth-child(5)');
+    // Ask the independent source first: whether this race's odds are
+    // published decides which settled screen state is acceptable below.
+    // (Historical NAR odds, for example, are served on demand from the
+    // official archive even when the saved snapshot stored none.)
+    const published=await oddsPublished(r.id);
+    // The odds panel renders asynchronously: the race detail renders
+    // first (a table from carried odds, or the explicit not-acquired
+    // message) and independently fetched live odds then merge and
+    // re-render it. Sampling the DOM once, mid-merge, can catch the
+    // section between generations — no table node at the count sample,
+    // yet the text already carrying acquired values by the text sample —
+    // and misread a correct screen as a missing-state violation. Wait
+    // for a settled state (a table, or the explicit message) before
+    // asserting anything about it.
+    await page.waitForFunction(()=>
+      document.querySelector('.arv-odds-table')||
+      /まだ取得できていません/.test(document.querySelector('#section-odds')?.textContent||''),
+      null,{timeout:20000});
     let odds=(await winOddsCells().allTextContents()).map(x=>x.trim());
     if(await page.locator('.arv-odds-table').count()===0)
       assert.match(await page.locator('#section-odds').innerText(),/まだ取得できていません/,'odds missing state must be explicit '+r.id);
@@ -78,7 +96,6 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // Before the official source publishes (e.g. NAR overnight) no acquired odds can exist;
     // the roster must then show only the explicit missing status. Once the source has
     // odds the screen must show some acquired value.
-    const published=await oddsPublished(r.id);
     if(published===true){
       // Published odds update independently of the base racecard request.
       // Wait for actual DOM values; timeout remains a hard failure, never a fake odd.
