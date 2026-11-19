@@ -26,28 +26,33 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/diagnosis_view.js','utf8')});await page.addScriptTag({content:fs.readFileSync('arvexq/ui/static/research/live_odds.js','utf8')});await page.addScriptTag({content:code});
   await page.evaluate(d=>{revisionTest.state.date=d.date;revisionTest.state.circuit=d.circuit;revisionTest.state.races=[d]},originalDetail);
   await page.evaluate(id=>revisionTest.openRace(id),detail.id);
-  await page.waitForFunction(()=>document.querySelectorAll('.racecard-row').length===6);
+  // v349: the entry panel is the integrated entry table; the retired
+  // .racecard-row list survives only in the error-fallback panel.
+  await page.waitForFunction(()=>document.querySelectorAll('.arv-entry-table tbody tr').length===6);
   // This fixture is retrospective, uncalibrated and explicitly production-ineligible.
   // Existing retrospective reference marks must be labelled and never become actionable tickets.
   assert.equal(detail.forecastRevisions[0].analysisType,'retrospective');
   assert.equal(detail.forecastRevisions[0].productionEligible,false);
-  assert.equal(await page.locator('.rc-ai-mark[data-ai-mark="◎"]').count(),1);
+  assert.equal(await page.locator('.arv-marks-mark[data-ai-mark="◎"]').count(),1);
   assert.equal(await page.evaluate(()=>window.ARVEXQProductionPrediction.current().source),'learned-revision-retrospective');
+  // v349: the compact marks frame (with the retrospective label) is
+  // appended under the non-entry panels. v363: the analysis panel is
+  // tag-switched; the diagnosis list and the pace section live behind
+  // their own tags.
+  await page.locator('[data-panel="pace"]').click();
+  await page.waitForSelector('.da-tags');
   assert.match(await page.locator('#section-aimarks').innerText(),/事後再分析の参考印/);
   assert.equal(await page.locator('#section-aimarks').count(),1);
-  assert.equal(await page.locator('.diagnosis-merged-row').count(),6);
-  // Current UI has independent entry / pace tabs and a dedicated
-  // tickets subpage. Verify each real route instead of requiring all
-  // retired sections at once. (v349: the forecast/bets subpage was
-  // merged into the entry table; the marks live on the entry panel.)
-  await page.locator('[data-panel="pace"]').click();
+  await page.locator('[data-analysis-tag="diagnosis"]').click();
+  await page.waitForFunction(()=>document.querySelectorAll('.diagnosis-merged-row').length===6);
+  await page.locator('[data-analysis-tag="paceview"]').click();
   await page.waitForSelector('#section-pace');
   await page.locator('[data-panel="entry"]').click();
   await page.waitForSelector('.arv-entry-table');
   assert.equal(await page.locator('.arv-entry-table .bet-item').count(),0);
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRaceBet)),JSON.stringify(detail.preRaceBet));
   await page.locator('[data-panel="pace"]').click();
-  await page.waitForSelector('#section-pace');
+  await page.waitForSelector('.da-tags');
   await page.locator('[data-panel="entry"]').click();
   await page.waitForSelector('.arv-entry-table');
   assert.equal(await page.evaluate(()=>JSON.stringify(revisionTest.state.race.preRacePrediction)),before);
