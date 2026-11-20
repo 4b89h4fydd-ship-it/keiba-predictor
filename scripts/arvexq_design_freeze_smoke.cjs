@@ -32,7 +32,12 @@ const styleBaseline={
   // pale bet-tab texts on the white card restored to dark ink; venue
   // row time column / mid-word wrap fix). Approved by the user's
   // 2026-11-21 bug report itself ("アプリバグってるぞ、クソ見にくい").
-  "arvexq/ui/static/sports/unified-home.css": "3ead026a8ccab2c7",
+  // Re-pinned 2026-11-21 (round 2): the round-1 contrast block lost
+  // the cascade inside venue rows / the race head (universal :not()
+  // selectors outranked it); the same palette is repeated with
+  // higher-specificity selectors. Production-verified need: PR #599
+  // fixed the bets tab but badges/band stayed dark-on-dark.
+  "arvexq/ui/static/sports/unified-home.css": "c4b688f7b1626371",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
