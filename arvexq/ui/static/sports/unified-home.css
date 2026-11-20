@@ -2459,3 +2459,39 @@ html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-ups
 html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band .arv-upset-band-reasons{
  color:#c8d4da!important;opacity:1!important;text-shadow:none!important;
 }
+
+/* 2026-11-21 contrast repair, round 3: the round-2 venue selectors
+   never matched, because .smart-shell and .smart-venue-page are the
+   SAME element on the venue page (class="smart-shell
+   smart-venue-page"), so a descendant combinator between them finds
+   nothing. The detail-head rules in round 2 did match (there the
+   shell and the race page are different elements), which is why the
+   detail badge/band fixed while the venue list did not. Restate the
+   venue (and home-grid) badge palette with the two classes compounded
+   on one element. */
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-solid{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-rough{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-low{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-high{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip :is(small,b,i){
+ color:inherit!important;opacity:1!important;text-shadow:none!important;
+}
