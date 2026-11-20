@@ -1338,6 +1338,11 @@ function raceHeadCountText(r){
   var count=Number(r.fieldSize),hs=r.horses||[],st=detailState(r.id);
   if(r.fieldSize!=null&&isFinite(count)&&count>0)return count+'頭';
   if(hs.length)return hs.length+'頭';
+  // List summaries carry neither fieldSize nor horses; fall back to
+  // the already-fetched detail cache for this race before claiming
+  // the count is still being fetched.
+  var dc=loadDetailCache(r.id,true);
+  if(dc){var dcount=Number(dc.fieldSize)>0?Number(dc.fieldSize):(dc.horses||[]).length;if(dcount>0)return dcount+'頭'}
   return st.entry==='empty'?'0頭':'頭数取得中'
 }
 function raceDetailNotice(r){
@@ -3076,6 +3081,12 @@ function mergeCachedVolatilityForTrack(track){
       if(JSON.stringify(r.volatility||null)!==JSON.stringify(v)){r.volatility=v;changed=true}
     }
     if(d&&d.riskLabel&&JSON.stringify(r.riskLabel||null)!==JSON.stringify(d.riskLabel)){r.riskLabel=d.riskLabel;changed=true}
+    // Head count: the list summary carries no fieldSize/horses, so a
+    // race whose detail was already fetched still showed 頭数取得中 on
+    // the venue list. Sync the detail's real count into the summary
+    // (stale cache is fine for a field size; never estimate one).
+    var dc=loadDetailCache(r.id,true),dcount=dc?(Number(dc.fieldSize)>0?Number(dc.fieldSize):(dc.horses||[]).length):0;
+    if(dcount>0&&Number(r.fieldSize)!==dcount){r.fieldSize=dcount;changed=true}
   });
   if(changed)persistRaceSummaryCache();
   return changed
