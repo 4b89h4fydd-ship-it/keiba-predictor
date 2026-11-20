@@ -4848,20 +4848,31 @@ function entryTableSection(r,p){
   var body=rows.map(function(x){
     var h=x.horse,no=n(h.horseNumber),scratch=isScratchHorse(h),mk=visiblePredictionMark(x),
         win=racecardBandWinText(r,no,x),ownChecked=!scratch&&isUserMarked(r,no);
-    var meta=esc(h.sex||'—')+esc(h.age||'—')+' '+esc(carriedWeightText(h))+(h.jockey?' '+esc(h.jockey):'');
     var curBw=currentBodyWeight(h),deltaValue=currentBodyWeightChange(h),pastBw=!curBw?referenceBodyWeight(h):0,
-        weightTxt=scratch?'':(curBw?(' · '+esc(curBw)+(deltaValue!=null?('('+(deltaValue>0?'+':'')+esc(deltaValue)+')'):'')):(pastBw?(' · 前'+esc(pastBw)):''));
-    var pop=marketPopularity(h,r),oddsVal=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?(Math.round(n(h.winOdds)*10)/10).toFixed(1):'',
-        oddsTxt=(scratch||!oddsVal)?'':('単勝 '+oddsVal+(pop>0?(' · '+pop+'人気'):''));
+        weightTxt=scratch?'―':(curBw?(esc(curBw)+(deltaValue!=null?('('+(deltaValue>0?'+':'')+esc(deltaValue)+')'):'')):(pastBw?('前'+esc(pastBw)):'―'));
+    var pop=marketPopularity(h,r),oddsVal=(h.winOdds!=null&&h.winOdds!==''&&n(h.winOdds)>0)?(Math.round(n(h.winOdds)*10)/10).toFixed(1):'';
+    /* v364 — netkeiba-form racecard (user direction 2026-11-21: the
+       page structure itself follows the netkeiba race page; contents
+       stay ARVEXQ's own). Column order: 枠・馬番・印・馬名・性齢・
+       斤量・騎手・厩舎・馬体重(増減)・オッズ・人気, with ARVEXQ's own
+       win-rate estimate kept as the final column and the user's own
+       check column kept at the head. */
     return '<tr'+(scratch?' class="scratched"':'')+'>'
       +'<td>'+(scratch?'':'<button type="button" class="rc-v345-owncheck'+(ownChecked?' is-on':'')+'" data-user-mark="'+esc(no)+'" aria-pressed="'+ownChecked+'" aria-label="自分のチェック（'+esc(horseDisplayName(r,h))+'）"><span class="rc-v345-ownbox" aria-hidden="true">'+(ownChecked?'☑':'☐')+'</span></button>')+'</td>'
+      +'<td class="arv-entry-frame">'+esc(frame(h))+'</td>'
       +'<td>'+badge(h)+'</td>'
-      +'<td class="l"><button type="button" class="nk-odds-name" data-horse-open="'+esc(no)+'">'+esc(horseDisplayName(r,h))+'</button>'
-      +'<div class="arv-entry-sub">'+meta+weightTxt+'</div></td>'
       +'<td class="arv-marks-mark" data-ai-mark="'+esc(mk)+'">'+(mk?racecardMarkCellHtml(x):'―')+'</td>'
-      +'<td>'+(win?esc(String(win).replace(/^勝率\s*/,'')):'―')+(oddsTxt?'<div class="arv-entry-sub">'+oddsTxt+'</div>':'')+'</td></tr>';
+      +'<td class="l"><button type="button" class="nk-odds-name" data-horse-open="'+esc(no)+'">'+esc(horseDisplayName(r,h))+'</button></td>'
+      +'<td>'+esc(h.sex||'—')+esc(h.age||'—')+'</td>'
+      +'<td>'+esc(carriedWeightText(h))+'</td>'
+      +'<td class="l">'+esc(h.jockey||'—')+'</td>'
+      +'<td class="l">'+esc(h.trainer||'—')+'</td>'
+      +'<td>'+weightTxt+'</td>'
+      +'<td>'+((scratch||!oddsVal)?'―':esc(oddsVal))+'</td>'
+      +'<td>'+(pop>0?esc(pop):'―')+'</td>'
+      +'<td>'+(win?esc(String(win).replace(/^勝率\s*/,'')):'―')+'</td></tr>';
   }).join('');
-  return '<table class="arv-marks-table arv-entry-table"><thead><tr><th>自分</th><th>馬番</th><th class="l">馬名</th><th>印</th><th>勝率</th></tr></thead><tbody>'+body+'</tbody></table>';
+  return '<div class="arv-entry-scroll"><table class="arv-marks-table arv-entry-table"><thead><tr><th>自分</th><th>枠</th><th>馬番</th><th>印</th><th class="l">馬名</th><th>性齢</th><th>斤量</th><th class="l">騎手</th><th class="l">厩舎</th><th>馬体重</th><th>オッズ</th><th>人気</th><th>勝率</th></tr></thead><tbody>'+body+'</tbody></table></div>';
 }
 /* データ分析 tab: top horses by own-data condition fit + course facts. */
 /* v363 fix (user report 2026-11-19, 笠松1R): the shrinkage prior is
