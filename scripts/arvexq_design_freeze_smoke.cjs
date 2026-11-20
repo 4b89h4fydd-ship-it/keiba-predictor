@@ -37,7 +37,10 @@ const styleBaseline={
   // selectors outranked it); the same palette is repeated with
   // higher-specificity selectors. Production-verified need: PR #599
   // fixed the bets tab but badges/band stayed dark-on-dark.
-  "arvexq/ui/static/sports/unified-home.css": "c4b688f7b1626371",
+  // Re-pinned 2026-11-21 (round 3): round-2 venue selectors never
+  // matched (.smart-shell and .smart-venue-page are one element, not
+  // ancestor/descendant); restated compounded on the same element.
+  "arvexq/ui/static/sports/unified-home.css": "c70c6abc3289ff1c",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
