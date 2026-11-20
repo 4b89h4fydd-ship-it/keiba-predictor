@@ -2411,3 +2411,51 @@ html body .smart-venue-page .smart-race-title small{
  white-space:normal!important;word-break:keep-all!important;overflow-wrap:break-word!important;
  line-height:1.45!important;
 }
+
+/* 2026-11-21 contrast repair, round 2: the round-1 block above lost
+   the cascade inside venue rows and the race head, because the light
+   passes there use universal selectors carrying :not()/attribute
+   specificity (0,5,2) that beat a plain badge selector. Repeat the
+   same palette with selectors that outrank those passes, so the dark
+   badges and the dark upset band really do get their light text. */
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge,
+html body .smart-shell .smart-home .arv-all-race .arv-risk-badge.arv-risk-badge{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell .smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-solid{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell .smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-rough{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-low{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-high{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip :is(small,b,i){
+ color:inherit!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band{
+ background:#232a2e!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band.upset-low{background:#12291d!important;border-color:#3f9e6b!important}
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band.upset-high{background:#33191b!important;border-color:#a05f63!important}
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band :is(.arv-upset-band-title,.arv-upset-band-level,.arv-upset-band-score,b){
+ color:#eee7dc!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band .arv-upset-band-reasons{
+ color:#c8d4da!important;opacity:1!important;text-shadow:none!important;
+}
