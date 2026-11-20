@@ -2495,3 +2495,173 @@ html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-
 html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip :is(small,b,i){
  color:inherit!important;opacity:1!important;text-shadow:none!important;
 }
+
+/* 2026-11-21 simple white redesign (user direction: build the main
+   screens in the netkeiba race-page form — plain white ground, thin
+   borders, dark text; no black pills, no black bands, no solid dark
+   badge fills; contents stay ARVEXQ's own). This block supersedes the
+   2026-11-21 contrast blocks above for the elements it names. */
+
+/* Home venue tags: large, easy to tap, plain white cards. Their
+   dedicated rules were dropped from index.html in the v363 icon pass
+   and never re-added, so the tags fell back to cramped generic dark
+   button styling; they are defined here instead. */
+html body .smart-shell .nk-venue-tags{
+ display:flex!important;flex-wrap:wrap!important;gap:10px!important;
+ padding:12px 2px 6px!important;min-width:0!important;
+}
+html body .smart-shell .nk-venue-tag{
+ flex:1 1 108px!important;min-width:0!important;max-width:230px!important;min-height:64px!important;
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:4px!important;
+ padding:14px 12px!important;border:1px solid #d9d9d9!important;border-radius:14px!important;
+ background:#ffffff!important;color:#26303a!important;font-family:inherit!important;
+ cursor:pointer!important;text-align:left!important;box-shadow:none!important;
+}
+html body .smart-shell .nk-venue-tag b{font-size:24px!important;font-weight:900!important;line-height:1.15!important;color:#26303a!important}
+html body .smart-shell .nk-venue-tag small{font-size:15px!important;font-weight:700!important;color:#47525c!important}
+html body .smart-shell .nk-venue-tag.is-live{border-color:#c0392b!important;background:#fdf0ec!important}
+html body .smart-shell .nk-venue-tag.is-live small{color:#b02a20!important}
+html body .smart-shell .nk-venue-tag.is-next{border-color:#006636!important;background:#eef7f0!important}
+html body .smart-shell .nk-venue-tag.is-done{opacity:.55!important}
+
+/* Race tabs: a slim netkeiba-form tab bar instead of the 58px beige
+   blocks — text tabs on white, the active tab marked by weight and a
+   green underline only. */
+html body .smart-race-page .race-nav-v230{
+ background:#ffffff!important;background-image:none!important;border:0!important;
+ border-bottom:1px solid #dddddd!important;border-radius:0!important;
+ padding:0!important;margin:0 0 10px!important;box-shadow:none!important;
+}
+html body .smart-race-page .race-nav-v230-top{margin-bottom:0!important}
+html body .smart-race-page .race-nav-v230-row{gap:0!important}
+html body .smart-race-page .race-nav-v230-btn{
+ height:42px!important;min-height:42px!important;padding:0 2px!important;
+ background:#ffffff!important;background-image:none!important;
+ border:0!important;border-bottom:3px solid transparent!important;border-radius:0!important;
+ color:#5a564d!important;font-size:15px!important;font-weight:700!important;
+ box-shadow:none!important;
+}
+html body .smart-race-page .race-nav-v230-btn.active{
+ background:#ffffff!important;color:#111111!important;
+ border-bottom:3px solid #006636!important;
+}
+html body .smart-race-page .race-nav-v230-btn *,
+html body .smart-race-page .race-nav-v230-label{color:inherit!important;opacity:1!important}
+
+/* Data-analysis section tags: white chips with a thin border and dark
+   text; the selected tag gets only a light green tint. */
+html body .smart-shell .da-tags{
+ display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin:0 0 10px!important;
+}
+html body .smart-shell .da-tag{
+ background:#ffffff!important;border:1px solid #cfcfc8!important;border-radius:999px!important;
+ color:#33312b!important;font-size:13px!important;font-weight:700!important;
+ padding:7px 12px!important;min-height:36px!important;box-shadow:none!important;
+}
+html body .smart-shell .da-tag.active{
+ background:#eef7f0!important;border-color:#006636!important;color:#0b4d26!important;
+}
+
+/* Horse names are plain text, never pills (the name buttons in the
+   racecard, the data-top horses and the odds table). */
+html body .smart-shell .nk-odds-name{
+ background:transparent!important;background-image:none!important;border:0!important;
+ border-radius:0!important;box-shadow:none!important;
+ color:#26303a!important;font-weight:700!important;text-decoration:none!important;
+ padding:2px 0!important;text-align:left!important;
+}
+
+/* Upset band: a plain light row with dark text, not a black band. */
+html body .smart-shell .arv-upset-band,
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band{
+ background:#f7f7f2!important;background-image:none!important;
+ border:1px solid #dddddd!important;color:#292820!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-band.upset-low,
+html body .smart-shell .arv-upset-band.upset-high,
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band.upset-low,
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band.upset-high{
+ background:#f7f7f2!important;border-color:#dddddd!important;
+}
+html body .smart-shell .arv-upset-band :is(.arv-upset-band-title,.arv-upset-band-level,.arv-upset-band-score,b),
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band :is(.arv-upset-band-title,.arv-upset-band-level,.arv-upset-band-score,b){
+ color:#292820!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-band .arv-upset-band-reasons,
+html body .smart-shell .smart-race-page .smart-race-head .arv-upset-band.arv-upset-band .arv-upset-band-reasons{
+ color:#6b675c!important;opacity:1!important;text-shadow:none!important;
+}
+
+/* Risk badges and upset chips: light tints with dark text instead of
+   solid dark fills (covers the plain, venue-row and race-head scopes
+   the earlier blocks used). */
+html body .smart-shell .arv-risk-badge,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge{
+ background:#f5f4ee!important;border-color:#d5d2c6!important;color:#33312b!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-risk-badge.risk-solid,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge.risk-solid,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-solid{
+ background:#eef7f0!important;border-color:#bcd8c2!important;color:#0b4d26!important;
+}
+html body .smart-shell .arv-risk-badge.risk-rough,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell .smart-race-page .smart-race-head .arv-risk-badge.arv-risk-badge.risk-rough,
+html body .smart-shell.smart-home .arv-all-race .arv-risk-badge.arv-risk-badge.risk-rough{
+ background:#fdf0ec!important;border-color:#eec9c2!important;color:#a33327!important;
+}
+html body .smart-shell .arv-upset-chip,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip{
+ background:#f5f4ee!important;border-color:#d5d2c6!important;color:#33312b!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-chip.upset-low,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-low,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-low{
+ background:#eef7f0!important;border-color:#bcd8c2!important;color:#0b4d26!important;
+}
+html body .smart-shell .arv-upset-chip.upset-high,
+html body .smart-shell .smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-high,
+html body .smart-shell.smart-venue-page .smart-race-row[data-race-state] .smart-race-title .arv-upset-chip.arv-upset-chip.upset-high{
+ background:#fdf0ec!important;border-color:#eec9c2!important;color:#a33327!important;
+}
+html body .smart-shell .arv-upset-chip :is(small,b,i){
+ color:inherit!important;opacity:1!important;text-shadow:none!important;
+}
+
+/* Bets-tab mark chips: light chip, dark mark (was a dark navy pill). */
+html body .smart-shell .arv-three-bet .bet-mark-grid>span>i{
+ background:#f2f0e9!important;border-color:#d8d2c4!important;color:#26241f!important;
+}
+
+/* Racecard table in the netkeiba form: light gray header row, thin
+   row rules, no fills on the body cells. The wide table scrolls
+   sideways inside its card on narrow screens. */
+html body .smart-race-page .arv-entry-scroll{
+ overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;
+}
+html body .smart-race-page .arv-entry-table{
+ border-collapse:collapse!important;width:100%!important;background:#ffffff!important;
+}
+html body .smart-race-page .arv-entry-table th{
+ background:#f2f2f2!important;color:#666666!important;font-size:11px!important;font-weight:700!important;
+ border-bottom:1px solid #dddddd!important;padding:6px 4px!important;white-space:nowrap!important;text-align:center!important;
+}
+html body .smart-race-page .arv-entry-table th.l{text-align:left!important}
+html body .smart-race-page .arv-entry-table td{
+ background:transparent!important;border-bottom:1px solid #e6e6e0!important;
+ padding:7px 4px!important;font-size:13px!important;color:#26241f!important;
+ white-space:nowrap!important;vertical-align:middle!important;text-align:center!important;
+}
+html body .smart-race-page .arv-entry-table td.l{text-align:left!important}
+html body .smart-race-page .arv-entry-table .arv-entry-frame{font-weight:900!important}
+html body .smart-race-page .arv-entry-table .nk-odds-name{font-size:14px!important}
