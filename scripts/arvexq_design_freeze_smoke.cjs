@@ -27,7 +27,12 @@ const styleBaseline={
   // Re-pinned 2026-11-17: user-directed pure-white ground (the cream
   // paper theme #f6f2e8/#f7f7f4 -> #ffffff, tan borders -> light gray)
   // on the main screens.
-  "arvexq/ui/static/sports/unified-home.css": "bc2daad4a4fd4c73",
+  // Re-pinned 2026-11-21: user-directed contrast repair (dark text on
+  // the dark risk/upset badges and upset band restored to light ink;
+  // pale bet-tab texts on the white card restored to dark ink; venue
+  // row time column / mid-word wrap fix). Approved by the user's
+  // 2026-11-21 bug report itself ("アプリバグってるぞ、クソ見にくい").
+  "arvexq/ui/static/sports/unified-home.css": "3ead026a8ccab2c7",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
