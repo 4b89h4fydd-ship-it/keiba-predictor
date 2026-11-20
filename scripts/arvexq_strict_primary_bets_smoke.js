@@ -1,12 +1,25 @@
-/* Bets tab primary display (user rule 2026-11-21, third revision):
+/* Bets tab primary display (user rule 2026-11-21, final revision):
  * a strict selection across ALL ticket kinds from the payload's
- * ticketPlan, at most 5 points —
+ * ticketPlan, at most 5 points, built ONLY from the marked horses
+ * (◎○▲△☆) — a pick naming an unmarked horse is never shown. This
+ * mirrors the posting-side selection (generate_posts.py):
  *   1. 単勝: winExpectedValues with EV >= 1.25 AND win prob >= 5%,
- *      the maximum-EV horse (1 point).
- *   2. 複勝: placeExpectedValues with EV lower bound >= 1.0, the
- *      highest top-3 probability, excluding the 単勝 pick (1 point).
- *   3. Combinations: ticketPlan.items in joint-probability order,
- *      only probability >= 5%, filling up to 5 points total.
+ *      marked horses only, the maximum-EV horse (1 point).
+ *   2. 複勝: placeExpectedValues with EV lower bound >= 1.0,
+ *      marked horses only, the highest top-3 probability,
+ *      excluding the 単勝 pick (1 point).
+ *   3. Combinations: ticketPlan.items in payload order whose
+ *      horses are ALL marked, only probability >= 5% (an item
+ *      carrying no probability passes), filling up to 5 points.
+ *   4. Coverage: a marked horse still in no pick is covered by a
+ *      marked-only combination — 3+ uncovered: the 3連複 of the
+ *      three with the highest top-3 probabilities (diagnosis);
+ *      2 uncovered: their ワイド; 1 uncovered: a ワイド with the
+ *      strongest mark (◎, or ○ when the horse itself is ◎). At
+ *      the 5-point cap the coverage bet replaces the lowest-
+ *      probability combination （単勝/複勝 are never replaced).
+ * No probability percentages are displayed: combination rows carry
+ * no 推定確率, and the 単勝/複勝 rows show only their EV.
  * When a ticketPlan exists this selection is the ONLY main display
  * (nothing qualifying renders as 見送り); neither the marks
  * formation, the ticketPlan items alone, the integrated
@@ -18,8 +31,7 @@
  * combination picks sharing an axis render as one formation line
  * (ワイド/馬連 shared horse, 馬単 shared 1st horse, 3連複 shared
  * pair, 3連単 shared 1st-2nd pair); group lines carry only the
- * point count, ungrouped picks keep their probability, and the
- * total still counts individual picks.
+ * point count, and the total still counts individual picks.
  * Run from the repository root: node scripts/arvexq_strict_primary_bets_smoke.js
  */
 'use strict';
@@ -56,51 +68,62 @@ function makeUf(ticketPlan,extra){
     ticketPlan:ticketPlan
   },extra||{});
 }
+function raceOf(uf){
+  return {id:'r1',date:'2026-11-21',predictionStatus:'ready',
+    predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
+    unifiedForecast:uf};
+}
 const mech=[{kind:'ワイド',combos:[[7,8]],points:1,reason:'MECH-REASON-XYZ'}];
 
-// A) Full selection: 単勝 = max EV among EV>=1.25 & win>=5%
-//    (horse 6, EV 1.68; horse 3 fails EV, horse 4 fails win prob,
-//    horse 5 passes but lower EV). 複勝 = highest top-3 prob among
-//    EV-low>=1.0 excluding the 単勝 pick (horse 7; horse 6 excluded
-//    as the win pick, horse 8 fails the EV-low bound despite the
-//    highest top-3 prob). Combinations fill to 5 total in
-//    probability order; the 5.1% item is cut by the cap and the
-//    4.9% item by the probability floor.
+// A) Full selection, marked horses only. 単勝 = max EV among marked
+//    EV>=1.25 & win>=5% passers (horse 5, EV 1.68): horse 6 has a
+//    higher EV but is unmarked and excluded; horse 3 fails EV,
+//    horse 4 fails win prob, horse 2 passes with a lower EV.
+//    複勝 = highest top-3 prob among marked EV-low>=1.0 passers
+//    excluding the win pick (horse 1): horse 6 is unmarked, horse 5
+//    is the win pick, horse 2 fails the EV-low bound. Combinations
+//    fill to 5 in payload order (the [5,6] item names an unmarked
+//    horse and is excluded; [1,2] is cut by the cap). Coverage then
+//    replaces the lowest-probability combination (3連複 9.6%) with
+//    the ワイド of the two uncovered marks 3 and 4.
 const tpA={sameModelAndMarks:true,expectedValueStatus:'calibrated-estimate',
   combinedPicks:[],
   winExpectedValues:[
+    {horseNumber:6,expectedValue:3.00,winProbability:0.30,odds:9.0},
+    {horseNumber:5,expectedValue:1.68,winProbability:0.09,odds:18.2},
+    {horseNumber:2,expectedValue:1.42,winProbability:0.12,odds:11.6},
     {horseNumber:3,expectedValue:1.10,winProbability:0.20,odds:5.5},
-    {horseNumber:4,expectedValue:2.10,winProbability:0.04,odds:52.0},
-    {horseNumber:5,expectedValue:1.42,winProbability:0.12,odds:11.6},
-    {horseNumber:6,expectedValue:1.68,winProbability:0.09,odds:18.2}],
+    {horseNumber:4,expectedValue:2.10,winProbability:0.04,odds:52.0}],
   placeExpectedValues:[
-    {horseNumber:6,top3Probability:0.55,placeOddsLow:2.0,placeOddsHigh:3.0,expectedValueLow:1.10,expectedValueHigh:1.65},
-    {horseNumber:7,top3Probability:0.48,placeOddsLow:1.8,placeOddsHigh:2.6,expectedValueLow:1.02,expectedValueHigh:1.30},
-    {horseNumber:8,top3Probability:0.60,placeOddsLow:1.5,placeOddsHigh:2.0,expectedValueLow:0.95,expectedValueHigh:1.20}],
+    {horseNumber:6,top3Probability:0.60,placeOddsLow:3.0,placeOddsHigh:4.5,expectedValueLow:2.00,expectedValueHigh:3.00},
+    {horseNumber:5,top3Probability:0.55,placeOddsLow:2.0,placeOddsHigh:3.0,expectedValueLow:1.10,expectedValueHigh:1.65},
+    {horseNumber:1,top3Probability:0.48,placeOddsLow:1.8,placeOddsHigh:2.6,expectedValueLow:1.02,expectedValueHigh:1.30},
+    {horseNumber:2,top3Probability:0.50,placeOddsLow:1.5,placeOddsHigh:2.0,expectedValueLow:0.95,expectedValueHigh:1.20}],
   items:[
-    {kind:'ワイド',combo:[6,7],probability:0.213},
-    {kind:'馬連',combo:[6,5],probability:0.184},
-    {kind:'3連複',combo:[6,7,5],probability:0.096},
-    {kind:'3連単',combo:[6,7,5],probability:0.051},
-    {kind:'ワイド',combo:[1,2],probability:0.049}]};
-const raceA={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpA)};
+    {kind:'ワイド',combo:[5,6],probability:0.300},
+    {kind:'ワイド',combo:[5,1],probability:0.213},
+    {kind:'馬連',combo:[5,2],probability:0.184},
+    {kind:'3連複',combo:[5,1,2],probability:0.096},
+    {kind:'ワイド',combo:[1,2],probability:0.060},
+    {kind:'ワイド',combo:[1,3],probability:0.049}]};
+const raceA=raceOf(makeUf(tpA));
 const htmlA=frame.contents(raceA,{});
 assert.match(htmlA,/arv-strict-picks/,'strict selection is the main display');
-assert.match(htmlA,/単勝 6番 馬6/,'win pick: max EV passer');
+assert.match(htmlA,/単勝 5番 馬5/,'win pick: max EV marked passer');
 assert.match(htmlA,/期待値 1\.68/,'win EV shown');
-assert.doesNotMatch(htmlA,/単勝 5番|単勝 3番|単勝 4番/,'win rejects not picked');
-assert.match(htmlA,/複勝 7番 馬7/,'place pick: best top-3 among EV-low passers, win pick excluded');
+assert.doesNotMatch(htmlA,/単勝 6番|単勝 2番|単勝 3番|単勝 4番/,'win rejects not picked (6 is unmarked)');
+assert.match(htmlA,/複勝 1番 馬1/,'place pick: best top-3 among marked EV-low passers');
 assert.match(htmlA,/期待値 1\.02〜1\.30/,'place EV range shown');
-assert.doesNotMatch(htmlA,/複勝 8番|複勝 6番/,'place rejects not picked');
-assert.match(htmlA,/推定確率 21\.3%/,'combo probability shown');
-assert.ok(htmlA.indexOf('推定確率 21.3%')<htmlA.indexOf('推定確率 18.4%')&&
-          htmlA.indexOf('推定確率 18.4%')<htmlA.indexOf('推定確率 9.6%'),
-          'combos in probability order');
+assert.doesNotMatch(htmlA,/複勝 6番|複勝 5番|複勝 2番/,'place rejects not picked');
+assert.doesNotMatch(htmlA,/5 - 6/,'combo naming an unmarked horse excluded');
+assert.match(htmlA,/5 - 1/,'wide combo kept');
+assert.match(htmlA,/5 - 2/,'quinella combo kept');
+assert.match(htmlA,/3 - 4/,'coverage wide for the uncovered marks 3 and 4');
+assert.doesNotMatch(htmlA,/3連複/,'lowest-probability combo replaced by the coverage bet');
+assert.doesNotMatch(htmlA,/1 - 2/,'cap cut the remaining item');
 assert.match(htmlA,/合計 5点/,'total capped at 5');
-assert.doesNotMatch(htmlA,/3連単/,'cap cut the 4th combo');
-assert.doesNotMatch(htmlA,/1 - 2/,'probability floor cut the 4.9% combo');
+assert.doesNotMatch(htmlA,/推定確率/,'no probability percentages anywhere');
+assert.doesNotMatch(htmlA,/× 単勝 18\.2/,'win row shows no win-rate detail line');
 assert.doesNotMatch(htmlA,/arv-formation-picks|arv-plan-picks/,'no formation / plan-picks primary');
 assert.doesNotMatch(htmlA,/arv-osusume/,'integrated recommendation not shown');
 assert.doesNotMatch(htmlA,/MECH-REASON-XYZ/,'mechanical set not shown');
@@ -108,56 +131,75 @@ assert.doesNotMatch(htmlA,/<details/,'no reference fold');
 assert.match(htmlA,/期待値候補|単勝期待値/,'EV section kept');
 assert.match(frame.render(raceA,{}),/おすすめ買い目/,'tab heading');
 
-// B) No win/place qualifiers: combinations alone fill the 5 slots.
+// B) Coverage branches with no qualifying picks at all: the items
+//    are unusable (one names unmarked horses, one is below the
+//    probability floor), so coverage alone builds the selection —
+//    first the 3連複 of the three uncovered marks with the highest
+//    diagnosis top-3 probabilities (3, 4, 1), then the ワイド of
+//    the two remaining marks (2, 5).
+const diagB=[1,2,3,4,5,6,7,8,9,10].map(function(no){
+  const t3={1:0.30,2:0.10,3:0.50,4:0.40,5:0.20}[no]||0.05;
+  return {horseNumber:no,winProbability:0.05,top3Probability:t3,grade:'A'};
+});
 const tpB={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
-    {kind:'ワイド',combo:[1,2],probability:0.30},
-    {kind:'馬連',combo:[1,3],probability:0.25},
-    {kind:'3連複',combo:[1,2,3],probability:0.20},
-    {kind:'馬単',combo:[1,2],probability:0.15},
-    {kind:'ワイド',combo:[2,4],probability:0.10},
-    {kind:'ワイド',combo:[8,9],probability:0.06}]};
-const raceB={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpB)};
+    {kind:'ワイド',combo:[6,7],probability:0.30},
+    {kind:'ワイド',combo:[1,2],probability:0.04}]};
+const raceB=raceOf(makeUf(tpB,{diagnosis:diagB}));
 const htmlB=frame.contents(raceB,{});
 assert.match(htmlB,/arv-strict-picks/);
-assert.match(htmlB,/合計 5点/,'five combos fill the cap');
-assert.doesNotMatch(htmlB,/8 - 9/,'sixth combo cut by the cap');
 assert.doesNotMatch(htmlB,/単勝 \d+番|複勝 \d+番/,'no single picks');
-// The two ワイド picks share horse 2, so they collapse into one
-// formation line; the other kinds stay single lines with probabilities.
-assert.match(htmlB,/2 − 1・4（2点）/,'wide picks grouped on shared horse 2');
-assert.doesNotMatch(htmlB,/推定確率 30\.0%|推定確率 10\.0%/,'grouped picks lose individual probabilities');
-assert.match(htmlB,/推定確率 25\.0%/,'ungrouped 馬連 keeps its probability');
-assert.match(htmlB,/推定確率 15\.0%/,'ungrouped 馬単 keeps its probability');
+assert.doesNotMatch(htmlB,/6 - 7/,'unmarked combo excluded');
+assert.match(htmlB,/1 - 3 - 4/,'coverage trio: top-3 by diagnosis top-3 probability');
+assert.match(htmlB,/2 - 5/,'coverage wide for the last two uncovered marks');
+assert.match(htmlB,/合計 2点/,'two coverage bets');
+assert.doesNotMatch(htmlB,/推定確率/,'coverage bets carry no probability display');
 
-// C) Partial selection: only the win pick and two combos qualify.
+// C) Coverage of a single uncovered mark: the partner is the
+//    strongest mark (◎ = horse 1). Selection: win pick 1, place
+//    pick 3 (horse 2 fails the EV-low bound), one wide item
+//    covering marks 2 and 4 — mark 5 is left over and covered by
+//    ワイド [1,5].
 const tpC={sameModelAndMarks:true,combinedPicks:[],
-  winExpectedValues:[{horseNumber:2,expectedValue:1.30,winProbability:0.10,odds:13.0}],
-  placeExpectedValues:[{horseNumber:3,top3Probability:0.40,placeOddsLow:1.4,placeOddsHigh:1.9,expectedValueLow:0.80,expectedValueHigh:1.05}],
-  items:[
-    {kind:'ワイド',combo:[2,3],probability:0.22},
-    {kind:'馬連',combo:[2,4],probability:0.11},
-    {kind:'ワイド',combo:[5,6],probability:0.02}]};
-const raceC={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpC)};
+  winExpectedValues:[{horseNumber:1,expectedValue:1.30,winProbability:0.10,odds:13.0}],
+  placeExpectedValues:[
+    {horseNumber:3,top3Probability:0.45,placeOddsLow:1.6,placeOddsHigh:2.2,expectedValueLow:1.05,expectedValueHigh:1.40},
+    {horseNumber:2,top3Probability:0.50,placeOddsLow:1.4,placeOddsHigh:1.9,expectedValueLow:0.80,expectedValueHigh:1.05}],
+  items:[{kind:'ワイド',combo:[2,4],probability:0.20}]};
+const raceC=raceOf(makeUf(tpC));
 const htmlC=frame.contents(raceC,{});
-assert.match(htmlC,/単勝 2番/);
-assert.doesNotMatch(htmlC,/複勝 3番/,'place EV-low below 1.0 rejected');
-assert.match(htmlC,/合計 3点/,'1 win + 2 combos');
+assert.match(htmlC,/単勝 1番/);
+assert.match(htmlC,/複勝 3番/,'place pick: EV-low passer');
+assert.doesNotMatch(htmlC,/複勝 2番/,'place EV-low below 1.0 rejected');
+assert.match(htmlC,/2 - 4/,'item kept');
+assert.match(htmlC,/1 - 5/,'single uncovered mark covered with the ◎ horse');
+assert.match(htmlC,/合計 4点/,'win + place + item + coverage');
+assert.doesNotMatch(htmlC,/推定確率/,'no probability percentages');
+assert.doesNotMatch(htmlC,/3着内 45/,'place row shows no top-3 detail line');
 
-// D) ticketPlan present but nothing qualifies: 見送り, and the
-//    fallback chain is NOT used.
+// C2) The single uncovered mark is ◎ itself: the partner is ○.
+const tpC2={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
+  combinedPicks:[],
+  items:[
+    {kind:'3連複',combo:[2,3,4],probability:0.20},
+    {kind:'ワイド',combo:[4,5],probability:0.15}]};
+const raceC2=raceOf(makeUf(tpC2));
+const htmlC2=frame.contents(raceC2,{});
+assert.match(htmlC2,/2 - 3 - 4/,'trio item kept');
+assert.match(htmlC2,/4 - 5/,'wide item kept');
+assert.match(htmlC2,/1 - 2/,'uncovered ◎ covered with the ○ horse');
+assert.match(htmlC2,/合計 3点/,'two items + coverage');
+
+// D) ticketPlan present but no marks at all: nothing can be built
+//    (every candidate names an unmarked horse, and there is no
+//    marked horse to cover) — 見送り, and the fallback chain is
+//    NOT used.
 const tpD={sameModelAndMarks:true,combinedPicks:[],
-  winExpectedValues:[{horseNumber:2,expectedValue:1.00,winProbability:0.30,odds:3.3}],
-  placeExpectedValues:[{horseNumber:3,top3Probability:0.40,placeOddsLow:1.4,placeOddsHigh:1.9,expectedValueLow:0.90,expectedValueHigh:1.05}],
-  items:[{kind:'ワイド',combo:[2,3],probability:0.03}]};
-const raceD={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpD)};
+  winExpectedValues:[{horseNumber:2,expectedValue:1.80,winProbability:0.30,odds:5.8}],
+  placeExpectedValues:[{horseNumber:3,top3Probability:0.40,placeOddsLow:1.4,placeOddsHigh:1.9,expectedValueLow:1.10,expectedValueHigh:1.30}],
+  items:[{kind:'ワイド',combo:[2,3],probability:0.30}]};
+const raceD=raceOf(makeUf(tpD,{marks:[]}));
 const htmlD=frame.contents(raceD,{});
 assert.match(htmlD,/arv-strict-picks/,'strict block still primary');
 assert.match(htmlD,/見送り（条件を満たす買い目なし）/,'pass displayed');
@@ -201,91 +243,124 @@ const htmlH=frame.contents(raceG,{});
 assert.match(htmlH,/arv-strict-picks/,'standalone strict selection');
 assert.doesNotMatch(htmlH,/MECH-REASON-XYZ/);
 
-// I) Formation grouping: ワイド sharing horse 4 (3 partners, in
-//    probability order) and 馬連 sharing horse 4 collapse into
-//    one line each. Group lines carry only the point count; the
-//    total still counts the 5 individual picks.
+// I) Formation grouping: ワイド sharing horse 1 (3 partners, in
+//    selection order) and 馬連 sharing horse 1 collapse into one
+//    line each. All five marks are covered by the items, so no
+//    coverage bet appears. Group lines carry only the point
+//    count; the total still counts the 5 individual picks.
 const tpI={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
-    {kind:'ワイド',combo:[4,9],probability:0.30},
-    {kind:'ワイド',combo:[4,8],probability:0.25},
-    {kind:'ワイド',combo:[4,7],probability:0.20},
-    {kind:'馬連',combo:[4,9],probability:0.15},
-    {kind:'馬連',combo:[4,6],probability:0.12}]};
-const raceI={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpI)};
+    {kind:'ワイド',combo:[1,4],probability:0.30},
+    {kind:'ワイド',combo:[1,3],probability:0.25},
+    {kind:'ワイド',combo:[1,2],probability:0.20},
+    {kind:'馬連',combo:[1,4],probability:0.15},
+    {kind:'馬連',combo:[1,5],probability:0.12}]};
+const raceI=raceOf(makeUf(tpI));
 const htmlI=frame.contents(raceI,{});
-assert.match(htmlI,/4 − 9・8・7（3点）/,'wide formation: axis 4, partners in probability order');
-assert.match(htmlI,/4 − 9・6（2点）/,'quinella formation: axis 4');
-assert.doesNotMatch(htmlI,/推定確率/,'group lines carry no individual probabilities');
+assert.match(htmlI,/1 − 4・3・2（3点）/,'wide formation: axis 1, partners in selection order');
+assert.match(htmlI,/1 − 4・5（2点）/,'quinella formation: axis 1');
+assert.doesNotMatch(htmlI,/推定確率/,'group lines carry no probabilities');
 assert.match(htmlI,/合計 5点/,'total counts individual picks, not lines');
 
 // J) 馬単 grouping on the shared 1st horse; an unrelated ワイド
-//    stays a single line with its probability.
+//    stays a single line. All marks are covered by the items.
 const tpJ={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
-    {kind:'馬単',combo:[9,5],probability:0.30},
-    {kind:'馬単',combo:[9,3],probability:0.25},
-    {kind:'ワイド',combo:[1,2],probability:0.20}]};
-const raceJ={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpJ)};
+    {kind:'馬単',combo:[2,5],probability:0.30},
+    {kind:'馬単',combo:[2,3],probability:0.25},
+    {kind:'ワイド',combo:[1,4],probability:0.20}]};
+const raceJ=raceOf(makeUf(tpJ));
 const htmlJ=frame.contents(raceJ,{});
-assert.match(htmlJ,/9 → 5・3（2点）/,'exacta formation: shared 1st horse 9');
-assert.match(htmlJ,/推定確率 20\.0%/,'ungrouped wide keeps its probability');
+assert.match(htmlJ,/2 → 5・3（2点）/,'exacta formation: shared 1st horse 2');
+assert.match(htmlJ,/1 - 4/,'ungrouped wide stays a single line');
+assert.doesNotMatch(htmlJ,/推定確率/,'ungrouped pick shows no probability either');
 assert.match(htmlJ,/合計 3点/,'total counts individual picks');
 
 // K) 3連複 grouping on the shared pair; a trio without the pair
-//    stays a single line.
+//    stays a single line. All marks are covered by the items.
 const tpK={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
-    {kind:'3連複',combo:[4,9,7],probability:0.30},
-    {kind:'3連複',combo:[4,9,8],probability:0.25},
-    {kind:'3連複',combo:[1,2,3],probability:0.20}]};
-const raceK={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpK)};
+    {kind:'3連複',combo:[1,2,4],probability:0.30},
+    {kind:'3連複',combo:[1,2,5],probability:0.25},
+    {kind:'3連複',combo:[3,4,5],probability:0.20}]};
+const raceK=raceOf(makeUf(tpK));
 const htmlK=frame.contents(raceK,{});
-assert.match(htmlK,/4・9 − 7・8（2点）/,'trio formation: shared pair 4・9');
-assert.match(htmlK,/1 - 2 - 3/,'ungrouped trio stays a single line');
-assert.match(htmlK,/推定確率 20\.0%/,'ungrouped trio keeps its probability');
+assert.match(htmlK,/1・2 − 4・5（2点）/,'trio formation: shared pair 1・2');
+assert.match(htmlK,/3 - 4 - 5/,'ungrouped trio stays a single line');
 assert.match(htmlK,/合計 3点/,'total counts individual picks');
 
 // L) 3連単 grouping on the shared 1st-2nd pair; a trifecta with a
-//    different 2nd horse stays a single line.
+//    different 2nd horse stays a single line. Mark 5 is in no
+//    item, so coverage appends ワイド [1,5] (total 3 -> 4).
 const tpL={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
-    {kind:'3連単',combo:[9,5,3],probability:0.30},
-    {kind:'3連単',combo:[9,5,7],probability:0.25},
-    {kind:'3連単',combo:[9,3,5],probability:0.20}]};
-const raceL={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpL)};
+    {kind:'3連単',combo:[2,1,3],probability:0.30},
+    {kind:'3連単',combo:[2,1,4],probability:0.25},
+    {kind:'3連単',combo:[2,3,1],probability:0.20}]};
+const raceL=raceOf(makeUf(tpL));
 const htmlL=frame.contents(raceL,{});
-assert.match(htmlL,/9-5 → 3・7（2点）/,'trifecta formation: shared 1st-2nd 9-5');
-assert.match(htmlL,/9 - 3 - 5/,'ungrouped trifecta stays a single line');
-assert.match(htmlL,/推定確率 20\.0%/,'ungrouped trifecta keeps its probability');
-assert.match(htmlL,/合計 3点/,'total counts individual picks');
+assert.match(htmlL,/2-1 → 3・4（2点）/,'trifecta formation: shared 1st-2nd 2-1');
+assert.match(htmlL,/2 - 3 - 1/,'ungrouped trifecta stays a single line');
+assert.match(htmlL,/1 - 5/,'coverage wide for the uncovered mark 5');
+assert.match(htmlL,/合計 4点/,'total counts individual picks incl. coverage');
 
-// M) Same kind but no shared axis: no grouping, both picks stay
-//    single lines with their probabilities.
+// M) Same kind but no shared axis: no grouping, both ワイド picks
+//    stay single lines; the 馬連 covers the last mark so no
+//    coverage bet is needed.
 const tpM={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
   combinedPicks:[],
   items:[
     {kind:'ワイド',combo:[1,2],probability:0.30},
-    {kind:'ワイド',combo:[3,4],probability:0.25}]};
-const raceM={id:'r1',date:'2026-11-21',predictionStatus:'ready',
-  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,
-  unifiedForecast:makeUf(tpM)};
+    {kind:'ワイド',combo:[3,4],probability:0.25},
+    {kind:'馬連',combo:[3,5],probability:0.20}]};
+const raceM=raceOf(makeUf(tpM));
 const htmlM=frame.contents(raceM,{});
-assert.match(htmlM,/推定確率 30\.0%/,'disjoint wide 1 keeps its probability');
-assert.match(htmlM,/推定確率 25\.0%/,'disjoint wide 2 keeps its probability');
+assert.match(htmlM,/1 - 2/,'disjoint wide 1 stays a single line');
+assert.match(htmlM,/3 - 4/,'disjoint wide 2 stays a single line');
+assert.match(htmlM,/3 - 5/,'quinella stays a single line');
 assert.doesNotMatch(htmlM,/（2点）/,'no formation line without a shared axis');
-assert.match(htmlM,/合計 2点/,'total counts individual picks');
+assert.doesNotMatch(htmlM,/推定確率/,'no probability percentages');
+assert.match(htmlM,/合計 3点/,'total counts individual picks');
 
-console.log('STRICT_PRIMARY_BETS_OK win-EV place-EVlow combos-to-5pt pass-display fallback-unchanged EV-kept formation-grouping');
+// N) Coverage replacement never touches the 単勝/複勝 picks: with
+//    the cap full (win + place + 3 combos) and marks 4, 5
+//    uncovered, the coverage ワイド [4,5] replaces the lowest-
+//    probability combination (3連複 20%) only.
+const tpN={sameModelAndMarks:true,combinedPicks:[],
+  winExpectedValues:[{horseNumber:1,expectedValue:1.30,winProbability:0.10,odds:13.0}],
+  placeExpectedValues:[
+    {horseNumber:2,top3Probability:0.50,placeOddsLow:1.8,placeOddsHigh:2.4,expectedValueLow:1.05,expectedValueHigh:1.30}],
+  items:[
+    {kind:'ワイド',combo:[1,2],probability:0.30},
+    {kind:'馬連',combo:[1,2],probability:0.25},
+    {kind:'3連複',combo:[1,2,3],probability:0.20}]};
+const raceN=raceOf(makeUf(tpN));
+const htmlN=frame.contents(raceN,{});
+assert.match(htmlN,/単勝 1番/,'win pick survives the replacement');
+assert.match(htmlN,/複勝 2番/,'place pick survives the replacement');
+assert.match(htmlN,/4 - 5/,'coverage wide present');
+assert.doesNotMatch(htmlN,/3連複/,'lowest-probability combo replaced');
+assert.match(htmlN,/合計 5点/,'total stays at the cap');
+
+// O) An item carrying no probability passes the floor (posting
+//    side parity); an item at exactly 5% passes and one below is
+//    cut. Mark 5 is left uncovered and covered by ワイド [1,5],
+//    which shares the axis horse 1 with the first item and so
+//    renders inside its formation line.
+const tpO={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
+  combinedPicks:[],
+  items:[
+    {kind:'ワイド',combo:[1,2]},
+    {kind:'馬連',combo:[3,4],probability:0.049},
+    {kind:'馬連',combo:[3,4],probability:0.05}]};
+const raceO=raceOf(makeUf(tpO));
+const htmlO=frame.contents(raceO,{});
+assert.match(htmlO,/1 − 2・5（2点）/,'probability-less item + coverage wide grouped on axis 1');
+assert.match(htmlO,/3 - 4/,'boundary 5% item passes');
+assert.match(htmlO,/合計 3点/,'two items + coverage');
+
+console.log('STRICT_PRIMARY_BETS_OK marks-only win-EV place-EVlow combos-to-5pt coverage(trio/wide-single/replace) no-percent pass-display fallback-unchanged EV-kept formation-grouping');
