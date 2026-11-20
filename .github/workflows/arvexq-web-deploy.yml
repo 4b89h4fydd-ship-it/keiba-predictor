@@ -116,7 +116,10 @@ jobs:
             exit 1
           }
           grep -Fq 'ARVEXQ light theme v4: single final palette' prod-unified-home.css
-          grep -Fq 'background:#fffaf3!important' prod-unified-home.css
+          # The cream ground (#fffaf3) was replaced by the pure-white
+          # ground on 2026-11-17; the old marker no longer exists in
+          # the stylesheet and made this step fail on every deploy.
+          grep -Fq 'background:#ffffff!important' prod-unified-home.css
           if grep -Fq 'ARVEXQ daylight warm palette final' prod-unified-home.css; then
             echo '::error::OLD_DARK_PALETTE_STILL_PRESENT'
             exit 1
