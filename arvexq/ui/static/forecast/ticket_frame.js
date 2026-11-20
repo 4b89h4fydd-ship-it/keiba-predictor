@@ -322,17 +322,34 @@ function marksByNoOf(r){
  return out;
 }
 function contents(r,p){
- // Primary おすすめ買い目 (user rule 2026-11-21, third revision —
+ // Primary おすすめ買い目 (user rule 2026-11-21, final revision —
  // the fixed formation and the plain ticketPlan top-5 were both
  // rejected): a strict selection across ALL ticket kinds from the
- // payload's own ticketPlan, at most 5 points in total:
- //   1. 単勝: the best winExpectedValues entry with expected
- //      value >= 1.25 AND win probability >= 5% (max EV, 1 point).
+ // payload's own ticketPlan, at most 5 points in total, built ONLY
+ // from the marked horses (◎○▲△☆) — a pick naming an unmarked
+ // horse is never shown. This mirrors the posting-side selection
+ // (generate_posts.py) exactly:
+ //   1. 単勝: the winExpectedValues entry with expected value
+ //      >= 1.25 AND win probability >= 5% and the highest EV,
+ //      marked horses only (1 point).
  //   2. 複勝: the placeExpectedValues entry with expected-value
  //      lower bound >= 1.0 and the highest top-3 probability,
- //      excluding the 単勝 pick (1 point).
- //   3. Combinations: ticketPlan.items in joint-probability order,
- //      only probability >= 5%, filling up to 5 points in total.
+ //      marked horses only, excluding the 単勝 pick (1 point).
+ //   3. Combinations: ticketPlan.items in payload order whose
+ //      horses are ALL marked, only probability >= 5% (an item
+ //      carrying no probability passes), filling up to 5 points.
+ //   4. Coverage: a marked horse still in no pick is covered by a
+ //      marked-only combination — 3+ uncovered: the 3連複 of the
+ //      three with the highest top-3 probabilities (diagnosis);
+ //      2 uncovered: their ワイド; 1 uncovered: a ワイド with the
+ //      strongest mark (◎, or ○ when the horse itself is ◎).
+ //      When the total is already 5 points the coverage bet
+ //      replaces the lowest-probability combination pick （単勝/
+ //      複勝 are never replaced; coverage bets carry no
+ //      probability and are the last to be replaced).
+ // No probability percentages are displayed (user rule
+ // 2026-11-21): combination rows carry no 推定確率, and the
+ // 単勝/複勝 rows show only their expected value.
  // When the payload carries a ticketPlan this selection is the
  // ONLY main display (a ticketPlan that yields nothing renders as
  // 見送り); neither the marks formation, the integrated
@@ -352,44 +369,106 @@ function contents(r,p){
    var hasRoster=Object.keys(rosterNos).length>0;
    function inRoster(no){return !hasRoster||!!rosterNos[no];}
    function fin(x){var v=Number(x);return Number.isFinite(v)?v:null;}
+   // The marked horses, in mark order (◎○▲△☆), from the unified
+   // payload's own marks — the only material the selection may use.
+   var MARK_SYMS=['◎','○','▲','△','☆'];
+   var markBySym={};
+   (Array.isArray(uf.marks)?uf.marks:[]).forEach(function(m){
+     if(!m)return;
+     var no=Number(m.horseNumber),sym=String(m.markSymbol||'');
+     if(Number.isInteger(no)&&no>0&&MARK_SYMS.indexOf(sym)>=0)markBySym[sym]=no;
+   });
+   var markNos=[];
+   MARK_SYMS.forEach(function(s){if(markBySym[s]!=null)markNos.push(markBySym[s]);});
+   var markSet={};
+   markNos.forEach(function(n){markSet[n]=1;});
+   function isMark(no){return !!markSet[no];}
    var picks=[];
    var winCands=[];
    (Array.isArray(tp.winExpectedValues)?tp.winExpectedValues:[]).forEach(function(x){
      if(!x)return;
      var no=Number(x.horseNumber),ev=fin(x.expectedValue),wp=fin(x.winProbability);
-     if(!Number.isInteger(no)||no<=0||ev==null||wp==null||!inRoster(no))return;
+     if(!Number.isInteger(no)||no<=0||ev==null||wp==null||!inRoster(no)||!isMark(no))return;
      if(ev>=1.25&&wp>=0.05)winCands.push({no:no,ev:ev,wp:wp,odds:fin(x.odds)});
    });
-   winCands.sort(function(a,b){return b.ev-a.ev||a.no-b.no;});
-   var winPick=winCands.length?winCands[0]:null;
-   if(winPick)picks.push({kind:'単勝',no:winPick.no,ev:winPick.ev,wp:winPick.wp,odds:winPick.odds});
+   var winPick=null;
+   winCands.forEach(function(c){if(!winPick||c.ev>winPick.ev)winPick=c;});
+   if(winPick)picks.push({kind:'単勝',no:winPick.no,combo:[winPick.no],ev:winPick.ev,wp:winPick.wp,odds:winPick.odds});
    var placeCands=[];
    (Array.isArray(tp.placeExpectedValues)?tp.placeExpectedValues:[]).forEach(function(x){
      if(!x)return;
      var no=Number(x.horseNumber),lo=fin(x.expectedValueLow),t3=fin(x.top3Probability);
-     if(!Number.isInteger(no)||no<=0||lo==null||t3==null||!inRoster(no))return;
+     if(!Number.isInteger(no)||no<=0||lo==null||!inRoster(no)||!isMark(no))return;
      if(winPick&&no===winPick.no)return;
      if(lo>=1.0)placeCands.push({no:no,evLow:lo,evHigh:fin(x.expectedValueHigh),t3:t3});
    });
-   placeCands.sort(function(a,b){return b.t3-a.t3||a.no-b.no;});
-   if(placeCands.length){
-     var pc=placeCands[0];
-     picks.push({kind:'複勝',no:pc.no,evLow:pc.evLow,evHigh:pc.evHigh,t3:pc.t3});
-   }
+   var placePick=null;
+   placeCands.forEach(function(c){
+     var v=c.t3==null?0:c.t3;
+     if(!placePick||v>(placePick.t3==null?0:placePick.t3))placePick=c;
+   });
+   if(placePick)picks.push({kind:'複勝',no:placePick.no,combo:[placePick.no],evLow:placePick.evLow,evHigh:placePick.evHigh,t3:placePick.t3});
    var COMBO_KINDS={'ワイド':1,'馬連':1,'馬単':1,'3連複':1,'3連単':1};
-   var comboCands=[];
    (Array.isArray(tp.items)?tp.items:[]).forEach(function(x){
+     if(picks.length>=5)return;
      if(!x||!COMBO_KINDS[x.kind]||!Array.isArray(x.combo)||x.combo.length<2)return;
      var combo=x.combo.map(Number);
-     if(combo.some(function(n){return !Number.isInteger(n)||n<=0||!inRoster(n);}))return;
+     if(combo.some(function(n){return !Number.isInteger(n)||n<=0||!inRoster(n)||!isMark(n);}))return;
      var prob=fin(x.probability);
-     if(prob==null||prob<0.05)return;
-     comboCands.push({kind:String(x.kind),combo:combo,probability:prob});
+     if(prob!=null&&prob<0.05)return;
+     picks.push({kind:String(x.kind),combo:combo,probability:prob});
    });
-   comboCands.sort(function(a,b){return b.probability-a.probability||
-     String(a.kind).localeCompare(String(b.kind))||
-     String(a.combo).localeCompare(String(b.combo));});
-   for(var i=0;i<comboCands.length&&picks.length<5;i++)picks.push(comboCands[i]);
+   // Coverage: every marked horse must appear in the selection.
+   // A marked horse in no pick yet is covered by a marked-only
+   // combination; when the selection is already at 5 points the
+   // coverage bet replaces the lowest-probability combination
+   // pick （単勝/複勝 are never replaced, and a coverage bet —
+   // probability null — is replaced only when no probability-
+   // carrying combination remains). Same rule as the posting side.
+   var t3ByNo={};
+   (Array.isArray(uf.diagnosis)?uf.diagnosis:[]).forEach(function(d){
+     if(!d)return;
+     var no=Number(d.horseNumber),v=fin(d.top3Probability);
+     if(Number.isInteger(no)&&no>0&&v!=null)t3ByNo[no]=v;
+   });
+   function coverageBet(uncovered){
+     if(uncovered.length>=3){
+       var top=uncovered.slice().sort(function(a,b){
+         return (t3ByNo[b]||0)-(t3ByNo[a]||0);
+       }).slice(0,3);
+       return {kind:'3連複',combo:top.sort(function(a,b){return a-b;}),probability:null};
+     }
+     if(uncovered.length===2)
+       return {kind:'ワイド',combo:uncovered.slice().sort(function(a,b){return a-b;}),probability:null};
+     var h=uncovered[0];
+     var partner=markNos[0]!==h?markNos[0]:markNos[1];
+     if(partner==null)return null;
+     return {kind:'ワイド',combo:[h,partner].sort(function(a,b){return a-b;}),probability:null};
+   }
+   var guard=0;
+   while(guard<6){
+     var covered={};
+     picks.forEach(function(pk){pk.combo.forEach(function(n){covered[n]=1;});});
+     var uncovered=markNos.filter(function(n){return !covered[n];});
+     if(!uncovered.length)break;
+     guard++;
+     var bet=coverageBet(uncovered);
+     if(!bet)break;
+     var dup=picks.some(function(pk){
+       return pk.kind===bet.kind&&pk.combo.length===bet.combo.length&&
+         pk.combo.every(function(n,i){return n===bet.combo[i];});
+     });
+     if(dup)break;
+     if(picks.length<5){picks.push(bet);continue;}
+     var worstIdx=-1,worstA=0,worstB=0;
+     picks.forEach(function(pk,i){
+       if(pk.kind==='単勝'||pk.kind==='複勝')return;
+       var ka=pk.probability!=null?0:1,kb=pk.probability!=null?pk.probability:0;
+       if(worstIdx<0||ka<worstA||(ka===worstA&&kb<worstB)){worstIdx=i;worstA=ka;worstB=kb;}
+     });
+     if(worstIdx<0)break;
+     picks[worstIdx]=bet;
+   }
    if(!picks.length){
      strictHtml='<div class="arv-three-group arv-strict-picks">'+
        '<p class="arv-three-ticket-reason">見送り（条件を満たす買い目なし）</p></div>';
@@ -400,11 +479,12 @@ function contents(r,p){
    // an axis collapse into one formation line. ワイド/馬連 group
    // on a shared horse, 馬単 on a shared 1st horse, 3連複 on a
    // shared pair, 3連単 on a shared 1st-2nd pair. A group needs
-   // >= 2 members; partners keep probability order. Group lines
-   // carry only the point count (no per-pick probabilities), and
-   // the total below still counts individual picks. 単勝/複勝
-   // are never grouped. A group sits at the position of its
-   // highest-probability member.
+   // >= 2 members; partners keep selection order. No row carries
+   // a probability percentage (user rule 2026-11-21): group lines
+   // show only the point count, single lines show just the
+   // combination, and the total below still counts individual
+   // picks. 単勝/複勝 are never grouped. A group sits at the
+   // position of its first member.
    function formationEntries(combos){
      var entries=[];
      function pushSingle(pk){entries.push({group:false,pick:pk});}
@@ -505,22 +585,17 @@ function contents(r,p){
    .map(function(pk){
      var evTxt=pk.kind==='単勝'?'期待値 '+pk.ev.toFixed(2):
        '期待値 '+pk.evLow.toFixed(2)+(pk.evHigh!=null?'〜'+pk.evHigh.toFixed(2):'');
-     var detail=pk.kind==='単勝'
-       ?'勝率 '+(pk.wp*100).toFixed(1)+'%'+(pk.odds!=null?' × 単勝 '+pk.odds.toFixed(1):'')
-       :'3着内 '+(pk.t3*100).toFixed(1)+'%';
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+pk.kind+' '+
        esc(pk.no)+'番'+(rosterNames[pk.no]?' '+esc(rosterNames[pk.no]):'')+'</b>'+
        '<span class="arv-three-count">'+esc(evTxt)+'</span></div>'+
-       '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(pk.no)+'</span></strong>'+
-       '<p class="arv-three-ticket-reason">'+esc(detail)+'</p></div>';
+       '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(pk.no)+'</span></strong></div>';
    }).join('');
    rows+=formationEntries(picks.filter(function(pk){
      return pk.kind!=='単勝'&&pk.kind!=='複勝';
    })).map(function(e){
      if(!e.group){
        var pk=e.pick;
-       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(pk.kind)+'</b>'+
-         '<span class="arv-three-count">推定確率 '+esc((pk.probability*100).toFixed(1))+'%</span></div>'+
+       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(pk.kind)+'</b></div>'+
          '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(pk.combo.join(' - '))+'</span></strong></div>';
      }
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(e.kind)+'</b></div>'+
