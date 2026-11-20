@@ -40,7 +40,17 @@ const styleBaseline={
   // Re-pinned 2026-11-21 (round 3): round-2 venue selectors never
   // matched (.smart-shell and .smart-venue-page are one element, not
   // ancestor/descendant); restated compounded on the same element.
-  "arvexq/ui/static/sports/unified-home.css": "c70c6abc3289ff1c",
+  // Re-pinned 2026-11-21 (simple white redesign): the main screens
+  // are rebuilt in the netkeiba race-page form at the user's explicit
+  // direction ("ネット競馬みたいにしろって作りを" -> structure itself,
+  // contents stay ARVEXQ's own). The appended block supersedes the
+  // round 1-3 contrast fills for the elements it names: slim text tab
+  // bar for the race tabs, white chips for the data-analysis tags,
+  // plain-text horse names, a light upset band, light-tint risk/upset
+  // badges, large white home venue tags, and the netkeiba-form
+  // racecard table. The entry table markup change (entryTableSection,
+  // not a frozen function) carries the column order.
+  "arvexq/ui/static/sports/unified-home.css": "57ac3e188ce7bd03",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
