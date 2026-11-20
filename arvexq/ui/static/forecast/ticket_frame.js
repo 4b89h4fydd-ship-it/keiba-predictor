@@ -322,22 +322,223 @@ function marksByNoOf(r){
  return out;
 }
 function contents(r,p){
- // Integrated おすすめ買い目 (user order 2026-11-04): when the stored
- // unified payload carries the full frozen material, the bets tab's
- // primary content is the ONE integrated recommendation built from
- // it (ARVEXQIntegratedOsusume). The mechanical ticket group drops
- // into a collapsed reference below it; the EV sections keep their
- // exact current behaviour. Payloads without the unified material
- // render exactly as before.
+ // Primary おすすめ買い目 (user rule 2026-11-21, third revision —
+ // the fixed formation and the plain ticketPlan top-5 were both
+ // rejected): a strict selection across ALL ticket kinds from the
+ // payload's own ticketPlan, at most 5 points in total:
+ //   1. 単勝: the best winExpectedValues entry with expected
+ //      value >= 1.25 AND win probability >= 5% (max EV, 1 point).
+ //   2. 複勝: the placeExpectedValues entry with expected-value
+ //      lower bound >= 1.0 and the highest top-3 probability,
+ //      excluding the 単勝 pick (1 point).
+ //   3. Combinations: ticketPlan.items in joint-probability order,
+ //      only probability >= 5%, filling up to 5 points in total.
+ // When the payload carries a ticketPlan this selection is the
+ // ONLY main display (a ticketPlan that yields nothing renders as
+ // 見送り); neither the marks formation, the integrated
+ // recommendation (ARVEXQIntegratedOsusume) nor the mechanical
+ // set (recommendedBets) is shown alongside. A payload without a
+ // ticketPlan keeps the fallback chain below unchanged.
+ var strictHtml='';
+ (function(){
+   var uf=r&&r.unifiedForecast;
+   var tp=uf&&uf.ticketPlan;
+   if(!tp||typeof tp!=='object')return;
+   var rosterNos={},rosterNames={};
+   (Array.isArray(uf.roster)?uf.roster:[]).forEach(function(h){
+     var no=Number(h&&h.horseNumber);
+     if(Number.isInteger(no)&&no>0){rosterNos[no]=1;rosterNames[no]=h.name||'';}
+   });
+   var hasRoster=Object.keys(rosterNos).length>0;
+   function inRoster(no){return !hasRoster||!!rosterNos[no];}
+   function fin(x){var v=Number(x);return Number.isFinite(v)?v:null;}
+   var picks=[];
+   var winCands=[];
+   (Array.isArray(tp.winExpectedValues)?tp.winExpectedValues:[]).forEach(function(x){
+     if(!x)return;
+     var no=Number(x.horseNumber),ev=fin(x.expectedValue),wp=fin(x.winProbability);
+     if(!Number.isInteger(no)||no<=0||ev==null||wp==null||!inRoster(no))return;
+     if(ev>=1.25&&wp>=0.05)winCands.push({no:no,ev:ev,wp:wp,odds:fin(x.odds)});
+   });
+   winCands.sort(function(a,b){return b.ev-a.ev||a.no-b.no;});
+   var winPick=winCands.length?winCands[0]:null;
+   if(winPick)picks.push({kind:'単勝',no:winPick.no,ev:winPick.ev,wp:winPick.wp,odds:winPick.odds});
+   var placeCands=[];
+   (Array.isArray(tp.placeExpectedValues)?tp.placeExpectedValues:[]).forEach(function(x){
+     if(!x)return;
+     var no=Number(x.horseNumber),lo=fin(x.expectedValueLow),t3=fin(x.top3Probability);
+     if(!Number.isInteger(no)||no<=0||lo==null||t3==null||!inRoster(no))return;
+     if(winPick&&no===winPick.no)return;
+     if(lo>=1.0)placeCands.push({no:no,evLow:lo,evHigh:fin(x.expectedValueHigh),t3:t3});
+   });
+   placeCands.sort(function(a,b){return b.t3-a.t3||a.no-b.no;});
+   if(placeCands.length){
+     var pc=placeCands[0];
+     picks.push({kind:'複勝',no:pc.no,evLow:pc.evLow,evHigh:pc.evHigh,t3:pc.t3});
+   }
+   var COMBO_KINDS={'ワイド':1,'馬連':1,'馬単':1,'3連複':1,'3連単':1};
+   var comboCands=[];
+   (Array.isArray(tp.items)?tp.items:[]).forEach(function(x){
+     if(!x||!COMBO_KINDS[x.kind]||!Array.isArray(x.combo)||x.combo.length<2)return;
+     var combo=x.combo.map(Number);
+     if(combo.some(function(n){return !Number.isInteger(n)||n<=0||!inRoster(n);}))return;
+     var prob=fin(x.probability);
+     if(prob==null||prob<0.05)return;
+     comboCands.push({kind:String(x.kind),combo:combo,probability:prob});
+   });
+   comboCands.sort(function(a,b){return b.probability-a.probability||
+     String(a.kind).localeCompare(String(b.kind))||
+     String(a.combo).localeCompare(String(b.combo));});
+   for(var i=0;i<comboCands.length&&picks.length<5;i++)picks.push(comboCands[i]);
+   if(!picks.length){
+     strictHtml='<div class="arv-three-group arv-strict-picks">'+
+       '<p class="arv-three-ticket-reason">見送り（条件を満たす買い目なし）</p></div>';
+     return;
+   }
+   // Display grouping (user rule 2026-11-21, display only — the
+   // selection above is unchanged): combination picks that share
+   // an axis collapse into one formation line. ワイド/馬連 group
+   // on a shared horse, 馬単 on a shared 1st horse, 3連複 on a
+   // shared pair, 3連単 on a shared 1st-2nd pair. A group needs
+   // >= 2 members; partners keep probability order. Group lines
+   // carry only the point count (no per-pick probabilities), and
+   // the total below still counts individual picks. 単勝/複勝
+   // are never grouped. A group sits at the position of its
+   // highest-probability member.
+   function formationEntries(combos){
+     var entries=[];
+     function pushSingle(pk){entries.push({group:false,pick:pk});}
+     combos.forEach(function(pk){
+       var c=pk.combo,i;
+       if(pk.kind==='ワイド'||pk.kind==='馬連'){
+         for(i=0;i<entries.length;i++){
+           var g=entries[i];
+           if(g.group&&g.kind===pk.kind&&(g.axis===c[0]||g.axis===c[1])){
+             g.partners.push(g.axis===c[0]?c[1]:c[0]);g.count++;return;
+           }
+         }
+         for(i=0;i<entries.length;i++){
+           var s=entries[i];
+           if(s.group||s.pick.kind!==pk.kind)continue;
+           var sc=s.pick.combo,has0=sc.indexOf(c[0])>=0,has1=sc.indexOf(c[1])>=0;
+           if(has0===has1)continue;
+           var shared=has0?c[0]:c[1];
+           entries[i]={group:true,kind:pk.kind,axis:shared,
+             partners:[sc[0]===shared?sc[1]:sc[0],shared===c[0]?c[1]:c[0]],count:2};
+           return;
+         }
+         pushSingle(pk);return;
+       }
+       if(pk.kind==='馬単'){
+         for(i=0;i<entries.length;i++){
+           var gm=entries[i];
+           if(gm.group&&gm.kind==='馬単'&&gm.axis===c[0]){
+             gm.partners.push(c[1]);gm.count++;return;
+           }
+         }
+         for(i=0;i<entries.length;i++){
+           var sm=entries[i];
+           if(!sm.group&&sm.pick.kind==='馬単'&&sm.pick.combo[0]===c[0]){
+             entries[i]={group:true,kind:'馬単',axis:c[0],
+               partners:[sm.pick.combo[1],c[1]],count:2};
+             return;
+           }
+         }
+         pushSingle(pk);return;
+       }
+       if(pk.kind==='3連複'){
+         for(i=0;i<entries.length;i++){
+           var gt=entries[i];
+           if(gt.group&&gt.kind==='3連複'&&
+              c.indexOf(gt.pair[0])>=0&&c.indexOf(gt.pair[1])>=0){
+             var rest=c.filter(function(n){return n!==gt.pair[0]&&n!==gt.pair[1];});
+             if(rest.length===1){gt.partners.push(rest[0]);gt.count++;return;}
+           }
+         }
+         for(i=0;i<entries.length;i++){
+           var st=entries[i];
+           if(st.group||st.pick.kind!=='3連複')continue;
+           var inter=st.pick.combo.filter(function(n){return c.indexOf(n)>=0;});
+           if(inter.length!==2)continue;
+           var sRest=st.pick.combo.filter(function(n){return inter.indexOf(n)<0;});
+           var cRest=c.filter(function(n){return inter.indexOf(n)<0;});
+           if(sRest.length!==1||cRest.length!==1)continue;
+           entries[i]={group:true,kind:'3連複',
+             pair:inter.slice().sort(function(a,b){return a-b;}),
+             partners:[sRest[0],cRest[0]],count:2};
+           return;
+         }
+         pushSingle(pk);return;
+       }
+       if(pk.kind==='3連単'){
+         for(i=0;i<entries.length;i++){
+           var gs=entries[i];
+           if(gs.group&&gs.kind==='3連単'&&gs.keyA===c[0]&&gs.keyB===c[1]){
+             gs.partners.push(c[2]);gs.count++;return;
+           }
+         }
+         for(i=0;i<entries.length;i++){
+           var ss=entries[i];
+           if(!ss.group&&ss.pick.kind==='3連単'&&
+              ss.pick.combo[0]===c[0]&&ss.pick.combo[1]===c[1]){
+             entries[i]={group:true,kind:'3連単',keyA:c[0],keyB:c[1],
+               partners:[ss.pick.combo[2],c[2]],count:2};
+             return;
+           }
+         }
+         pushSingle(pk);return;
+       }
+       pushSingle(pk);
+     });
+     return entries;
+   }
+   function formationText(e){
+     if(e.kind==='ワイド'||e.kind==='馬連')
+       return e.axis+' − '+e.partners.join('・')+'（'+e.count+'点）';
+     if(e.kind==='馬単')
+       return e.axis+' → '+e.partners.join('・')+'（'+e.count+'点）';
+     if(e.kind==='3連複')
+       return e.pair.join('・')+' − '+e.partners.join('・')+'（'+e.count+'点）';
+     return e.keyA+'-'+e.keyB+' → '+e.partners.join('・')+'（'+e.count+'点）';
+   }
+   var rows=picks.filter(function(pk){return pk.kind==='単勝'||pk.kind==='複勝';})
+   .map(function(pk){
+     var evTxt=pk.kind==='単勝'?'期待値 '+pk.ev.toFixed(2):
+       '期待値 '+pk.evLow.toFixed(2)+(pk.evHigh!=null?'〜'+pk.evHigh.toFixed(2):'');
+     var detail=pk.kind==='単勝'
+       ?'勝率 '+(pk.wp*100).toFixed(1)+'%'+(pk.odds!=null?' × 単勝 '+pk.odds.toFixed(1):'')
+       :'3着内 '+(pk.t3*100).toFixed(1)+'%';
+     return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+pk.kind+' '+
+       esc(pk.no)+'番'+(rosterNames[pk.no]?' '+esc(rosterNames[pk.no]):'')+'</b>'+
+       '<span class="arv-three-count">'+esc(evTxt)+'</span></div>'+
+       '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(pk.no)+'</span></strong>'+
+       '<p class="arv-three-ticket-reason">'+esc(detail)+'</p></div>';
+   }).join('');
+   rows+=formationEntries(picks.filter(function(pk){
+     return pk.kind!=='単勝'&&pk.kind!=='複勝';
+   })).map(function(e){
+     if(!e.group){
+       var pk=e.pick;
+       return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(pk.kind)+'</b>'+
+         '<span class="arv-three-count">推定確率 '+esc((pk.probability*100).toFixed(1))+'%</span></div>'+
+         '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(pk.combo.join(' - '))+'</span></strong></div>';
+     }
+     return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(e.kind)+'</b></div>'+
+       '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(formationText(e))+'</span></strong></div>';
+   }).join('');
+   strictHtml='<div class="arv-three-group arv-strict-picks">'+rows+'</div>'+
+     '<div class="arv-three-budget"><strong>合計 '+picks.length+'点</strong></div>';
+ })();
+ // Fallback chain when the payload carries no ticketPlan
+ // (unchanged): the integrated recommendation when the stored
+ // unified payload carries the full frozen material, otherwise the
+ // mechanical ticket set / legacy plan exactly as before. The EV
+ // sections keep their exact current behaviour throughout.
  var integratedHtml='';
  var osusume=root.ARVEXQIntegratedOsusume;
  if(osusume&&typeof osusume.renderSection==='function'){
    try{integratedHtml=osusume.renderSection(r,function(item){return combosHtml(item,r);});}
    catch(e){integratedHtml='';}
- }
- function referenceFold(inner){
-   return '<details class="arv-three-reference"><summary>参考：従来の全券種セット（機械的構成）</summary>'
-     +inner+'</details>';
  }
  // Win-EV label follows the payload's own calibration status: races
  // published on the v9b lane (temperature calibration + market
@@ -352,7 +553,7 @@ function contents(r,p){
  var server=r&&r.predictionStatus==='ready'&&Array.isArray(r.recommendedBets)
    ?(integratedHtml?r.recommendedBets:sealedFive(r,r.recommendedBets)):null;
  if(server){
-   if(!server.length)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
+   if(!server.length&&!integratedHtml&&!strictHtml)return '<div class="ai-bet-box"><p class="muted">発走前の実オッズと着順確率から、期待回収率の条件を満たす買い目がありません。</p></div>';
    // The kinds are ONE same-model group (user decision 2026-11-04):
    // the reason text the payload repeats verbatim on every item is
    // printed once under the group instead of under every block, and
@@ -404,12 +605,12 @@ function contents(r,p){
      '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
    }
    return '<div class="ai-bet-box arv-three-bet">'
-     +(integratedHtml?integratedHtml+referenceFold(ticketGroup):ticketGroup)
+     +(strictHtml?strictHtml:(integratedHtml?integratedHtml:ticketGroup))
      +evSection+'</div>';
  }
  // Never mix an unrelated historical morning receipt into a ready Stage64
  // product when the server did not provide matching ticket evidence.
- if(r&&r.predictionStatus==='ready'&&r.prediction&&
+ if(r&&r.predictionStatus==='ready'&&r.prediction&&!strictHtml&&
     r.prediction.modelVersion==='arvexq-stage64-product-v1')
    return '<div class="ai-bet-box"><p class="muted">保存済み旧方式の買い目データが未取得です。</p></div>';
  var service=root.ARVEXQProductionTickets;
@@ -428,10 +629,13 @@ function contents(r,p){
  // were fixed before the off (the unified gate enforces capturedAt<post).
  var fixedAt=plan&&(plan.fixedAt||plan.referenceCapturedAt);
  if(!plan||!fixedAt||!Array.isArray(plan.items)||!plan.items.length){
-   // The integrated recommendation is a pure function of the stored
-   // payload itself, so it can stand alone when the legacy plan path
-   // has nothing for this race (previously this state showed only
-   // the unavailable note).
+   // The strict ticketPlan selection and the integrated
+   // recommendation are pure functions of the stored payload
+   // itself, so they can stand alone when the legacy plan path
+   // has nothing for this race (previously this state showed
+   // only the unavailable note). The strict selection takes
+   // priority.
+   if(strictHtml)return '<div class="ai-bet-box arv-three-bet">'+strictHtml+'</div>';
    if(integratedHtml)return '<div class="ai-bet-box arv-three-bet">'+integratedHtml+'</div>';
    return '<div class="ai-bet-box"><p class="muted">発走前に検証・保存されたおすすめ買い目が未取得です。後付けで作りません。</p>'+revisionStatus(r)+'</div>';
  }
@@ -477,23 +681,13 @@ function contents(r,p){
    '<p class="arv-three-ticket-reason">'+evNote+'</p></section>':'';
  }
  var planGroup='<div class="arv-three-group">'+list+(sharedReasonP?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedReasonP)+'</p>':'')+budgetHtml(plan.items)+'</div>';
- // With the integrated recommendation primary, the reference fold
- // shows the payload's full mechanical set (recommendedBets) when
- // the payload carries one — the projected plan items above are a
- // one-combo-per-kind subset of it. Without an integrated block the
- // plan group renders exactly as before.
- var refInner=planGroup;
- if(integratedHtml&&Array.isArray(r.recommendedBets)&&r.recommendedBets.length){
-   var sharedR=null,firstR=String(r.recommendedBets[0].reason||'');
-   if(firstR&&r.recommendedBets.every(function(item){return String(item.reason||'')===firstR;}))sharedR=firstR;
-   var refRows=r.recommendedBets.map(function(item){
-     return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(item.kind)+'</b><span class="arv-three-count">'+esc((item.combos||[]).length)+'点</span></div><strong class="arv-three-combos">'+combosHtml(item,r)+'</strong>'+(sharedR?'':'<p class="arv-three-ticket-reason">'+esc(item.reason||'')+'</p>')+'</div>';
-   }).join('');
-   refInner='<div class="arv-three-group">'+refRows+(sharedR?'<p class="arv-three-ticket-reason arv-three-group-reason">'+esc(sharedR)+'</p>':'')+budgetHtml(r.recommendedBets)+'</div>';
- }
+ // Priority: the strict ticketPlan selection outranks the
+ // projected plan group; with an integrated recommendation the
+ // plan group is not shown at all (user orders 2026-11-21).
+ // Without either, the plan group renders exactly as before.
  return '<div class="ai-bet-box arv-three-bet">'+
    '<p class="arv-three-fixed">発走前固定 '+esc(fixedAt)+'</p>'+
-   (integratedHtml?integratedHtml+referenceFold(refInner):planGroup)+
+   (strictHtml?strictHtml:(integratedHtml?integratedHtml:planGroup))+
    evSection+
    '</div>';
 }
