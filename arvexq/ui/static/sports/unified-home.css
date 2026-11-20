@@ -2307,3 +2307,107 @@ html body .smart-home .arv-unified-reload .arv-unified-action-icon{
  font-size:22px!important;width:28px!important;height:24px!important;
 }
 html body .smart-home .arv-unified-reload:active{filter:brightness(.92)}
+
+/* 2026-11-21 contrast repair (user report: badges and bet text unreadable).
+   Root cause: the light-theme passes above paint whole subtrees with a
+   universal dark ink (!important) — `.smart-race-row... *` and
+   `.smart-race-head *` — which also recoloured the TEXT of the dark
+   risk/upset badges and the dark upset band, leaving dark text on dark
+   fills. On the bets tab the same passes turned the card white while
+   several bet texts kept their dark-theme pale colours, because the
+   dark-ink rules for them are scoped to a shell class the bets page
+   does not use (.bet-detail-page-shell; the page is
+   .ticket-detail-page-shell). Restore the obvious contrast here, at
+   the end of the last-loaded sheet: dark fills get light text, the
+   white bet card gets dark text. No layout or colours elsewhere move. */
+html body .smart-shell .arv-risk-badge{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-risk-badge.risk-solid{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell .arv-risk-badge.risk-normal{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+}
+html body .smart-shell .arv-risk-badge.risk-rough{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell .arv-upset-chip{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-chip.upset-low{
+ background:#173d2a!important;border-color:#3f9e6b!important;color:#a9ecc4!important;
+}
+html body .smart-shell .arv-upset-chip.upset-mid{
+ background:#30363a!important;border-color:#697176!important;color:#eee7dc!important;
+}
+html body .smart-shell .arv-upset-chip.upset-high{
+ background:#4a292b!important;border-color:#a05f63!important;color:#f3c1c3!important;
+}
+html body .smart-shell .arv-upset-chip :is(small,b,i){
+ color:inherit!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-band{
+ background:#232a2e!important;border-color:#697176!important;color:#eee7dc!important;
+ opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-band.upset-low{background:#12291d!important;border-color:#3f9e6b!important}
+html body .smart-shell .arv-upset-band.upset-high{background:#33191b!important;border-color:#a05f63!important}
+html body .smart-shell .arv-upset-band :is(.arv-upset-band-title,.arv-upset-band-level,.arv-upset-band-score,b){
+ color:#eee7dc!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-upset-band .arv-upset-band-reasons{
+ color:#c8d4da!important;opacity:1!important;text-shadow:none!important;
+}
+/* Bets tab: every explanatory text on the white card takes dark ink,
+   including the classes the earlier dark-ink pass missed
+   (.arv-three-provisional, .arv-three-count, .arv-three-ticket-reason,
+   .arv-three-budget and its hint, .ai-bet-why, .bet-mark-grid). The
+   ticket group itself joins the light card so the total line at its
+   foot is dark-on-light like the rest; combo chips keep their own
+   dark fill with white numbers. */
+html body .smart-shell .arv-three-bet .arv-three-group{
+ background:#ffffff!important;background-image:none!important;
+ border-color:#cccccc!important;color:#28271f!important;
+}
+html body .smart-shell .arv-three-bet :is(
+ .ai-bet-title,.arv-three-provisional,.arv-three-count,
+ .arv-three-ticket-reason,.arv-three-budget-hint,.arv-three-ev,
+ .arv-three-reason,.arv-three-skip,.ai-bet-why,.ai-bet-why p,
+ .ai-bet-why small,.bet-mark-grid>span,.arv-three-reference>summary
+){
+ color:#3f3a30!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-three-bet :is(.ai-bet-why,.bet-mark-guide){
+ background:#ffffff!important;background-image:none!important;border-color:#cccccc!important;
+}
+html body .smart-shell .arv-three-bet .ai-bet-why>b{color:#28271f!important;opacity:1!important}
+html body .smart-shell .arv-three-bet .arv-three-count{
+ color:#28271f!important;font-weight:800!important;
+}
+html body .smart-shell .arv-three-bet .arv-three-budget{
+ color:#28271f!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-three-bet .arv-three-budget :is(strong,span){
+ color:#28271f!important;opacity:1!important;text-shadow:none!important;
+}
+html body .smart-shell .arv-three-bet .bet-mark-grid>span>i{
+ background:#0c2a3d!important;border-color:#356781!important;color:#ffffff!important;
+}
+/* Venue race rows: give the post time its own nowrap column and let
+   the flags wrap as a row, so time and title no longer crush together;
+   the meta line wraps only at its spaces (keep-all), never mid-word
+   (「馬場待ち」 must not split into 馬／場待ち）. */
+html body .smart-venue-page .smart-race-row{
+ grid-template-columns:36px 54px minmax(0,1fr) 14px!important;column-gap:6px!important;
+}
+html body .smart-venue-page .smart-race-time{white-space:nowrap!important}
+html body .smart-venue-page .smart-race-flags{
+ display:flex!important;flex-wrap:wrap!important;gap:3px!important;align-items:center!important;
+}
+html body .smart-venue-page .smart-race-title small{
+ white-space:normal!important;word-break:keep-all!important;overflow-wrap:break-word!important;
+ line-height:1.45!important;
+}
