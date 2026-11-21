@@ -33,7 +33,7 @@ def race_family(detail):
 from arvexq.core.runner_status import is_inactive_runner
 
 VERSION = "arvexq-unified-live-v1"
-SYMBOLS = ("◎", "○", "▲", "△", "☆", "注")
+SYMBOLS = ("◎", "○", "▲", "△", "☆", "注", "穴", "伏")
 BET_KINDS = {"馬連", "ワイド", "馬単", "3連複", "3連単"}
 
 
@@ -273,9 +273,16 @@ def master_sidecar_digest(sidecar):
     return _receipt_digest(_value_canonical(unsigned))
 
 
-def _sidecar_mark_restored(unsigned):
+def _sidecar_mark_restored(unsigned, extended=False):
     """The sealed tree behind a projection-stripped stored sidecar,
     or None when this sidecar is not in that form.
+
+    With ``extended=True`` the restored assignment additionally
+    applies the 2026-11-21 extended-mark rule (win-probability
+    ranks 6-8 at pWin >= 0.02 receive 注, 穴, 伏), matching
+    _assign_marks as the builder runs it since that change;
+    master_sidecar_digests accepts BOTH restorations, so sidecars
+    sealed under the five-mark rule keep verifying unchanged.
 
     The display projection that wraps API read-backs (the worker's
     public-race projection and its Python mirror,
@@ -329,6 +336,19 @@ def _sidecar_mark_restored(unsigned):
             star = max(rest, key=lambda r: (
                 r["pTop3"], r["pWin"], -r["horseNumber"]))
             marks[star["horseNumber"]] = "☆"
+        if extended:
+            extra = iter(("注", "穴", "伏"))
+            for rank in range(6, 9):
+                if rank > len(ranking):
+                    break
+                row = ranking[rank - 1]
+                number = row["horseNumber"]
+                if number in marks or row["pWin"] < 0.02:
+                    continue
+                symbol = next(extra, None)
+                if symbol is None:
+                    break
+                marks[number] = symbol
         for r in rows:
             r["mark"] = marks.get(r["horseNumber"], "")
     elif all(r.get("pWin") is None and r.get("pTop3") is None
@@ -365,6 +385,11 @@ def master_sidecar_digests(sidecar):
     restored = _sidecar_mark_restored(unsigned)
     if restored is not None:
         digests |= _sidecar_digest_forms(restored)
+    # Sidecars sealed after the 2026-11-21 extended-mark rule carry
+    # the extended assignment; accept its restoration too.
+    restored_extended = _sidecar_mark_restored(unsigned, extended=True)
+    if restored_extended is not None:
+        digests |= _sidecar_digest_forms(restored_extended)
     return digests
 
 
