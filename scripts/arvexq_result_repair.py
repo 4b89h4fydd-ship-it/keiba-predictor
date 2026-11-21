@@ -285,6 +285,9 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
         except Exception as exc:
             print("NAR official result after bundle refresh failed", rid, exc)
         if official:
+            # Dual-source rule in the repair lane too: netkeiba fills
+            # the fields the official block leaves empty.
+            official = app._dual_source_result(fresh, official)
             fresh["result"] = official
             if official.get("weather") not in (None, "", "不明"):
                 fresh["weather"] = official["weather"]
@@ -333,12 +336,37 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
                                     int(base.get("raceNumber") or 0))
         if cname:
             result_cname = app._jra_result_cname_from_card(cname)
+    parsed = None
     if result_cname:
         parsed = app._jra_parse_result(result_cname, fresh)
         if parsed:
             if app._official_result_would_downgrade(fresh, parsed):
                 parsed = {**parsed, "result": None}
             fresh = app._merge_official_result(fresh, parsed)
+            if app._race_should_have_result(fresh):
+                fresh["result"] = app._dual_source_result(fresh, fresh.get("result"))
+    if not parsed and app._race_should_have_result(fresh):
+        # The official token route is unavailable, but a stored
+        # result whose gaps are parser staleness — last-3F, corner
+        # positions or race laps a pre-fix parse never recorded
+        # (the 2026-11-15 Kyoto results) — can still be healed:
+        # fill from a fresh netkeiba parse, never overwriting a
+        # stored value. The fast lane deliberately does not do
+        # this (its gate is fetch-free for complete results); the
+        # repair lane is where historical staleness belongs.
+        stored = fresh.get("result") or {}
+        if stored.get("finishers") and any(
+                g in ("last3FSeconds", "cornerPositions", "raceLapTimes")
+                for g in app._result_gaps(stored)):
+            try:
+                nk = app._netkeiba_current_result(fresh)
+                if nk:
+                    merged = app._merge_result_sources(stored, nk)
+                    if merged and merged is not stored:
+                        fresh["result"] = merged
+                        fresh = app._merge_result_fields(fresh, merged)
+            except Exception as exc:
+                print("JRA stored result dual-source heal (bundle) failed", rid, exc)
     stored_payouts = ((fresh.get("result") or {}).get("payouts")) or []
     payout_broken = not stored_payouts or bool(payout_combination_violations(fresh))
     if (not app._result_has_podium(fresh)
@@ -347,8 +375,17 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
         try:
             nk = app._netkeiba_current_result(fresh)
             if nk:
-                fresh["result"] = nk
-                fresh = app._merge_result_fields(fresh, nk)
+                # A shape-broken payout block must be superseded
+                # wholesale (the merge only fills empty fields and
+                # would preserve the corruption); every other gap is
+                # filled into the stored block, dual-source style.
+                stored = fresh.get("result") or {}
+                if stored.get("finishers") and not payout_broken:
+                    merged = app._merge_result_sources(stored, nk)
+                    fresh["result"] = merged or nk
+                else:
+                    fresh["result"] = nk
+                fresh = app._merge_result_fields(fresh, fresh["result"])
         except Exception as exc:
             print("JRA result fallback after bundle refresh failed", rid, exc)
     if fresh.get("result") == base.get("result"):
