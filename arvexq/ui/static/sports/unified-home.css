@@ -2819,3 +2819,19 @@ html body .live-direct-venue{border-color:#cbd5e1!important;background:#fff!impo
 html body .live-direct-venue small{color:#64748b!important}
 html body .live-direct-venue strong{color:#0284c7!important}
 html body .live-direct-venues .live-center-empty{border-color:#cbd5e1!important}
+
+/* 20261121 entry table fix (user: racecard broken on phone — columns
+   crushed, check column a black oval, names truncated. netkeiba form:
+   the table keeps its natural width and scrolls sideways inside its
+   card; the name column always fits the full name; the own check is
+   a small white square, never a pill.) */
+html body .smart-race-page .arv-entry-scroll{overflow-x:auto!important;max-width:100%!important}
+html body .smart-race-page .arv-entry-table{width:auto!important;min-width:660px!important;table-layout:auto!important}
+html body .smart-race-page .arv-entry-table th,html body .smart-race-page .arv-entry-table td{padding:7px 6px!important}
+html body .smart-race-page .arv-entry-table th.l,html body .smart-race-page .arv-entry-table td.l{min-width:138px!important}
+html body .smart-race-page .arv-entry-table .nk-odds-name{background:none!important;background-image:none!important;border:0!important;padding:0!important;margin:0!important;font:inherit!important;font-weight:700!important;color:#26303a!important;white-space:nowrap!important;text-align:left!important;box-shadow:none!important;border-radius:0!important;min-height:0!important}
+html body .smart-race-page .arv-entry-table .rc-v345-owncheck{appearance:none!important;-webkit-appearance:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:28px!important;height:28px!important;min-height:0!important;padding:0!important;margin:0!important;background:#ffffff!important;background-image:none!important;border:1.5px solid #9aa7a0!important;border-radius:6px!important;color:#26303a!important;box-shadow:none!important;cursor:pointer!important}
+html body .smart-race-page .arv-entry-table .rc-v345-owncheck .rc-v345-ownbox{font-size:17px!important;line-height:1!important}
+html body .smart-race-page .arv-entry-table .rc-v345-owncheck.is-on{background:#e8f5ee!important;border-color:#2e7d32!important;color:#2e7d32!important}
+html body .smart-race-page .arv-entry-table .frame-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:22px!important;height:22px!important;padding:0 3px!important;border-radius:4px!important;font-size:12px!important;font-weight:800!important}
+html body .smart-race-page [data-action="odds-update"]{background:#ffffff!important;background-image:none!important;color:#26303a!important;border:1px solid #cbd5e1!important;border-radius:8px!important;box-shadow:none!important}
