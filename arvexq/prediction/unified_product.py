@@ -240,6 +240,14 @@ def verified(race):
 # ever re-spells a number whose value it does not touch, and a
 # restored tree that is not the sealed content does not hash to the
 # stored seal.
+#
+# A second, independent drift hit the same seal: the display
+# projection recursively deletes the key name "mark", which the
+# sidecar's runners carry, so stored sidecars are also missing a
+# whole key the seal binds. _sidecar_mark_restored below restores
+# it — deterministically, from the sidecar's own sealed
+# probabilities — the same treatment _serving_form_digests gives
+# the receipt's projection-stripped "tickets" block.
 
 _SIDECAR_FLOAT_KEYS = frozenset((
     "score100", "pWin", "pTop3", "modelHitProbability",
@@ -265,9 +273,74 @@ def master_sidecar_digest(sidecar):
     return _receipt_digest(_value_canonical(unsigned))
 
 
-def master_sidecar_digests(sidecar):
-    """Every seal spelling under which a stored sidecar verifies."""
-    unsigned = {k: v for k, v in sidecar.items() if k != "contentSha256"}
+def _sidecar_mark_restored(unsigned):
+    """The sealed tree behind a projection-stripped stored sidecar,
+    or None when this sidecar is not in that form.
+
+    The display projection that wraps API read-backs (the worker's
+    public-race projection and its Python mirror,
+    arvexq.forecast.publication.public_race) recursively deletes
+    the retired key name "mark" at EVERY nesting level — the same
+    projection whose "tickets" deletion the receipt side already
+    restores in _serving_form_digests. Inside the sidecar exactly
+    one "mark" exists: the per-runner mark the publish lane's
+    assembly always emits. Stored sidecars that ever circulated
+    through a projected read as a write seed therefore reach D1
+    with every runner's "mark" gone, while the seal was computed
+    over the builder's tree that carries it — so the float-spelling
+    forms alone never re-hash a stored sidecar (every stored
+    production sidecar checked on 2026-11-19/20/21 lacks the key).
+
+    The mark is not free content the projection happened to eat:
+    the builder assigns it by _assign_marks over the sidecar's own
+    probabilities (◎○▲△ by win-probability ranking with the
+    top-3 / number tie-breaks, ☆ to the best remaining top-3
+    probability), so the sealed marks are a deterministic function
+    of leaves the seal itself binds (horseNumber / pWin / pTop3).
+    Restoring exactly that function re-spells representation drift
+    and nothing else: a changed probability, number or roster
+    changes the restored tree or the ranking it implies, and the
+    digest still fails. On the insufficient-evidence builds the
+    assembly emits mark=None for every runner, which is likewise
+    the only restorable value there. A sidecar whose runners
+    already carry a mark, or whose shape the builder cannot have
+    produced, gets no extra variant (fail-closed).
+    """
+    runners = unsigned.get("runners")
+    if not isinstance(runners, list) or not runners:
+        return None
+    if any(not isinstance(r, dict) or "mark" in r for r in runners):
+        return None
+    rows = [dict(r) for r in runners]
+
+    def _num(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+    if all(_num(r.get("pWin")) and _num(r.get("pTop3"))
+           and isinstance(r.get("horseNumber"), int) for r in rows):
+        ranking = sorted(rows, key=lambda r: (
+            -r["pWin"], -r["pTop3"], r["horseNumber"]))
+        marks = {}
+        for index, symbol in enumerate(("◎", "○", "▲", "△")):
+            if index < len(ranking):
+                marks[ranking[index]["horseNumber"]] = symbol
+        rest = ranking[4:]
+        if rest:
+            star = max(rest, key=lambda r: (
+                r["pTop3"], r["pWin"], -r["horseNumber"]))
+            marks[star["horseNumber"]] = "☆"
+        for r in rows:
+            r["mark"] = marks.get(r["horseNumber"], "")
+    elif all(r.get("pWin") is None and r.get("pTop3") is None
+             for r in rows):
+        for r in rows:
+            r["mark"] = None
+    else:
+        return None
+    return {**unsigned, "runners": rows}
+
+
+def _sidecar_digest_forms(unsigned):
     return {
         # Current form: value-canonical (what master_sidecar_digest
         # seals), identical before and after a JS round trip.
@@ -279,6 +352,20 @@ def master_sidecar_digests(sidecar):
         # builder always emits as floats.
         _receipt_digest(_sidecar_float_restored(unsigned)),
     }
+
+
+def master_sidecar_digests(sidecar):
+    """Every seal spelling under which a stored sidecar verifies."""
+    unsigned = {k: v for k, v in sidecar.items() if k != "contentSha256"}
+    digests = _sidecar_digest_forms(unsigned)
+    # Projection-stripped form: the display projection deleted the
+    # per-runner "mark" keys the builder sealed; restore the one
+    # mark assignment the sidecar's own sealed probabilities imply
+    # and accept its seal spellings too (see _sidecar_mark_restored).
+    restored = _sidecar_mark_restored(unsigned)
+    if restored is not None:
+        digests |= _sidecar_digest_forms(restored)
+    return digests
 
 
 def master_sidecar_verified(sidecar):
