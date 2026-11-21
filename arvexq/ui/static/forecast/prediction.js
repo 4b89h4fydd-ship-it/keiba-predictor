@@ -177,6 +177,25 @@
         if(Number.isInteger(n)&&roster[n]&&!diagMap[n])diagMap[n]=d;
       });
       if(accepted&&best===1){
+        // 軸 label (axis design, user rule 2026-11-21): for races
+        // dated on/after 2026-11-22, the marked horse with the
+        // highest top-3 probability (the mark entry's own value,
+        // the diagnosis entry as fallback) carries axisMark, so
+        // the racecard mark cell can print a small 軸 under its
+        // mark — the same two-line stack as the 注 overlay. Ties
+        // keep the earlier mark in payload order. Display only;
+        // earlier races keep the published form with no label.
+        var axisNo=null;
+        if(String(race.date||unified.raceDate||'')>='2026-11-22'){
+          var axisBest=-1;
+          unified.marks.forEach(function(x){
+            var n=Number(x&&x.horseNumber);
+            if(!Number.isInteger(n)||!roster[n])return;
+            var t3=x.top3Probability!=null&&Number.isFinite(Number(x.top3Probability))?Number(x.top3Probability)
+              :(diagMap[n]&&diagMap[n].top3Probability!=null&&Number.isFinite(Number(diagMap[n].top3Probability))?Number(diagMap[n].top3Probability):null);
+            if(t3!=null&&t3>axisBest){axisBest=t3;axisNo=n;}
+          });
+        }
         var unifiedStages=Array.isArray(unified.paceStages)?unified.paceStages:[],
             unifiedPlan=unifiedStages.length?{stages:unifiedStages}:null;
         var rowsU=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
@@ -203,6 +222,7 @@
           return Object.assign({horse:h,predMark:mark,serverPreoffMark:false,
             originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:!!mark,
             attentionMark:!!attentionMap[no],
+            axisMark:axisNo!=null&&no===axisNo,
             predRank:999,winProbability:winP,p1Probability:winP,p2Probability:null,
             p3Probability:null,overallGrade:grade,coverage:0,
             overallScoreExact:score100,
@@ -224,10 +244,22 @@
     if(server&&server.predictionStatus==='ready'&&Array.isArray(race.horses)){
       var stage=server.stages||{}, prob=(stage.probability&&stage.probability.value)||{}, marks=race.predictionMarks||[], by={};
       marks.forEach(function(x){by[String(Number(x.horseNumber))]=x});
+      // 軸 label, same rule as the unified lane (on/after
+      // 2026-11-22 only): the marked horse with the highest
+      // top-3 probability in the saved distribution.
+      var axisNoS=null;
+      if(String(race.date||'')>='2026-11-22'&&prob.top3){
+        var axisBestS=-1;
+        marks.forEach(function(x){
+          var n=Number(x&&x.horseNumber),t3=prob.top3[n];
+          if(Number.isInteger(n)&&t3!=null&&Number.isFinite(Number(t3))&&Number(t3)>axisBestS){axisBestS=Number(t3);axisNoS=n;}
+        });
+      }
       var rows=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0}).map(function(h){
         var no=Number(h.horseNumber),m=by[String(no)]||{};
         return Object.assign({horse:h,predMark:String(m.mark||''),serverPreoffMark:!!m.mark,
           originalPreoffMark:false,referencePostoffMark:false,revisionCandidateMark:false,
+          axisMark:axisNoS!=null&&no===axisNoS,
           predRank:marks.findIndex(function(x){return Number(x.horseNumber)===no})+1,
           winProbability:prob.win&&prob.win[no]!=null?prob.win[no]:null,
           p1Probability:prob.win&&prob.win[no]!=null?prob.win[no]:null,p2Probability:null,
