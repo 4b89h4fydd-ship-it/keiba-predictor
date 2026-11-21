@@ -27,18 +27,76 @@ jobs:
       - name: Measure D1 before any change
         run: |
           python - <<'PY'
-          import os, json, urllib.request
+          import os, json, time, urllib.request, urllib.error
+          # The production API rate-limits aggressively (HTTP 429/503).
+          # Retry with exponential backoff (30s -> 60s -> 120s -> 240s,
+          # capped), honouring Retry-After; slowing down is the correct
+          # response to rate limiting, aborting the recovery is not.
           req = urllib.request.Request('https://kraiz-api.4b89h4fydd.workers.dev/api/admin/storage-audit', headers={'Authorization': 'Bearer ' + os.environ['SYNC_TOKEN'], 'User-Agent': 'Mozilla/5.0 ARVEXQ-RecoveryAudit/1.0'})
-          with urllib.request.urlopen(req, timeout=60) as response:
-              metrics = json.load(response)
+          metrics = None
+          for attempt in range(6):
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      metrics = json.load(response)
+                  break
+              except Exception as error:
+                  retryable = not isinstance(error, urllib.error.HTTPError) or error.code in (429, 500, 502, 503, 504)
+                  if attempt == 5 or not retryable:
+                      raise
+                  delay = min(30 * (2 ** attempt), 240)
+                  if isinstance(error, urllib.error.HTTPError) and error.headers is not None:
+                      retry_after = error.headers.get('Retry-After')
+                      if retry_after:
+                          try:
+                              delay = max(0.0, float(retry_after))
+                          except ValueError:
+                              pass
+                  print('STORAGE_AUDIT_RETRY', getattr(error, 'code', type(error).__name__), 'attempt', attempt + 1, 'sleep', delay, flush=True)
+                  time.sleep(delay)
           with open('audit-before.json', 'w') as f:
               json.dump(metrics, f, indent=2)
           print(json.dumps(metrics['queries'], indent=2))
           PY
       - name: Export all original application tables and verify reopened SQLite
-        run: python scripts/arvexq_backup_live_d1.py
+        run: |
+          # arvexq_backup_live_d1.py has only a short built-in retry, which
+          # sustained API rate limiting (429) can outlast. Re-run the whole
+          # export with long backoff between attempts; the script refuses to
+          # overwrite an existing destination file, so remove the partial
+          # outputs of the failed attempt first (they are unverified and
+          # worthless without the reopen check the script performs).
+          for attempt in 1 2 3 4 5 6; do
+            rm -f /tmp/arvexq-complete-d1.sqlite3 /tmp/arvexq-complete-d1-summary.json
+            if python scripts/arvexq_backup_live_d1.py; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 6 ]; then
+              echo "backup export failed after 6 attempts" >&2
+              exit 1
+            fi
+            delay=$((30 * 2 ** (attempt - 1)))
+            if [ "$delay" -gt 240 ]; then delay=240; fi
+            echo "backup export attempt $attempt failed; sleeping ${delay}s before retry"
+            sleep "$delay"
+          done
       - name: Encrypt verified backup and publish protected backup branch
         run: |
+          BRANCH="backup/d1-recovery-$GITHUB_RUN_ID"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            # Re-run of the same run_id (e.g. Re-run jobs reuses the run_id):
+            # a backup branch for this run already exists. Its single commit
+            # always contains the verified manifest, so the backup is already
+            # durable; skip re-publishing instead of failing on a
+            # non-fast-forward push. A branch without a manifest should never
+            # occur from this workflow, so refuse to touch it if one appears.
+            git fetch --depth 1 origin "$BRANCH"
+            if git cat-file -e "FETCH_HEAD:protected-backups/d1-recovery-$GITHUB_RUN_ID/manifest.json" 2>/dev/null; then
+              echo "BACKUP_BRANCH_ALREADY_PUBLISHED $BRANCH (verified manifest present); skipping publish"
+              exit 0
+            fi
+            echo "backup branch $BRANCH exists without a manifest; refusing to overwrite" >&2
+            exit 1
+          fi
           python - <<'PY'
           import os, json, gzip, shutil, subprocess, hashlib
           from pathlib import Path
