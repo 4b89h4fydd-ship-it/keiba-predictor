@@ -671,6 +671,75 @@ def speed_coverage(entry) -> int:
                if isinstance(h, dict) and h.get("nk_avg5") is not None)
 
 
+def materials_fingerprint(entry) -> dict:
+    """Per-family counts of horses carrying a usable value in
+    one parsed materials entry, keyed by the integrate()
+    coverage names (plus the entry-level course_analysis flag).
+
+    This is the content state of the materials file for one
+    race, in the exact units the adjustment consumes: a family
+    count can only grow when newly collected material lands
+    (the morning rebuild lighting bestTime / headToHead / the
+    odds block after the evening file had shipped without
+    them). The publish lane stamps the fingerprint of the
+    entry it applied and re-qualifies a frozen race when the
+    current entry's fingerprint has outgrown the stamped one
+    (see scripts/arvexq_rewrite_publish.py,
+    _nk_materials_upgrade_info) — the stamp keys on WHAT was
+    applied, not only on the adjustment definition's version,
+    so material that arrives after first publication still
+    reaches a pre-post race. Counts use the same per-family
+    readers apply_nk_materials uses, so the fingerprint never
+    claims material the adjustment could not read."""
+    counts = {
+        "speed": 0, "mochitime": 0, "h2h": 0, "pedigree": 0,
+        "press": 0, "pace": 0, "nk_form_dev": 0, "nk_ai": 0,
+        "odds_drift": 0, "odds_wp_gap": 0, "horse_analysis": 0,
+        "course_jockey": 0, "course_trainer": 0,
+        "course_analysis": 0,
+    }
+    if not isinstance(entry, dict):
+        return counts
+    if isinstance(entry.get("courseAnalysis"), dict) \
+            and entry.get("courseAnalysis"):
+        counts["course_analysis"] = 1
+    pace_label = entry.get("paceLabel")
+    for horse in (entry.get("horses") or {}).values():
+        if not isinstance(horse, dict):
+            continue
+        if horse.get("nk_avg5") is not None:
+            counts["speed"] += 1
+        if best_time_seconds(horse.get("bestTime")) is not None:
+            counts["mochitime"] += 1
+        if h2h_shrunk_rate(horse.get("headToHead")) is not None:
+            counts["h2h"] += 1
+        if sire_course_score(horse.get("pedigree")) is not None:
+            counts["pedigree"] += 1
+        if press_points(horse.get("press")) is not None:
+            counts["press"] += 1
+        if pace_score(horse.get("pace"), pace_label) is not None:
+            counts["pace"] += 1
+        if horse.get("nkFormDev") is not None:
+            counts["nk_form_dev"] += 1
+        if horse.get("nkAiScore") is not None:
+            counts["nk_ai"] += 1
+        cells = _odds_cells(horse.get("odds"))
+        if cells.get("publish_win_odds") and cells.get("final_win_odds"):
+            counts["odds_drift"] += 1
+        if cells.get("final_win_odds") \
+                and cells.get("place_odds_low") \
+                and cells.get("place_odds_high"):
+            counts["odds_wp_gap"] += 1
+        if horse_analysis_score(horse.get("horseAnalysis")) is not None:
+            counts["horse_analysis"] += 1
+        persons = horse.get("coursePersons") or {}
+        if person_course_score(persons.get("jockey")) is not None:
+            counts["course_jockey"] += 1
+        if person_course_score(persons.get("trainer")) is not None:
+            counts["course_trainer"] += 1
+    return counts
+
+
 # --------------------------------------- all-materials terms (v5)
 def best_time_seconds(best_time):
     """The bestTime block's seconds, or None. The block is the
@@ -1074,6 +1143,16 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     or a race without course inputs — runs with the frozen
     defaults, where the course weights are 0.
 
+    Jumps races (segment "jumps", 2026-11-21) count as JRA for
+    the course terms — they are JRA races and the collection
+    carries their courseAnalysis like any other JRA race — but
+    the trial marker is stamped "jra-jumps" so the jump
+    record stays separable from the flat one. Jumps races have
+    no v8/v9b lane (no fitted candidate exists for the
+    segment), so the publish lane applies this adjustment to
+    their v1 probability vector; every segment-independent
+    family below applies exactly as on the v9b lane.
+
     The v5 all-materials terms (mochitime / h2h / pedigree /
     press, ALL_TERMS_WEIGHTS) are segment-independent: they
     read the entry's per-horse blocks directly. When any of
@@ -1161,7 +1240,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     if not materials:
         return forecast, info
     extras_by_number = extras_by_number or {}
-    is_jra = segment in JRA_SEGMENTS
+    is_jra = segment in JRA_SEGMENTS or segment == "jumps"
     course_active = ((segment == "nar" or is_jra)
                      and isinstance(course_inputs, dict))
     front_bias, frame_bias = (course_biases(entry.get("courseAnalysis"))
@@ -1396,8 +1475,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # The trial is on the record wherever the stamp is
             # read from: the weights label above, plus this
             # explicit marker the publish lane copies into the
-            # nkMaterials stamp.
-            info["courseTrial"] = "jra"
+            # nkMaterials stamp. Jumps races carry their own
+            # marker so their trial record stays separable.
+            info["courseTrial"] = (
+                "jra-jumps" if segment == "jumps" else "jra")
     if pace_label_stamp is not None and any(
             "pace" in d["terms"] for d in detail):
         label_parts.append(pace_label_stamp)
