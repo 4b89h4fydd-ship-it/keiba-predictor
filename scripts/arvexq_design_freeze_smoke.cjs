@@ -50,7 +50,10 @@ const styleBaseline={
   // badges, large white home venue tags, and the netkeiba-form
   // racecard table. The entry table markup change (entryTableSection,
   // not a frozen function) carries the column order.
-  "arvexq/ui/static/sports/unified-home.css": "57ac3e188ce7bd03",
+  // Re-pinned 2026-11-21 (venue balance): home venue tags grouped
+  // under 中央 / 地方 headings in an equal-width grid (user direction
+  // 2026-11-21: "バランス悪い 中央と地方わけて").
+  "arvexq/ui/static/sports/unified-home.css": "37127978ebe154c4",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
