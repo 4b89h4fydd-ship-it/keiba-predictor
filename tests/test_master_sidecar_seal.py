@@ -190,6 +190,139 @@ class SidecarSealFormsTests(TestCase):
         self.assertFalse(master_sidecar_verified("sidecar"))
 
 
+def projection_strip(value):
+    """The display projection's recursive retired-key deletion
+    (arvexq.forecast.publication.public_race / the worker's
+    public-race projection), for the one retired name a sidecar
+    carries: every "mark" key, at every nesting level."""
+    if isinstance(value, dict):
+        return {k: projection_strip(v) for k, v in value.items()
+                if k != "mark"}
+    if isinstance(value, list):
+        return [projection_strip(v) for v in value]
+    return value
+
+
+def marked_sidecar():
+    """A sidecar in the publish lane's build shape whose runner
+    marks are exactly what the builder's _assign_marks produces
+    for its probabilities (the sealed marks are a deterministic
+    function of pWin / pTop3 / horseNumber)."""
+    from rewrite.analysis.forecast import _assign_marks
+    probs = {2: (0.30, 0.55, 0.75), 3: (0.20, 0.40, 0.60),
+             4: (0.15, 0.35, 0.55), 5: (0.10, 0.25, 0.45),
+             6: (0.08, 0.20, 0.50), 7: (0.05, 0.15, 0.30)}
+    ranking = sorted(probs, key=lambda n: (-probs[n][0],
+                                           -probs[n][2], n))
+    marks = _assign_marks(ranking, probs)
+    runners = []
+    for n in (2, 3, 4, 5, 6, 7):
+        runners.append({
+            "horseNumber": n,
+            "score100": 68.0 if n == 2 else 40.0 + n,
+            "coveragePoints": 80, "evidenceRuns": 5,
+            "categories": {"ability": 14.0, "recent": 11.25},
+            "missingCategories": ["gate"],
+            "mark": marks.get(n, ""),
+            "pWin": probs[n][0], "pTop3": probs[n][2],
+            "marketRank": n - 1, "popularRisk": "not-assessed",
+            "valueHypothesis": False})
+    return {
+        "version": "master-18-factor-shadow-v1",
+        "status": "shadow-candidate",
+        "probabilityStatus": "master-experimental-uncalibrated",
+        "validated": False, "evidenceConfidence": "B",
+        "marketStatus": "complete",
+        "pace": {"label": "スローペース想定", "frontRunners": [2],
+                 "unknown": [],
+                 "scenarioOrder": {"slow": [2, 3], "normal": [2, 3],
+                                   "fast": [3, 2]},
+                 "scenarioProbabilities": None},
+        "runners": runners,
+        "ticketStyles": {
+            "status": "conditional-research-only",
+            "styles": {"hit_first": {
+                "kind": "place", "selection": [2],
+                "modelHitProbability": 1.0,
+                "probabilityStatus": "experimental-uncalibrated",
+                "expectedReturn": None, "minimumActualOdds": None,
+                "purchaseRecommended": False},
+                "balanced": None, "outsider": None},
+            "calibrationValidated": False, "stakeAllocationYen": None},
+        "capturedAt": CAPTURED_AT,
+    }
+
+
+class ProjectionStrippedSidecarTests(TestCase):
+    """Stored sidecars are also missing a whole key the seal binds:
+    the display projection recursively deletes the key name "mark",
+    and stored production sidecars reach D1 without any runner's
+    mark while the seal was computed over the builder's tree that
+    carries it (Saga 4R/5R/6R/7R/10R still failing after the float
+    fix; every stored sidecar of 2026-11-19/20/21 checked). The
+    verifier restores the one mark assignment the sidecar's own
+    sealed probabilities deterministically imply — a changed value
+    still fails, exactly as for the float spellings."""
+
+    def test_projection_stripped_legacy_sidecar_verifies(self):
+        sidecar = legacy_sign(marked_sidecar())
+        stored = projection_strip(js_round_trip(sidecar))
+        self.assertNotIn("mark", stored["runners"][0])
+        self.assertTrue(master_sidecar_verified(stored))
+
+    def test_projection_stripped_new_seal_verifies(self):
+        sidecar = marked_sidecar()
+        sidecar["contentSha256"] = master_sidecar_digest(sidecar)
+        stored = projection_strip(js_round_trip(sidecar))
+        self.assertTrue(master_sidecar_verified(stored))
+
+    def test_projection_stripped_tampering_still_fails(self):
+        sidecar = legacy_sign(marked_sidecar())
+        for mutate in (
+                # A probability change re-derives different marks
+                # and a different tree: no accepted form matches.
+                lambda s: s["runners"][0].update(pWin=0.31),
+                # Moving the star: horse 7's top-3 now beats horse
+                # 6's, so the implied ☆ changes with the value.
+                lambda s: s["runners"][5].update(pTop3=0.51),
+                lambda s: s["runners"][1].update(score100=41.5),
+                lambda s: s["runners"].pop(),
+                # A mark that is present but wrong gets no restored
+                # variant and does not match the seal either.
+                lambda s: s["runners"][0].update(mark="○")):
+            stored = projection_strip(js_round_trip(
+                copy.deepcopy(sidecar)))
+            mutate(stored)
+            self.assertFalse(master_sidecar_verified(stored))
+
+    def test_insufficient_style_sidecar_stripped_verifies(self):
+        sidecar = marked_sidecar()
+        for r in sidecar["runners"]:
+            r["mark"] = None
+            r["pWin"] = None
+            r["pTop3"] = None
+        sidecar = legacy_sign(sidecar)
+        stored = projection_strip(js_round_trip(sidecar))
+        self.assertTrue(master_sidecar_verified(stored))
+
+    def test_projection_stripped_sidecar_restores_and_protects(self):
+        stored = _stored_with(projection_strip(js_round_trip(
+            legacy_sign(marked_sidecar()))))
+        old_raw = _stored_with(projection_strip(js_round_trip(
+            legacy_sign(marked_sidecar()))))
+        new = _place_ev_new(copy.deepcopy(old_raw))
+        with patch.object(pub, "_get_admin",
+                          return_value=_export_response(stored)):
+            ok, reason = _restore_pristine_sidecar(new, "token")
+        self.assertTrue(ok, reason)
+        self.assertEqual(new["masterAnalysis"],
+                         stored["masterAnalysis"])
+        protect_detail = pub._load_protect()
+        final = protect_detail(old_raw, new)  # must not raise
+        plan = final["unifiedForecast"]["ticketPlan"]
+        self.assertIn("placeExpectedValues", plan)
+
+
 class StoredDigestRestoreTests(TestCase):
     def test_js_spelled_stored_sidecar_restores_and_protect_passes(self):
         # The production state for Saga 3R/4R: sealed in Python,
