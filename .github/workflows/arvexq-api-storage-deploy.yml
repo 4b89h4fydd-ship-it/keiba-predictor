@@ -195,7 +195,7 @@ jobs:
               else:
                   assert len(entry)==1, 'UNKNOWN_BUNDLE_ENTRY_NOT_UNIQUE'
               for name in ('api_forecast_revisions.mjs','api_storage_audit.mjs',
-                           'api_snapshot_export.mjs','api_full_snapshot.mjs'):
+                           'api_snapshot_export.mjs','api_full_snapshot.mjs','api_snapshot_prune.mjs'):
                   (directory/name).write_bytes((Path('workers')/name).read_bytes())
               entry_name=entry[0]
               (directory/'worker-entry-overlay.mjs').write_text(f"""
@@ -203,12 +203,14 @@ jobs:
           import {{forecastRevisions}} from './api_forecast_revisions.mjs';
           import {{storageAudit}} from './api_storage_audit.mjs';
           import {{snapshotExport}} from './api_snapshot_export.mjs';
+          import {{snapshotPrune}} from './api_snapshot_prune.mjs';
           import {{compressStoredSnapshot,readCompressedRace}} from './api_full_snapshot.mjs';
           export default {{async fetch(request,env,ctx){{
             const path=new URL(request.url).pathname;
             if(path.startsWith('/api/forecast-revisions/') || path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
             if(path==='/api/admin/storage-audit')return storageAudit(request,env);
             if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
+            if(path==='/api/admin/snapshot-prune')return snapshotPrune(request,env);
             if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
             if(request.method==='GET' && path.startsWith('/api/race/')){{
               const id=decodeURIComponent(path.slice('/api/race/'.length));
@@ -228,7 +230,7 @@ jobs:
               directory=Path('.arvexq-production-overlay');directory.mkdir(exist_ok=True)
               (directory/'preserved-live-worker.mjs').write_bytes(source)
               for name in ('api_forecast_revisions.mjs','api_storage_audit.mjs',
-                           'api_snapshot_export.mjs','api_full_snapshot.mjs'):
+                           'api_snapshot_export.mjs','api_full_snapshot.mjs','api_snapshot_prune.mjs'):
                   (directory/name).write_bytes((Path('workers')/name).read_bytes())
               # Only explicitly named existing APIs are added; the exact current
               # deployed Worker continues handling every other request.
@@ -237,6 +239,7 @@ jobs:
           import {forecastRevisions} from './api_forecast_revisions.mjs';
           import {storageAudit} from './api_storage_audit.mjs';
           import {snapshotExport} from './api_snapshot_export.mjs';
+          import {snapshotPrune} from './api_snapshot_prune.mjs';
           import {compressStoredSnapshot,readCompressedRace} from './api_full_snapshot.mjs';
           export default {async fetch(request,env,ctx){
             const path=new URL(request.url).pathname;
@@ -244,6 +247,7 @@ jobs:
                path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
             if(path==='/api/admin/storage-audit')return storageAudit(request,env);
             if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
+            if(path==='/api/admin/snapshot-prune')return snapshotPrune(request,env);
             if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
             if(request.method==='GET' && path.startsWith('/api/race/')){
               const id=decodeURIComponent(path.slice('/api/race/'.length));
@@ -277,7 +281,7 @@ jobs:
                   assert hashlib.sha256(original).hexdigest()==digest,'LIVE_MODULE_CHANGED '+name
                   (directory/name).write_bytes(original)
               for name in ('api_forecast_revisions.mjs','api_storage_audit.mjs',
-                           'api_snapshot_export.mjs','api_full_snapshot.mjs'):
+                           'api_snapshot_export.mjs','api_full_snapshot.mjs','api_snapshot_prune.mjs'):
                   (directory/name).write_bytes((Path('workers')/name).read_bytes())
               # Additive wrapper: every other live route executes its deployed
               # handler byte-for-byte. No use of outdated GitHub legacy worker.
@@ -286,6 +290,7 @@ jobs:
           import {forecastRevisions} from './api_forecast_revisions.mjs';
           import {storageAudit} from './api_storage_audit.mjs';
           import {snapshotExport} from './api_snapshot_export.mjs';
+          import {snapshotPrune} from './api_snapshot_prune.mjs';
           import {compressStoredSnapshot,readCompressedRace} from './api_full_snapshot.mjs';
           export default {async fetch(request,env,ctx){
             const path=new URL(request.url).pathname;
@@ -293,6 +298,7 @@ jobs:
                path.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
             if(path==='/api/admin/storage-audit')return storageAudit(request,env);
             if(path==='/api/admin/snapshot-export')return snapshotExport(request,env);
+            if(path==='/api/admin/snapshot-prune')return snapshotPrune(request,env);
             if(path==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
             if(request.method==='GET' && path.startsWith('/api/race/')){
               const id=decodeURIComponent(path.slice('/api/race/'.length));
