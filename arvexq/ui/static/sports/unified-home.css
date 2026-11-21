@@ -2793,3 +2793,29 @@ html body .smart-shell .nk-live-card-time{font-size:13px!important;font-weight:7
 html body .smart-shell .nk-race-switchbar{display:flex!important;gap:8px!important;padding:8px 10px 0!important}
 html body .smart-shell .nk-switch-chip{appearance:none!important;border:1px solid #c9d2dc!important;background:#fff!important;color:#20242b!important;font-size:13px!important;font-weight:700!important;border-radius:8px!important;padding:6px 14px!important;cursor:pointer!important}
 html body .smart-shell .smart-race-step{font-size:13px!important;font-weight:700!important;white-space:nowrap!important}
+
+/* 20261121 live overlay light (user direction: overlay also white-based) */
+html body .live-center-overlay{background:rgba(15,23,42,.45)!important}
+html body .live-center-sheet{background:#fff!important;border-color:#dbe3ea!important;box-shadow:0 -12px 45px rgba(15,23,42,.25)!important}
+html body .live-center-head{background:#fff!important;border-bottom-color:#e2e8f0!important}
+html body .live-center-head b{color:#dc2626!important}
+html body .live-center-head small{color:#64748b!important}
+html body .live-center-head button{border-color:#cbd5e1!important;background:#fff!important;color:#0f172a!important}
+html body .live-center-venues{border-bottom-color:#e2e8f0!important}
+html body .live-center-venues button{border-color:#cbd5e1!important;background:#fff!important;color:#0f172a!important}
+html body .live-center-venues button small{color:#64748b!important}
+html body .live-center-venues button.active{border-color:#0284c7!important;background:#f0f9ff!important;box-shadow:inset 0 0 0 1px rgba(2,132,199,.25)!important}
+html body .live-center-player-foot{background:#fff!important;color:#64748b!important}
+html body .live-center-player-foot a{color:#0284c7!important}
+html body .live-center-prompt{color:#64748b!important}
+html body .live-center-prompt b{color:#0f172a!important}
+html body .live-center-empty{color:#64748b!important}
+html body .live-direct-box{border-color:#cbd5e1!important;background:#fff!important;color:#0f172a!important}
+html body .live-direct-box span small{color:#64748b!important}
+html body .live-direct-box em{color:#0284c7!important}
+html body .live-direct-box>strong{color:#0284c7!important}
+html body .live-direct-box.central{border-color:#cbd5e1!important}
+html body .live-direct-venue{border-color:#cbd5e1!important;background:#fff!important;color:#0f172a!important}
+html body .live-direct-venue small{color:#64748b!important}
+html body .live-direct-venue strong{color:#0284c7!important}
+html body .live-direct-venues .live-center-empty{border-color:#cbd5e1!important}
