@@ -2835,3 +2835,12 @@ html body .smart-race-page .arv-entry-table .rc-v345-owncheck .rc-v345-ownbox{fo
 html body .smart-race-page .arv-entry-table .rc-v345-owncheck.is-on{background:#e8f5ee!important;border-color:#2e7d32!important;color:#2e7d32!important}
 html body .smart-race-page .arv-entry-table .frame-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:22px!important;height:22px!important;padding:0 3px!important;border-radius:4px!important;font-size:12px!important;font-weight:800!important}
 html body .smart-race-page [data-action="odds-update"]{background:#ffffff!important;background-image:none!important;color:#26303a!important;border:1px solid #cbd5e1!important;border-radius:8px!important;box-shadow:none!important}
+
+/* 20261121 race head clearance (user: race title row half-hidden
+   under the nav bar on the race detail page). The race topbar is
+   fixed; its old clearance rule targeted header + main as adjacent
+   siblings, but the switchbar now sits between them, so the main
+   lost its top clearance and the head section slid under the bar.
+   The switchbar is the first in-flow element: give it the full
+   clearance so the chips and the race title start below the bar. */
+html body .smart-shell:has(> .smart-main.smart-race-page) > .nk-race-switchbar{padding-top:calc(74px + env(safe-area-inset-top))!important}
