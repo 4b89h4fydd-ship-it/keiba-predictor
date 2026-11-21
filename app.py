@@ -1619,29 +1619,6 @@ def _nar_netkeiba_preview_rows(detail:dict,force:bool=False)->dict:
                         if po:z.update(po)
         except Exception as exc:
             print('NAR netkeiba odds-page fallback failed',rid,exc)
-        # The scan above runs on the smartphone layout (the mobile UA
-        # is redirected to the SP shutuba card), which carries no
-        # place table at all — its 複勝 search can never match, so
-        # place coverage from netkeiba stayed 0 and only the official
-        # OddsTanFuku leg ever supplied ranges. The desktop b1 page
-        # carries two same-header tables — win (bare number) and
-        # place (observed range) — which the dedicated parser
-        # separates by cell content. Fetch it with the desktop layout
-        # and merge the observed place ranges (plus any win odds the
-        # card scan still lacks).
-        try:
-            b1_url=f"https://nar.netkeiba.com/odds/?race_id={rid}&type=b1"
-            if force:b1_url+=f"&t={int(time.time()*1000)}"
-            bh=_netkeiba_get(b1_url,float(os.getenv('NETKEIBA_NAR_ODDS_TIMEOUT_SEC','3.2')),0 if force else 12,desktop=True)
-            for no,z0 in _parse_nar_netkeiba_b1_html(bh).items():
-                z=out.setdefault(no,{})
-                odd=z0.get('winOdds')
-                if odd and odd>1 and not z.get('winOdds'):
-                    z['winOdds']=odd;z['oddsSource']='netkeiba実オッズ';z['oddsForecast']=False
-                if z0.get('placeOddsLow') is not None and z.get('placeOddsLow') is None:
-                    z['placeOddsLow']=z0['placeOddsLow'];z['placeOddsHigh']=z0['placeOddsHigh']
-        except Exception as exc:
-            print('NAR netkeiba b1 place fallback failed',rid,exc)
     return out
 
 _nar_odds_cache_lock=threading.Lock()
@@ -1653,7 +1630,6 @@ from arvexq.ingest.jra_fields.body_weight import extract as jra_observed_body_we
 from arvexq.ingest.jra_fields.body_weight_change import extract as jra_observed_body_weight_change
 
 from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html
-from arvexq.ingest.odds_fields.nar_netkeiba_b1 import _parse_nar_netkeiba_b1_html
 
 def _nar_live_odds(track:str,iso_date:str,race_no:int,force:bool=False)->dict:
     code=NAR_BABA_CODES.get(str(track or "").strip())
@@ -2166,78 +2142,16 @@ def _attach_nar_payouts(detail: dict) -> dict:
 from arvexq.ingest.netkeiba_result import parse_current_result_html as _parse_netkeiba_result_html
 
 
-def _netkeiba_result_urls(detail:dict,rid:str)->list[tuple[str,bool]]:
-    """Result-page URLs for a netkeiba race id, best layout first.
-
-    The JRA result lives on race.netkeiba.com (its smartphone layout
-    carries every field the parser reads). NAR races are NOT served
-    there — that host returns a fixed error page for NAR ids — so
-    the NAR desktop site (nar.netkeiba.com; the PC layout parses
-    with clean names and body weights) is primary and the NAR
-    smartphone page is the fallback. The circuit is judged from the
-    detail's own identity first, then from the race id's track code
-    (JRA codes are exactly the NETKEIBA_TRACK_CODES keys, 01-10;
-    NAR codes are 30 and above).
-    """
-    code=rid[4:6] if len(rid)>=6 else ""
-    nar=(str(detail.get("id") or "").startswith("nar-")
-         or str(detail.get("circuit") or "")=="地方"
-         or (bool(code) and code not in NETKEIBA_TRACK_CODES))
-    if nar:
-        return [
-            (f"https://nar.netkeiba.com/race/result.html?race_id={rid}",True),
-            (f"https://nar.sp.netkeiba.com/race/race_result.html?race_id={rid}",False),
-        ]
-    return [(f"https://race.netkeiba.com/race/result.html?race_id={rid}",False)]
-
-
 def _netkeiba_current_result(detail:dict)->dict|None:
     rid=str(detail.get("netkeibaRaceId") or "") or _netkeiba_race_id(str(detail.get("date") or ""),str(detail.get("track") or ""),int(detail.get("raceNumber") or 0))
     if not rid:return None
-    timeout=float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0"))
-    # One retry per URL: the site intermittently truncates responses
-    # (IncompleteRead), and a single attempt silently lost the whole
-    # second source for that race.
-    for url,desktop in _netkeiba_result_urls(detail,rid):
-        for _attempt in range(2):
-            try:html=_netkeiba_get(url,timeout,20,desktop=desktop)
-            except Exception as exc:
-                print("netkeiba result failed",rid,exc);continue
-            parsed=_parse_netkeiba_result_html(
-                html, clean=_clean, parse_time_seconds=_jra_parse_time_seconds,
-                parse_payouts=_parse_payouts,
-            )
-            if parsed:return parsed
-    return None
-
-
-from arvexq.ingest.result_dual_source import (
-    merge_result_sources as _merge_result_sources,
-    result_gaps as _result_gaps,
-)
-
-
-def _dual_source_result(detail:dict,primary:dict|None,*,skip_fields:tuple=())->dict|None:
-    """Merge the netkeiba parse into a fresh official result block.
-
-    The dual-source rule (official + netkeiba, both circuits): the
-    official block stays authoritative, netkeiba fills the fields
-    it leaves empty, and disagreements are recorded in the merged
-    block's dualSource meta instead of being silently picked over.
-    A failed netkeiba fetch leaves the official block untouched.
-    """
-    if not primary or not (primary.get("finishers") or []):return primary
-    try:nk=_netkeiba_current_result(detail)
+    try:html=_netkeiba_get(f"https://race.netkeiba.com/race/result.html?race_id={rid}",float(os.getenv("NETKEIBA_RESULT_TIMEOUT_SEC","3.0")),20)
     except Exception as exc:
-        print("dual-source netkeiba fetch failed",detail.get("id"),exc);return primary
-    if not nk:return primary
-    merged=_merge_result_sources(primary,nk,skip_fields=skip_fields)
-    meta=(merged or {}).get("dualSource") or {}
-    if meta.get("filledTotal") or meta.get("conflictCount"):
-        print("RESULT_DUAL_SOURCE",detail.get("id"),
-              "filled",meta.get("filled"),"conflicts",meta.get("conflictCount"),
-              (meta.get("conflicts") or [])[:5])
-    return merged or primary
+        print("netkeiba result failed",rid,exc);return None
+    return _parse_netkeiba_result_html(
+        html, clean=_clean, parse_time_seconds=_jra_parse_time_seconds,
+        parse_payouts=_parse_payouts,
+    )
 
 def _jra_result_cname_from_card(cname:str)->str:
     if not cname:return ""
@@ -2490,10 +2404,45 @@ def _netkeiba_race_meta(detail:dict)->dict:
     if sm:out["startTime"]=sm.group(1)
     dm=re.search(r"(?:芝|ダ|障)(\d{3,4})m",full)
     if dm:out["distance"]=int(dm.group(1))
-    wm=re.search(r"天候[:：]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
-    if wm:out["weather"]=wm.group(1)
-    cm=re.search(r"馬場[:：]?\s*(良|稍重|重|不良)",full)
-    if cm:out["condition"]=cm.group(1)
+    # Current netkeiba pages no longer print "天候：晴" / "馬場：良" text:
+    # weather is an icon (aria-label/title on an Icon_Weather* span) and
+    # the going is a one-letter abbreviation span (Item03 = turf/jump,
+    # Item04 = dirt; NAR pages put the going in Item03 and the weather
+    # as text inside a WeatherData span). Read those forms first and
+    # keep the legacy text form below as a fallback.
+    scope=soup.find(class_="Race_Data") or soup
+    for el in scope.find_all(True):
+        classes=[str(c) for c in (el.get("class") or [])]
+        if not any(c.startswith("Icon_Weather") for c in classes):continue
+        for attr in ("aria-label","title"):
+            v=_clean(str(el.get(attr) or ""))
+            if v in ("晴","曇","雨","小雨","雪","小雪"):out["weather"]=v;break
+        if out.get("weather"):break
+    if "weather" not in out:
+        wd=scope.find(class_="WeatherData")
+        if wd:
+            wm2=re.search(r"(小雨|小雪|晴|曇|雨|雪)",wd.get_text(" ",strip=True))
+            if wm2:out["weather"]=wm2.group(1)
+    _going_abbr={"良":"良","稍":"稍重","重":"重","不":"不良"}
+    _going_by_surface={}
+    for cls,surf_key in (("Item03","conditionTurf"),("Item04","conditionDirt")):
+        el=scope.find("span",class_=cls)
+        if el:
+            gv=_going_abbr.get(_clean(el.get_text(" ",strip=True)))
+            if gv:_going_by_surface[surf_key]=gv
+    if _going_by_surface:
+        out.update(_going_by_surface)
+        surface=str(detail.get("surface") or "")
+        if "芝" in surface or "障" in surface:picked=_going_by_surface.get("conditionTurf")
+        elif "ダ" in surface:picked=_going_by_surface.get("conditionDirt")
+        else:picked=None
+        out["condition"]=picked or _going_by_surface.get("conditionTurf") or _going_by_surface.get("conditionDirt")
+    if "weather" not in out:
+        wm=re.search(r"天候[:：]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
+        if wm:out["weather"]=wm.group(1)
+    if "condition" not in out:
+        cm=re.search(r"馬場[:：]?\s*(良|稍重|重|不良)",full)
+        if cm:out["condition"]=cm.group(1)
     return out
 
 def _race_should_have_result(detail:dict)->bool:
@@ -2546,18 +2495,6 @@ def central_race_detail(race_id: str) -> dict | None:
                 official=_jra_parse_result(rc,detail)
                 if official:detail=_merge_official_result(detail,official)
         except Exception as exc:print("JRA official result hydrate failed",race_id,exc)
-    # Dual-source rule on the read path too, but gap-triggered so a
-    # complete official result costs no second fetch: netkeiba fills
-    # what the official block leaves empty (race laps above all —
-    # the official parse carries none). Win odds stay out of the
-    # central result finishers by this path's existing policy.
-    if should_result and (detail.get("result") or {}).get("finishers"):
-        _gaps=[g for g in _result_gaps(detail["result"]) if g!="winOdds"]
-        if _gaps:
-            try:
-                merged=_dual_source_result(detail,detail["result"],skip_fields=("winOdds",))
-                if merged:detail["result"]=merged
-            except Exception as exc:print("central dual-source result merge failed",race_id,exc)
     # Official JRA card is primary for the pre-race card and live body data.
     malformed=(not (detail.get("horses") or []) or bool(JRA_BAD_TITLE_RE.search(str(detail.get("title") or ""))) or int(detail.get("distance") or 0)<=0)
     if cname:
@@ -4058,6 +3995,44 @@ def _result_covers_card(detail: dict | None) -> bool:
     return runners==0 or len(finishers)>=runners
 
 
+def _result_block_complete(detail: dict | None) -> bool:
+    """Whether the stored result needs no further refresh.
+
+    Complete means final (確定), podium present, covering the whole
+    card, with payouts present and shape-clean — the same standard
+    the netkeiba fallback gate has always used, plus the final-status
+    requirement. A race short of this is worth a fresh source fetch.
+    """
+    d=detail or {}
+    result=d.get("result") or {}
+    if result.get("status")!="確定":return False
+    if not _result_has_podium(d):return False
+    if not _result_covers_card(d):return False
+    if not (result.get("payouts") or []):return False
+    try:
+        from arvexq.results.state import payout_combination_violations as _pcv
+        if _pcv(d):return False
+    except Exception:pass
+    return True
+
+
+def _official_result_would_downgrade(detail: dict, parsed: dict) -> bool:
+    """Whether an official parse is weaker than the stored result.
+
+    With netkeiba as the first source, the stored block can already
+    be final (確定) while the official page still serves an interim
+    (速報) table; merging that parse wholesale would downgrade the
+    published result. A final official parse always wins; an interim
+    one only replaces a stored block it covers at least as fully.
+    """
+    stored=(detail.get("result") or {})
+    new=((parsed or {}).get("result") or {})
+    if not stored.get("finishers") or not new.get("finishers"):return False
+    if new.get("status")=="確定":return False
+    if stored.get("status")=="確定":return True
+    return len(new.get("finishers") or [])<len(stored.get("finishers") or [])
+
+
 def _refresh_result_fast(race_id: str) -> dict | None:
     """Refresh only authoritative result data; never rebuild history/diagnosis."""
     detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
@@ -4067,31 +4042,49 @@ def _refresh_result_fast(race_id: str) -> dict | None:
 
     official=None
     if race_id.startswith("nar-"):
-        try:official=_nar_official_result_fast(detail)
-        except Exception as exc:print("NAR fast result refresh failed",race_id,exc)
-        if official:
-            official=_dual_source_result(detail,official)
-            detail["result"]=official
-            if official.get("weather") not in (None,"","不明"):detail["weather"]=official["weather"]
-            if official.get("condition") not in (None,"","不明"):detail["condition"]=official["condition"]
-            detail=_merge_result_fields(detail,official)
-        elif _race_should_have_result(detail):
+        # netkeiba is the first source (see the JRA branch): publish
+        # its flash as soon as it posts; the official table below
+        # still overwrites once it lands, unless it is only an
+        # interim table and the netkeiba block is already final.
+        nk_applied=False
+        if _race_should_have_result(detail) and not _result_block_complete(detail):
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
-                    # A stored result keeps its values; the fresh
-                    # netkeiba parse only fills what it leaves empty
-                    # (dual-source merge), instead of replacing the
-                    # block wholesale as the old fallback did.
-                    stored=detail.get("result") or {}
-                    merged=_merge_result_sources(stored,nk) if stored.get("finishers") else nk
-                    detail["result"]=merged or nk
-                    detail=_merge_result_fields(detail,detail["result"])
-            except Exception as exc:print("NAR result fallback failed",race_id,exc)
+                    detail["result"]=nk
+                    detail=_merge_result_fields(detail,nk)
+                    nk_applied=True
+            except Exception as exc:print("NAR result netkeiba-first failed",race_id,exc)
+        try:official=_nar_official_result_fast(detail)
+        except Exception as exc:print("NAR fast result refresh failed",race_id,exc)
+        if official:
+            if not (nk_applied and (detail.get("result") or {}).get("status")=="確定"
+                    and official.get("status")!="確定"):
+                detail["result"]=official
+            if official.get("weather") not in (None,"","不明"):detail["weather"]=official["weather"]
+            if official.get("condition") not in (None,"","不明"):detail["condition"]=official["condition"]
+            detail=_merge_result_fields(detail,official)
         if _result_has_podium(detail):
             try:detail=_attach_nar_payouts(detail)
             except Exception as exc:print("NAR payout attach after result failed",race_id,exc)
     else:
+        # netkeiba is the first source for a race that has just run:
+        # its flash (速報) posts minutes before the official result
+        # page is reliably parseable, and gating netkeiba behind the
+        # official route made the whole result wait on the slowest
+        # source. Publish netkeiba immediately; the official parse
+        # below still overwrites once it is final (an interim official
+        # parse never downgrades a stronger stored block — see
+        # _official_result_would_downgrade).
+        nk_attempted=False
+        if _race_should_have_result(detail) and not _result_block_complete(detail):
+            nk_attempted=True
+            try:
+                nk=_netkeiba_current_result(detail)
+                if nk:
+                    detail["result"]=nk
+                    detail=_merge_result_fields(detail,nk)
+            except Exception as exc:print("JRA result netkeiba-first failed",race_id,exc)
         try:
             result_cname=str(detail.get("resultCname") or "")
             if result_cname and not _jra_result_cname_matches_detail(result_cname,detail):
@@ -4106,9 +4099,11 @@ def _refresh_result_fast(race_id: str) -> dict | None:
                 if cname:result_cname=_jra_result_cname_from_card(cname)
             parsed=_jra_parse_result(result_cname,detail) if result_cname else None
             if parsed:
+                if _official_result_would_downgrade(detail,parsed):
+                    # Keep the stronger stored result block; the
+                    # parse's meta (title/weather/token) still merges.
+                    parsed={**parsed,"result":None}
                 detail=_merge_official_result(detail,parsed)
-                if _race_should_have_result(detail):
-                    detail["result"]=_dual_source_result(detail,detail.get("result"))
         except Exception as exc:print("JRA fast result refresh failed",race_id,exc)
         # The fallback must also fire when a podium-shaped but partial
         # result is already stored and the official token route could
@@ -4130,7 +4125,10 @@ def _refresh_result_fast(race_id: str) -> dict | None:
                 payout_broken=bool(_pcv(detail))
             except Exception:
                 payout_broken=False
-        if (not _result_has_podium(detail) or not _result_covers_card(detail) or payout_broken) and _race_should_have_result(detail):
+        # Skipped when netkeiba was already attempted above in this
+        # call: one fetch per refresh is the standing semantic, and a
+        # second identical fetch cannot return more.
+        if (not _result_has_podium(detail) or not _result_covers_card(detail) or payout_broken) and _race_should_have_result(detail) and not nk_attempted:
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
@@ -4141,6 +4139,33 @@ def _refresh_result_fast(race_id: str) -> dict | None:
     if _result_has_podium(detail):
         try:_store_fast_snapshot(detail)
         except Exception as exc:print("result snapshot save failed",race_id,exc)
+    return _compact_display_snapshot(detail)
+
+
+def _refresh_result_light(race_id: str) -> dict | None:
+    """Lightweight result refresh for a race that has just run.
+
+    netkeiba only: its flash (速報) is published as soon as it posts,
+    and its confirmed (確定) block replaces it when that lands. The
+    official overwrite, payout completion and verification stay with
+    _refresh_result_fast in the repair lane; this path exists so a
+    just-finished race does not wait on the heavy lane's full pass.
+    """
+    detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
+    if not detail:
+        detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
+    if not detail:return None
+    if not _race_should_have_result(detail) or _result_block_complete(detail):
+        return _compact_display_snapshot(detail)
+    try:
+        nk=_netkeiba_current_result(detail)
+        if nk:
+            detail["result"]=nk
+            detail=_merge_result_fields(detail,nk)
+    except Exception as exc:print("light result refresh failed",race_id,exc)
+    if _result_has_podium(detail):
+        try:_store_fast_snapshot(detail)
+        except Exception as exc:print("light result snapshot save failed",race_id,exc)
     return _compact_display_snapshot(detail)
 
 
@@ -4563,58 +4588,6 @@ def _nar_race_lap_times(soup)->list:
     return []
 
 
-def _nar_official_corner_positions(soup)->dict[int,list]:
-    """Per-horse corner positions from the official page's corner table.
-
-    The RaceMarkTable's per-horse コーナー通過順 cells are empty in the
-    raw HTML (the site fills them in with JavaScript), so reading only
-    that column left every finisher's cornerPositions empty even though
-    the same page carries the full passing order in its 全馬コーナー
-    通過順 section (class cornerPassTable): one row per corner, the
-    order written in the same notation as netkeiba's corner table.
-    Conversion reuses netkeiba_result._corner_order_ranks, so ties and
-    separators mean exactly what the netkeiba path takes them to mean.
-    A horse missing from one corner's order gets None at that slot (the
-    NAR公式CSV convention); a horse absent from every row is not in
-    the map, and nothing is ever estimated.
-    """
-    from arvexq.ingest.netkeiba_result import _corner_order_ranks
-    section=soup.find("section",class_="cornerPassTable")
-    rows=[]
-    if section is not None:
-        # The section is dedicated to the passing order, and its row
-        # labels vary by venue (大井 "１角", 園田 "１コーナー", 笠松
-        # "最初の直線" then "第２コーナー"…). Only corner rows count:
-        # a straight row (笠松's 最初の直線) is a passing point but not
-        # a corner, and netkeiba's table — whose semantics the stored
-        # cornerPositions follow — omits it.
-        for tr in section.find_all("tr"):
-            cells=tr.find_all(["th","td"],recursive=False)
-            if len(cells)<2:continue
-            label=unicodedata.normalize("NFKC",_clean(cells[0].get_text(" ",strip=True)))
-            if "角" not in label and "コーナー" not in label:continue
-            order=" ".join(_clean(c.get_text(" ",strip=True)) for c in cells[1:])
-            if re.search(r"\d",order):rows.append(_corner_order_ranks(order))
-    else:
-        for table in soup.find_all("table"):
-            found=[]
-            for tr in table.find_all("tr"):
-                cells=tr.find_all(["th","td"],recursive=False)
-                if len(cells)<2:continue
-                label=unicodedata.normalize("NFKC",_clean(cells[0].get_text(" ",strip=True)))
-                if not re.fullmatch(r"第?\d+\s*(角|コーナー)",label):continue
-                order=" ".join(_clean(c.get_text(" ",strip=True)) for c in cells[1:])
-                if re.search(r"\d",order):found.append(_corner_order_ranks(order))
-            if found:
-                rows=found;break
-    out:dict[int,list]={}
-    for idx,ranks in enumerate(rows):
-        for no in ranks:
-            if no not in out:out[no]=[None]*len(rows)
-            out[no][idx]=ranks[no]
-    return out
-
-
 def _nar_official_result_fast(detail:dict)->dict|None:
     """Fetch NAR official RaceMarkTable directly; includes result, body weight and corner order."""
     code=NAR_BABA_CODES.get(str(detail.get("track") or "").strip())
@@ -4767,17 +4740,6 @@ def _nar_official_result_fast(detail:dict)->dict|None:
                 })
             if finishers:break
         finishers.sort(key=lambda x:(int(x.get("finish") or 999),int(x.get("horseNumber") or 999)))
-        # The per-horse corner column above is empty in the raw page
-        # (see _nar_official_corner_positions), so fill any finisher it
-        # left blank from the page's corner passing-order table. A
-        # value the column itself produced always wins.
-        if any(not f.get("cornerPositions") for f in finishers):
-            corner_map=_nar_official_corner_positions(soup)
-            if corner_map:
-                for f in finishers:
-                    if not f.get("cornerPositions"):
-                        positions=corner_map.get(int(f.get("horseNumber") or 0))
-                        if positions:f["cornerPositions"]=positions
         # Do not call a partial page final until at least the podium is visible.
         classified=[int(x.get("finish") or 0) for x in finishers if int(x.get("finish") or 0)>0]
         if 1 not in classified or sum(1 for finish in classified if finish<=3)<3:continue
@@ -4988,7 +4950,6 @@ def _hydrate_fast_card_now(race_id:str, deep_history:bool=False)->None:
                 try:official_result=_nar_official_result_fast(q)
                 except Exception as exc:print("fast NAR official result failed",race_id,exc)
             if official_result:
-                official_result=_dual_source_result(q,official_result)
                 q["result"]=official_result
                 if official_result.get("weather") not in (None,"","不明"):q["weather"]=official_result["weather"]
                 if official_result.get("condition") not in (None,"","不明"):q["condition"]=official_result["condition"]
