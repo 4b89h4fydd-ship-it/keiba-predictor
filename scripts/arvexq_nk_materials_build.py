@@ -53,18 +53,51 @@ normaliser between the collection side and that file; its inputs:
                       {<number>: {"nkFormDev": <number>,
                       "nkAiScore": <number>}}}}}; the two values
                       are carried verbatim per horse as the
-                      "nkFormDev" / "nkAiScore" fields. NO
-                      forward collection produces this file yet
-                      (the judgements live on JRA-side pages;
-                      the 2026-11-17/18 collections are NAR days)
-                      — the input exists so the values flow the
-                      moment a collection saves them.
+                      "nkFormDev" / "nkAiScore" fields. The
+                      nkFormDev half is produced by
+                      scripts/arvexq_nk_page_collect.py
+                      --barometer (the JRA 調子偏差値 page;
+                      2026-11-21 fix2). nkAiScore remains
+                      unproduced: its source (the AI総合スコア
+                      page) is gated behind netkeiba's Master
+                      course, outside the current plan.
+  --stable-comments   (optional, 2026-11-21 fix2) per-horse stable
+                      comments (厩舎コメント), the shape
+                      scripts/arvexq_nk_page_collect.py writes:
+                      {"races": {<netkeiba race_id>: {"horses":
+                      {<number>: {"comment": text}},
+                      "published": bool}}}. A race with
+                      "published": false has no comments in the
+                      source (掲載は新馬戦・特別レースのみ) — the
+                      correct state, recorded as no comment, never
+                      as a failure. The builder joins them by
+                      (race, horse number) into each horse's
+                      "comment_text" (the integrated evaluation's
+                      comment input) and carries the text verbatim
+                      as "stableComment". A newspaper short comment
+                      (短評) saved in the press entry fills
+                      comment_text only where no stable comment
+                      exists. The press entry's 調教評価 letter is
+                      also extracted into "grade" (the integrated
+                      evaluation's grade input, until now never
+                      populated by any build) and a saved press
+                      "rating" into "pressRating".
   --odds              (optional, v6) per-horse odds snapshots.
+                      May be given more than once (2026-11-21
+                      fix2): the files are successive snapshots
+                      in argument order, and _normalise_odds_
+                      snapshots merges them — the FIRST actual
+                      win line becomes publishWin and the LAST
+                      becomes finalWin, so the odds-drift term
+                      finally has its two points (前夜保存→朝に
+                      比較). A single snapshot behaves exactly as
+                      before (finalWin only). Provenance is kept:
+                      forecast lines never become actual cells.
                       Two collected shapes are accepted (see
                       _normalise_odds_races): the dict shape
                       {"races": {<netkeiba race_id>: {"horses":
                       {<number>: {"publishWin": ..., "finalWin":
-                      ..., "placeLow": ..., "placeHigh": ...}}}}}
+                      ..., "placeLow": ..., "placeHigh": ...}}}}
                       (the 2026-11-18 collection's shape, produced
                       from the actual odds pages), and the list
                       shape {"races": {<netkeiba race_id>:
@@ -223,6 +256,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -588,6 +622,114 @@ def _normalise_odds_races(odds) -> dict:
     return out
 
 
+def _normalise_odds_snapshots(odds) -> dict:
+    """{netkeiba race_id: {number: odds cells}} from one odds
+    payload (the legacy behaviour of _normalise_odds_races) or a
+    LIST of payloads read as successive snapshots in order
+    (2026-11-21 fix2, audit B4: the odds-drift term needs TWO
+    actual-odds points and no collection ever wrote publishWin).
+
+    Merge rule per horse, over the snapshots in order:
+      - every snapshot's actual win line (a list-shape "actual"
+        race's win_odds, or a dict shape's finalWin cell) is one
+        observation; the LAST observation becomes finalWin and,
+        when at least two observations exist, the FIRST becomes
+        publishWin — the evening save compared against the
+        morning save, exactly the two-stage snapshot the audit
+        prescribed;
+      - a dict shape's explicit publishWin cell is a sealed
+        publish-time value and always wins over the derived one;
+      - placeLow / placeHigh come from the last snapshot that
+        carried them;
+      - forecastWin is carried from the last snapshot that had
+        one and is never promoted to an actual cell.
+    A single snapshot therefore behaves exactly as the legacy
+    normaliser did (finalWin only, no publishWin)."""
+    if not isinstance(odds, list):
+        return _normalise_odds_races(odds)
+    merged: dict = {}
+    for payload in odds:
+        snap = _normalise_odds_races(payload)
+        for nk_id, horses in snap.items():
+            target = merged.setdefault(str(nk_id), {})
+            for number, cells in horses.items():
+                cur = target.setdefault(str(number), {})
+                observations = cur.setdefault("_actualWins", [])
+                if cells.get("finalWin") is not None:
+                    observations.append(cells["finalWin"])
+                if cells.get("publishWin") is not None \
+                        and cur.get("publishWin") is None:
+                    cur["publishWin"] = cells["publishWin"]
+                for cell in ("placeLow", "placeHigh", "forecastWin"):
+                    if cells.get(cell) is not None:
+                        cur[cell] = cells[cell]
+    for horses in merged.values():
+        for cur in horses.values():
+            observations = cur.pop("_actualWins", [])
+            if observations:
+                cur["finalWin"] = observations[-1]
+                if cur.get("publishWin") is None \
+                        and len(observations) >= 2:
+                    cur["publishWin"] = observations[0]
+    return merged
+
+
+# ------------------------------------------------------------------
+# Press comment / grade extraction (2026-11-21 fix2, audit B6/B7)
+# ------------------------------------------------------------------
+
+_CHOKYO_GRADE_RE = re.compile(r"([ABCD])\s*$")
+_PRESS_COMMENT_KEYS = ("tanpyo", "short_comment", "comment")
+
+
+def _press_grade(press) -> str | None:
+    """The training-evaluation grade letter from a newspaper
+    entry: an explicit "grade" the collection saved, else the
+    trailing letter of the 調教評価 text ("好気配B" -> "B") the
+    newspaper collection has always carried inside "chokyo".
+    The letter set is the page's own (A-D); the integrated
+    evaluation scores A/B/C and treats anything else as
+    unscored — the builder carries the letter verbatim either
+    way, never a mapped substitute."""
+    if not isinstance(press, dict):
+        return None
+    grade = press.get("grade")
+    if isinstance(grade, str) and grade.strip() in ("A", "B", "C", "D"):
+        return grade.strip()
+    chokyo = press.get("chokyo")
+    if isinstance(chokyo, str):
+        m = _CHOKYO_GRADE_RE.search(chokyo.strip())
+        if m:
+            return m.group(1)
+    return None
+
+
+def _press_comment(press) -> str | None:
+    """The newspaper short comment (短評) from a press entry,
+    under whichever key a collection saved it. None when the
+    entry carries none (today's collections save none — the
+    short comment lives in the premium newspaper view — so this
+    lights up the moment a collection adds the key)."""
+    if not isinstance(press, dict):
+        return None
+    for key in _PRESS_COMMENT_KEYS:
+        text = press.get(key)
+        if isinstance(text, str) and text.strip():
+            return text.strip()
+    return None
+
+
+def _press_rating(press):
+    """The newspaper rating (レーティング) from a press entry,
+    numeric only, else None. Carried as the horse's pressRating;
+    no integrated-evaluation term reads it yet — it is recorded
+    in the materials file (and counted in fieldCoverage) so the
+    collected value is on record, not silently dropped."""
+    if not isinstance(press, dict):
+        return None
+    return _num(press.get("rating"))
+
+
 # ------------------------------------------------------------------
 # Horse analysis (each horse's data-analysis judgements, 2026-11-19)
 # ------------------------------------------------------------------
@@ -767,9 +909,10 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           newspaper: dict | None = None,
           pace_forecast: dict | None = None,
           nk_judgements: dict | None = None,
-          odds: dict | None = None,
+          odds: dict | list | None = None,
           horse_analysis: dict | None = None,
-          course_persons: dict | None = None) -> dict:
+          course_persons: dict | None = None,
+          stable_comments: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -780,7 +923,10 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     judgement_races = (nk_judgements.get("races")
                        if isinstance(nk_judgements, dict)
                        else None) or {}
-    odds_races = _normalise_odds_races(odds)
+    stable_races = (stable_comments.get("races")
+                    if isinstance(stable_comments, dict)
+                    else None) or {}
+    odds_races = _normalise_odds_snapshots(odds)
     analysis_races = (horse_analysis.get("races")
                       if isinstance(horse_analysis, dict)
                       else None) or {}
@@ -889,6 +1035,35 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 horse["press"] = (entry_p
                                   if isinstance(entry_p, dict)
                                   else None)
+            # --- 2026-11-21 fix2 (B6/B7): the comment / grade
+            # inputs the integrated evaluation has always read
+            # (comment_text at weight 0.25, grade at 0.20) but no
+            # build ever populated — the adapter read them from
+            # the horse block and the builder never wrote them,
+            # so both terms were structurally dark on every race.
+            press = horse.get("press")
+            if isinstance(press, dict):
+                grade = _press_grade(press)
+                if grade is not None:
+                    horse["grade"] = grade
+                rating = _press_rating(press)
+                if rating is not None:
+                    horse["pressRating"] = rating
+                short = _press_comment(press)
+                if short is not None:
+                    horse["comment_text"] = short
+            stable = (stable_races.get(nk_id)
+                      or {}).get("horses") or {}
+            entry_s = stable.get(key) \
+                if isinstance(stable, dict) else None
+            if isinstance(entry_s, dict):
+                text = entry_s.get("comment")
+                if isinstance(text, str) and text.strip():
+                    horse["stableComment"] = text.strip()
+                    # The stable's own words are the comment
+                    # input's primary source; a newspaper short
+                    # comment only fills a horse without one.
+                    horse["comment_text"] = text.strip()
         # --- 2026-11-19: each horse's data-analysis judgements
         # Join on (race, horse number) like the pace positions:
         # the judgements never needed the race-details input.
@@ -948,7 +1123,9 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         for horse in horses.values():
             for field in V2_HORSE_FIELDS \
                     + ("pace", "horseAnalysis", "coursePersons") \
-                    + V6_HORSE_FIELDS:
+                    + V6_HORSE_FIELDS \
+                    + ("grade", "comment_text", "stableComment",
+                       "pressRating"):
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
@@ -994,6 +1171,17 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         and h["odds"].get("forecastWin") is not None)
     coverage["horseAnalysis"] = sum(
         1 for h in all_horses if h.get("horseAnalysis") is not None)
+    # 2026-11-21 fix2 (B6/B7): the comment / grade wiring. grade
+    # and commentText count what actually reached the integrated
+    # evaluation's inputs; stableComment and pressRating count
+    # the verbatim records.
+    coverage["grade"] = sum(1 for h in all_horses if h.get("grade"))
+    coverage["commentText"] = sum(
+        1 for h in all_horses if h.get("comment_text"))
+    coverage["stableComment"] = sum(
+        1 for h in all_horses if h.get("stableComment"))
+    coverage["pressRating"] = sum(
+        1 for h in all_horses if h.get("pressRating") is not None)
     # 2026-11-19 additions: the course persons (this race's
     # jockey / trainer records at today's course).
     coverage["courseJockey"] = sum(
@@ -1061,9 +1249,10 @@ def main() -> int:
     parser.add_argument("--newspaper")
     parser.add_argument("--pace-forecast")
     parser.add_argument("--nk-judgements")
-    parser.add_argument("--odds")
+    parser.add_argument("--odds", action="append")
     parser.add_argument("--horse-analysis")
     parser.add_argument("--course-persons")
+    parser.add_argument("--stable-comments")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -1075,6 +1264,55 @@ def main() -> int:
         except (OSError, ValueError):
             return {}
 
+    # 2026-11-21 fix2: an input a collection saved into the same
+    # forward directory is picked up even when the caller did not
+    # name it — a saved material must not sit unused because an
+    # argument was never added (the judgements and horse-analysis
+    # files spent days in exactly that state). An explicit
+    # argument always wins over discovery.
+    base_dir = None
+    for candidate in (args.newspaper, args.speed_index,
+                      args.pace_forecast):
+        if candidate:
+            base_dir = Path(candidate).parent
+            break
+
+    def _discover(name, given):
+        if given or base_dir is None:
+            return given
+        sibling = base_dir / name
+        return str(sibling) if sibling.exists() else given
+
+    args.nk_judgements = _discover("nk-judgements.json",
+                                   args.nk_judgements)
+    args.horse_analysis = _discover("horse-analysis.json",
+                                    args.horse_analysis)
+    args.stable_comments = _discover("stable-comments.json",
+                                     args.stable_comments)
+    # Odds snapshots: every odds*.json sibling joins the named
+    # ones, each file once, in file-mtime order (collection
+    # order) — the two-stage snapshot merge then has its evening
+    # and morning points without a caller change.
+    odds_paths = list(args.odds or [])
+    if base_dir is not None:
+        known = {Path(p).resolve() for p in odds_paths}
+        odds_paths += [str(p) for p in base_dir.glob("odds*.json")
+                       if p.resolve() not in known]
+
+    def _mtime(path):
+        try:
+            return Path(path).stat().st_mtime
+        except OSError:
+            return 0.0
+
+    odds_paths.sort(key=_mtime)
+    odds_payloads = [_load(p) for p in odds_paths]
+    if len(odds_payloads) > 1:
+        print("odds snapshots merged in order: "
+              + ", ".join(Path(p).name for p in odds_paths))
+    odds_arg = (odds_payloads if len(odds_payloads) != 1
+                else odds_payloads[0] if odds_payloads else None)
+
     payload = build(args.date, _load(args.speed_index),
                     _load(args.course_analysis), _load(args.targets),
                     race_details=load_race_details(args.race_details_dir),
@@ -1082,9 +1320,10 @@ def main() -> int:
                     newspaper=_load(args.newspaper),
                     pace_forecast=_load(args.pace_forecast),
                     nk_judgements=_load(args.nk_judgements),
-                    odds=_load(args.odds),
+                    odds=odds_arg,
                     horse_analysis=_load(args.horse_analysis),
-                    course_persons=_load(args.course_persons))
+                    course_persons=_load(args.course_persons),
+                    stable_comments=_load(args.stable_comments))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)

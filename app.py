@@ -624,6 +624,19 @@ def _jra_parse_race(cname:str, supplement_profiles: bool = True)->dict|None:
         body_weight=0; body_change=None
         body_weight=jra_observed_body_weight(infot)
         body_change=jra_observed_body_weight_change(infot)
+        if not body_weight:
+            # 2026-11-21 fix2 (audit B8): the weight was read from
+            # the info cell only, so a card layout that carries it
+            # in its own cell (or in the profile cell) silently
+            # dropped every weight — the 2026-11-21 issue carried
+            # body weights for 10 of 589 horses. Scan the row's
+            # other cells with the same patterns (see
+            # body_weight.extract_from_texts for why they cannot
+            # match the carried weight or a past-run cell).
+            cell_texts=[prot]+[_jra_text(c) for c in cells
+                               if c is not info and c is not profile]
+            body_weight,body_change=(
+                jra_observed_body_weight_from_texts(cell_texts))
         scratch_status=_scratch_status(_jra_text(tr))
         horses.append({"horseNumber":no,"frameNumber":frame_no,"name":name,"age":age,"sex":sex,"carriedWeight":cw,"jockey":jockey,"trainer":trainer,"affiliation":affiliation,"prizeMoneyAtRace":prize,"recentRaces":past,"winOdds":win_odds or None,"popularity":popularity or None,"bodyWeight":body_weight or None,"bodyWeightChange":body_change,"oddsSource":"JRA公式" if win_odds else "","status":scratch_status,"scratched":bool(scratch_status),"_jraHorseCname":horse_cname,"_jraCareerComplete":career_complete,"jockeyStats":{},"trainerStats":{},"jockeyProfile":{},"trainerProfile":{}})
     if not horses:return None
@@ -1650,6 +1663,7 @@ _nar_odds_cache:dict[str,tuple[float,dict]]={}
 from arvexq.ingest.place_odds import place_odds, place_odds_pair
 from arvexq.ingest.odds_fields.jra_official import parse_win_odds as jra_observed_win_odds
 from arvexq.ingest.jra_fields.body_weight import extract as jra_observed_body_weight
+from arvexq.ingest.jra_fields.body_weight import extract_from_texts as jra_observed_body_weight_from_texts
 from arvexq.ingest.jra_fields.body_weight_change import extract as jra_observed_body_weight_change
 
 from arvexq.ingest.odds_fields.nar_official import _parse_nar_live_odds_html
@@ -6035,11 +6049,18 @@ def central_refresh_status(date: str = Query(...)):
 def race_detail(race_id: str, refresh: int = Query(0), history: int = Query(1), prepared: int = Query(1)):
     cached=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id)
     if cached:
-        if race_id.startswith("nar-") and str(cached.get("date") or "")==_today_iso():
+        if str(cached.get("date") or "")==_today_iso() and (
+                race_id.startswith("nar-") or race_id.startswith("jra-")):
             hs=[h for h in cached.get("horses",[]) or [] if not h.get("scratched")]
             weights=sum(1 for h in hs if int(h.get("bodyWeight") or 0)>250)
             weight_missing=bool(hs) and weights<max(1,math.ceil(len(hs)*.80))
-            result_missing=_nar_result_should_be_available(cached) and not _snapshot_final(cached)
+            # 2026-11-21 fix2 (audit B8): the weight-missing
+            # refresh trigger existed for NAR only, so a stored
+            # JRA card built before the weights were published
+            # kept empty weights forever (10 of 589 horses on the
+            # 2026-11-21 issue). The fast card path carries the
+            # weights for JRA too — give it the same trigger.
+            result_missing=race_id.startswith("nar-") and _nar_result_should_be_available(cached) and not _snapshot_final(cached)
             if refresh or weight_missing or result_missing:_schedule_fast_card_refresh(race_id,0)
         return _compact_display_snapshot(cached)
     quick=_fast_local_race_detail(race_id)
@@ -6395,6 +6416,26 @@ def odds_refresh(race_id:str, force: int = Query(0)):
                             if h.get(k) not in (None,""):z[k]=h.get(k)
                     if any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):source="netkeiba出馬表"
                 except Exception as exc:print("fast odds card scrape failed",race_id,exc)
+
+            # 2026-11-21 fix2 (audit B8): the shutuba scrape above
+            # runs only when no win odds were found at all, so once
+            # the official odds landed the card's body weights
+            # never filled in (the official parse may carry none).
+            # Fill ONLY the still-missing weights from the same
+            # page; odds and every other field keep the values the
+            # earlier sources produced.
+            if merged and any(not (z or {}).get("bodyWeight") for z in merged.values()):
+                try:
+                    card_detail=dict(detail);card_detail["id"]=race_id
+                    for h in _netkeiba_card_rows_fast(card_detail):
+                        no=int(h.get("horseNumber") or 0)
+                        if not no:continue
+                        z=merged.setdefault(no,{})
+                        if not z.get("bodyWeight") and h.get("bodyWeight"):
+                            z["bodyWeight"]=h.get("bodyWeight")
+                            if h.get("bodyWeightChange") is not None:
+                                z["bodyWeightChange"]=h.get("bodyWeightChange")
+                except Exception as exc:print("fast odds card weight fill failed",race_id,exc)
 
             # Yesterday/final races: result page carries final odds.
             if not any(float((z or {}).get("winOdds") or 0)>0 for z in merged.values()):

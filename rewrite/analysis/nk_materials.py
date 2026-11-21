@@ -346,7 +346,7 @@ import math
 from ..safety.probability import distribution, marginals
 from .ability import RECENCY_DECAY
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
-from .integrated_eval import DEFAULT_WEIGHTS, integrate
+from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 
 # nk-materials-v8 (2026-11-19): the builder widens the speed-derived
 # features' input window from the recent 3 runs to the collected 5-run
@@ -637,6 +637,28 @@ def parse_materials_payload(payload) -> dict:
                 press = values.get("press")
                 horse["press"] = (press if isinstance(press, (dict, str))
                                   else None)
+                # 2026-11-21 fix2 (B6/B7): the comment / grade
+                # inputs integrate() reads. Until now the parser
+                # never carried them, so even a builder file that
+                # had them would have dropped both here — the two
+                # heaviest integrated terms (comment 0.25, grade
+                # 0.20) were dark at two independent points.
+                comment_text = values.get("comment_text")
+                horse["comment_text"] = (
+                    comment_text.strip()
+                    if isinstance(comment_text, str)
+                    and comment_text.strip() else None)
+                grade = values.get("grade")
+                horse["grade"] = (
+                    grade.strip()
+                    if isinstance(grade, str)
+                    and grade.strip() in ("A", "B", "C", "D") else None)
+                stable = values.get("stableComment")
+                horse["stableComment"] = (
+                    stable.strip()
+                    if isinstance(stable, str) and stable.strip()
+                    else None)
+                horse["pressRating"] = _num(values.get("pressRating"))
                 horse["pace"] = _parse_pace(values.get("pace"))
                 horse["nkFormDev"] = _num(values.get("nkFormDev"))
                 horse["nkAiScore"] = _num(values.get("nkAiScore"))
@@ -697,6 +719,11 @@ def materials_fingerprint(entry) -> dict:
         "odds_drift": 0, "odds_wp_gap": 0, "horse_analysis": 0,
         "course_jockey": 0, "course_trainer": 0,
         "course_analysis": 0,
+        # 2026-11-21 fix2 (B6/B7): the comment / grade families
+        # join the fingerprint so a race whose comments or grades
+        # arrive after first publication re-qualifies like any
+        # other material growth.
+        "comment": 0, "grade": 0,
     }
     if not isinstance(entry, dict):
         return counts
@@ -719,6 +746,10 @@ def materials_fingerprint(entry) -> dict:
             counts["press"] += 1
         if pace_score(horse.get("pace"), pace_label) is not None:
             counts["pace"] += 1
+        if comment_score(horse.get("comment_text"))[0] is not None:
+            counts["comment"] += 1
+        if horse.get("grade") in ("A", "B", "C"):
+            counts["grade"] += 1
         if horse.get("nkFormDev") is not None:
             counts["nk_form_dev"] += 1
         if horse.get("nkAiScore") is not None:
