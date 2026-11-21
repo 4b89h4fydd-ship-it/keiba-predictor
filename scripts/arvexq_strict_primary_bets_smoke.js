@@ -12,12 +12,21 @@
  *      horses are ALL marked, only probability >= 5% (an item
  *      carrying no probability passes), filling up to 5 points.
  *   4. Coverage: a marked horse still in no pick is covered by a
- *      marked-only combination — 3+ uncovered: the 3連複 of the
- *      three with the highest top-3 probabilities (diagnosis);
- *      2 uncovered: their ワイド; 1 uncovered: a ワイド with the
- *      strongest mark (◎, or ○ when the horse itself is ◎). At
- *      the 5-point cap the coverage bet replaces the lowest-
- *      probability combination （単勝/複勝 are never replaced).
+ *      marked-only combination built around the strongest mark
+ *      (highest diagnosis top-3 probability, in practice ◎) —
+ *      3+ uncovered: the 3連複 of the anchor plus the two
+ *      uncovered horses with the highest top-3 probabilities;
+ *      2 uncovered: the 3連複 of the two plus the anchor (or the
+ *      strongest remaining mark when the anchor is one of them);
+ *      1 uncovered: a ワイド with the anchor (or ◎/○ when the
+ *      horse itself is the anchor). At the 5-point cap the
+ *      coverage bet replaces the lowest-probability combination
+ *      （単勝/複勝 are never replaced).
+ *   5. 3連単フォーメーション (app + feature posts only): 1st =
+ *      the win pick + ◎, 2nd = the 1st set plus ○・▲ in mark
+ *      order, 3rd = every marked horse (written 全印). Counted
+ *      at its real combination count on top of the 5 points.
+ *      Marks include the extended 注・穴・伏 (up to 8).
  * No probability percentages are displayed: combination rows carry
  * no 推定確率, and the 単勝/複勝 rows show only their EV.
  * When a ticketPlan exists this selection is the ONLY main display
@@ -85,7 +94,10 @@ const mech=[{kind:'ワイド',combos:[[7,8]],points:1,reason:'MECH-REASON-XYZ'}]
 //    fill to 5 in payload order (the [5,6] item names an unmarked
 //    horse and is excluded; [1,2] is cut by the cap). Coverage then
 //    replaces the lowest-probability combination (3連複 9.6%) with
-//    the ワイド of the two uncovered marks 3 and 4.
+//    the 3連複 of the anchor (horse 1, highest top-3 probability)
+//    plus the two uncovered marks 3 and 4. The 3連単 formation
+//    (1st = win pick 5 + ◎ 1, 2nd = 1・2・3・5, 3rd = 全印) adds
+//    18 real points on top: total 23.
 const tpA={sameModelAndMarks:true,expectedValueStatus:'calibrated-estimate',
   combinedPicks:[],
   winExpectedValues:[
@@ -118,10 +130,11 @@ assert.doesNotMatch(htmlA,/複勝 6番|複勝 5番|複勝 2番/,'place rejects n
 assert.doesNotMatch(htmlA,/5 - 6/,'combo naming an unmarked horse excluded');
 assert.match(htmlA,/5 - 1/,'wide combo kept');
 assert.match(htmlA,/5 - 2/,'quinella combo kept');
-assert.match(htmlA,/3 - 4/,'coverage wide for the uncovered marks 3 and 4');
-assert.doesNotMatch(htmlA,/3連複/,'lowest-probability combo replaced by the coverage bet');
+assert.match(htmlA,/1 - 3 - 4/,'coverage trio: anchor 1 plus the uncovered marks 3 and 4');
+assert.doesNotMatch(htmlA,/1 - 2 - 5/,'lowest-probability combo replaced by the coverage bet');
 assert.doesNotMatch(htmlA,/1 - 2/,'cap cut the remaining item');
-assert.match(htmlA,/合計 5点/,'total capped at 5');
+assert.match(htmlA,/5\.1-1\.2\.3\.5-全印（18点）/,'trifecta formation: win pick + ◎ first');
+assert.match(htmlA,/合計 23点/,'total = 5 strict points + 18 formation points');
 assert.doesNotMatch(htmlA,/推定確率/,'no probability percentages anywhere');
 assert.doesNotMatch(htmlA,/× 単勝 18\.2/,'win row shows no win-rate detail line');
 assert.doesNotMatch(htmlA,/arv-formation-picks|arv-plan-picks/,'no formation / plan-picks primary');
@@ -134,9 +147,11 @@ assert.match(frame.render(raceA,{}),/おすすめ買い目/,'tab heading');
 // B) Coverage branches with no qualifying picks at all: the items
 //    are unusable (one names unmarked horses, one is below the
 //    probability floor), so coverage alone builds the selection —
-//    first the 3連複 of the three uncovered marks with the highest
-//    diagnosis top-3 probabilities (3, 4, 1), then the ワイド of
-//    the two remaining marks (2, 5).
+//    first the 3連複 of the anchor (horse 3, highest diagnosis
+//    top-3 probability) plus the two uncovered marks with the
+//    highest top-3 probabilities (4, 1), then the 3連複 of the
+//    two remaining marks (5, 2) plus the anchor. The formation
+//    (◎ alone first, no win pick) adds 6 points: total 8.
 const diagB=[1,2,3,4,5,6,7,8,9,10].map(function(no){
   const t3={1:0.30,2:0.10,3:0.50,4:0.40,5:0.20}[no]||0.05;
   return {horseNumber:no,winProbability:0.05,top3Probability:t3,grade:'A'};
@@ -151,9 +166,10 @@ const htmlB=frame.contents(raceB,{});
 assert.match(htmlB,/arv-strict-picks/);
 assert.doesNotMatch(htmlB,/単勝 \d+番|複勝 \d+番/,'no single picks');
 assert.doesNotMatch(htmlB,/6 - 7/,'unmarked combo excluded');
-assert.match(htmlB,/1 - 3 - 4/,'coverage trio: top-3 by diagnosis top-3 probability');
-assert.match(htmlB,/2 - 5/,'coverage wide for the last two uncovered marks');
-assert.match(htmlB,/合計 2点/,'two coverage bets');
+assert.match(htmlB,/1 - 3 - 4/,'coverage trio: anchor 3 plus top-2 uncovered by top-3 probability');
+assert.match(htmlB,/2 - 3 - 5/,'coverage trio: the last two uncovered marks plus the anchor');
+assert.match(htmlB,/1-1\.2\.3-全印（6点）/,'formation with ◎ alone in first');
+assert.match(htmlB,/合計 8点/,'two coverage bets + 6 formation points');
 assert.doesNotMatch(htmlB,/推定確率/,'coverage bets carry no probability display');
 
 // C) Coverage of a single uncovered mark: the partner is the
@@ -174,7 +190,7 @@ assert.match(htmlC,/複勝 3番/,'place pick: EV-low passer');
 assert.doesNotMatch(htmlC,/複勝 2番/,'place EV-low below 1.0 rejected');
 assert.match(htmlC,/2 - 4/,'item kept');
 assert.match(htmlC,/1 - 5/,'single uncovered mark covered with the ◎ horse');
-assert.match(htmlC,/合計 4点/,'win + place + item + coverage');
+assert.match(htmlC,/合計 10点/,'win + place + item + coverage + 6 formation points');
 assert.doesNotMatch(htmlC,/推定確率/,'no probability percentages');
 assert.doesNotMatch(htmlC,/3着内 45/,'place row shows no top-3 detail line');
 
@@ -189,7 +205,7 @@ const htmlC2=frame.contents(raceC2,{});
 assert.match(htmlC2,/2 - 3 - 4/,'trio item kept');
 assert.match(htmlC2,/4 - 5/,'wide item kept');
 assert.match(htmlC2,/1 - 2/,'uncovered ◎ covered with the ○ horse');
-assert.match(htmlC2,/合計 3点/,'two items + coverage');
+assert.match(htmlC2,/合計 9点/,'two items + coverage + 6 formation points');
 
 // D) ticketPlan present but no marks at all: nothing can be built
 //    (every candidate names an unmarked horse, and there is no
@@ -261,7 +277,7 @@ const htmlI=frame.contents(raceI,{});
 assert.match(htmlI,/1 − 4・3・2（3点）/,'wide formation: axis 1, partners in selection order');
 assert.match(htmlI,/1 − 4・5（2点）/,'quinella formation: axis 1');
 assert.doesNotMatch(htmlI,/推定確率/,'group lines carry no probabilities');
-assert.match(htmlI,/合計 5点/,'total counts individual picks, not lines');
+assert.match(htmlI,/合計 11点/,'total counts individual picks + 6 formation points, not lines');
 
 // J) 馬単 grouping on the shared 1st horse; an unrelated ワイド
 //    stays a single line. All marks are covered by the items.
@@ -276,7 +292,7 @@ const htmlJ=frame.contents(raceJ,{});
 assert.match(htmlJ,/2 → 5・3（2点）/,'exacta formation: shared 1st horse 2');
 assert.match(htmlJ,/1 - 4/,'ungrouped wide stays a single line');
 assert.doesNotMatch(htmlJ,/推定確率/,'ungrouped pick shows no probability either');
-assert.match(htmlJ,/合計 3点/,'total counts individual picks');
+assert.match(htmlJ,/合計 9点/,'total counts individual picks + 6 formation points');
 
 // K) 3連複 grouping on the shared pair; a trio without the pair
 //    stays a single line. All marks are covered by the items.
@@ -290,7 +306,7 @@ const raceK=raceOf(makeUf(tpK));
 const htmlK=frame.contents(raceK,{});
 assert.match(htmlK,/1・2 − 4・5（2点）/,'trio formation: shared pair 1・2');
 assert.match(htmlK,/3 - 4 - 5/,'ungrouped trio stays a single line');
-assert.match(htmlK,/合計 3点/,'total counts individual picks');
+assert.match(htmlK,/合計 9点/,'total counts individual picks + 6 formation points');
 
 // L) 3連単 grouping on the shared 1st-2nd pair; a trifecta with a
 //    different 2nd horse stays a single line. Mark 5 is in no
@@ -306,7 +322,7 @@ const htmlL=frame.contents(raceL,{});
 assert.match(htmlL,/2-1 → 3・4（2点）/,'trifecta formation: shared 1st-2nd 2-1');
 assert.match(htmlL,/2 - 3 - 1/,'ungrouped trifecta stays a single line');
 assert.match(htmlL,/1 - 5/,'coverage wide for the uncovered mark 5');
-assert.match(htmlL,/合計 4点/,'total counts individual picks incl. coverage');
+assert.match(htmlL,/合計 10点/,'total counts individual picks incl. coverage + 6 formation points');
 
 // M) Same kind but no shared axis: no grouping, both ワイド picks
 //    stay single lines; the 馬連 covers the last mark so no
@@ -324,12 +340,13 @@ assert.match(htmlM,/3 - 4/,'disjoint wide 2 stays a single line');
 assert.match(htmlM,/3 - 5/,'quinella stays a single line');
 assert.doesNotMatch(htmlM,/（2点）/,'no formation line without a shared axis');
 assert.doesNotMatch(htmlM,/推定確率/,'no probability percentages');
-assert.match(htmlM,/合計 3点/,'total counts individual picks');
+assert.match(htmlM,/合計 9点/,'total counts individual picks + 6 formation points');
 
 // N) Coverage replacement never touches the 単勝/複勝 picks: with
 //    the cap full (win + place + 3 combos) and marks 4, 5
-//    uncovered, the coverage ワイド [4,5] replaces the lowest-
-//    probability combination (3連複 20%) only.
+//    uncovered, the coverage 3連複 [1,4,5] (the two plus the
+//    anchor ◎ 1) replaces the lowest-probability combination
+//    (3連複 20%) only. Total = 5 + 6 formation points = 11.
 const tpN={sameModelAndMarks:true,combinedPicks:[],
   winExpectedValues:[{horseNumber:1,expectedValue:1.30,winProbability:0.10,odds:13.0}],
   placeExpectedValues:[
@@ -342,9 +359,9 @@ const raceN=raceOf(makeUf(tpN));
 const htmlN=frame.contents(raceN,{});
 assert.match(htmlN,/単勝 1番/,'win pick survives the replacement');
 assert.match(htmlN,/複勝 2番/,'place pick survives the replacement');
-assert.match(htmlN,/4 - 5/,'coverage wide present');
-assert.doesNotMatch(htmlN,/3連複/,'lowest-probability combo replaced');
-assert.match(htmlN,/合計 5点/,'total stays at the cap');
+assert.match(htmlN,/1 - 4 - 5/,'coverage trio with the anchor present');
+assert.doesNotMatch(htmlN,/1 - 2 - 3/,'lowest-probability combo replaced');
+assert.match(htmlN,/合計 11点/,'strict points stay at the cap, formation added on top');
 
 // O) An item carrying no probability passes the floor (posting
 //    side parity); an item at exactly 5% passes and one below is
@@ -361,6 +378,57 @@ const raceO=raceOf(makeUf(tpO));
 const htmlO=frame.contents(raceO,{});
 assert.match(htmlO,/1 − 2・5（2点）/,'probability-less item + coverage wide grouped on axis 1');
 assert.match(htmlO,/3 - 4/,'boundary 5% item passes');
-assert.match(htmlO,/合計 3点/,'two items + coverage');
+assert.match(htmlO,/合計 9点/,'two items + coverage + 6 formation points');
 
-console.log('STRICT_PRIMARY_BETS_OK marks-only win-EV place-EVlow combos-to-5pt coverage(trio/wide-single/replace) no-percent pass-display fallback-unchanged EV-kept formation-grouping');
+// P) Real payload regression (2026-11-21 Kochi 12R, production
+//    API values): 8 marks including the extended 注・穴・伏. The
+//    posting side produced 単勝3・複勝7・ワイド8-11・3連複
+//    1-5-11／4-6-11 + 3連単 3.11-11.3.7-全印（24点）= 29点； the
+//    app must render exactly the same selection.
+const kochiMarks=[[11,'◎'],[3,'○'],[7,'▲'],[6,'△'],[4,'☆'],[1,'注'],[5,'穴'],[8,'伏']];
+const kochiT3={1:0.2714,2:0.1481,3:0.4111,4:0.3347,5:0.1978,6:0.3387,7:0.3776,8:0.1897,9:0.114,10:0.1609,11:0.4298,12:0.0261};
+const kochiNames={1:'カラバッシュ',2:'コスモラパウィラ',3:'チョットヤバイヨネ',4:'シーザソング',5:'オーシンミリオン',6:'ベルベットアノ',7:'ソックス',8:'メイショウゴウケツ',9:'サンシャインビーチ',10:'シデンイッセン',11:'ジョウショーブリエ',12:'ダノンタッチダウン'};
+const ufP={version:'arvexq-unified-live-v1',raceId:'nar-2026-11-21-高知-12',raceDate:'2026-11-21',
+  diagnosis:Object.keys(kochiT3).map(function(k){return {horseNumber:Number(k),winProbability:0.05,top3Probability:kochiT3[k],grade:'A'};}),
+  marks:kochiMarks.map(function(ms){return {horseNumber:ms[0],markSymbol:ms[1]};}),
+  roster:Object.keys(kochiNames).map(function(k){return {horseNumber:Number(k),name:kochiNames[k]};}),
+  ticketPlan:{sameModelAndMarks:true,expectedValueStatus:'calibrated-estimate',combinedPicks:[],
+    winExpectedValues:[
+      {horseNumber:3,winProbability:0.144,odds:20.8,expectedValue:2.9952},
+      {horseNumber:8,winProbability:0.0595,odds:34.6,expectedValue:2.0587},
+      {horseNumber:11,winProbability:0.1523,odds:13,expectedValue:1.9799},
+      {horseNumber:4,winProbability:0.1122,odds:9.4,expectedValue:1.0547},
+      {horseNumber:10,winProbability:0.05,odds:20.8,expectedValue:1.04},
+      {horseNumber:6,winProbability:0.1138,odds:8.6,expectedValue:0.9787},
+      {horseNumber:7,winProbability:0.1296,odds:5.4,expectedValue:0.6998},
+      {horseNumber:5,winProbability:0.0623,odds:4.9,expectedValue:0.3053},
+      {horseNumber:1,winProbability:0.0882,odds:3.4,expectedValue:0.2999}],
+    placeExpectedValues:[
+      {horseNumber:5,top3Probability:0.1978,placeOddsLow:10.6,placeOddsHigh:31.7,expectedValueLow:2.097,expectedValueHigh:6.2712},
+      {horseNumber:3,top3Probability:0.4111,placeOddsLow:3.9,placeOddsHigh:11,expectedValueLow:1.6035,expectedValueHigh:4.5226},
+      {horseNumber:7,top3Probability:0.3776,placeOddsLow:3,placeOddsHigh:8.4,expectedValueLow:1.1329,expectedValueHigh:3.172},
+      {horseNumber:8,top3Probability:0.1897,placeOddsLow:5.6,placeOddsHigh:16.2,expectedValueLow:1.0622,expectedValueHigh:3.0728},
+      {horseNumber:6,top3Probability:0.3387,placeOddsLow:3,placeOddsHigh:8.4,expectedValueLow:1.0162,expectedValueHigh:2.8455},
+      {horseNumber:11,top3Probability:0.4298,placeOddsLow:2.2,placeOddsHigh:5.7,expectedValueLow:0.9455,expectedValueHigh:2.4497},
+      {horseNumber:1,top3Probability:0.2714,placeOddsLow:2.5,placeOddsHigh:6.8,expectedValueLow:0.6785,expectedValueHigh:1.8454},
+      {horseNumber:4,top3Probability:0.3347,placeOddsLow:1.5,placeOddsHigh:3.6,expectedValueLow:0.5021,expectedValueHigh:1.205}],
+    items:[
+      {kind:'ワイド',combo:[11,3],probability:0.1439},
+      {kind:'ワイド',combo:[11,7],probability:0.1303},
+      {kind:'ワイド',combo:[3,7],probability:0.1236},
+      {kind:'ワイド',combo:[11,6],probability:0.1151},
+      {kind:'ワイド',combo:[3,6],probability:0.1091}]}};
+const raceP={id:'nar-2026-11-21-高知-12',date:'2026-11-21',predictionStatus:'ready',
+  predictionMarks:kochiMarks.map(function(ms){return {horseNumber:ms[0],mark:ms[1]};}),
+  recommendedBets:mech,unifiedForecast:ufP};
+const htmlP=frame.contents(raceP,{});
+assert.match(htmlP,/単勝 3番/,'Kochi: win pick is the max-EV marked horse 3');
+assert.match(htmlP,/複勝 7番/,'Kochi: place pick is horse 7');
+assert.match(htmlP,/8 - 11/,'Kochi: coverage wide for the last uncovered mark');
+assert.match(htmlP,/1 - 5 - 11/,'Kochi: coverage trio 注・穴 + ◎');
+assert.match(htmlP,/4 - 6 - 11/,'Kochi: coverage trio ☆・△ + ◎');
+assert.match(htmlP,/3\.11-11\.3\.7-全印（24点）/,'Kochi: trifecta formation in the user notation');
+assert.match(htmlP,/合計 29点/,'Kochi: 5 strict points + 24 formation points');
+assert.doesNotMatch(htmlP,/推定確率/,'Kochi: no probability percentages');
+
+console.log('STRICT_PRIMARY_BETS_OK marks-only(8) win-EV place-EVlow combos-to-5pt coverage(anchor-trio/wide-single/replace) trifecta-formation no-percent pass-display fallback-unchanged EV-kept formation-grouping kochi12r-29pt');
