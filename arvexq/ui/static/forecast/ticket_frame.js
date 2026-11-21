@@ -326,9 +326,10 @@ function contents(r,p){
  // the fixed formation and the plain ticketPlan top-5 were both
  // rejected): a strict selection across ALL ticket kinds from the
  // payload's own ticketPlan, at most 5 points in total, built ONLY
- // from the marked horses (◎○▲△☆) — a pick naming an unmarked
- // horse is never shown. This mirrors the posting-side selection
- // (generate_posts.py) exactly:
+ // from the marked horses (◎○▲△☆ plus the extended marks
+ // 注・穴・伏） — a pick naming an unmarked horse is never shown.
+ // This mirrors the posting-side selection (generate_posts.py)
+ // exactly:
  //   1. 単勝: the winExpectedValues entry with expected value
  //      >= 1.25 AND win probability >= 5% and the highest EV,
  //      marked horses only (1 point).
@@ -339,14 +340,27 @@ function contents(r,p){
  //      horses are ALL marked, only probability >= 5% (an item
  //      carrying no probability passes), filling up to 5 points.
  //   4. Coverage: a marked horse still in no pick is covered by a
- //      marked-only combination — 3+ uncovered: the 3連複 of the
- //      three with the highest top-3 probabilities (diagnosis);
- //      2 uncovered: their ワイド; 1 uncovered: a ワイド with the
- //      strongest mark (◎, or ○ when the horse itself is ◎).
- //      When the total is already 5 points the coverage bet
+ //      marked-only combination built around the strongest mark
+ //      (the marked horse with the highest diagnosis top-3
+ //      probability — in practice ◎): 3+ uncovered: the 3連複 of
+ //      the anchor plus the two uncovered horses with the
+ //      highest top-3 probabilities; 2 uncovered: the 3連複 of
+ //      the two plus the anchor (or, when the anchor is one of
+ //      them, the strongest remaining mark); 1 uncovered: a
+ //      ワイド with the anchor (or ◎/○ when the horse itself is
+ //      the anchor). A coverage bet made only of leftover marks
+ //      would contradict the marks, so the anchor is always in
+ //      it. When the total is already 5 points the coverage bet
  //      replaces the lowest-probability combination pick （単勝/
  //      複勝 are never replaced; coverage bets carry no
  //      probability and are the last to be replaced).
+ //   5. 3連単フォーメーション (user rule 2026-11-21, app and
+ //      feature posts only — never in the summary posts): 1st =
+ //      the 単勝 pick + ◎ (◎ alone when there is no win pick),
+ //      2nd = the 1st set plus ○・▲ in mark order, 3rd = every
+ //      marked horse. Shown as "3.11-11.3.7-全印（24点）" and
+ //      counted at its real number of combinations, on top of
+ //      the 5-point selection.
  // No probability percentages are displayed (user rule
  // 2026-11-21): combination rows carry no 推定確率, and the
  // 単勝/複勝 rows show only their expected value.
@@ -369,9 +383,10 @@ function contents(r,p){
    var hasRoster=Object.keys(rosterNos).length>0;
    function inRoster(no){return !hasRoster||!!rosterNos[no];}
    function fin(x){var v=Number(x);return Number.isFinite(v)?v:null;}
-   // The marked horses, in mark order (◎○▲△☆), from the unified
-   // payload's own marks — the only material the selection may use.
-   var MARK_SYMS=['◎','○','▲','△','☆'];
+   // The marked horses, in mark order (◎○▲△☆ plus the extended
+   // marks 注・穴・伏, up to 8), from the unified payload's own
+   // marks — the only material the selection may use.
+   var MARK_SYMS=['◎','○','▲','△','☆','注','穴','伏'];
    var markBySym={};
    (Array.isArray(uf.marks)?uf.marks:[]).forEach(function(m){
      if(!m)return;
@@ -431,17 +446,29 @@ function contents(r,p){
      var no=Number(d.horseNumber),v=fin(d.top3Probability);
      if(Number.isInteger(no)&&no>0&&v!=null)t3ByNo[no]=v;
    });
+   function t3Of(no){return t3ByNo[no]||0;}
+   // The coverage anchor: the marked horse with the highest
+   // diagnosis top-3 probability (in practice ◎). Ties keep mark
+   // order, exactly like the posting side's max().
+   var anchor=null;
+   markNos.forEach(function(n){if(anchor==null||t3Of(n)>t3Of(anchor))anchor=n;});
+   function byT3Desc(list){
+     return list.slice().sort(function(a,b){return t3Of(b)-t3Of(a);});
+   }
    function coverageBet(uncovered){
-     if(uncovered.length>=3){
-       var top=uncovered.slice().sort(function(a,b){
-         return (t3ByNo[b]||0)-(t3ByNo[a]||0);
-       }).slice(0,3);
-       return {kind:'3連複',combo:top.sort(function(a,b){return a-b;}),probability:null};
+     var unc=byT3Desc(uncovered);
+     if(unc.length>=3){
+       var trio=[anchor].concat(unc.filter(function(h){return h!==anchor;}).slice(0,2));
+       return {kind:'3連複',combo:trio.sort(function(a,b){return a-b;}),probability:null};
      }
-     if(uncovered.length===2)
-       return {kind:'ワイド',combo:uncovered.slice().sort(function(a,b){return a-b;}),probability:null};
-     var h=uncovered[0];
-     var partner=markNos[0]!==h?markNos[0]:markNos[1];
+     if(unc.length===2){
+       var third=unc.indexOf(anchor)<0?anchor:
+         byT3Desc(markNos).filter(function(h){return unc.indexOf(h)<0;})[0];
+       if(third==null)return null;
+       return {kind:'3連複',combo:unc.concat([third]).sort(function(a,b){return a-b;}),probability:null};
+     }
+     var h=unc[0];
+     var partner=anchor!==h?anchor:(markNos[0]!==h?markNos[0]:markNos[1]);
      if(partner==null)return null;
      return {kind:'ワイド',combo:[h,partner].sort(function(a,b){return a-b;}),probability:null};
    }
@@ -469,7 +496,26 @@ function contents(r,p){
      if(worstIdx<0)break;
      picks[worstIdx]=bet;
    }
-   if(!picks.length){
+   // 3連単フォーメーション (posting-side parity): 1st = the
+   // 単勝 pick + ◎, 2nd = the 1st set plus ○・▲ in mark order,
+   // 3rd = every marked horse. Needs at least 3 marks with
+   // ◎○▲ present; points are the real combination count.
+   var formation=null;
+   if(markNos.length>=3&&markBySym['◎']!=null&&markBySym['○']!=null&&markBySym['▲']!=null){
+     var fFirst=[];
+     if(winPick)fFirst.push(winPick.no);
+     if(fFirst.indexOf(markBySym['◎'])<0)fFirst.push(markBySym['◎']);
+     var fSecondSet={};
+     fFirst.forEach(function(n){fSecondSet[n]=1;});
+     fSecondSet[markBySym['○']]=1;fSecondSet[markBySym['▲']]=1;
+     var fSecond=markNos.filter(function(n){return fSecondSet[n];});
+     var fPoints=0;
+     fFirst.forEach(function(a){fSecond.forEach(function(b){markNos.forEach(function(c){
+       if(a!==b&&b!==c&&a!==c)fPoints++;
+     });});});
+     if(fPoints>0)formation={first:fFirst,second:fSecond,points:fPoints};
+   }
+   if(!picks.length&&!formation){
      strictHtml='<div class="arv-three-group arv-strict-picks">'+
        '<p class="arv-three-ticket-reason">見送り（条件を満たす買い目なし）</p></div>';
      return;
@@ -601,8 +647,18 @@ function contents(r,p){
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+esc(e.kind)+'</b></div>'+
        '<strong class="arv-three-combos"><span class="arv-three-combo">'+esc(formationText(e))+'</span></strong></div>';
    }).join('');
+   if(formation){
+     // Same notation as the posting side: legs joined by '-',
+     // horses inside a leg by '.', the 3rd leg written 全印
+     // (it is always every marked horse), points appended.
+     rows+='<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>3連単</b></div>'+
+       '<strong class="arv-three-combos"><span class="arv-three-combo">'+
+       esc(formation.first.join('.')+'-'+formation.second.join('.')+'-全印（'+formation.points+'点）')+
+       '</span></strong></div>';
+   }
+   var totalPoints=picks.length+(formation?formation.points:0);
    strictHtml='<div class="arv-three-group arv-strict-picks">'+rows+'</div>'+
-     '<div class="arv-three-budget"><strong>合計 '+picks.length+'点</strong></div>';
+     '<div class="arv-three-budget"><strong>合計 '+totalPoints+'点</strong></div>';
  })();
  // Fallback chain when the payload carries no ticketPlan
  // (unchanged): the integrated recommendation when the stored
