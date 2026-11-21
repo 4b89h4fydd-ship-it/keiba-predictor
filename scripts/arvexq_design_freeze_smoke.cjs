@@ -92,7 +92,7 @@ const layoutBaseline={
   "smartRaceTopBar": "7eca0afdf011818a",
   // Re-pinned 2026-11-17: user-directed removal of the yellow
   // result-status box (smartInlineResult) from the race header.
-  "smartRaceHead": "ea60c4edac0702d4",
+  "smartRaceHead": "670623a277e17c68",
   "renderPicker": "8b81f0479683023d",
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
