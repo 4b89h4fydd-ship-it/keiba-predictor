@@ -72,13 +72,14 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
  assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- // Entry, pace and tickets are separate tabs; the tickets tab opens a
- // dedicated subpage. (v349: the old 予想/bets subpage was merged into
- // the entry table and retired.)
+ // Entry, pace and tickets are separate tabs; since 2026-11-21 the
+ // tickets tab switches in place like the others (user request: the
+ // tickets tab must not jump to a separate page). The dedicated
+ // ticket subpage remains reachable from the frozen-revision route.
  await t.page.locator('[data-panel="tickets"]').click();
- await t.page.waitForSelector('.ticket-detail-page-shell');
- assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'買い目');
- await t.page.locator('[data-action="close-race-subpage"]').first().click();
+ await t.page.waitForSelector('#section-bets');
+ assert.equal(await t.page.locator('.ticket-detail-page-shell').count(),0);
+ await t.page.locator('[data-panel="entry"]').click();
  await t.page.waitForSelector('.race-nav-v230-top .race-nav-v230-btn');
  await t.page.locator('.arv-entry-table [data-horse-open="2"]').click();
  // The tabbed horse detail (v348) opens on 基本情報; past runs live on
