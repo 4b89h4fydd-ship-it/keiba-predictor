@@ -619,13 +619,15 @@ def _restore_pristine_sidecar(new: dict, token: str | None):
             or stored_marker.get("receiptSha256")
             != revision.get("previousReceiptSha256")):
         return False, "receipt-chain-mismatch"
-    from hashlib import sha256
-    unsigned = {k: v for k, v in stored_sidecar.items()
-                if k != "contentSha256"}
-    expected = sha256(json.dumps(
-        unsigned, sort_keys=True, separators=(",", ":"),
-        ensure_ascii=False).encode("utf-8")).hexdigest()
-    if stored_sidecar.get("contentSha256") != expected:
+    # The stored seal is verified by VALUE (master_sidecar_verified):
+    # the stored payload crossed the sync worker's JSON.stringify,
+    # which re-spells integral floats as ints (68.0 -> 68), so the
+    # legacy spelling-bound check rejected stored sidecars whose
+    # content was exactly the sealed content. Verification is not
+    # weakened: every accepted spelling binds the full content, and
+    # any changed value, string, key or list still fails here.
+    from arvexq.prediction.unified_product import master_sidecar_verified
+    if not master_sidecar_verified(stored_sidecar):
         return False, "stored-digest-mismatch"
     import copy as _copy
     new["masterAnalysis"] = _copy.deepcopy(stored_sidecar)
@@ -2532,9 +2534,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         master_analysis["errorType"] = type(exc).__name__
     captured = now.isoformat(timespec="seconds")
     master_analysis["capturedAt"] = captured
-    master_analysis["contentSha256"] = sha256(json.dumps(
-        master_analysis, sort_keys=True, separators=(",", ":"),
-        ensure_ascii=False).encode("utf-8")).hexdigest()
+    # Seal by VALUE, not by Python's spelling of the values: the
+    # detail crosses the sync worker's JSON.stringify on its way
+    # into D1, which collapses integral floats to ints (68.0 -> 68),
+    # and a spelling-bound seal never re-hashed on the stored copy —
+    # the pristine restore then rejected every surgical re-issue of
+    # the race (see master_sidecar_verified in unified_product).
+    from arvexq.prediction.unified_product import master_sidecar_digest
+    master_analysis["contentSha256"] = master_sidecar_digest(
+        master_analysis)
     # Freeze the pre-off feature matrix beside the forecast (see
     # _build_mass_feature_archive): built from the same input detail
     # the forecast was computed from, attached to the same published
