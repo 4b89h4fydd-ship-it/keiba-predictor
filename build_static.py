@@ -363,6 +363,10 @@ BRAND_FILES = {
     "arvexq-horse-icon-v364-192.png": ("arvexq-icon-v364-192.png",),
     "arvexq-horse-icon-v364-512.png": ("arvexq-icon-v364-512.png",),
     "arvexq-touch-v364.png": ("arvexq-touch-v364.png",),
+    "arvexq-horse-hero-v365.webp": ("arvexq-racing-hero.webp", "arvexq-horse-hero-v365.webp"),
+    "arvexq-horse-icon-v365-192.png": ("arvexq-icon-v365-192.png",),
+    "arvexq-horse-icon-v365-512.png": ("arvexq-icon-v365-512.png",),
+    "arvexq-touch-v365.png": ("arvexq-touch-v365.png",),
 }
 for filename, outputs in BRAND_FILES.items():
     source_file = STATIC / filename

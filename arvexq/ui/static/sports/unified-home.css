@@ -2844,3 +2844,12 @@ html body .smart-race-page [data-action="odds-update"]{background:#ffffff!import
    The switchbar is the first in-flow element: give it the full
    clearance so the chips and the race title start below the bar. */
 html body .smart-shell:has(> .smart-main.smart-race-page) > .nk-race-switchbar{padding-top:calc(74px + env(safe-area-inset-top))!important}
+
+/* 20261121 hero full size: show the 16:9 brand artwork at full width
+   instead of letterboxed inside a 3:1 strip. */
+html body .smart-shell.smart-home>.arv-unified-hero{
+ aspect-ratio:16/9!important;height:auto!important;
+}
+html body .smart-shell.smart-home>.arv-unified-hero img{
+ object-fit:cover!important;
+}
