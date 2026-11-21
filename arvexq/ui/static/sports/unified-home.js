@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function hero(){return '<div class="arv-unified-hero"><img src="/arvexq-horse-hero-v364.webp" alt="ARVEXQ" width="720" height="405" decoding="async" fetchpriority="high"></div>'}
+function hero(){return '<div class="arv-unified-hero"><img src="/arvexq-horse-hero-v365.webp" alt="ARVEXQ" width="720" height="405" decoding="async" fetchpriority="high"></div>'}
 function dateBar(iso){const value=/^\d{4}-\d{2}-\d{2}$/.test(String(iso||''))?iso:'';return '<label class="arv-unified-date" title="日付を選択"><span>'+esc(value.replace(/-/g,'/'))+'</span><input id="date" type="date" value="'+esc(value)+'" aria-label="開催日を選択"></label>'}
 function buttons(_mode,counts={}){const btn=(key,symbol,title,view)=>'<button type="button" class="arv-unified-action" data-action-kind="'+key+'" data-home-page="'+view+'"><span class="arv-unified-action-icon" aria-hidden="true">'+symbol+'</span><span class="arv-unified-action-label">'+title+'</span>'+'<span class="arv-unified-chevron" aria-hidden="true">›</span></button>';return '<nav class="arv-unified-actions" aria-label="予想メニュー">'+btn('favorites','★','お気に入り','favorites')+'<button type="button" class="arv-unified-action arv-unified-reload" data-action="reload-all" aria-label="全て更新" title="全て更新"><span class="arv-unified-action-icon" aria-hidden="true">↻</span></button></nav>'}
 // Only official result/status evidence can turn an elapsed race into a result.
