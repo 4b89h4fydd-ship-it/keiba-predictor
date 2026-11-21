@@ -17,7 +17,7 @@ def measure(bundle):
             c['horsesWithFiveRuns']+=len(runs)>=5
             for run in runs:
                 c['runs']+=1
-                for key,fields in {'margin':('marginSeconds','timeBehindWinner','margin','marginText'),'sectionalRank':('last3fRank','last3FRank','last600Rank','last3fPercentile'),'sectionalTime':('last3fSeconds','last3f','last600Seconds'),'opponentLevel':('opponentLevel',)}.items():
+                for key,fields in {'margin':('marginSeconds','timeBehindWinner','margin','marginText'),'sectionalRank':('last3fRank','last3FRank','last600Rank','last3fPercentile'),'sectionalTime':('last3fSeconds','last3f','last3FSeconds','last3F','lastThreeFurlongs','last600Seconds'),'opponentLevel':('opponentLevel',)}.items():
                     c[key+'Runs']+=any(run.get(f) not in (None,'',[],{}) for f in fields)
     return {k:dict(v) for k,v in totals.items()}
 

@@ -14,5 +14,27 @@ class UpstreamCaseTests(unittest.TestCase):
         r={"date":"2026-10-10","finish":2,"fieldSize":9}
         self.assertIsNone(normalize_run(r)["last3fRank"])
 
+    def test_last3f_seconds_spellings_all_normalise(self):
+        # B3 (2026-11-21): the stored records split across
+        # spellings — the JRA official parser's last3FSeconds /
+        # last3F and the long-form lastThreeFurlongs were
+        # missing from normalize_run's alias list, so a run
+        # carrying only those read as unmeasured here (and in
+        # every consumer downstream of it).
+        for field in ("last3FSeconds", "last3F", "lastThreeFurlongs"):
+            r = {"date": "2026-10-10", "finish": 2, "fieldSize": 9,
+                 field: 36.5}
+            self.assertEqual(normalize_run(r)["last3f"], 36.5, field)
+
+    def test_rewrite_past_run_spellings_all_normalise(self):
+        # The publish lane's closing term reads past runs
+        # through rewrite.data.normalize._past_run; it missed
+        # last3F and lastThreeFurlongs.
+        from rewrite.data.normalize import _past_run
+        for field in ("last3FSeconds", "last3F", "lastThreeFurlongs",
+                      "last3fSeconds", "last3f"):
+            run = _past_run({field: 36.5}, "test")
+            self.assertEqual(run.last3f_seconds.value, 36.5, field)
+
 if __name__=="__main__":
     unittest.main()

@@ -30,6 +30,19 @@ def test_lowercase_last3f_seconds_becomes_measured_late():
     assert [r["late3FSeconds"] for r in result["runs"]] == [38.6, 39.9]
 
 
+def test_long_form_spelling_becomes_measured_late():
+    # B3 (2026-11-21): lastThreeFurlongs was missing from the
+    # LATE probe tuple, so a run stored under the long-form
+    # name read as unmeasured here.
+    horse = _horse([
+        {"date": "2026-10-28", "track": "東京", "raceNumber": 10,
+         "finish": 2, "fieldSize": 14, "lastThreeFurlongs": 34.1},
+    ])
+    result = profile(horse, RACE)
+    assert result["measuredLate"] == 1
+    assert [r["late3FSeconds"] for r in result["runs"]] == [34.1]
+
+
 def test_capital_f_spelling_still_works():
     horse = _horse([
         {"date": "2026-10-28", "track": "東京", "raceNumber": 10,
