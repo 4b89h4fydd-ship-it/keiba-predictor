@@ -2941,9 +2941,20 @@ function homeVenueTags(){
     return {circuit:v.circuit,track:v.track,rank:rank,label:label,sortTime:sortTime||0}
   });
   tags.sort(function(a,b){return a.rank-b.rank||a.sortTime-b.sortTime||String(a.track).localeCompare(String(b.track),'ja')});
-  return '<nav class="nk-venue-tags" aria-label="開催会場">'+tags.map(function(v){
+  /* v347 — venue tags grouped by circuit under 中央 / 地方 headings
+     (user direction 2026-11-21: "中央と地方わけて", and the mixed
+     flex row left a lone last-row tag stretched wider than the rest —
+     "バランス悪い"). Each group is an equal-width grid, so every tag
+     keeps the same width regardless of how many venues the day has. */
+  function tagHtml(v){
     return '<button type="button" class="nk-venue-tag'+(v.rank===0?' is-live':(v.rank===1?' is-next':(v.rank===3?' is-done':'')))+'" data-track="'+esc(v.track)+'" data-circuit="'+esc(v.circuit)+'"><b>'+esc(v.track)+'</b><small>'+esc(v.label)+'</small></button>'
-  }).join('')+'</nav>'
+  }
+  var groups=['中央','地方'].map(function(circuit){
+    var vs=tags.filter(function(v){return v.circuit===circuit});
+    if(!vs.length)return '';
+    return '<section class="nk-venue-group"><h2 class="nk-venue-group-title">'+esc(circuit)+'</h2><div class="nk-venue-grid">'+vs.map(tagHtml).join('')+'</div></section>'
+  }).join('');
+  return '<nav class="nk-venue-tags" aria-label="開催会場">'+groups+'</nav>'
 }
 function renderHome(){
   /* v346 — home is venue tags only (user decision 2026-11-16): the old
