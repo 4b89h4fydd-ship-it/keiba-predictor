@@ -157,37 +157,53 @@ def _seed_base(rid: str, detail: dict[str, Any] | None) -> None:
 _ENV_UNKNOWN = (None, "", "不明")
 
 
+def _nar_environment_probe(probe: dict[str, Any]) -> dict[str, Any]:
+    """Adapt app._nar_fetch_environment to the probe-dict shape the
+    JRA fetcher takes, so one backfill pass can serve both circuits."""
+    return app._nar_fetch_environment(
+        str(probe.get("track") or ""), str(probe.get("date") or ""),
+        int(probe.get("raceNumber") or 0)) or {}
+
+
 def _fill_missing_environment(
     by_id: dict[str, Any],
     summary_by_id: dict[str, Any],
     race_ids: list[str],
     fetch_env: Any,
     limit: int = 12,
+    fetch_env_nar: Any = None,
 ) -> list[str]:
-    """Backfill JRA weather/going on started races whose stored detail
-    still carries the list builder's placeholder.
+    """Backfill weather/going on races whose stored detail still
+    carries the list builder's placeholder.
 
-    JRA summary rows are born with weather/condition "不明" (the
-    netkeiba list builder hardcodes them), and the values only ever
-    landed when a best-effort live refresh or an official-result
-    merge happened to run for that race: on 2026-11-07/08, 44 of 72
-    JRA races (all of Kyoto/Tokyo) kept the placeholder permanently,
-    while Fukushima — refreshed successfully — had none. The fetch
-    machinery itself works (official result page, then the netkeiba
-    race page, inside app._jra_fetch_environment); nothing steady
-    called it per race. This pass is that steady call, scoped to
-    races this lane already owns: started, JRA, values still unknown.
-    Only values the fetcher actually observed are written; existing
-    values are never overwritten. Attempts are capped per run (the
-    lane runs every few minutes, so a day's backlog drains over
-    consecutive runs instead of bursting the official site).
+    Summary rows are born with weather/condition "不明" (the list
+    builders hardcode them), and the values only ever landed when a
+    best-effort live refresh or an official-result merge happened to
+    run for that race: on 2026-11-07/08, 44 of 72 JRA races (all of
+    Kyoto/Tokyo) kept the placeholder permanently, while Fukushima —
+    refreshed successfully — had none. This pass is the steady call.
+    It is deliberately independent of the result-repair scope: it
+    covers every race in the day bundle — not yet started races too
+    (JRA publishes the going in the morning and NAR publishes through
+    keiba.go.jp before the off) and NAR races as well as JRA, which
+    previously had no backfill at all. Only values the fetcher
+    actually observed are written; existing values are never
+    overwritten. Attempts are capped per run (the lane runs every
+    few minutes, so a day's backlog drains over consecutive runs
+    instead of bursting the source sites).
     """
     filled: list[str] = []
     attempts = 0
     for rid in race_ids:
         if attempts >= max(0, int(limit)):
             break
-        if not str(rid).startswith("jra-"):
+        if str(rid).startswith("nar-"):
+            fetcher = fetch_env_nar
+        elif str(rid).startswith("jra-"):
+            fetcher = fetch_env
+        else:
+            continue
+        if fetcher is None:
             continue
         detail = by_id.get(rid)
         if not isinstance(detail, dict):
@@ -207,7 +223,7 @@ def _fill_missing_environment(
             "jraCname": detail.get("jraCname") or "",
         }
         try:
-            env = fetch_env(probe) or {}
+            env = fetcher(probe) or {}
         except Exception as exc:
             print("RESULT_ENV_FILL_ERROR", rid, type(exc).__name__, exc)
             continue
@@ -221,7 +237,9 @@ def _fill_missing_environment(
                 changed = True
         if changed:
             detail["environmentMeta"] = {
-                "source": env.get("source") or "JRA公式優先",
+                "source": env.get("source") or (
+                    "NAR公式" if str(rid).startswith("nar-")
+                    else "JRA公式優先"),
                 "updatedAtEpoch": int(time.time()),
                 "filledBy": "result-repair-env-backfill",
             }
@@ -261,24 +279,52 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
                 if isinstance(f, dict) and f.get("name") and f.get("horseNumber")
             ],
         }
-        official = app._nar_official_result_fast(minimal)
-        if not official:
+        official = None
+        try:
+            official = app._nar_official_result_fast(minimal)
+        except Exception as exc:
+            print("NAR official result after bundle refresh failed", rid, exc)
+        if official:
+            # Dual-source rule in the repair lane too: netkeiba fills
+            # the fields the official block leaves empty.
+            official = app._dual_source_result(fresh, official)
+            fresh["result"] = official
+            if official.get("weather") not in (None, "", "不明"):
+                fresh["weather"] = official["weather"]
+            if official.get("condition") not in (None, "", "不明"):
+                fresh["condition"] = official["condition"]
+            fresh = app._merge_result_fields(fresh, official)
+        elif app._race_should_have_result(fresh) and not app._result_block_complete(fresh):
+            # Mirror the fast path: netkeiba carries the race when
+            # the official table cannot be read from the bundle.
+            try:
+                nk = app._netkeiba_current_result(fresh)
+                if nk:
+                    fresh["result"] = nk
+                    fresh = app._merge_result_fields(fresh, nk)
+            except Exception as exc:
+                print("NAR result fallback after bundle refresh failed", rid, exc)
+        if fresh.get("result") == base.get("result"):
             return None
-        # Dual-source rule in the repair lane too: netkeiba fills
-        # the fields the official block leaves empty.
-        official = app._dual_source_result(fresh, official)
-        fresh["result"] = official
-        if official.get("weather") not in (None, "", "不明"):
-            fresh["weather"] = official["weather"]
-        if official.get("condition") not in (None, "", "不明"):
-            fresh["condition"] = official["condition"]
-        fresh = app._merge_result_fields(fresh, official)
         if app._result_has_podium(fresh):
             try:
                 fresh = app._attach_nar_payouts(fresh)
             except Exception as exc:
                 print("NAR payout attach after bundle refresh failed", rid, exc)
         return fresh
+    # netkeiba first, mirroring app._refresh_result_fast: publish its
+    # flash/confirmed block immediately; the official parse below
+    # overwrites once final and never downgrades it.
+    nk_attempted = False
+    if app._race_should_have_result(fresh) and not app._result_block_complete(fresh):
+        nk_attempted = True
+        try:
+            nk = app._netkeiba_current_result(fresh)
+            if nk:
+                fresh["result"] = nk
+                fresh = app._merge_result_fields(fresh, nk)
+        except Exception as exc:
+            print("JRA result netkeiba-first after bundle refresh failed", rid, exc)
     # JRA: reuse the stored result token when it still names this race;
     # otherwise re-derive it from the race card, as the fast path does.
     result_cname = str(base.get("resultCname") or "")
@@ -294,6 +340,8 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
     if result_cname:
         parsed = app._jra_parse_result(result_cname, fresh)
         if parsed:
+            if app._official_result_would_downgrade(fresh, parsed):
+                parsed = {**parsed, "result": None}
             fresh = app._merge_official_result(fresh, parsed)
             if app._race_should_have_result(fresh):
                 fresh["result"] = app._dual_source_result(fresh, fresh.get("result"))
@@ -323,7 +371,7 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
     payout_broken = not stored_payouts or bool(payout_combination_violations(fresh))
     if (not app._result_has_podium(fresh)
             or not app._result_covers_card(fresh)
-            or payout_broken) and app._race_should_have_result(fresh):
+            or payout_broken) and app._race_should_have_result(fresh) and not nk_attempted:
         try:
             nk = app._netkeiba_current_result(fresh)
             if nk:
@@ -345,7 +393,17 @@ def _official_refresh_from_bundle(rid: str, base: dict[str, Any] | None) -> dict
     return fresh
 
 
-def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6) -> int:
+def repair(bundle_path: str, payload_path: str, report_path: str, workers: int = 6,
+           light: bool = False, light_window_min: int = 60) -> int:
+    """Repair started races with incomplete results.
+
+    Light mode is the fast lane for races that have just run: only
+    races started within ``light_window_min`` minutes are refreshed,
+    through the netkeiba-only app._refresh_result_light, in a single
+    pass — no marks heal, no environment backfill, no standing
+    audits. The full (heavy) mode remains responsible for official
+    overwrites, payout completion and verification of every race.
+    """
     bundle = _read_json(bundle_path)
     # The D1 calendar can retain retired Banei summary IDs without detail
     # records. Do not reacquire, publish, or verify those retired races. Leave
@@ -376,13 +434,25 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     # publication re-sent; a fresher result obtained by the refresh
     # is transplanted into it at payload assembly below.
     healed_by_id: dict[str, dict[str, Any]] = {}
-    for rid in started_ids:
-        candidate = copy.deepcopy(by_id.get(rid) or {})
-        if candidate.get("id") and _heal_marks_consistency(candidate):
-            healed_by_id[rid] = candidate
+    if not light:
+        for rid in started_ids:
+            candidate = copy.deepcopy(by_id.get(rid) or {})
+            if candidate.get("id") and _heal_marks_consistency(candidate):
+                healed_by_id[rid] = candidate
+
+    def just_started(rid: str) -> bool:
+        row = summary_by_id.get(rid) or {}
+        if row_date(row) != now.strftime("%Y-%m-%d"):
+            return False
+        sm = start_minutes(row)
+        if sm >= 9999:
+            return False
+        return 0 <= (now.hour * 60 + now.minute) - sm <= max(1, int(light_window_min))
 
     pending = []
     for rid in started_ids:
+        if light and not just_started(rid):
+            continue
         result_ok, payout_ok, _ = result_state(by_id.get(rid))
         if not result_ok or not payout_ok:
             pending.append(rid)
@@ -396,6 +466,17 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         _seed_base(rid, by_id.get(rid))
 
     def refresh_one(rid: str) -> tuple[str, dict[str, Any] | None, str]:
+        if light:
+            # Light lane: netkeiba only, via the dedicated light
+            # refresher. No bundle rebuild fallback — races the light
+            # refresher cannot reach belong to the heavy lane.
+            try:
+                fresh = app._refresh_result_light(rid)
+            except Exception as exc:
+                return rid, None, f"{type(exc).__name__}: {exc}"
+            if not isinstance(fresh, dict) or not fresh.get("id"):
+                return rid, None, "light result refresher returned no usable detail"
+            return rid, fresh, ""
         try:
             fresh = app._refresh_result_fast(rid)
             if isinstance(fresh, dict) and fresh.get("id"):
@@ -413,7 +494,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             return rid, None, "result refresher returned no usable detail"
         return rid, fresh, ""
 
-    for attempt in (1, 2):
+    for attempt in ((1,) if light else (1, 2)):
         todo = []
         for rid in pending:
             result_ok, payout_ok, _ = result_state(by_id.get(rid))
@@ -452,19 +533,24 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 if result_ok and payout_ok:
                     repaired.add(rid)
                     errors.pop(rid, None)
-        if attempt == 1:
+        if attempt == 1 and not light:
             unresolved_now = [rid for rid in todo if not all(result_state(by_id.get(rid))[:2])]
             if unresolved_now:
                 time.sleep(float(os.getenv("ARVEXQ_RESULT_RETRY_SLEEP_SEC", "2")))
 
     # Environment backfill: races whose result/payout are already
-    # complete are never refreshed above, so a stored JRA placeholder
+    # complete are never refreshed above, so a stored placeholder
     # ("不明" weather/going from the list builder) would otherwise
-    # survive forever. Fill the ones the official fetcher can observe
-    # now and publish them with this run's payload.
-    environment_filled = _fill_missing_environment(
-        by_id, summary_by_id, started_ids, app._jra_fetch_environment,
-        int(os.getenv("ARVEXQ_RESULT_ENV_FILL_LIMIT", "12")))
+    # survive forever. The pass is separate from the result scope: it
+    # covers every race in the day bundle (not yet started included)
+    # and both circuits (JRA official-first, NAR via keiba.go.jp).
+    # Fill the ones the fetchers can observe now and publish them
+    # with this run's payload. Light mode skips the pass entirely.
+    environment_filled = [] if light else _fill_missing_environment(
+        by_id, summary_by_id, [str(r["id"]) for r in rows],
+        app._jra_fetch_environment,
+        int(os.getenv("ARVEXQ_RESULT_ENV_FILL_LIMIT", "12")),
+        fetch_env_nar=_nar_environment_probe)
     for rid in environment_filled:
         published.add(rid)
 
@@ -526,8 +612,9 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     # run reports incomplete. Keep this block intact and named when
     # the audit is restructured into named checks.
     combination_violations: list[dict[str, Any]] = []
-    for rid in started_ids:
-        combination_violations.extend(payout_combination_violations(by_id.get(rid)))
+    if not light:
+        for rid in started_ids:
+            combination_violations.extend(payout_combination_violations(by_id.get(rid)))
     # === standing audit check: payout_combination_shape (end) ===
 
     # === standing audit: named checks (begin) ===
@@ -540,18 +627,19 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     from arvexq.results.audit import audit_detail, summarise
 
     audit_failures: list[dict[str, Any]] = []
-    for rid in started_ids:
-        row = summary_by_id[rid]
-        audit_failures.extend(audit_detail(
-            by_id.get(rid),
-            expected_race_id=rid,
-            expected_identity={
-                "date": row.get("date") or "",
-                "track": row.get("track") or "",
-                "raceNumber": row.get("raceNumber") or row.get("raceNo") or "",
-            },
-            now=now, retry_state="in_repair_report"))
-    audit_by_check = summarise(audit_failures)
+    if not light:
+        for rid in started_ids:
+            row = summary_by_id[rid]
+            audit_failures.extend(audit_detail(
+                by_id.get(rid),
+                expected_race_id=rid,
+                expected_identity={
+                    "date": row.get("date") or "",
+                    "track": row.get("track") or "",
+                    "raceNumber": row.get("raceNumber") or row.get("raceNo") or "",
+                },
+                now=now, retry_state="in_repair_report"))
+    audit_by_check = summarise(audit_failures) if not light else {}
     # === standing audit: named checks (end) ===
 
     payload_by_id: dict[str, dict[str, Any]] = {
@@ -602,6 +690,8 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "details": detail_payload,
         "meta": {
             "source": "github-actions-result-repair-v6-domain-split",
+            "light_mode": bool(light),
+            "light_window_min": int(light_window_min) if light else 0,
             "sync_date": bundle.get("date") or "",
             "started_race_count": len(started_ids),
             "result_pending_before": len(pending),
@@ -625,6 +715,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
     }
     report = {
         "date": bundle.get("date") or "",
+        "light_mode": bool(light),
         "started": len(started_ids),
         "pending_before": len(pending),
         "repaired": sorted(repaired),
@@ -669,8 +760,13 @@ def main() -> int:
     parser.add_argument("--payload", default="result-repair-payload.json")
     parser.add_argument("--report", default="result-repair-report.json")
     parser.add_argument("--workers", type=int, default=int(os.getenv("ARVEXQ_RESULT_WORKERS", "6")))
+    parser.add_argument("--light", action="store_true",
+                        help="light lane: only races started within the window, netkeiba-only refresh, single pass")
+    parser.add_argument("--light-window-min", type=int,
+                        default=int(os.getenv("ARVEXQ_RESULT_LIGHT_WINDOW_MIN", "60")))
     args = parser.parse_args()
-    return repair(args.bundle, args.payload, args.report, args.workers)
+    return repair(args.bundle, args.payload, args.report, args.workers,
+                  light=bool(args.light), light_window_min=int(args.light_window_min))
 
 
 if __name__ == "__main__":

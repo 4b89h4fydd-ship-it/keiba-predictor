@@ -71,7 +71,7 @@ class FillMissingEnvironmentTests(unittest.TestCase):
         self.assertEqual(by_id[rid]["weather"], "晴")
         self.assertEqual(by_id[rid]["condition"], "稍重")
 
-    def test_skips_nar_and_missing_details(self):
+    def test_skips_nar_without_nar_fetcher_and_missing_details(self):
         nar = "nar-2026-11-07-佐賀-01"
         by_id = {nar: _detail(nar, track="佐賀")}
         calls = []
@@ -80,6 +80,24 @@ class FillMissingEnvironmentTests(unittest.TestCase):
             lambda probe: calls.append(probe) or {"weather": "晴"})
         self.assertEqual(filled, [])
         self.assertEqual(calls, [])
+
+    def test_fills_nar_with_nar_fetcher(self):
+        nar = "nar-2026-11-07-佐賀-01"
+        by_id = {nar: _detail(nar, track="佐賀")}
+        summary = {nar: {"id": nar, "weather": "不明", "condition": "不明"}}
+        probes = []
+        filled = repair._fill_missing_environment(
+            by_id, summary, [nar],
+            lambda probe: (_ for _ in ()).throw(
+                AssertionError("JRA fetcher must not serve NAR")),
+            fetch_env_nar=lambda probe: probes.append(probe) or {
+                "weather": "晴", "condition": "稍重", "source": "NAR公式"})
+        self.assertEqual(filled, [nar])
+        self.assertEqual(probes[0]["track"], "佐賀")
+        self.assertEqual(by_id[nar]["weather"], "晴")
+        self.assertEqual(by_id[nar]["condition"], "稍重")
+        self.assertEqual(summary[nar]["condition"], "稍重")
+        self.assertEqual(by_id[nar]["environmentMeta"]["source"], "NAR公式")
 
     def test_fetcher_failure_is_per_race(self):
         ok = "jra-2026-11-07-京都-02"
@@ -148,6 +166,54 @@ class RepairLaneIntegrationTests(unittest.TestCase):
             summaries = {s["id"]: s for s in payload["summaries"]}
             self.assertEqual(summaries[rid]["weather"], "晴")
             self.assertEqual(summaries[rid]["condition"], "良")
+
+    def test_unstarted_and_nar_races_get_environment_too(self):
+        """The env backfill is separate from the result scope: an
+        unstarted race and a NAR race with unknown values are filled
+        and published even though no result repair applies to them."""
+        date = "2026-11-07"
+        jra = f"jra-{date}-京都-02"
+        nar = f"nar-{date}-佐賀-01"
+        rows = [
+            {"id": jra, "date": date, "track": "京都", "circuit": "中央",
+             "startTime": "23:55", "raceNumber": 2,
+             "weather": "不明", "condition": "不明"},
+            {"id": nar, "date": date, "track": "佐賀", "circuit": "地方",
+             "startTime": "23:59", "raceNumber": 1,
+             "weather": "不明", "condition": "不明"},
+        ]
+        details = [_detail(jra, raceNumber=2),
+                   _detail(nar, track="佐賀", raceNumber=1)]
+        snapshot = {"date": date, "races": rows, "details": details}
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = [Path(tmp) / n
+                     for n in ("bundle.json", "payload.json", "report.json")]
+            paths[0].write_text(json.dumps(snapshot, ensure_ascii=False),
+                                encoding="utf-8")
+            with patch.object(repair, "started", return_value=False), \
+                    patch.object(repair, "result_state",
+                                 return_value=(True, True, "確定")), \
+                    patch.object(repair.app, "_jra_fetch_environment",
+                                 return_value={"weather": "晴",
+                                               "condition": "良",
+                                               "source": "JRA公式優先"}), \
+                    patch.object(repair.app, "_nar_fetch_environment",
+                                 return_value={"weather": "曇",
+                                               "condition": "稍重",
+                                               "source": "NAR公式"}):
+                rc = repair.repair(str(paths[0]), str(paths[1]),
+                                   str(paths[2]), workers=1)
+            self.assertEqual(rc, 0)
+            report = json.loads(paths[2].read_text(encoding="utf-8"))
+            self.assertEqual(sorted(report["environment_filled"]),
+                             sorted([jra, nar]))
+            payload = json.loads(paths[1].read_text(encoding="utf-8"))
+            written = {d["id"]: d for d in payload["details"]}
+            self.assertEqual(written[jra]["weather"], "晴")
+            self.assertEqual(written[nar]["weather"], "曇")
+            self.assertEqual(written[nar]["condition"], "稍重")
+            summaries = {s["id"]: s for s in payload["summaries"]}
+            self.assertEqual(summaries[nar]["condition"], "稍重")
 
 
 if __name__ == "__main__":

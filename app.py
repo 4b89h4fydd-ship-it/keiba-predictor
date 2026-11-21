@@ -2490,10 +2490,45 @@ def _netkeiba_race_meta(detail:dict)->dict:
     if sm:out["startTime"]=sm.group(1)
     dm=re.search(r"(?:芝|ダ|障)(\d{3,4})m",full)
     if dm:out["distance"]=int(dm.group(1))
-    wm=re.search(r"天候[:：]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
-    if wm:out["weather"]=wm.group(1)
-    cm=re.search(r"馬場[:：]?\s*(良|稍重|重|不良)",full)
-    if cm:out["condition"]=cm.group(1)
+    # Current netkeiba pages no longer print "天候：晴" / "馬場：良" text:
+    # weather is an icon (aria-label/title on an Icon_Weather* span) and
+    # the going is a one-letter abbreviation span (Item03 = turf/jump,
+    # Item04 = dirt; NAR pages put the going in Item03 and the weather
+    # as text inside a WeatherData span). Read those forms first and
+    # keep the legacy text form below as a fallback.
+    scope=soup.find(class_="Race_Data") or soup
+    for el in scope.find_all(True):
+        classes=[str(c) for c in (el.get("class") or [])]
+        if not any(c.startswith("Icon_Weather") for c in classes):continue
+        for attr in ("aria-label","title"):
+            v=_clean(str(el.get(attr) or ""))
+            if v in ("晴","曇","雨","小雨","雪","小雪"):out["weather"]=v;break
+        if out.get("weather"):break
+    if "weather" not in out:
+        wd=scope.find(class_="WeatherData")
+        if wd:
+            wm2=re.search(r"(小雨|小雪|晴|曇|雨|雪)",wd.get_text(" ",strip=True))
+            if wm2:out["weather"]=wm2.group(1)
+    _going_abbr={"良":"良","稍":"稍重","重":"重","不":"不良"}
+    _going_by_surface={}
+    for cls,surf_key in (("Item03","conditionTurf"),("Item04","conditionDirt")):
+        el=scope.find("span",class_=cls)
+        if el:
+            gv=_going_abbr.get(_clean(el.get_text(" ",strip=True)))
+            if gv:_going_by_surface[surf_key]=gv
+    if _going_by_surface:
+        out.update(_going_by_surface)
+        surface=str(detail.get("surface") or "")
+        if "芝" in surface or "障" in surface:picked=_going_by_surface.get("conditionTurf")
+        elif "ダ" in surface:picked=_going_by_surface.get("conditionDirt")
+        else:picked=None
+        out["condition"]=picked or _going_by_surface.get("conditionTurf") or _going_by_surface.get("conditionDirt")
+    if "weather" not in out:
+        wm=re.search(r"天候[:：]?\s*(晴|曇|雨|小雨|雪|小雪)",full)
+        if wm:out["weather"]=wm.group(1)
+    if "condition" not in out:
+        cm=re.search(r"馬場[:：]?\s*(良|稍重|重|不良)",full)
+        if cm:out["condition"]=cm.group(1)
     return out
 
 def _race_should_have_result(detail:dict)->bool:
@@ -4058,6 +4093,44 @@ def _result_covers_card(detail: dict | None) -> bool:
     return runners==0 or len(finishers)>=runners
 
 
+def _result_block_complete(detail: dict | None) -> bool:
+    """Whether the stored result needs no further refresh.
+
+    Complete means final (確定), podium present, covering the whole
+    card, with payouts present and shape-clean — the same standard
+    the netkeiba fallback gate has always used, plus the final-status
+    requirement. A race short of this is worth a fresh source fetch.
+    """
+    d=detail or {}
+    result=d.get("result") or {}
+    if result.get("status")!="確定":return False
+    if not _result_has_podium(d):return False
+    if not _result_covers_card(d):return False
+    if not (result.get("payouts") or []):return False
+    try:
+        from arvexq.results.state import payout_combination_violations as _pcv
+        if _pcv(d):return False
+    except Exception:pass
+    return True
+
+
+def _official_result_would_downgrade(detail: dict, parsed: dict) -> bool:
+    """Whether an official parse is weaker than the stored result.
+
+    With netkeiba as the first source, the stored block can already
+    be final (確定) while the official page still serves an interim
+    (速報) table; merging that parse wholesale would downgrade the
+    published result. A final official parse always wins; an interim
+    one only replaces a stored block it covers at least as fully.
+    """
+    stored=(detail.get("result") or {})
+    new=((parsed or {}).get("result") or {})
+    if not stored.get("finishers") or not new.get("finishers"):return False
+    if new.get("status")=="確定":return False
+    if stored.get("status")=="確定":return True
+    return len(new.get("finishers") or [])<len(stored.get("finishers") or [])
+
+
 def _refresh_result_fast(race_id: str) -> dict | None:
     """Refresh only authoritative result data; never rebuild history/diagnosis."""
     detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
@@ -4067,15 +4140,32 @@ def _refresh_result_fast(race_id: str) -> dict | None:
 
     official=None
     if race_id.startswith("nar-"):
+        # netkeiba is the first source (see the JRA branch): publish
+        # its flash as soon as it posts; the official table below
+        # still overwrites once it lands, unless it is only an
+        # interim table and the netkeiba block is already final.
+        nk_applied=False
+        if _race_should_have_result(detail) and not _result_block_complete(detail):
+            try:
+                nk=_netkeiba_current_result(detail)
+                if nk:
+                    detail["result"]=nk
+                    detail=_merge_result_fields(detail,nk)
+                    nk_applied=True
+            except Exception as exc:print("NAR result netkeiba-first failed",race_id,exc)
         try:official=_nar_official_result_fast(detail)
         except Exception as exc:print("NAR fast result refresh failed",race_id,exc)
         if official:
-            official=_dual_source_result(detail,official)
-            detail["result"]=official
+            if not (nk_applied and (detail.get("result") or {}).get("status")=="確定"
+                    and official.get("status")!="確定"):
+                # Dual-source rule: the official block stays
+                # authoritative, netkeiba fills what it leaves empty.
+                official=_dual_source_result(detail,official)
+                detail["result"]=official
             if official.get("weather") not in (None,"","不明"):detail["weather"]=official["weather"]
             if official.get("condition") not in (None,"","不明"):detail["condition"]=official["condition"]
             detail=_merge_result_fields(detail,official)
-        elif _race_should_have_result(detail):
+        elif not nk_applied and _race_should_have_result(detail):
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
@@ -4092,6 +4182,23 @@ def _refresh_result_fast(race_id: str) -> dict | None:
             try:detail=_attach_nar_payouts(detail)
             except Exception as exc:print("NAR payout attach after result failed",race_id,exc)
     else:
+        # netkeiba is the first source for a race that has just run:
+        # its flash (速報) posts minutes before the official result
+        # page is reliably parseable, and gating netkeiba behind the
+        # official route made the whole result wait on the slowest
+        # source. Publish netkeiba immediately; the official parse
+        # below still overwrites once it is final (an interim official
+        # parse never downgrades a stronger stored block — see
+        # _official_result_would_downgrade).
+        nk_attempted=False
+        if _race_should_have_result(detail) and not _result_block_complete(detail):
+            nk_attempted=True
+            try:
+                nk=_netkeiba_current_result(detail)
+                if nk:
+                    detail["result"]=nk
+                    detail=_merge_result_fields(detail,nk)
+            except Exception as exc:print("JRA result netkeiba-first failed",race_id,exc)
         try:
             result_cname=str(detail.get("resultCname") or "")
             if result_cname and not _jra_result_cname_matches_detail(result_cname,detail):
@@ -4106,8 +4213,16 @@ def _refresh_result_fast(race_id: str) -> dict | None:
                 if cname:result_cname=_jra_result_cname_from_card(cname)
             parsed=_jra_parse_result(result_cname,detail) if result_cname else None
             if parsed:
+                if _official_result_would_downgrade(detail,parsed):
+                    # Keep the stronger stored result block; the
+                    # parse's meta (title/weather/token) still merges.
+                    parsed={**parsed,"result":None}
                 detail=_merge_official_result(detail,parsed)
-                if _race_should_have_result(detail):
+                if not nk_attempted and _race_should_have_result(detail):
+                    # Dual-source fill from netkeiba. Skipped when
+                    # netkeiba was already fetched above in this call:
+                    # one fetch per refresh is the standing semantic,
+                    # and its block is already merged in by then.
                     detail["result"]=_dual_source_result(detail,detail.get("result"))
         except Exception as exc:print("JRA fast result refresh failed",race_id,exc)
         # The fallback must also fire when a podium-shaped but partial
@@ -4130,7 +4245,10 @@ def _refresh_result_fast(race_id: str) -> dict | None:
                 payout_broken=bool(_pcv(detail))
             except Exception:
                 payout_broken=False
-        if (not _result_has_podium(detail) or not _result_covers_card(detail) or payout_broken) and _race_should_have_result(detail):
+        # Skipped when netkeiba was already attempted above in this
+        # call: one fetch per refresh is the standing semantic, and a
+        # second identical fetch cannot return more.
+        if (not _result_has_podium(detail) or not _result_covers_card(detail) or payout_broken) and _race_should_have_result(detail) and not nk_attempted:
             try:
                 nk=_netkeiba_current_result(detail)
                 if nk:
@@ -4141,6 +4259,33 @@ def _refresh_result_fast(race_id: str) -> dict | None:
     if _result_has_podium(detail):
         try:_store_fast_snapshot(detail)
         except Exception as exc:print("result snapshot save failed",race_id,exc)
+    return _compact_display_snapshot(detail)
+
+
+def _refresh_result_light(race_id: str) -> dict | None:
+    """Lightweight result refresh for a race that has just run.
+
+    netkeiba only: its flash (速報) is published as soon as it posts,
+    and its confirmed (確定) block replaces it when that lands. The
+    official overwrite, payout completion and verification stay with
+    _refresh_result_fast in the repair lane; this path exists so a
+    just-finished race does not wait on the heavy lane's full pass.
+    """
+    detail=_prepared_get_fresh(race_id) or _racedb_get_fast(race_id) or _fast_local_race_detail(race_id)
+    if not detail:
+        detail=nar_race_detail(race_id) if race_id.startswith("nar-") else central_race_detail(race_id)
+    if not detail:return None
+    if not _race_should_have_result(detail) or _result_block_complete(detail):
+        return _compact_display_snapshot(detail)
+    try:
+        nk=_netkeiba_current_result(detail)
+        if nk:
+            detail["result"]=nk
+            detail=_merge_result_fields(detail,nk)
+    except Exception as exc:print("light result refresh failed",race_id,exc)
+    if _result_has_podium(detail):
+        try:_store_fast_snapshot(detail)
+        except Exception as exc:print("light result snapshot save failed",race_id,exc)
     return _compact_display_snapshot(detail)
 
 
