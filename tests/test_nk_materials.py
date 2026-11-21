@@ -100,9 +100,24 @@ its complete inertness without closing inputs, the stamp
 record (closingTrial), that normalize keeps the observed
 value on past runs, and that a v6-stamped publication
 qualifies for exactly one more re-issue onto v7.
+
+Growth + jumps (2026-11-21, audit B1/B5): the stamp now also
+records the entryFingerprint of the entry applied, and a
+current-version stamp re-qualifies when the materials file
+has grown past it — on 2026-11-21 the races stamped off the
+evening file (bestTime / headToHead / place-divergence all
+zero) never received the morning rebuild's material. The
+tests pin the growth matrix (fingerprint and legacy
+coverage/terms baselines, the sub-threshold floor, the
+fail-closed empty stamp), that jumps races qualify on the
+v1 lane with any family at the threshold (their entries
+carry no speed index), that the lane upgrade can no longer
+trap them, and that a jumps build applies the adjustment
+and re-issues exactly once.
 """
 from __future__ import annotations
 
+import copy
 import json
 import tempfile
 from datetime import datetime
@@ -124,8 +139,8 @@ from rewrite.analysis.nk_materials import (
     apply_nk_materials, best_time_seconds, closing_inputs_from_race,
     combo_inputs_from_race, course_biases,
     course_inputs_from_race, front_rate_from_runs, h2h_shrunk_rate,
-    pace_score, parse_materials_payload, press_points,
-    sire_course_score,
+    materials_fingerprint, pace_score, parse_materials_payload,
+    press_points, sire_course_score,
     speed_coverage)
 from rewrite.data.normalize import (
     Obs, PastRun, RaceRecord, RunnerRecord, normalize_runner, obs)
@@ -138,7 +153,9 @@ from scripts.arvexq_nk_materials_build import (
 from scripts.arvexq_rewrite_publish import (
     NAR_DECAY_V9B_ABILITY_MODEL_VERSION,
     V9B_LANE,
+    _lane_upgrade_info,
     _load_nk_materials,
+    _nk_materials_growth,
     _nk_materials_upgrade_info,
     build_publish_detail,
 )
@@ -247,6 +264,7 @@ def fresh_detail() -> dict:
 
 
 def stored_detail(*, nk_stamp=False, nk_stamp_version="nk-materials-v1",
+                  nk_stamp_extra=None,
                   lane=V9B_LANE, date=DATE, post=POST) -> dict:
     horses = [{"horseNumber": n, "name": NAMES[n], "winOdds": 3.0}
               for n in (1, 2, 3, 4, 5)]
@@ -266,6 +284,8 @@ def stored_detail(*, nk_stamp=False, nk_stamp_version="nk-materials-v1",
     if nk_stamp:
         marker["nkMaterials"] = {"version": nk_stamp_version,
                                  "applied": True}
+        if nk_stamp_extra:
+            marker["nkMaterials"].update(nk_stamp_extra)
     roster = [{"horseNumber": h["horseNumber"], "name": h["name"]}
               for h in horses]
     unified = {"receiptSha256": RECEIPT, "roster": roster,
@@ -896,6 +916,175 @@ class UpgradeQualificationTests(TestCase):
             stored_detail(), datetime(2026, 11, 17, 20, 41, tzinfo=JST)))
 
 
+# ------------------------------------- growth + jumps (2026-11-21)
+
+GROWN_PAYLOAD = {
+    "version": "nk-materials-v5", "date": DATE,
+    "races": {RACE_ID: {
+        "netkeibaRaceId": NK_ID,
+        "horses": {str(n): {
+            "nk_best": NK_AVG5[n] + 5, "nk_avg5": NK_AVG5[n],
+            "nk_dist": None, "nk_course": None,
+            "nk_recent": [NK_AVG5[n]] * 3,
+            "bestTime": {"seconds": 88.0 + n, "tier": 1},
+            "headToHead": {"duels": 10, "ahead": n}}
+            for n in NAMES},
+        "courseAnalysis": {"コース": "金沢1500m"}}}}
+GROWN = parse_materials_payload(GROWN_PAYLOAD)
+
+JUMPS_ID = "jra-2026-11-21-福島-04"
+JUMPS_DATE = "2026-11-21"
+JUMPS_POST = "10:45"
+JUMPS_NOW = datetime(2026, 11, 21, 8, 0, tzinfo=JST)
+
+JUMPS_PAYLOAD = {
+    "version": "nk-materials-v12", "date": JUMPS_DATE,
+    "races": {JUMPS_ID: {
+        "netkeibaRaceId": "202603010404",
+        "horses": {str(n): {
+            "nk_best": None, "nk_avg5": None, "nk_dist": None,
+            "nk_course": None, "nk_recent": None,
+            "bestTime": {"seconds": 190.0 + n, "tier": 1},
+            "press": {"marks": {"記者": "○"}}}
+            for n in NAMES},
+        "courseAnalysis": {"コース": "福島2750m"}}}}
+JUMPS_MATERIALS = parse_materials_payload(JUMPS_PAYLOAD)
+
+
+def jumps_stored_detail(*, nk_stamp=False,
+                        nk_stamp_version=NK_MATERIALS_VERSION) -> dict:
+    detail = stored_detail(lane="v1-prior", date=JUMPS_DATE,
+                           post=JUMPS_POST, nk_stamp=nk_stamp,
+                           nk_stamp_version=nk_stamp_version)
+    detail.update({"id": JUMPS_ID, "circuit": "中央", "venue": "福島",
+                   "track": "福島", "surface": "障害"})
+    return detail
+
+
+class GrowthQualificationTests(TestCase):
+    """B1 (2026-11-21): a current-version stamp used to be
+    final even when the materials file grew after the stamp
+    was written — on 2026-11-21 the morning rebuild lit
+    bestTime (560 horses) / headToHead / the place-divergence
+    cells the evening file had shipped as zero, and every
+    race stamped before it kept the thin adjustment all day.
+    The stamp now records what it stood on (entryFingerprint;
+    older stamps fall back to their coverage/terms) and
+    growth re-qualifies the race exactly once per materials
+    state."""
+
+    def _info(self, detail, materials, now=NOW):
+        with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
+                   return_value=materials):
+            return _nk_materials_upgrade_info(detail, now)
+
+    def test_grown_materials_requalify_a_current_version_stamp(self):
+        detail = stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp_extra={"terms": ["speed"],
+                            "coverage": {"speed": 5, "mochitime": 0,
+                                         "h2h": 0}})
+        self.assertIsNotNone(self._info(detail, GROWN))
+
+    def test_unchanged_materials_do_not_requalify(self):
+        detail = stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp_extra={"terms": ["speed"],
+                            "coverage": {"speed": 5, "mochitime": 0,
+                                         "h2h": 0}})
+        self.assertIsNone(self._info(detail, MATERIALS))
+
+    def test_fingerprint_stamp_requalifies_only_on_growth(self):
+        detail = stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp_extra={"entryFingerprint":
+                            materials_fingerprint(MATERIALS[RACE_ID])})
+        self.assertIsNone(self._info(detail, MATERIALS))
+        self.assertIsNotNone(self._info(detail, GROWN))
+
+    def test_subthreshold_growth_never_requalifies(self):
+        thin_growth = parse_materials_payload({"races": {RACE_ID: {
+            "horses": {str(n): {"nk_avg5": NK_AVG5[n],
+                                "bestTime": {"seconds": 88.0,
+                                             "tier": 1}}
+                       for n in (1, 2)}}}})
+        detail = stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp_extra={"terms": ["speed"],
+                            "coverage": {"speed": 5, "mochitime": 0}})
+        self.assertIsNone(self._info(detail, thin_growth))
+
+    def test_growth_helper_reads_only_what_the_stamp_recorded(self):
+        entry = MATERIALS[RACE_ID]
+        self.assertFalse(_nk_materials_growth(
+            {"entryFingerprint": materials_fingerprint(entry)}, entry))
+        self.assertTrue(_nk_materials_growth(
+            {"entryFingerprint": materials_fingerprint(entry)},
+            GROWN[RACE_ID]))
+        # A stamp with neither fingerprint nor coverage/terms
+        # proves nothing: fail-closed, as before.
+        self.assertFalse(_nk_materials_growth({"applied": True}, entry))
+
+
+class JumpsQualificationTests(TestCase):
+    """B5 (2026-11-21): jumps races stand on the v1 lane (no
+    fitted v8 candidate exists for the segment), so they never
+    qualified for the materials upgrade at all — the day's two
+    Fukushima jump races were published with their collected
+    materials (full bestTime / press coverage, no speed index)
+    never applied."""
+
+    def _info(self, detail, materials=JUMPS_MATERIALS, now=JUMPS_NOW):
+        with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
+                   return_value=materials):
+            return _nk_materials_upgrade_info(detail, now)
+
+    def test_unstamped_jumps_race_qualifies_without_speed(self):
+        info = self._info(jumps_stored_detail())
+        self.assertIsNotNone(info)
+        self.assertEqual(info["previousAbilityLane"], "v1-prior")
+
+    def test_jumps_thin_materials_never_qualify(self):
+        thin = parse_materials_payload({"races": {JUMPS_ID: {
+            "horses": {str(n): {"bestTime": {"seconds": 190.0,
+                                             "tier": 1}}
+                       for n in (1, 2)}}}})
+        self.assertIsNone(self._info(jumps_stored_detail(), thin))
+
+    def test_jumps_post_guard(self):
+        self.assertIsNone(self._info(
+            jumps_stored_detail(),
+            now=datetime(2026, 11, 21, 10, 46, tzinfo=JST)))
+
+    def test_stamped_jumps_race_requalifies_on_growth_only(self):
+        detail = jumps_stored_detail(nk_stamp=True)
+        detail["preparedMeta"]["rewritePublish"]["nkMaterials"].update(
+            {"terms": ["mochitime", "press"],
+             "coverage": {"mochitime": 5, "press": 5}})
+        self.assertIsNone(self._info(detail))
+        grown = parse_materials_payload({"races": {JUMPS_ID: {
+            "netkeibaRaceId": "202603010404",
+            "horses": {str(n): {
+                "bestTime": {"seconds": 190.0 + n, "tier": 1},
+                "press": {"marks": {"記者": "○"}},
+                "headToHead": {"duels": 8, "ahead": n}}
+                for n in NAMES}}}})
+        self.assertIsNotNone(self._info(detail, grown))
+
+    def test_lane_upgrade_never_traps_a_jumps_race(self):
+        # The extras export DOES carry the jump races; before
+        # the segment guard, _lane_upgrade_info qualified them
+        # for a lane upgrade that can never land (no v8 weights
+        # for the segment), trapping them in a permanent
+        # keep-frozen loop ahead of every other exception.
+        extras = {JUMPS_ID: {"segment": "jumps", "extras": {
+            str(n): {"elo": 1500.0, "spd2_recent": 1.0}
+            for n in NAMES}}}
+        with patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+                   return_value=extras):
+            self.assertIsNone(_lane_upgrade_info(jumps_stored_detail()))
+
+
 def fabricated_course_race() -> RaceRecord:
     """A race whose runners carry frame numbers and corner
     evidence: horse 1 is the field's only habitual front-runner
@@ -1003,6 +1192,33 @@ class BuildTests(TestCase):
         with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
                    return_value=MATERIALS):
             return _nk_materials_upgrade_info(detail, NOW)
+
+    def test_first_publication_stamps_the_entry_fingerprint(self):
+        new, receipt = _build(fresh_detail())
+        self.assertIsNotNone(new, receipt)
+        stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertEqual(stamp["entryFingerprint"]["speed"], 5)
+        self.assertEqual(stamp["entryFingerprint"]["mochitime"], 0)
+        self.assertEqual(stamp["entryFingerprint"]["course_analysis"], 1)
+
+    def test_grown_materials_reissue_exactly_once(self):
+        first, receipt = _build(fresh_detail())
+        self.assertIsNotNone(first, receipt)
+        new, receipt = _build(first, materials=GROWN)
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        revision = marker["revision"]
+        self.assertEqual(revision["kind"], "nk-materials-upgrade")
+        self.assertEqual(revision["previousAbilityLane"], V9B_LANE)
+        self.assertEqual(revision["abilityLane"], V9B_LANE)
+        self.assertEqual(
+            marker["nkMaterials"]["entryFingerprint"]["mochitime"], 5)
+        self.assertIsNotNone(verified_unified(new))
+        # The re-stamped fingerprint closes the qualification:
+        # the same materials never qualify the race again.
+        with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
+                   return_value=GROWN):
+            self.assertIsNone(_nk_materials_upgrade_info(new, NOW))
 
     def test_v1_stamped_race_is_reissued_once_to_current_version(self):
         new, receipt = _build(stored_detail(
@@ -1899,6 +2115,116 @@ class V6BuildStampTests(TestCase):
         self.assertNotIn("judgementTrial", stamp)
         self.assertNotIn("oddsTrial", stamp)
         self.assertIsNotNone(verified_unified(new))
+
+
+def fabricated_jumps_race() -> RaceRecord:
+    """A Fukushima jumps race whose runners carry scored past
+    runs (the v1 forecast needs them; there is no v8 lane for
+    the segment)."""
+    missing = Obs(None, "test", "not_captured")
+
+    def run(finish):
+        return PastRun(
+            date="2026-10-25", track=obs("福島", "test"),
+            distance=obs(2750, "test"), surface=obs("障害", "test"),
+            finish=obs(finish, "test"), field_size=obs(12, "test"),
+            corner_positions=(3, 3), margin_text=missing,
+            time_seconds=obs(190.0 + finish, "test"), jockey=missing)
+
+    runners = []
+    for number in (1, 2, 3, 4, 5):
+        runners.append(RunnerRecord(
+            number=number, horse_id=missing,
+            name=obs(NAMES[number], "test"),
+            frame_number=obs(number, "test"),
+            age=missing, sex=missing, jockey=missing, trainer=missing,
+            carried_weight=missing, body_weight=missing,
+            body_weight_change=missing,
+            win_odds=obs(ODDS[number], "test"),
+            scratched=False,
+            past_runs=(run(number), run((number % 5) + 1))))
+    return RaceRecord(
+        race_id=JUMPS_ID, date=JUMPS_DATE, circuit=obs("中央", "test"),
+        track="福島", race_number=obs(4, "test"), title=missing,
+        start_time=obs(JUMPS_POST, "test"), distance=obs(2750, "test"),
+        surface=obs("障害", "test"), weather=missing,
+        condition=missing, updated_at=missing, segment=Segment.JUMPS,
+        source="test", runners=tuple(runners))
+
+
+def fresh_jumps_detail() -> dict:
+    return {
+        "id": JUMPS_ID, "date": JUMPS_DATE, "circuit": "中央",
+        "track": "福島", "raceNumber": 4,
+        "scheduledStartTime": JUMPS_POST, "distance": 2750,
+        "surface": "障害", "condition": "良",
+        "horses": [{
+            "horseNumber": n, "name": NAMES[n], "winOdds": ODDS[n],
+            "frameNumber": n, "age": 5, "sex": "牡",
+            "carriedWeight": 60.0, "jockey": "騎手",
+            "trainer": "調教師", "popularity": n,
+            "allPastRuns": [past_run("2026-11-03", n)]}
+            for n in (1, 2, 3, 4, 5)],
+    }
+
+
+def _build_jumps(detail, materials=JUMPS_MATERIALS, extras=None):
+    ctx = [
+        patch("scripts.arvexq_rewrite_publish.normalize_race",
+              return_value=fabricated_jumps_race()),
+        patch("scripts.arvexq_rewrite_publish.forecast_race_v8",
+              return_value=v9b_like_forecast()),
+        patch("scripts.arvexq_rewrite_publish._load_v8_extras",
+              return_value=extras or {}),
+        patch("scripts.arvexq_rewrite_publish._load_nk_materials",
+              return_value=materials),
+    ]
+    for c in ctx:
+        c.start()
+    try:
+        return build_publish_detail(
+            detail, {"race_id": JUMPS_ID, "id": JUMPS_ID}, JUMPS_NOW)
+    finally:
+        for c in reversed(ctx):
+            c.stop()
+
+
+class JumpsBuildTests(TestCase):
+    """B5 (2026-11-21): the build applies the materials
+    adjustment to a jumps race's v1 vector — before this, the
+    segment never reached the adjustment block at all."""
+
+    def test_first_publication_applies_materials_on_the_v1_lane(self):
+        new, receipt = _build_jumps(fresh_jumps_detail())
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        self.assertEqual(marker["abilityLane"], "v1-prior")
+        stamp = marker["nkMaterials"]
+        self.assertTrue(stamp["applied"])
+        self.assertIn("mochitime", stamp["terms"])
+        self.assertIn("press", stamp["terms"])
+        self.assertEqual(stamp["entryFingerprint"]["mochitime"], 5)
+        self.assertIsNotNone(verified_unified(new))
+
+    def test_frozen_jumps_race_reissues_once_with_materials(self):
+        first, receipt = _build_jumps(fresh_jumps_detail())
+        self.assertIsNotNone(first, receipt)
+        frozen = copy.deepcopy(first)
+        frozen["preparedMeta"]["rewritePublish"].pop("nkMaterials")
+        new, receipt = _build_jumps(frozen)
+        self.assertIsNotNone(new, receipt)
+        marker = new["preparedMeta"]["rewritePublish"]
+        revision = marker["revision"]
+        self.assertEqual(revision["kind"], "nk-materials-upgrade")
+        self.assertEqual(revision["previousAbilityLane"], "v1-prior")
+        self.assertEqual(revision["abilityLane"], "v1-prior")
+        self.assertTrue(marker["nkMaterials"]["applied"])
+        self.assertIsNotNone(verified_unified(new))
+        # Exactly once: the re-issued detail no longer qualifies.
+        with patch("scripts.arvexq_rewrite_publish._load_nk_materials",
+                   return_value=JUMPS_MATERIALS):
+            self.assertIsNone(
+                _nk_materials_upgrade_info(new, JUMPS_NOW))
 
 
 if __name__ == "__main__":
