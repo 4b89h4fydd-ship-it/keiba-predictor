@@ -104,12 +104,14 @@ def grade_master_pairs(details: list[dict]) -> dict:
         if candidate.get("status") != "shadow-candidate" or candidate.get("validated") is not False:
             exclusions["no-shadow-candidate"] += 1
             continue
-        digest = candidate.get("contentSha256")
-        unsigned = {k: v for k, v in candidate.items() if k != "contentSha256"}
-        actual = sha256(json.dumps(
-            unsigned, sort_keys=True, separators=(",", ":"),
-            ensure_ascii=False).encode("utf-8")).hexdigest()
-        if candidate.get("capturedAt") != prediction.get("capturedAt") or digest != actual:
+        # The seal is verified by VALUE (master_sidecar_verified):
+        # details reach this grading through API read-backs whose
+        # JSON round trips re-spell integral floats as ints, which
+        # the old spelling-bound digest scored as a seal mismatch
+        # for content that was exactly the sealed content.
+        from arvexq.prediction.unified_product import master_sidecar_verified
+        if candidate.get("capturedAt") != prediction.get("capturedAt") \
+                or not master_sidecar_verified(candidate):
             exclusions["shadow-seal-mismatch"] += 1
             continue
         try:
