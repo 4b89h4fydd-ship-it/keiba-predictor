@@ -3455,6 +3455,7 @@ function smartRaceHead(r){
         '<div class="smart-race-head-left"><span class="smart-circuit-chip">'+esc(r.circuit||state.circuit)+'</span>'+riskLabelBadge(r)+'<div class="smart-race-title-stack"><div class="smart-race-meta">'+metaParts.join(' / ')+'</div></div>'+cinematicGrade(r)+'</div>'+
         officialRaceActions(r)+
       '</div>'+
+      '<div class="smart-race-result-side"><time>'+timeHtml(r)+' 発走</time></div>'+
     '</div>'+upsetBand(r)+riskLabelNote(r)+
   '</section>'
 }
