@@ -2413,6 +2413,12 @@ document.addEventListener('click',function(e){
   if(!t)return;
   e.preventDefault();e.stopPropagation();
   analysisTagState.tag=t.getAttribute('data-analysis-tag')||'top';
+  /* v348 — selecting the 全頭診断 tag opens its fold straight away
+     (user direction 2026-11-21: "全頭診断のタグ押せば見れるように
+     して"): the diagnosis body is a <details> that used to stay shut
+     until its own summary was tapped as well. The fold's ontoggle
+     keeps diagnosisOpenId in sync, so a manual close still sticks. */
+  if(analysisTagState.tag==='diagnosis'&&state.race)state.diagnosisOpenId=String(state.race.id);
   render();
 });
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
