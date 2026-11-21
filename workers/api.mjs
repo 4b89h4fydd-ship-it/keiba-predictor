@@ -3,6 +3,7 @@ import original from './api_preserved.mjs';
 import {forecastRevisions} from './api_forecast_revisions.mjs';
 import {storageAudit} from './api_storage_audit.mjs';
 import {snapshotExport} from './api_snapshot_export.mjs';
+import {snapshotPrune} from './api_snapshot_prune.mjs';
 import {readCompressedRace,storageEnvironment,compressStoredSnapshot} from './api_full_snapshot.mjs';
 import {overlayRaceResponse,overlayDayResponse} from './api_display_overlay.mjs';
 export default {async fetch(request,env,ctx){
@@ -14,6 +15,7 @@ export default {async fetch(request,env,ctx){
   }
   if(url.pathname.startsWith('/api/forecast-revisions/')||url.pathname.startsWith('/api/admin/forecast-revisions'))return forecastRevisions(request,env);
   if(url.pathname==='/api/admin/snapshot-compress')return compressStoredSnapshot(request,env);
+  if(url.pathname==='/api/admin/snapshot-prune')return snapshotPrune(request,env);
   if(request.method==='GET'&&url.pathname.startsWith('/api/race/')){
       try{
         const restored=await readCompressedRace(env,decodeURIComponent(url.pathname.slice('/api/race/'.length)));
