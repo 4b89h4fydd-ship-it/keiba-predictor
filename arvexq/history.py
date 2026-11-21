@@ -32,7 +32,7 @@ def normalize_run(run: dict[str, Any]) -> dict[str, Any]:
         "finish": _pick(run, "finish", "finishPosition", "着順") or None,
         "time": _pick(run, "time", "raceTime", "タイム") or "",
         "passing": _pick(run, "passing", "cornerPositions", "通過順位") or "",
-        "last3f": _pick(run, "last3f", "last3fSeconds", "last600", "last600Seconds", "上がり") or None,
+        "last3f": _pick(run, "last3f", "last3fSeconds", "last3FSeconds", "last3F", "lastThreeFurlongs", "last600", "last600Seconds", "上がり") or None,
         "first1f": _pick(run, "first1f", "first200", "テン1F") or None,
         "carriedWeight": _pick(run, "carriedWeight", "weight", "斤量") or None,
         "bodyWeight": _pick(run, "bodyWeight", "horseWeight", "馬体重") or None,
