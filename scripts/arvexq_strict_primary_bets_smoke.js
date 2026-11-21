@@ -26,7 +26,10 @@
  *      the win pick + ◎, 2nd = the 1st set plus ○・▲ in mark
  *      order, 3rd = every marked horse (written 全印). Counted
  *      at its real combination count on top of the 5 points.
- *      Marks include the extended 注・穴・伏 (up to 8).
+ *      Marks include the extended 注・穴・伏 (up to 8). For
+ *      races on/after 2026-11-22 the 2nd set also includes ☆
+ *      (user rule 2026-11-21); earlier races keep the ○・▲-only
+ *      form they were published with.
  * No probability percentages are displayed: combination rows carry
  * no 推定確率, and the 単勝/複勝 rows show only their EV.
  * When a ticketPlan exists this selection is the ONLY main display
@@ -431,4 +434,18 @@ assert.match(htmlP,/3\.11-11\.3\.7-全印（24点）/,'Kochi: trifecta formation
 assert.match(htmlP,/合計 29点/,'Kochi: 5 strict points + 24 formation points');
 assert.doesNotMatch(htmlP,/推定確率/,'Kochi: no probability percentages');
 
-console.log('STRICT_PRIMARY_BETS_OK marks-only(8) win-EV place-EVlow combos-to-5pt coverage(anchor-trio/wide-single/replace) trifecta-formation no-percent pass-display fallback-unchanged EV-kept formation-grouping kochi12r-29pt');
+// P2) The same Kochi 12R payload dated 2026-11-22 (user rule
+//     2026-11-21): the 2nd set of the trifecta formation also
+//     includes ☆ (horse 4), so the formation is 36 points and
+//     the total is 41. The strict selection itself is unchanged.
+const ufP2=Object.assign({},ufP,{raceId:'nar-2026-11-22-高知-12',raceDate:'2026-11-22'});
+const raceP2={id:'nar-2026-11-22-高知-12',date:'2026-11-22',predictionStatus:'ready',
+  predictionMarks:kochiMarks.map(function(ms){return {horseNumber:ms[0],mark:ms[1]};}),
+  recommendedBets:mech,unifiedForecast:ufP2};
+const htmlP2=frame.contents(raceP2,{});
+assert.match(htmlP2,/単勝 3番/,'Kochi 11/22: strict selection unchanged (win pick 3)');
+assert.match(htmlP2,/3\.11-11\.3\.7\.4-全印（36点）/,'Kochi 11/22: ☆ joins the formation 2nd set');
+assert.match(htmlP2,/合計 41点/,'Kochi 11/22: 5 strict points + 36 formation points');
+assert.doesNotMatch(htmlP2,/推定確率/,'Kochi 11/22: no probability percentages');
+
+console.log('STRICT_PRIMARY_BETS_OK marks-only(8) win-EV place-EVlow combos-to-5pt coverage(anchor-trio/wide-single/replace) trifecta-formation no-percent pass-display fallback-unchanged EV-kept formation-grouping kochi12r-29pt kochi-1122-formation36');
