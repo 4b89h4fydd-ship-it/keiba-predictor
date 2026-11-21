@@ -51,13 +51,14 @@ const instrumented = source.replace(boot, `
  let t=await setup(async route=>recovered?route.fulfill({json:{ok:true,race_id:id,detail,summary:base,odds:[]}}):route.fulfill({status:503,json:{error:'test outage'}}));
  await t.page.evaluate(id=>{localStorage.setItem('unrelated-cache','keep');testDetail.openRace(id)},id);
  await t.page.waitForSelector('.smart-race-title-stack h1');
- assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.title);
+ assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.raceNumber+'R '+base.title);
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('2000m'));
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('頭数取得中'));
- // Main tabs are five since the entry/forecast integration (PR #563):
- // 出走表・買い目・オッズ・データ分析 (panel key pace)・結果・払戻.
+ // Main tabs are five since the entry/forecast integration (PR #563);
+ // labels follow the netkeiba layout since 2026-11-21:
+ // 出馬表・予想・オッズ・データ分析 (panel key pace)・結果・払戻.
  assert.equal(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').count(),5);
- assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','買い目','オッズ','データ分析','結果・払戻']);
+ assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出馬表','予想','オッズ','データ分析','結果・払戻']);
  assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>e.getAttribute('data-panel'))),['entry','tickets','odds','pace','result']);
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
  // fetchEdgeRace now has exactly two bounded attempts, not the retired 3 retries.
