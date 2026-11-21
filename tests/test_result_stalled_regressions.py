@@ -247,5 +247,170 @@ class JraBrokenPayoutFallbackGateTests(unittest.TestCase):
         self.assertEqual(out["result"]["payouts"], valid)
 
 
+class NetkeibaPrimaryResultTests(unittest.TestCase):
+    """2026-11-21: netkeiba is the first result source. Its flash is
+    published immediately, its confirmed block is never downgraded by
+    an interim official parse, and a final official parse still
+    overwrites it. The repair lane's light refresher is netkeiba-only.
+    """
+
+    @staticmethod
+    def _detail(result=None):
+        detail = {
+            "id": "jra-2026-11-08-東京-07", "date": "2026-11-08",
+            "startTime": "13:20", "track": "東京", "raceNumber": 7,
+            "fieldSize": 3, "netkeibaRaceId": "202605050207",
+            "horses": [{"horseNumber": n, "name": "競走馬" + str(n)}
+                       for n in (7, 14, 3)],
+        }
+        if result is not None:
+            detail["result"] = result
+        return detail
+
+    @staticmethod
+    def _nk(status, payouts):
+        return {
+            "status": status, "source": "netkeiba結果",
+            "finishers": [{"finish": 1, "horseNumber": 7},
+                          {"finish": 2, "horseNumber": 14},
+                          {"finish": 3, "horseNumber": 3}],
+            "payouts": payouts,
+        }
+
+    @staticmethod
+    def _valid_payouts():
+        return [{"type": "単勝", "combination": "7", "amount": 600},
+                {"type": "馬連", "combination": "7-14", "amount": 420},
+                {"type": "3連単", "combination": "7-14-3", "amount": 14560}]
+
+    def _run_fast(self, detail, nk, parsed=None):
+        import copy as _copy
+        import app
+        calls = {"nk": 0}
+
+        def fake_nk(d):
+            calls["nk"] += 1
+            return _copy.deepcopy(nk) if nk is not None else None
+
+        patches = [
+            patch.object(app, "_prepared_get_fresh",
+                         side_effect=lambda rid: _copy.deepcopy(detail)),
+            patch.object(app, "_netkeiba_current_result", side_effect=fake_nk),
+            patch.object(app, "_store_fast_snapshot", side_effect=lambda d: None),
+            patch.object(app, "_compact_display_snapshot", side_effect=lambda d: d),
+        ]
+        if parsed is None:
+            patches.append(patch.object(app, "_jra_find_cname",
+                                        side_effect=lambda *a: ""))
+        else:
+            patches.append(patch.object(app, "_jra_find_cname",
+                                        side_effect=lambda *a: "cardtoken"))
+            patches.append(patch.object(app, "_jra_result_cname_from_card",
+                                        side_effect=lambda c: "restoken"))
+            patches.append(patch.object(app, "_jra_parse_result",
+                                        side_effect=lambda c, base=None: _copy.deepcopy(parsed)))
+        for p in patches:
+            p.start()
+        try:
+            out = app._refresh_result_fast(detail["id"])
+        finally:
+            for p in patches:
+                p.stop()
+        return out, calls
+
+    def test_netkeiba_flash_published_without_official(self):
+        out, calls = self._run_fast(self._detail(), self._nk("速報", []))
+        self.assertEqual(calls["nk"], 1)
+        self.assertEqual(out["result"]["status"], "速報")
+        self.assertEqual(out["result"]["source"], "netkeiba結果")
+        self.assertEqual(len(out["result"]["finishers"]), 3)
+
+    def test_official_interim_does_not_downgrade_netkeiba_final(self):
+        parsed = {
+            "date": "2026-11-08", "track": "東京", "raceNumber": 7,
+            "weather": "晴", "resultCname": "restoken", "source": "JRA公式結果",
+            "result": {"status": "速報", "source": "JRA公式",
+                       "finishers": [{"finish": 1, "horseNumber": 7}],
+                       "payouts": []},
+        }
+        out, calls = self._run_fast(
+            self._detail(), self._nk("確定", self._valid_payouts()), parsed)
+        self.assertEqual(calls["nk"], 1)
+        self.assertEqual(out["result"]["status"], "確定")
+        self.assertEqual(out["result"]["source"], "netkeiba結果")
+        self.assertEqual(len(out["result"]["finishers"]), 3)
+        # The official parse's meta still merges around the kept block.
+        self.assertEqual(out.get("weather"), "晴")
+        self.assertEqual(out.get("resultCname"), "restoken")
+
+    def test_official_final_overwrites_netkeiba_flash(self):
+        parsed = {
+            "date": "2026-11-08", "track": "東京", "raceNumber": 7,
+            "resultCname": "restoken", "source": "JRA公式結果",
+            "result": {"status": "確定", "source": "JRA公式",
+                       "finishers": [{"finish": 1, "horseNumber": 7},
+                                     {"finish": 2, "horseNumber": 14},
+                                     {"finish": 3, "horseNumber": 3}],
+                       "payouts": self._valid_payouts()},
+        }
+        out, calls = self._run_fast(self._detail(), self._nk("速報", []), parsed)
+        self.assertEqual(calls["nk"], 1)
+        self.assertEqual(out["result"]["status"], "確定")
+        self.assertEqual(out["result"]["source"], "JRA公式")
+        self.assertEqual(out["result"]["payouts"], self._valid_payouts())
+
+    def test_nar_netkeiba_first_survives_official_failure(self):
+        import copy as _copy
+        import app
+        detail = {
+            "id": "nar-2026-11-08-大井-02", "date": "2026-11-08",
+            "startTime": "13:20", "track": "大井", "raceNumber": 2,
+            "fieldSize": 3, "netkeibaRaceId": "202644080602",
+            "horses": [{"horseNumber": n, "name": "競走馬" + str(n)}
+                       for n in (7, 14, 3)],
+        }
+        nk = self._nk("確定", self._valid_payouts())
+        with patch.object(app, "_prepared_get_fresh",
+                          side_effect=lambda rid: _copy.deepcopy(detail)), \
+             patch.object(app, "_netkeiba_current_result",
+                          side_effect=lambda d: _copy.deepcopy(nk)), \
+             patch.object(app, "_nar_official_result_fast",
+                          side_effect=RuntimeError("official fetch failed")), \
+             patch.object(app, "_store_fast_snapshot", side_effect=lambda d: None), \
+             patch.object(app, "_compact_display_snapshot", side_effect=lambda d: d):
+            out = app._refresh_result_fast(detail["id"])
+        self.assertEqual(out["result"]["source"], "netkeiba結果")
+        self.assertEqual(out["result"]["status"], "確定")
+        self.assertEqual(len(out["result"]["finishers"]), 3)
+
+    def test_light_refresh_publishes_netkeiba_and_skips_complete(self):
+        import copy as _copy
+        import app
+        calls = {"nk": 0}
+
+        def fake_nk(d):
+            calls["nk"] += 1
+            return _copy.deepcopy(self._nk("確定", self._valid_payouts()))
+
+        def run(detail):
+            with patch.object(app, "_prepared_get_fresh",
+                              side_effect=lambda rid: _copy.deepcopy(detail)), \
+                 patch.object(app, "_netkeiba_current_result", side_effect=fake_nk), \
+                 patch.object(app, "_store_fast_snapshot", side_effect=lambda d: None), \
+                 patch.object(app, "_compact_display_snapshot", side_effect=lambda d: d):
+                return app._refresh_result_light(detail["id"])
+
+        out = run(self._detail())
+        self.assertEqual(calls["nk"], 1)
+        self.assertEqual(out["result"]["status"], "確定")
+        self.assertTrue(app._result_block_complete(out))
+
+        complete = self._detail(result=self._nk("確定", self._valid_payouts()))
+        out = run(complete)
+        self.assertEqual(calls["nk"], 1,
+                         "a complete stored result needs no light fetch")
+        self.assertEqual(out["result"]["status"], "確定")
+
+
 if __name__ == "__main__":
     unittest.main()
