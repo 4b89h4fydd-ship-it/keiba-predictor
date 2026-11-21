@@ -1379,13 +1379,21 @@ function racecardMarkDisplay(mark){
 /* Mark cell content with the 注 (attention) overlay (user layout
    decision 2026-11-04): the probability mark on line 1 and 注 on
    line 2 of the SAME cell; a qualifier without a probability mark
-   shows 注 alone. The overlay never replaces the probability mark. */
+   shows 注 alone. The overlay never replaces the probability mark.
+   Axis label (user rule 2026-11-21, races on/after 2026-11-22):
+   the axis horse's cell adds a small 軸 line under its mark in
+   the same stack (a third line when the 注 overlay is also
+   present). Text only — no colour or layout change. */
 function racecardMarkCellHtml(x){
-  var mark=visiblePredictionMark(x),att=!!(x&&x.attentionMark===true);
+  var mark=visiblePredictionMark(x),att=!!(x&&x.attentionMark===true),
+      axis=!!(x&&x.axisMark===true);
   if(mark&&att){
-    return '<span class="rc-mark-stack" aria-hidden="true"><span class="rc-mark-top">'+esc(mark)+'</span><span class="rc-mark-bottom rc-mark-attention">注</span></span>';
+    return '<span class="rc-mark-stack" aria-hidden="true"><span class="rc-mark-top">'+esc(mark)+'</span><span class="rc-mark-bottom rc-mark-attention">注</span>'+(axis?'<span class="rc-mark-bottom">軸</span>':'')+'</span>';
   }
   if(att)return '<span class="rc-mark-attention-only">注</span>';
+  if(mark&&axis){
+    return '<span class="rc-mark-stack" aria-hidden="true"><span class="rc-mark-top">'+esc(mark)+'</span><span class="rc-mark-bottom">軸</span></span>';
+  }
   return racecardMarkDisplay(mark);
 }
 
