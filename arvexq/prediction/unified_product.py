@@ -210,3 +210,88 @@ def verified(race):
     return candidate if candidate.get("receiptSha256") in accepted else None
 
 
+# --- masterAnalysis sidecar seal ------------------------------------------------
+# The 18-factor shadow sidecar is sealed with a contentSha256 of the
+# same kind as the receipt, and it crosses the same JS boundary: the
+# sync worker re-serializes every posted detail with JSON.stringify
+# (workers/api_preserved.mjs stores JSON.stringify(payloadObject)),
+# so a stored sidecar's integral floats come back as ints (68.0 -> 68)
+# and a seal computed over Python's json.dumps spelling no longer
+# re-hashes — although the stored content is value-for-value the
+# sealed content. The pristine-sidecar restore in the publish lane
+# verifies the STORED seal before adopting the stored sidecar, so
+# every surgical re-issue of such a race failed closed with
+# "stored-digest-mismatch" and the one-time upgrade never landed
+# (Saga 3R/4R, 2026-11-21: place-EV upgrade pending, every publish
+# run's exit code failed by the two stuck races). The unified receipt
+# solved the identical problem on 2026-10-31 by binding values, not
+# spellings; the sidecar seal follows it here. New sidecars are
+# sealed value-canonically (master_sidecar_digest). Verification
+# accepts that form, the legacy form of a payload that was never
+# re-serialized, and the legacy form reconstructed from a JS round
+# trip by restoring the float spelling at exactly the leaves the
+# sidecar's single builder (the publish lane) always emits as JSON
+# floats: score100 / pWin / pTop3 (round(..., 2|4) in
+# rewrite/analysis/master_v1.py), ticketStyles' modelHitProbability
+# (round(..., 4) in rewrite/analysis/master_bets.py) and the per-
+# category earned points under a runner's "categories" map
+# (round(points * value, 2)). Any change to an actual value, string,
+# key or list still changes every accepted digest: restoration only
+# ever re-spells a number whose value it does not touch, and a
+# restored tree that is not the sealed content does not hash to the
+# stored seal.
+
+_SIDECAR_FLOAT_KEYS = frozenset((
+    "score100", "pWin", "pTop3", "modelHitProbability",
+))
+
+
+def _sidecar_float_restored(value, key=None, categories=False):
+    if isinstance(value, dict):
+        return {k: _sidecar_float_restored(v, k, key == "categories")
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sidecar_float_restored(v, key, categories)
+                for v in value]
+    if type(value) is int and (categories or key in _SIDECAR_FLOAT_KEYS):
+        return float(value)
+    return value
+
+
+def master_sidecar_digest(sidecar):
+    """Seal for a new masterAnalysis sidecar: value-canonical,
+    serializer-proof, exactly like canonical_receipt."""
+    unsigned = {k: v for k, v in sidecar.items() if k != "contentSha256"}
+    return _receipt_digest(_value_canonical(unsigned))
+
+
+def master_sidecar_digests(sidecar):
+    """Every seal spelling under which a stored sidecar verifies."""
+    unsigned = {k: v for k, v in sidecar.items() if k != "contentSha256"}
+    return {
+        # Current form: value-canonical (what master_sidecar_digest
+        # seals), identical before and after a JS round trip.
+        _receipt_digest(_value_canonical(unsigned)),
+        # Legacy form, payload never re-serialized after sealing.
+        _receipt_digest(unsigned),
+        # Legacy form, payload JS round-tripped (stored production
+        # rows): the float spelling is restored at the leaves the
+        # builder always emits as floats.
+        _receipt_digest(_sidecar_float_restored(unsigned)),
+    }
+
+
+def master_sidecar_verified(sidecar):
+    """True when the sidecar's contentSha256 binds its content under
+    any accepted seal spelling. Fail-closed on unreadable content."""
+    if not isinstance(sidecar, dict):
+        return False
+    digest = sidecar.get("contentSha256")
+    if not isinstance(digest, str) or not digest:
+        return False
+    try:
+        return digest in master_sidecar_digests(sidecar)
+    except (TypeError, ValueError):
+        return False
+
+
