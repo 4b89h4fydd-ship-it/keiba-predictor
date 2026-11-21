@@ -2675,3 +2675,95 @@ html body .smart-race-page .arv-entry-table td{
 html body .smart-race-page .arv-entry-table td.l{text-align:left!important}
 html body .smart-race-page .arv-entry-table .arv-entry-frame{font-weight:900!important}
 html body .smart-race-page .arv-entry-table .nk-odds-name{font-size:14px!important}
+
+/* 2026-11-21 analysis sections (user review of the redesign on the
+   real app): the データ分析 sections below were not covered by the
+   simple-white block above and kept legacy dark styling — head-to-head
+   blocks were dark slate with dark horse names (unreadable), the
+   勝率・実績率 horse names were still black pills, its figures were
+   pale amber/gray, the データ上位馬 rank rows and the 血統 table
+   columns were unbalanced, and the 全頭診断 rows kept the dark
+   horse-card fill. All plain white / dark ink here, netkeiba form. */
+html body .smart-race-page .card .muted{color:#5b6770!important}
+html body .smart-race-page .recent{
+ background:#ffffff!important;color:#26303a!important;
+ border:1px solid #d9d9d9!important;border-radius:10px!important;
+ padding:10px 12px!important;margin-top:10px!important;font-size:14px!important;line-height:1.5!important;
+}
+html body .smart-race-page .recent-head{margin-bottom:6px!important}
+html body .smart-race-page .recent-head b{color:#26303a!important;font-size:14px!important;font-weight:800!important}
+html body .smart-race-page .recent .muted{color:#5b6770!important;font-size:12px!important}
+html body .smart-race-page .recent .row{display:flex!important;align-items:center!important;gap:8px!important;padding:5px 0!important;border-top:1px solid #eeeeee!important}
+html body .smart-race-page .recent .row strong{margin-left:auto!important;color:#26303a!important;font-size:14px!important}
+html body .smart-race-page .arv-analysis-rate-row{padding:10px 0!important;border-bottom:1px solid #e3e3e3!important}
+html body .smart-race-page .arv-analysis-rate-head{display:flex!important;align-items:center!important;gap:8px!important;margin-bottom:4px!important}
+html body .smart-race-page .arv-analysis-rate-name{
+ background:transparent!important;background-color:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+ color:#26303a!important;font-size:17px!important;font-weight:800!important;
+ padding:0!important;margin:0!important;text-align:left!important;cursor:pointer!important;font-family:inherit!important;
+}
+html body .smart-race-page .arv-analysis-rates .rc-v341-win{color:#26303a!important;font-size:15px!important;font-weight:900!important;margin-left:auto!important}
+html body .smart-race-page .rc-v343-rates{display:flex!important;align-items:center!important;gap:8px!important;padding:2px 0!important}
+html body .smart-race-page .rc-v343-rates-txt{color:#3d4750!important;font-size:13px!important;font-weight:600!important}
+html body .smart-race-page .rc-v343-nodata,html body .smart-race-page .rc-v343-unknown{color:#5b6770!important;font-size:12px!important}
+html body .smart-race-page .arv-top-horse{padding:10px 0!important;border-bottom:1px solid #e3e3e3!important}
+html body .smart-race-page .arv-top-horse-head{display:flex!important;align-items:center!important;gap:8px!important}
+html body .smart-race-page .arv-top-rank{flex:0 0 26px!important;width:26px!important;text-align:center!important;font-size:17px!important;font-weight:900!important;color:#26303a!important}
+html body .smart-race-page .arv-top-reason{margin:4px 0 0 42px!important;color:#47525c!important;font-size:13px!important;line-height:1.5!important}
+html body .smart-race-page .arv-marks-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important}
+html body .smart-race-page .arv-marks-table th,html body .smart-race-page .arv-marks-table td{
+ padding:8px 6px!important;border-bottom:1px solid #e3e3e3!important;
+ font-size:14px!important;color:#26303a!important;vertical-align:middle!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+html body .smart-race-page .arv-marks-table thead th{background:#f4f4f4!important;font-weight:800!important;text-align:left!important}
+html body .smart-race-page .arv-marks-table th:first-child,html body .smart-race-page .arv-marks-table td:first-child{width:52px!important;text-align:center!important}
+html body .smart-race-page .arv-marks-table th:nth-child(2),html body .smart-race-page .arv-marks-table td:nth-child(2){width:31%!important}
+html body .smart-race-page details.card>summary{font-size:16px!important;font-weight:800!important;color:#26303a!important;padding:4px 0!important;cursor:pointer!important}
+html body .smart-race-page .diagnosis-merged-row{
+ background:#ffffff!important;background-color:#ffffff!important;color:#26303a!important;
+ border:1px solid #d9d9d9!important;border-radius:10px!important;
+}
+html body .smart-race-page .diagnosis-merged-row .diag-explain{color:#47525c!important}
+html body .smart-race-page .diagnosis-horse-name b{color:#26303a!important}
+html body .smart-race-page .diagnosis-horse-main{background:transparent!important;border:0!important;box-shadow:none!important}
+
+/* 2026-11-21 full audit (user: "全てちゃんと点検しろ"): screens and
+   parts the redesign had missed entirely — the all-races picker was
+   still the old dark theme, the result tab's "6着以下" fold was a
+   navy block, the diagnosis AI mark was still a black pill, the odds
+   table had no CSS at all, the horse-detail fetch chips were the old
+   navy/blue design, and the entry table header kept pale text on
+   cream. All brought into the same simple-white form. */
+html body .shell .header{background:#ffffff!important;color:#26303a!important;box-shadow:0 1px 0 #d9d9d9!important}
+html body .shell .header h1{color:#26303a!important}
+html body .shell .header small{color:#5b6770!important}
+html body .shell .header button{background:#ffffff!important;color:#26303a!important;border:1px solid #d9d9d9!important}
+html body .picker-item{background:#ffffff!important;color:#26303a!important;border:1px solid #d9d9d9!important}
+html body .picker-item.final{background:#eef7f0!important;border-color:#006636!important}
+html body .smart-race-page .result-more{background:#ffffff!important;color:#26303a!important;border:1px solid #d9d9d9!important;border-radius:10px!important;padding:10px 12px!important}
+html body .smart-race-page .result-more summary{color:#26303a!important;font-weight:800!important;cursor:pointer!important}
+html body .smart-race-page .diagnosis-ai-mark{
+ background:#ffffff!important;background-color:#ffffff!important;color:#26303a!important;
+ border:1px solid #9aa7a0!important;border-radius:999px!important;padding:2px 8px!important;font-style:normal!important;font-weight:800!important;
+}
+html body .smart-race-page .arv-odds-table{width:100%!important;border-collapse:collapse!important;table-layout:auto!important}
+html body .smart-race-page .arv-odds-table th,html body .smart-race-page .arv-odds-table td{
+ padding:7px 6px!important;border-bottom:1px solid #e3e3e3!important;
+ font-size:14px!important;color:#26303a!important;vertical-align:middle!important;white-space:nowrap!important;text-align:center!important;
+}
+html body .smart-race-page .arv-odds-table thead th{background:#f4f4f4!important;font-weight:800!important}
+html body .smart-race-page .arv-odds-table td.l{text-align:left!important}
+html body .smart-race-page .arv-odds-chip{
+ background:#ffffff!important;color:#26303a!important;border:1px solid #d9d9d9!important;
+ border-radius:999px!important;padding:3px 9px!important;font-weight:700!important;
+}
+html body .smart-race-page .source-chip{
+ background:#ffffff!important;background-color:#ffffff!important;color:#26303a!important;
+ border:1px solid #d9d9d9!important;border-radius:999px!important;
+}
+html body .smart-race-page .horse-fetch-btn{
+ background:#ffffff!important;background-color:#ffffff!important;color:#006636!important;
+ border:1px solid #006636!important;border-radius:10px!important;font-weight:800!important;
+}
+html body .smart-race-page .arv-entry-table thead th{color:#26303a!important;background:#f4f4f4!important}
