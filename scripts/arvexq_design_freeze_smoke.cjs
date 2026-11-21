@@ -60,7 +60,7 @@ const styleBaseline={
   // Re-pinned 2026-11-21 (full audit): screens/parts the redesign
   // missed (all-races picker, result-more fold, diagnosis AI mark,
   // odds table styles, source chips, entry table header).
-  "arvexq/ui/static/sports/unified-home.css": "d8db3f78a6c43218",
+  "arvexq/ui/static/sports/unified-home.css": "d36f5fb4e5c5baeb",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
