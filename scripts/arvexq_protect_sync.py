@@ -617,16 +617,17 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         # marker genuinely advances the chain is still fully verified.
         out['masterAnalysis'] = copy.deepcopy(old['masterAnalysis'])
     elif 'masterAnalysis' in out:
-        from hashlib import sha256
         sidecar = out['masterAnalysis']
         if not isinstance(sidecar, dict) or sidecar.get('version') != 'master-18-factor-shadow-v1':
             raise ValueError('invalid masterAnalysis publication identity')
-        digest = sidecar.get('contentSha256')
-        unsigned = {k: v for k, v in sidecar.items() if k != 'contentSha256'}
-        expected = sha256(json.dumps(
-            unsigned, sort_keys=True, separators=(',', ':'),
-            ensure_ascii=False).encode('utf-8')).hexdigest()
-        if (digest != expected or sidecar.get('capturedAt') !=
+        # Verified by VALUE (master_sidecar_verified): a sidecar that
+        # crossed the sync worker's JSON.stringify carries its
+        # integral floats re-spelled as ints, which the old
+        # spelling-bound digest rejected even though the content was
+        # the sealed content. Every accepted spelling binds the full
+        # content, so a forged or altered sidecar still fails here.
+        from arvexq.prediction.unified_product import master_sidecar_verified
+        if (not master_sidecar_verified(sidecar) or sidecar.get('capturedAt') !=
                 (out.get('prediction') or {}).get('capturedAt')):
             raise ValueError('masterAnalysis signature or capture mismatch')
     elif 'masterAnalysis' in old:
