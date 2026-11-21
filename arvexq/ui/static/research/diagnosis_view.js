@@ -75,7 +75,7 @@
       if(!inactive(horseByNo[k])&&!(k in roster))ok=false;
     });
     if(!ok||active<3)return null;
-    var allow={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1},seen={},markMap={},best=0;
+    var allow={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1,'穴':1,'伏':1},seen={},markMap={},best=0;
     uf.marks.forEach(function(x){
       var n=Number(x&&x.horseNumber),m=String(x&&x.markSymbol||'');
       if(!Number.isInteger(n)||!roster[n]||seen[n]||!allow[m])ok=false;

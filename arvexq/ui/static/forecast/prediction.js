@@ -31,7 +31,7 @@
       if(!known[no]||Object.prototype.hasOwnProperty.call(marks,no))return null;
       // Historical records retain their original symbol, not a new ranking.
       var mark=String(row.mark||'');
-      if(['','◎','○','▲','△','☆','☆+','注'].indexOf(mark)<0)return null;
+      if(['','◎','○','▲','△','☆','☆+','注','穴','伏'].indexOf(mark)<0)return null;
       marks[no]=mark;
     }
     return marks;
@@ -46,7 +46,7 @@
        !Array.isArray(rev.horses)||!Array.isArray(race.horses))return null;
     var active=race.horses.filter(function(h){return h&&Number(h.horseNumber)>0&&!h.scratched&&!h.withdrawn;});
     if(active.length<3||active.length!==rev.horses.length)return null;
-    var allowed={'':1,'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1};
+    var allowed={'':1,'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1,'穴':1,'伏':1};
     var known={},marks={},count=0;
     for(var i=0;i<active.length;i++){
       var n=Number(active[i].horseNumber);
@@ -118,7 +118,11 @@
        String(unified.trainedThrough||'')<String(race.date||'')&&
        Date.parse(String(unified.capturedAt||''))<
        Date.parse(String(race.date)+'T'+String(race.scheduledStartTime||race.startTime||'').slice(0,5)+':00+09:00')){
-      var roster={},seen={},markMap={},accepted=true,best=0,allow={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1};
+      // Extended marks (2026-11-21): ranks 6-8 with win probability
+      // >= 2% also carry 注・穴・伏. Omitting them here rejected the
+      // whole unified forecast and fell back to the stale sealed
+      // predictionMarks (5 marks, pre-expansion ordering).
+      var roster={},seen={},markMap={},accepted=true,best=0,allow={'◎':1,'○':1,'▲':1,'△':1,'☆':1,'注':1,'穴':1,'伏':1};
       unified.roster.forEach(function(x){
         var n=Number(x&&x.horseNumber);
         if(!Number.isInteger(n)||n<=0||roster[n])accepted=false;

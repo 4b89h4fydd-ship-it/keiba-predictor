@@ -4,7 +4,7 @@
   function visible(row){
     if(!row||row.serverPreoffMark!==true&&row.originalPreoffMark!==true&&row.referencePostoffMark!==true&&row.revisionCandidateMark!==true)return '';
     var mark=String(row.predMark||'');
-    return ['◎','○','▲','△','☆','☆+','注'].indexOf(mark)>=0?mark:'';
+    return ['◎','○','▲','△','☆','☆+','注','穴','伏'].indexOf(mark)>=0?mark:'';
   }
   root.ARVEXQProductionMarks=Object.freeze({visible:visible});
 })(typeof window!=='undefined'?window:globalThis);
