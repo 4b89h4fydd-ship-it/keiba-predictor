@@ -58,7 +58,15 @@ frozen WITHOUT the adjustment is re-issued once — stamped kind
 "nk-materials-upgrade" — when the date's materials file carries
 an entry for the race; the re-issue stamps the nkMaterials
 marker into the lane marker, so the qualification can never
-hold again. A fifth exception of the same kind is the ticket-R24 upgrade
+hold again. Since 2026-11-21 the stamp also records the
+entryFingerprint of the entry applied, and a race stamped at
+the current version re-qualifies when the materials file has
+grown past that fingerprint (material collected after first
+publication still reaches a pre-post race; exactly-once per
+materials state), and jumps races — which stand on the v1
+lane, no fitted v8 candidate existing for the segment —
+qualify on the same rules and receive the adjustment on their
+v1 vector. A fifth exception of the same kind is the ticket-R24 upgrade
 (2026-11-08): the production trifecta recommendation switched
 from formation B (36 points) to R24 (24 points) by user order, so
 a forecast frozen with the B-form trifecta is re-issued once —
@@ -155,7 +163,8 @@ from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.nk_materials import (  # noqa: E402
     NK_MATERIALS_VERSION, apply_nk_materials, closing_inputs_from_race,
     combo_inputs_from_race, course_inputs_from_race,
-    parse_materials_payload, speed_coverage as nk_speed_coverage)
+    materials_fingerprint, parse_materials_payload,
+    speed_coverage as nk_speed_coverage)
 from rewrite.analysis.bias_pace import (  # noqa: E402
     BIAS_PACE_VERSION, compute_same_day_bias, overlay_bias_on_pace)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
@@ -836,6 +845,18 @@ def _lane_upgrade_info(old: dict) -> dict | None:
     raw_extras = entry.get("extras") if isinstance(entry, dict) else None
     if not (isinstance(raw_extras, dict) and raw_extras):
         return None
+    segment = entry.get("segment") if isinstance(entry, dict) else None
+    if segment is not None and segment not in V8_WEIGHTS:
+        # No fitted v8 candidate exists for this segment (jumps /
+        # debut): the race can never stand on the top lane, so a
+        # lane upgrade can never land. Qualifying here would trap
+        # the race in a permanent keep-frozen loop — the rebuild
+        # below would refuse the v1 result every cycle — and
+        # block every other freeze exception, including the
+        # nk-materials upgrade (2026-11-21: the day's two
+        # Fukushima jump races sat in exactly this trap, extras
+        # present, materials never applied).
+        return None
     return {"publishedAt": marker.get("publishedAt"),
             "previousAbilityLane": lane,
             "reason": reason}
@@ -1079,8 +1100,68 @@ def _nar_decay_upgrade_info(old: dict, now: datetime) -> dict | None:
             "reason": "nar-decay-upgrade"}
 
 
+def _nk_materials_growth(stamp: dict, entry) -> bool:
+    """Whether the current materials entry carries material the
+    stamped adjustment did not stand on.
+
+    The comparison baseline is the stamp itself. A stamp
+    written since 2026-11-21 carries the entryFingerprint of
+    the entry that was applied; growth is any family whose
+    current count both reaches the term threshold
+    (NK_MATERIALS_MIN_SPEED_HORSES — below it no z-score term
+    can exist) and exceeds the stamped count. An older stamp
+    carries no fingerprint, so its integrate() coverage and
+    terms stand in: growth is any family whose current count
+    reaches the threshold and exceeds the stamped coverage
+    count for that family (a family the stamped adjustment
+    never touched has coverage 0). The entry-level
+    course_analysis flag takes no part in the legacy
+    comparison: the stamp records nothing about whether the
+    entry carried the course tables when it was written, and
+    the course terms' firing also depends on race-record
+    inputs the fingerprint does not measure, so no growth is
+    claimable for it there (it IS compared fingerprint to
+    fingerprint, where both sides measure the same thing).
+    A stamp with neither fingerprint nor coverage/terms
+    records nothing to compare against — no growth is
+    claimable (fail-closed, exactly as the pre-2026-11-21
+    behaviour)."""
+    current = materials_fingerprint(entry)
+    stamped_fp = stamp.get("entryFingerprint")
+    if isinstance(stamped_fp, dict):
+        for family, count in current.items():
+            try:
+                before = int(stamped_fp.get(family) or 0)
+            except (TypeError, ValueError):
+                before = 0
+            if family == "course_analysis":
+                if count > before:
+                    return True
+            elif count >= NK_MATERIALS_MIN_SPEED_HORSES \
+                    and count > before:
+                return True
+        return False
+    terms = stamp.get("terms")
+    coverage = stamp.get("coverage")
+    if not isinstance(terms, list) and not isinstance(coverage, dict):
+        return False
+    coverage = coverage if isinstance(coverage, dict) else {}
+    for family, count in current.items():
+        if family == "course_analysis":
+            continue
+        if count < NK_MATERIALS_MIN_SPEED_HORSES:
+            continue
+        try:
+            before = int(coverage.get(family) or 0)
+        except (TypeError, ValueError):
+            before = 0
+        if count > before:
+            return True
+    return False
+
+
 def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
-    """Facts for the one-time nk-materials re-issue.
+    """Facts for the nk-materials re-issue.
 
     A stored forecast qualifies only when ALL of these hold:
 
@@ -1089,20 +1170,37 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
       materials file by construction);
     - it was published on the v9b lane (abilityLane
       v9b-cal-market) — the adjustment is defined on the v9b
-      probability vector;
+      probability vector — OR it is a jumps race standing on
+      the v1 lane: no fitted v8 candidate exists for the jumps
+      segment, so jumps races never reach the v9b lane, and
+      since 2026-11-21 the lane applies the adjustment to
+      their v1 vector instead of leaving their collected
+      materials permanently unread;
     - its lane marker does NOT already carry the CURRENT
-      nkMaterials stamp: a marker stamped at the current
-      NK_MATERIALS_VERSION never qualifies again (the upgrade
-      is exactly-once per adjustment definition), while a
+      nkMaterials stamp standing on the CURRENT materials: a
       marker stamped at an older version — e.g. a v1
       speed-only publication from before the course weights
       landed — qualifies exactly once more, so the weighted
       definition reaches still-pre-post races instead of only
-      tomorrow's first publications;
-    - the date's materials file carries an entry for this race
-      with at least NK_MATERIALS_MIN_SPEED_HORSES horses holding
-      the representative index (below that no z-score term can
-      exist, so a rebuild could not land the adjustment);
+      tomorrow's first publications; a marker stamped at the
+      current version qualifies again ONLY when the materials
+      file has grown since the stamp was written (see
+      _nk_materials_growth): the 2026-11-21 defect was a race
+      stamped in the morning off the evening materials file
+      (speed + course analysis only) never being re-issued
+      after the morning rebuild lit bestTime / headToHead /
+      the place-divergence cells, because the stamp keyed on
+      the adjustment version alone. The rebuilt product is
+      re-stamped with the new entry's fingerprint, so the
+      qualification is exactly-once per materials state;
+    - the date's materials file carries an entry for this
+      race able to land the adjustment: on the v9b path, at
+      least NK_MATERIALS_MIN_SPEED_HORSES horses holding the
+      representative index (below that no z-score term can
+      exist); on the jumps path, any single family at the
+      same threshold (jump entries carry no speed index at
+      all, but their bestTime / press / course-persons
+      coverage is full);
     - the post is still at least NK_MATERIALS_UPGRADE_MIN_LEAD
       away (the guard was removed on the user's instruction,
       like the decay upgrade's: eligibility holds until post).
@@ -1112,30 +1210,41 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
     after the rebuild that the adjustment actually landed (the
     nkMaterials stamp is present) before stamping anything.
     """
+    from arvexq.prediction.unified_product import race_family
+
     race_date = str(old.get("date") or "")
     if race_date < NK_MATERIALS_CUTOVER_DATE:
         return None
     marker = (old.get("preparedMeta") or {}).get("rewritePublish")
     if not isinstance(marker, dict):
         return None
-    if marker.get("abilityLane") != V9B_LANE:
-        return None
-    stamp = marker.get("nkMaterials")
-    if isinstance(stamp, dict) and stamp.get("applied") \
-            and stamp.get("version") == NK_MATERIALS_VERSION:
+    lane = marker.get("abilityLane")
+    is_jumps = race_family(old) == "jumps"
+    if lane != V9B_LANE and not (is_jumps and lane == "v1-prior"):
         return None
     race_id = str(old.get("id") or "")
     if not race_id:
         return None
     entry = _load_nk_materials(race_date).get(race_id)
-    if entry is None or nk_speed_coverage(entry) < NK_MATERIALS_MIN_SPEED_HORSES:
+    if entry is None:
+        return None
+    stamp = marker.get("nkMaterials")
+    if isinstance(stamp, dict) and stamp.get("applied") \
+            and stamp.get("version") == NK_MATERIALS_VERSION:
+        if not _nk_materials_growth(stamp, entry):
+            return None
+    elif is_jumps and lane != V9B_LANE:
+        if max(materials_fingerprint(entry).values()) \
+                < NK_MATERIALS_MIN_SPEED_HORSES:
+            return None
+    elif nk_speed_coverage(entry) < NK_MATERIALS_MIN_SPEED_HORSES:
         return None
     post = _post_at(old)
     if post is None or post - now < NK_MATERIALS_UPGRADE_MIN_LEAD:
         return None
     return {"publishedAt": marker.get("publishedAt"),
             "firstPublishedAt": marker.get("firstPublishedAt"),
-            "previousAbilityLane": V9B_LANE,
+            "previousAbilityLane": lane,
             "reason": "nk-materials-upgrade"}
 
 
@@ -2251,9 +2360,21 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     # derive from the adjusted probabilities. A race with no
     # materials entry (or an entry that cannot produce a term)
     # keeps the plain v9b vector byte-identical.
+    #
+    # Jumps races (2026-11-21) run the same adjustment on their
+    # v1 probability vector: no fitted v8 candidate exists for
+    # the segment, so they never reach the v9b branch above,
+    # and before this change their collected materials (full
+    # bestTime / press / course-persons coverage) were never
+    # applied at all. apply_nk_materials is lane-agnostic (it
+    # reads strength/p_win off whatever forecast it is given)
+    # and its course terms treat the segment as JRA under the
+    # separate "jra-jumps" trial marker.
     nk_info: dict = {"applied": False}
+    nk_entry = None
     bias_overlay = None
-    if used_v9b and race_date >= NK_MATERIALS_CUTOVER_DATE:
+    if (used_v9b or segment == "jumps") \
+            and race_date >= NK_MATERIALS_CUTOVER_DATE:
         nk_entry = _load_nk_materials(race_date).get(race.race_id)
         if nk_entry is not None:
             # Same-day bias pace (nk-materials-v12): read the
@@ -2626,6 +2747,16 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "terms": nk_info.get("terms"),
             "coverage": nk_info.get("coverage"),
             "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
+        if nk_entry is not None:
+            # The content state this publication stands on
+            # (2026-11-21): _nk_materials_growth compares the
+            # then-current entry against this fingerprint to
+            # re-qualify the race when the materials file grows
+            # after publication (B1 — morning-collected
+            # bestTime / headToHead / odds cells reaching a race
+            # stamped off the thinner evening file).
+            meta["rewritePublish"]["nkMaterials"]["entryFingerprint"] = (
+                materials_fingerprint(nk_entry))
         if nk_info.get("courseTrial"):
             # JRA course-weights trial (nk-materials-v3): the
             # stamp records that this publication's course terms
@@ -2953,8 +3084,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "revisionCount": (prev_count if isinstance(prev_count, int)
                               else 0) + 1,
             "previousReceiptSha256": nk_upgrade["receipt"],
-            "previousAbilityLane": V9B_LANE,
-            "abilityLane": V9B_LANE,
+            # The lanes the race actually stood on / stands on
+            # (v9b on the standard path — identical to the
+            # constant this used to hard-code — v1-prior on the
+            # jumps path, where no v9b lane exists).
+            "previousAbilityLane": (
+                nk_upgrade.get("previousAbilityLane") or V9B_LANE),
+            "abilityLane": (
+                meta["rewritePublish"].get("abilityLane") or V9B_LANE),
             "note": ("one-time netkeiba-materials adoption "
                      "(user instruction 2026-11-17: put ALL of "
                      "the collected data into the forecast): this "
