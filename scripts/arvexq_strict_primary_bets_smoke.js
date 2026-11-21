@@ -4,7 +4,10 @@
  * (◎○▲△☆) — a pick naming an unmarked horse is never shown. This
  * mirrors the posting-side selection (generate_posts.py):
  *   1. 単勝: winExpectedValues with EV >= 1.25 AND win prob >= 5%,
- *      marked horses only, the maximum-EV horse (1 point).
+ *      marked horses only, the maximum-EV horse (1 point). For
+ *      races on/after 2026-11-22 the win pick is ◎ itself (axis
+ *      design, user rule 2026-11-21); a high-EV horse is a
+ *      combination partner, never the win bet.
  *   2. 複勝: placeExpectedValues with EV lower bound >= 1.0,
  *      marked horses only, the highest top-3 probability,
  *      excluding the 単勝 pick (1 point).
@@ -29,7 +32,12 @@
  *      Marks include the extended 注・穴・伏 (up to 8). For
  *      races on/after 2026-11-22 the 2nd set also includes ☆
  *      (user rule 2026-11-21); earlier races keep the ○・▲-only
- *      form they were published with.
+ *      form they were published with. On/after 2026-11-22 the
+ *      1st set is ◎ alone (the win pick IS ◎, axis design).
+ *   6. Axis note (on/after 2026-11-22 only): when the marked
+ *      horse with the highest diagnosis top-3 probability (the
+ *      coverage anchor) is not ◎, one plain line names it and
+ *      its win rank; no note when the axis is ◎.
  * No probability percentages are displayed: combination rows carry
  * no 推定確率, and the 単勝/複勝 rows show only their EV.
  * When a ticketPlan exists this selection is the ONLY main display
@@ -434,18 +442,63 @@ assert.match(htmlP,/3\.11-11\.3\.7-全印（24点）/,'Kochi: trifecta formation
 assert.match(htmlP,/合計 29点/,'Kochi: 5 strict points + 24 formation points');
 assert.doesNotMatch(htmlP,/推定確率/,'Kochi: no probability percentages');
 
-// P2) The same Kochi 12R payload dated 2026-11-22 (user rule
-//     2026-11-21): the 2nd set of the trifecta formation also
-//     includes ☆ (horse 4), so the formation is 36 points and
-//     the total is 41. The strict selection itself is unchanged.
+// P2) The same Kochi 12R payload dated 2026-11-22 (user rules
+//     2026-11-21): the axis design applies — 単勝 = ◎ 11 (the
+//     old max-EV pick 3 becomes a partner), 複勝 = 3 (best top-3
+//     among EV-low passers excluding ◎), and the trifecta
+//     formation is ◎ alone in 1st with ☆ in the 2nd set:
+//     11-3.7.4-全印 = 18 points, total 23. The coverage bets are
+//     the same trios/wide as the published 11/21 form. The axis
+//     is ◎ itself (top-3 0.4298 is the marks' highest), so no
+//     axis note is shown.
 const ufP2=Object.assign({},ufP,{raceId:'nar-2026-11-22-高知-12',raceDate:'2026-11-22'});
 const raceP2={id:'nar-2026-11-22-高知-12',date:'2026-11-22',predictionStatus:'ready',
   predictionMarks:kochiMarks.map(function(ms){return {horseNumber:ms[0],mark:ms[1]};}),
   recommendedBets:mech,unifiedForecast:ufP2};
 const htmlP2=frame.contents(raceP2,{});
-assert.match(htmlP2,/単勝 3番/,'Kochi 11/22: strict selection unchanged (win pick 3)');
-assert.match(htmlP2,/3\.11-11\.3\.7\.4-全印（36点）/,'Kochi 11/22: ☆ joins the formation 2nd set');
-assert.match(htmlP2,/合計 41点/,'Kochi 11/22: 5 strict points + 36 formation points');
+assert.match(htmlP2,/単勝 11番/,'Kochi 11/22: win pick is ◎ under the axis design');
+assert.doesNotMatch(htmlP2,/単勝 3番/,'Kochi 11/22: max-EV horse 3 is no longer the win bet');
+assert.match(htmlP2,/複勝 3番/,'Kochi 11/22: place pick is 3 (◎ excluded)');
+assert.match(htmlP2,/7 - 8 - 11/,'Kochi 11/22: coverage trio (7 uncovered again by a replacement, covered with 8 + anchor)');
+assert.match(htmlP2,/1 - 5 - 11/,'Kochi 11/22: coverage trio kept');
+assert.match(htmlP2,/4 - 6 - 11/,'Kochi 11/22: coverage trio kept');
+assert.match(htmlP2,/11-11\.3\.7\.4-全印（18点）/,'Kochi 11/22: formation is ◎ first, ☆ in 2nd (2nd set lists the 1st horse too, as in the published notation)');
+assert.match(htmlP2,/合計 23点/,'Kochi 11/22: 5 strict points + 18 formation points');
+assert.doesNotMatch(htmlP2,/軸は/,'Kochi 11/22: axis is ◎, no axis note');
 assert.doesNotMatch(htmlP2,/推定確率/,'Kochi 11/22: no probability percentages');
 
-console.log('STRICT_PRIMARY_BETS_OK marks-only(8) win-EV place-EVlow combos-to-5pt coverage(anchor-trio/wide-single/replace) trifecta-formation no-percent pass-display fallback-unchanged EV-kept formation-grouping kochi12r-29pt kochi-1122-formation36');
+// P3) Axis divergence (2026-11-22): horse 3 (▲) carries the
+//     highest diagnosis top-3 probability, so the axis note
+//     names it with its win rank (3rd: win probabilities fall
+//     in mark order). 単勝 is ◎ 1 even though no EV entry
+//     exists for it. Coverage anchors on horse 3 as before.
+const diagP3=[1,2,3,4,5,6,7,8,9,10].map(function(no){
+  const t3={1:0.30,2:0.20,3:0.50,4:0.40,5:0.10}[no]||0.05;
+  return {horseNumber:no,winProbability:0.05,top3Probability:t3,grade:'A'};
+});
+const tpP3={sameModelAndMarks:true,winExpectedValues:[],placeExpectedValues:[],
+  combinedPicks:[],items:[]};
+const ufP3=makeUf(tpP3,{diagnosis:diagP3,raceDate:'2026-11-22'});
+const raceP3={id:'r1',date:'2026-11-22',predictionStatus:'ready',
+  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,unifiedForecast:ufP3};
+const htmlP3=frame.contents(raceP3,{});
+assert.match(htmlP3,/単勝 1番/,'axis case: win pick is ◎ without any EV entry');
+assert.match(htmlP3,/2 - 3 - 4/,'axis case: coverage trio around the anchor 3');
+assert.match(htmlP3,/3 - 5/,'axis case: last uncovered mark covered with the anchor');
+assert.match(htmlP3,/軸は3番（3着内率トップ・勝率は3位）/,'axis note names the axis and its win rank');
+assert.match(htmlP3,/1-1\.2\.3\.5-全印（9点）/,'axis case: formation ◎ first, ☆ in 2nd');
+assert.match(htmlP3,/合計 12点/,'axis case: 3 strict points + 9 formation points');
+assert.doesNotMatch(htmlP3,/推定確率/,'axis case: no probability percentages');
+
+// P4) The same axis-divergence payload dated 2026-11-21 keeps
+//     the published form: no ◎ win pick (no EV passer) and no
+//     axis note.
+const ufP4=makeUf(tpP3,{diagnosis:diagP3,raceDate:'2026-11-21'});
+const raceP4={id:'r1',date:'2026-11-21',predictionStatus:'ready',
+  predictionMarks:predMarks([1,2,3,4,5]),recommendedBets:mech,unifiedForecast:ufP4};
+const htmlP4=frame.contents(raceP4,{});
+assert.doesNotMatch(htmlP4,/単勝 \d+番/,'11/21 form: no win pick without an EV passer');
+assert.doesNotMatch(htmlP4,/軸は/,'11/21 form: no axis note');
+assert.match(htmlP4,/合計 8点/,'11/21 form: two coverage bets + 6 formation points');
+
+console.log('STRICT_PRIMARY_BETS_OK marks-only(8) win-EV place-EVlow combos-to-5pt coverage(anchor-trio/wide-single/replace) trifecta-formation no-percent pass-display fallback-unchanged EV-kept formation-grouping kochi12r-29pt kochi-1122-axis-design-23pt axis-note');
