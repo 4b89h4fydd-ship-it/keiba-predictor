@@ -332,7 +332,10 @@ function contents(r,p){
  // exactly:
  //   1. 単勝: the winExpectedValues entry with expected value
  //      >= 1.25 AND win probability >= 5% and the highest EV,
- //      marked horses only (1 point).
+ //      marked horses only (1 point). For races on/after
+ //      2026-11-22 the win pick is ◎ itself (axis design, user
+ //      rule 2026-11-21): a high-EV horse is used as a partner
+ //      in combinations, never as the win bet or the axis head.
  //   2. 複勝: the placeExpectedValues entry with expected-value
  //      lower bound >= 1.0 and the highest top-3 probability,
  //      marked horses only, excluding the 単勝 pick (1 point).
@@ -362,7 +365,15 @@ function contents(r,p){
  //      counted at its real number of combinations, on top of
  //      the 5-point selection. For races on/after 2026-11-22
  //      the 2nd set also includes ☆ (user rule 2026-11-21);
- //      earlier races keep the published ○・▲-only form.
+ //      earlier races keep the published ○・▲-only form. For
+ //      races on/after 2026-11-22 the 1st set is ◎ alone,
+ //      because the win pick IS ◎ under the axis design.
+ //   6. Axis note (axis design, races on/after 2026-11-22): the
+ //      axis is the marked horse with the highest diagnosis
+ //      top-3 probability (the coverage anchor). When it is not
+ //      ◎, one plain line under the picks names it and its win
+ //      rank ("軸は4番（3着内率トップ・勝率は3位）"); when the
+ //      axis is ◎ there is no note.
  // No probability percentages are displayed (user rule
  // 2026-11-21): combination rows carry no 推定確率, and the
  // 単勝/複勝 rows show only their expected value.
@@ -400,16 +411,32 @@ function contents(r,p){
    var markSet={};
    markNos.forEach(function(n){markSet[n]=1;});
    function isMark(no){return !!markSet[no];}
+   // Axis design boundary (user rule 2026-11-21): races dated
+   // on/after 2026-11-22 use ◎ as the win pick and show the
+   // axis note; earlier races keep the published form.
+   var raceDate=String((r&&r.date)||uf.raceDate||'');
+   var newDesign=raceDate>='2026-11-22';
    var picks=[];
-   var winCands=[];
-   (Array.isArray(tp.winExpectedValues)?tp.winExpectedValues:[]).forEach(function(x){
-     if(!x)return;
-     var no=Number(x.horseNumber),ev=fin(x.expectedValue),wp=fin(x.winProbability);
-     if(!Number.isInteger(no)||no<=0||ev==null||wp==null||!inRoster(no)||!isMark(no))return;
-     if(ev>=1.25&&wp>=0.05)winCands.push({no:no,ev:ev,wp:wp,odds:fin(x.odds)});
-   });
    var winPick=null;
-   winCands.forEach(function(c){if(!winPick||c.ev>winPick.ev)winPick=c;});
+   if(newDesign&&markBySym['◎']!=null){
+     // 単勝 = ◎. Its EV (when the payload carries one) is shown
+     // as before; no EV gate applies to ◎ under the axis design.
+     var honNo=markBySym['◎'];
+     winPick={no:honNo,ev:null,wp:null,odds:null};
+     (Array.isArray(tp.winExpectedValues)?tp.winExpectedValues:[]).forEach(function(x){
+       if(x&&Number(x.horseNumber)===honNo)
+         winPick={no:honNo,ev:fin(x.expectedValue),wp:fin(x.winProbability),odds:fin(x.odds)};
+     });
+   }else{
+     var winCands=[];
+     (Array.isArray(tp.winExpectedValues)?tp.winExpectedValues:[]).forEach(function(x){
+       if(!x)return;
+       var no=Number(x.horseNumber),ev=fin(x.expectedValue),wp=fin(x.winProbability);
+       if(!Number.isInteger(no)||no<=0||ev==null||wp==null||!inRoster(no)||!isMark(no))return;
+       if(ev>=1.25&&wp>=0.05)winCands.push({no:no,ev:ev,wp:wp,odds:fin(x.odds)});
+     });
+     winCands.forEach(function(c){if(!winPick||c.ev>winPick.ev)winPick=c;});
+   }
    if(winPick)picks.push({kind:'単勝',no:winPick.no,combo:[winPick.no],ev:winPick.ev,wp:winPick.wp,odds:winPick.odds});
    var placeCands=[];
    (Array.isArray(tp.placeExpectedValues)?tp.placeExpectedValues:[]).forEach(function(x){
@@ -512,11 +539,11 @@ function contents(r,p){
      var fFirst=[];
      if(winPick)fFirst.push(winPick.no);
      if(fFirst.indexOf(markBySym['◎'])<0)fFirst.push(markBySym['◎']);
+     if(newDesign)fFirst=[markBySym['◎']];
      var fSecondSet={};
      fFirst.forEach(function(n){fSecondSet[n]=1;});
      fSecondSet[markBySym['○']]=1;fSecondSet[markBySym['▲']]=1;
-     var raceDate=String((r&&r.date)||uf.raceDate||'');
-     if(raceDate>='2026-11-22'&&markBySym['☆']!=null)fSecondSet[markBySym['☆']]=1;
+     if(newDesign&&markBySym['☆']!=null)fSecondSet[markBySym['☆']]=1;
      var fSecond=markNos.filter(function(n){return fSecondSet[n];});
      var fPoints=0;
      fFirst.forEach(function(a){fSecond.forEach(function(b){markNos.forEach(function(c){
@@ -636,9 +663,31 @@ function contents(r,p){
        return e.pair.join('・')+' − '+e.partners.join('・')+'（'+e.count+'点）';
      return e.keyA+'-'+e.keyB+' → '+e.partners.join('・')+'（'+e.count+'点）';
    }
+   // Axis note (axis design, newDesign races only): the axis is
+   // the coverage anchor — the marked horse with the highest
+   // diagnosis top-3 probability. When it differs from ◎, name
+   // it with its win-probability rank among the marked horses
+   // (win probabilities from the payload's own marks, falling
+   // back to mark order when a mark carries none).
+   var axisNote='';
+   if(newDesign&&anchor!=null&&markBySym['◎']!=null&&anchor!==markBySym['◎']){
+     var wpByNo={};
+     (Array.isArray(uf.marks)?uf.marks:[]).forEach(function(m){
+       if(!m)return;
+       var n=Number(m.horseNumber),v=fin(m.winProbability);
+       if(Number.isInteger(n)&&n>0&&v!=null)wpByNo[n]=v;
+     });
+     var axisRank;
+     if(wpByNo[anchor]!=null){
+       axisRank=1+markNos.filter(function(n){return wpByNo[n]!=null&&wpByNo[n]>wpByNo[anchor];}).length;
+     }else{
+       axisRank=markNos.indexOf(anchor)+1;
+     }
+     axisNote='軸は'+anchor+'番（3着内率トップ・勝率は'+axisRank+'位）';
+   }
    var rows=picks.filter(function(pk){return pk.kind==='単勝'||pk.kind==='複勝';})
    .map(function(pk){
-     var evTxt=pk.kind==='単勝'?'期待値 '+pk.ev.toFixed(2):
+     var evTxt=pk.kind==='単勝'?(pk.ev!=null?'期待値 '+pk.ev.toFixed(2):'勝率トップ（◎）'):
        '期待値 '+pk.evLow.toFixed(2)+(pk.evHigh!=null?'〜'+pk.evHigh.toFixed(2):'');
      return '<div class="arv-three-ticket"><div class="arv-three-ticket-head"><b>'+pk.kind+' '+
        esc(pk.no)+'番'+(rosterNames[pk.no]?' '+esc(rosterNames[pk.no]):'')+'</b>'+
@@ -666,7 +715,8 @@ function contents(r,p){
        '</span></strong></div>';
    }
    var totalPoints=picks.length+(formation?formation.points:0);
-   strictHtml='<div class="arv-three-group arv-strict-picks">'+rows+'</div>'+
+   strictHtml='<div class="arv-three-group arv-strict-picks">'+rows+
+     (axisNote?'<p class="arv-three-ticket-reason">'+esc(axisNote)+'</p>':'')+'</div>'+
      '<div class="arv-three-budget"><strong>合計 '+totalPoints+'点</strong></div>';
  })();
  // Fallback chain when the payload carries no ticketPlan
