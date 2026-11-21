@@ -360,7 +360,9 @@ function contents(r,p){
  //      2nd = the 1st set plus ○・▲ in mark order, 3rd = every
  //      marked horse. Shown as "3.11-11.3.7-全印（24点）" and
  //      counted at its real number of combinations, on top of
- //      the 5-point selection.
+ //      the 5-point selection. For races on/after 2026-11-22
+ //      the 2nd set also includes ☆ (user rule 2026-11-21);
+ //      earlier races keep the published ○・▲-only form.
  // No probability percentages are displayed (user rule
  // 2026-11-21): combination rows carry no 推定確率, and the
  // 単勝/複勝 rows show only their expected value.
@@ -500,6 +502,11 @@ function contents(r,p){
    // 単勝 pick + ◎, 2nd = the 1st set plus ○・▲ in mark order,
    // 3rd = every marked horse. Needs at least 3 marks with
    // ◎○▲ present; points are the real combination count.
+   // 2nd-place range by race date (user rule 2026-11-21): races
+   // on/after 2026-11-22 also include ☆ in 2nd (the 2026-11-21
+   // Kochi final finished ◎-☆-▲ with every finisher marked, yet
+   // the trifecta was missed because ☆ was outside the 2nd set);
+   // earlier races keep the form they were published with.
    var formation=null;
    if(markNos.length>=3&&markBySym['◎']!=null&&markBySym['○']!=null&&markBySym['▲']!=null){
      var fFirst=[];
@@ -508,6 +515,8 @@ function contents(r,p){
      var fSecondSet={};
      fFirst.forEach(function(n){fSecondSet[n]=1;});
      fSecondSet[markBySym['○']]=1;fSecondSet[markBySym['▲']]=1;
+     var raceDate=String((r&&r.date)||uf.raceDate||'');
+     if(raceDate>='2026-11-22'&&markBySym['☆']!=null)fSecondSet[markBySym['☆']]=1;
      var fSecond=markNos.filter(function(n){return fSecondSet[n];});
      var fPoints=0;
      fFirst.forEach(function(a){fSecond.forEach(function(b){markNos.forEach(function(c){
