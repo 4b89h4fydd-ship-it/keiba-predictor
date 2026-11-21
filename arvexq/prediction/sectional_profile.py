@@ -14,7 +14,8 @@ CRUISE = ("middle3FSeconds", "middle3F", "cruise3FSeconds")
 # NAR run (and most JRA runs) read as unmeasured here even though the
 # record carried the observed value.
 LATE = ("last3FSeconds", "last3F", "closing3FSeconds",
-        "last3fSeconds", "last3f", "last600Seconds", "last600")
+        "last3fSeconds", "last3f", "lastThreeFurlongs",
+        "last600Seconds", "last600")
 PERCENTILE = ("last3FPercentile", "last3fPercentile", "last600Percentile")
 RANKS = ("last3fRank", "last3FRank", "last600Rank", "上がり順位")
 
