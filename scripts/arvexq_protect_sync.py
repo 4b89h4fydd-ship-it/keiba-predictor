@@ -239,7 +239,7 @@ _FORECAST_BLOCK_KEYS = ("predictionStatus", "predictionModelVersion",
 _AUTHORIZED_MODEL_VERSIONS = frozenset((
     "arvexq-stage64-product-v1", "arvexq-rewrite-v1-uncalibrated-prior",
     "arvexq-rewrite-v2-elo-speed2", "arvexq-rewrite-v3-v9b"))
-_MARK_LABELS = ("◎", "○", "▲", "△", "☆")
+_MARK_LABELS = ("◎", "○", "▲", "△", "☆", "注", "穴", "伏")
 
 
 def _projection_tombstone(detail: dict[str, Any]) -> bool:
@@ -333,7 +333,10 @@ def _authorized_forecast(detail: dict[str, Any]) -> bool:
     marks = detail.get("predictionMarks")
     if not isinstance(horses, list) or not isinstance(marks, list):
         return False
-    if len(marks) != 5:
+    # Five marks before the 2026-11-21 extended-mark rule, up to
+    # eight after it (ranks 6-8 at win probability >= 2%): the
+    # stored assignment must be a prefix of the label sequence.
+    if not 5 <= len(marks) <= len(_MARK_LABELS):
         return False
     known = {h.get("horseNumber") for h in horses if isinstance(h, dict)}
     used: set[Any] = set()
@@ -379,7 +382,7 @@ def _assert_publish_marks_consistent(detail: dict[str, Any]) -> None:
     pm = _marks_map(detail.get("predictionMarks"), "mark")
     uf = _marks_map((detail.get("unifiedForecast") or {}).get("marks"),
                     "markSymbol", "mark")
-    if len(pm) == 5 and len(uf) == 5 and pm != uf:
+    if len(pm) >= 5 and len(pm) == len(uf) and pm != uf:
         raise RuntimeError(
             "publish write carries inconsistent marks blocks "
             "(predictionMarks vs unifiedForecast.marks) for "

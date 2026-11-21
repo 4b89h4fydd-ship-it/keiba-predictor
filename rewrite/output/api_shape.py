@@ -77,7 +77,7 @@ STAGE_KEYS = {
     "start": "start", "corner3": "turn3", "corner4": "turn4",
     "straight": "straight",
 }
-MARK_ORDER = ("◎", "○", "▲", "△", "☆")
+MARK_ORDER = ("◎", "○", "▲", "△", "☆", "注", "穴", "伏")
 
 
 def _value(obs: Obs, default=None):
@@ -381,7 +381,7 @@ def _diagnosis_grade(p_win: Optional[float]) -> Optional[str]:
 def _diagnosis(forecast: RaceForecast, calibrated: bool = False) -> list[dict]:
     """All-runner diagnosis block for the 全頭診断 panel.
 
-    Marks carry probabilities for the five marked runners only; the
+    Marks carry probabilities for the marked runners only; the
     diagnosis panel renders EVERY runner, so it needs the engine's
     per-runner ability score and probabilities for the whole field.
     Values are the engine's own: the ability layer's raw score in

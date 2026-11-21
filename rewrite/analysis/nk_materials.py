@@ -376,7 +376,14 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # adjustment. The bump re-issues v11-stamped pre-race races once
 # so the term can reach them; a race whose card has no qualifying
 # source race yet recomputes with the term inert.
-NK_MATERIALS_VERSION = "nk-materials-v12"
+# nk-materials-v13 (2026-11-21): no materials change — the bump
+# carries the extended-mark rule (rewrite/analysis/forecast.py:
+# win-probability ranks 6-8 at >= 2% additionally receive 注, 穴,
+# 伏, user-directed after the mark-coverage verification) into
+# still-pre-post races: every v12-stamped race with a materials
+# entry re-issues exactly once through the full rebuild, which
+# re-derives the marks from the adjusted probabilities.
+NK_MATERIALS_VERSION = "nk-materials-v13"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
