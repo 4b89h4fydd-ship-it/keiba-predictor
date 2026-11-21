@@ -27,7 +27,7 @@ class HorseBrandAssetsTest(unittest.TestCase):
         self.assertFalse((dist/'kyotei').exists())
         self.assertFalse((dist/'sports'/'boat-app').exists())
         self.assertFalse((dist/'sports'/'switch.css').exists())
-        self.assertEqual((dist/'arvexq-racing-hero.webp').read_bytes(),(STATIC/'arvexq-horse-hero-v361.webp').read_bytes())
+        self.assertEqual((dist/'arvexq-racing-hero.webp').read_bytes(),(STATIC/'arvexq-horse-hero-v364.webp').read_bytes())
         for name in ('arvexq-touch-v361.png','arvexq-icon-v361-192.png','arvexq-icon-v361-512.png','manifest-arvexq-v361.webmanifest'):
             self.assertTrue((dist/name).is_file(),name)
         self.assertIn('arvexq-horse-hero-v361.webp', str(STATIC / 'arvexq-horse-hero-v361.webp'))
