@@ -66,6 +66,23 @@ class PairedScoreboardTests(unittest.TestCase):
         payload["masterAnalysis"]["runners"].pop()
         self.assertEqual(grade_master_pairs([payload])["overall"]["races"], 0)
 
+    def test_js_respelled_seal_still_grades(self):
+        # The stored sidecar crossed the sync worker's
+        # JSON.stringify, which re-spells integral floats as ints
+        # (score100 68.0 -> 68). The content is the sealed content,
+        # so the pair must still grade — the spelling-bound digest
+        # excluded every such race as "shadow-seal-mismatch".
+        payload = sample()
+        payload["masterAnalysis"]["runners"][0]["score100"] = 68.0
+        analysis = payload["masterAnalysis"]
+        analysis["contentSha256"] = sha256(json.dumps(
+            {k: v for k, v in analysis.items() if k != "contentSha256"},
+            sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False).encode("utf-8")).hexdigest()
+        analysis["runners"][0]["score100"] = 68  # the JS spelling
+        result = grade_master_pairs([payload])
+        self.assertEqual(result["overall"]["races"], 1)
+
     def test_shadow_checksum_tamper_excluded(self):
         payload = sample()
         payload["masterAnalysis"]["runners"][0]["pWin"] = 0.6
