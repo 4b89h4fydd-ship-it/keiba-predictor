@@ -2770,18 +2770,30 @@ html body .smart-race-page .arv-entry-table thead th{color:#26303a!important;bac
 
 /* v348 — LIVE速報 block (netkeiba top layout, white/simple): weather
    strip + next-race cards above the venue tags. */
-html body .smart-shell .nk-live{margin:0 0 14px!important}
+/* v349 overflow fix (user bug report 2026-11-21, home screenshot
+   20:34): the LIVE block is a grid item of .arv-unified-body, and
+   without min-width:0 its automatic minimum size is the min-content
+   of the card row — each card floored at the full nowrap race-name
+   width (~235px instead of the 148px flex-basis) — which inflated
+   the body's single grid column past the viewport, so the weather
+   strip and the cards ran off the right edge (and every other home
+   block was laid out at the same blown-out width). The min-width:0
+   guards below cut that min-content chain at every level, the same
+   pattern the venue grid / action row already use. No visual change:
+   colours, sizes and structure are untouched; the weather strip now
+   wraps inside the screen and the cards take their intended 148px. */
+html body .smart-shell .nk-live{margin:0 0 14px!important;min-width:0!important}
 html body .smart-shell .nk-live-title{font-size:19px!important;font-weight:800!important;color:#20242b!important;margin:2px 0 8px!important;letter-spacing:.02em!important}
-html body .smart-shell .nk-live-circuit{margin:0 0 12px!important}
+html body .smart-shell .nk-live-circuit{margin:0 0 12px!important;min-width:0!important}
 html body .smart-shell .nk-live-circuit-head{display:inline-block!important;font-size:12px!important;font-weight:700!important;color:#3c4450!important;background:#eef1f5!important;border-radius:999px!important;padding:3px 12px!important;margin:0 0 7px!important}
-html body .smart-shell .nk-live-weather{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:6px 14px!important;background:#fff!important;border:1px solid #dfe3e8!important;border-radius:8px!important;padding:8px 10px!important;margin:0 0 8px!important}
+html body .smart-shell .nk-live-weather{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:6px 14px!important;background:#fff!important;border:1px solid #dfe3e8!important;border-radius:8px!important;padding:8px 10px!important;margin:0 0 8px!important;min-width:0!important}
 html body .smart-shell .nk-live-weather-label{font-size:11px!important;font-weight:700!important;color:#5a636e!important;line-height:1.25!important}
 html body .smart-shell .nk-live-weather-label small{display:block!important;font-weight:400!important;color:#8a94a0!important}
-html body .smart-shell .nk-live-weather-venue{display:inline-flex!important;align-items:center!important;gap:6px!important;font-size:13px!important;color:#20242b!important}
+html body .smart-shell .nk-live-weather-venue{display:inline-flex!important;align-items:center!important;gap:6px!important;font-size:13px!important;color:#20242b!important;min-width:0!important}
 html body .smart-shell .nk-live-weather-venue b{font-weight:800!important}
 html body .smart-shell .nk-live-going{color:#1c7c43!important;font-weight:700!important}
-html body .smart-shell .nk-live-cards{display:flex!important;gap:8px!important;overflow-x:auto!important;padding:2px 0 4px!important;-webkit-overflow-scrolling:touch!important}
-html body .smart-shell .nk-live-card{flex:0 0 148px!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:3px!important;background:#fff!important;border:1.5px solid #2f6fd0!important;border-radius:10px!important;padding:10px 8px!important;cursor:pointer!important;text-align:center!important}
+html body .smart-shell .nk-live-cards{display:flex!important;gap:8px!important;overflow-x:auto!important;padding:2px 0 4px!important;-webkit-overflow-scrolling:touch!important;min-width:0!important}
+html body .smart-shell .nk-live-card{flex:0 0 148px!important;min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:3px!important;background:#fff!important;border:1.5px solid #2f6fd0!important;border-radius:10px!important;padding:10px 8px!important;cursor:pointer!important;text-align:center!important}
 html body .smart-shell .nk-live-card.is-done{border-color:#dfe3e8!important}
 html body .smart-shell .nk-live-card-venue{font-size:15px!important;font-weight:800!important;color:#20518f!important}
 html body .smart-shell .nk-live-card.is-done .nk-live-card-venue{color:#5a636e!important}

@@ -60,7 +60,14 @@ const styleBaseline={
   // Re-pinned 2026-11-21 (full audit): screens/parts the redesign
   // missed (all-races picker, result-more fold, diagnosis AI mark,
   // odds table styles, source chips, entry table header).
-  "arvexq/ui/static/sports/unified-home.css": "474342c8d930d3c7",
+  // Re-pinned 2026-11-21 (home overflow fix): min-width:0 guards on
+  // the LIVE block (nk-live / circuit / weather / cards / card) so
+  // the card row's min-content no longer inflates the home grid
+  // column past the viewport — the weather strip and next-race
+  // cards ran off the right edge in the user's 20:34 screenshot
+  // bug report. Layout containment only; no colour/size/structure
+  // change.
+  "arvexq/ui/static/sports/unified-home.css": "2c4694d38cdbc7f5",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
