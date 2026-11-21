@@ -166,8 +166,8 @@ if fingerprint_replacements != 1 or ("?fix=" + core_asset_hash) not in index_htm
 manifest = strings["MANIFEST"]
 # PWA icons must change their URLs when replaced, otherwise iOS retains the old
 # icon after users install or update the horse-only app.
-manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v363-192.png")
-manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v363-512.png")
+manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v364-192.png")
+manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v364-512.png")
 sw = strings["SW"]
 
 # Production adapters and frames are assembled from independent source modules.
@@ -350,7 +350,7 @@ for var,filename in assets.items():
 # Approved horse-only ARVEXQ branding (October 2026); no boat imagery.
 # Publish both fingerprinted icons and the main hero under its existing URL.
 BRAND_FILES = {
-    "arvexq-horse-hero-v361.webp": ("arvexq-racing-hero.webp", "arvexq-horse-hero-v361.webp"),
+    "arvexq-horse-hero-v364.webp": ("arvexq-racing-hero.webp", "arvexq-horse-hero-v364.webp"),
     "arvexq-horse-icon-v361-192.png": ("arvexq-icon-v361-192.png",),
     "arvexq-horse-icon-v361-512.png": ("arvexq-icon-v361-512.png",),
     "arvexq-horse-touch-v361.png": ("arvexq-touch-v361.png",),
@@ -360,6 +360,9 @@ BRAND_FILES = {
     "arvexq-horse-icon-v363-192.png": ("arvexq-icon-v363-192.png",),
     "arvexq-horse-icon-v363-512.png": ("arvexq-icon-v363-512.png",),
     "arvexq-horse-touch-v363.png": ("arvexq-touch-v363.png",),
+    "arvexq-horse-icon-v364-192.png": ("arvexq-icon-v364-192.png",),
+    "arvexq-horse-icon-v364-512.png": ("arvexq-icon-v364-512.png",),
+    "arvexq-touch-v364.png": ("arvexq-touch-v364.png",),
 }
 for filename, outputs in BRAND_FILES.items():
     source_file = STATIC / filename
