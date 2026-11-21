@@ -166,6 +166,8 @@ def _past_run(row: dict, source: str) -> PastRun:
         last3f_seconds=obs(_first(row.get("last3fSeconds"),
                                   row.get("last3f"),
                                   row.get("last3FSeconds"),
+                                  row.get("last3F"),
+                                  row.get("lastThreeFurlongs"),
                                   row.get("last600Seconds")), source),
         race_title=obs(row.get("title"), source),
     )
