@@ -1677,10 +1677,9 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
   var st=detailState(id),maxAttempts=retryLimit||2;
   st.error='';st.busy=true;st.attempts=0;
   updateDetailSections(id,cached||row,false);
-  function attempt(index){
-    var useStatic=index===0;
-    var url=useStatic?staticRaceUrl(id):edgeRaceUrl(id);st.attempts=index+1;
-    traceRaceDetail(id,'request',{attempt:index+1,url:url,date:(row||cached||{}).date||state.date,venue:(row||cached||{}).track,raceNo:(row||cached||{}).raceNumber});
+  function attempt(index,useStatic){
+    var url=useStatic?staticRaceUrl(id):edgeRaceUrl(id);st.attempts+=1;
+    traceRaceDetail(id,'request',{attempt:useStatic?'static':index+1,url:url,date:(row||cached||{}).date||state.date,venue:(row||cached||{}).track,raceNo:(row||cached||{}).raceNumber});
     var revisionsUrl='https://kraiz-api.4b89h4fydd.workers.dev/api/forecast-revisions/'+encodeURIComponent(key)+'?t='+Date.now();
     return Promise.all([edgeFetchJson(url,9000),edgeFetchJson(revisionsUrl,6000).catch(function(){return null})]).then(function(responses){
       var body=responses[0],revisionBody=responses[1];
@@ -1708,18 +1707,23 @@ function fetchEdgeRace(id,forceNetwork,retryLimit){
       if(d&&!d._entryOnly){merged._entryOnly=false;delete merged._staticRacecardFallback}
       if(body.analysis_ready)merged.preparedMeta=Object.assign({},merged.preparedMeta||{},{diagnosisReady:true});
       st.error='';updateDetailSections(id,merged,true);
-      traceRaceDetail(id,'loaded',{attempt:index+1,horses:(merged.horses||[]).length,sections:Object.assign({},st)});
+      traceRaceDetail(id,'loaded',{attempt:useStatic?'static':index+1,horses:(merged.horses||[]).length,sections:Object.assign({},st)});
       instantTrackDetails[key]=merged;saveDetailCache(id,merged);return merged
     }).catch(function(error){
-      traceRaceDetail(id,'failed',{attempt:index+1,url:url,message:String(error&&error.message||error)});
+      traceRaceDetail(id,'failed',{attempt:useStatic?'static':index+1,url:url,message:String(error&&error.message||error)});
       var message=String(error&&error.message||error);
-      if(index+1<maxAttempts&&(useStatic||!/http (?:404|400)/i.test(message)))return new Promise(function(resolve){setTimeout(resolve,useStatic?0:(index+1)*1000)}).then(function(){return attempt(index+1)});
+      // The static pack is only a first try: any failure falls through to
+      // the API immediately, and the API keeps its full bounded retry
+      // budget (maxAttempts tries, 1s/2s backoff, no retry on 404/400),
+      // exactly as before the static-first change.
+      if(useStatic)return attempt(0,false);
+      if(index+1<maxAttempts&&!/http (?:404|400)/i.test(message))return new Promise(function(resolve){setTimeout(resolve,(index+1)*1000)}).then(function(){return attempt(index+1,false)});
       st.error=message;updateDetailSections(id,cached||row,false);
       // Immutable pre-race archives remain for audits, not live roster recovery.
       return entryDataAvailable(cached)?cached:null
     })
   }
-  return attempt(0).finally(function(){st.busy=false})
+  return attempt(0,true).finally(function(){st.busy=false})
 }
 
 function warmTrackSnapshots(track,high){
