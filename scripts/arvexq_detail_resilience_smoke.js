@@ -51,13 +51,14 @@ const instrumented = source.replace(boot, `
  let t=await setup(async route=>recovered?route.fulfill({json:{ok:true,race_id:id,detail,summary:base,odds:[]}}):route.fulfill({status:503,json:{error:'test outage'}}));
  await t.page.evaluate(id=>{localStorage.setItem('unrelated-cache','keep');testDetail.openRace(id)},id);
  await t.page.waitForSelector('.smart-race-title-stack h1');
- assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.title);
+ assert.equal(await t.page.locator('.smart-race-title-stack h1').textContent(),base.raceNumber+'R '+base.title);
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('2000m'));
  assert.ok((await t.page.locator('.smart-race-meta').textContent()).includes('頭数取得中'));
- // Main tabs are five since the entry/forecast integration (PR #563):
- // 出走表・買い目・オッズ・データ分析 (panel key pace)・結果・払戻.
+ // Main tabs are five since the entry/forecast integration (PR #563);
+ // labels follow the netkeiba layout since 2026-11-21:
+ // 出馬表・予想・オッズ・データ分析 (panel key pace)・結果・払戻.
  assert.equal(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').count(),5);
- assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出走表','買い目','オッズ','データ分析','結果・払戻']);
+ assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-label').allTextContents(),['出馬表','予想','オッズ','データ分析','結果・払戻']);
  assert.deepEqual(await t.page.locator('.race-nav-v230-top .race-nav-v230-btn').evaluateAll(es=>es.map(e=>e.getAttribute('data-panel'))),['entry','tickets','odds','pace','result']);
  await t.page.waitForFunction(id=>testDetail.detailState(id).entry==='error'&&!testDetail.detailState(id).busy,id);
  // fetchEdgeRace now has exactly two bounded attempts, not the retired 3 retries.
@@ -71,13 +72,14 @@ const instrumented = source.replace(boot, `
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
  assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
- // Entry, pace and tickets are separate tabs; the tickets tab opens a
- // dedicated subpage. (v349: the old 予想/bets subpage was merged into
- // the entry table and retired.)
+ // Entry, pace and tickets are separate tabs; since 2026-11-21 the
+ // tickets tab switches in place like the others (user request: the
+ // tickets tab must not jump to a separate page). The dedicated
+ // ticket subpage remains reachable from the frozen-revision route.
  await t.page.locator('[data-panel="tickets"]').click();
- await t.page.waitForSelector('.ticket-detail-page-shell');
- assert.equal(await t.page.locator('.smart-race-subpage-topbar .smart-race-head-copy strong').textContent(),'買い目');
- await t.page.locator('[data-action="close-race-subpage"]').first().click();
+ await t.page.waitForSelector('#section-bets');
+ assert.equal(await t.page.locator('.ticket-detail-page-shell').count(),0);
+ await t.page.locator('[data-panel="entry"]').click();
  await t.page.waitForSelector('.race-nav-v230-top .race-nav-v230-btn');
  await t.page.locator('.arv-entry-table [data-horse-open="2"]').click();
  // The tabbed horse detail (v348) opens on 基本情報; past runs live on

@@ -39,11 +39,13 @@ function extractFunction(name){
 const navFactory=new Function('state',extractFunction('cinematicTabs')+'\nreturn cinematicTabs;');
 const navHtml=navFactory({openPanel:'entry'})({});
 // v349 (user direction 2026-11-17): five main tabs — the forecast
-// table merged into the racecard, so the 予想 tab (bets) is retired
-// and the entry tab is labelled 出走表.
+// table merged into the racecard, so the 予想 tab (bets) is retired.
+// 2026-11-21 (user direction): labels follow the netkeiba layout —
+// the entry tab is labelled 出馬表 and the tickets tab 予想.
 assert.equal((navHtml.match(/data-panel="/g)||[]).length,5);
 assert.match(navHtml,/data-panel="tickets"/);
-assert.match(navHtml,/出走表/);
+assert.match(navHtml,/出馬表/);
+assert.match(navHtml,/予想/);
 assert.doesNotMatch(navHtml,/data-panel="bets"/);
 const stagePages=[
   {key:'start',visualKey:'first',label:'スタート',index:0},

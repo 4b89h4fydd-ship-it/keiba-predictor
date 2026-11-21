@@ -60,7 +60,7 @@ const styleBaseline={
   // Re-pinned 2026-11-21 (full audit): screens/parts the redesign
   // missed (all-races picker, result-more fold, diagnosis AI mark,
   // odds table styles, source chips, entry table header).
-  "arvexq/ui/static/sports/unified-home.css": "8a64903d0b0b49da",
+  "arvexq/ui/static/sports/unified-home.css": "c3565fefd6c95342",
   "arvexq/ui/static/sports/all-races.css": "b19226ee0bf5f854",
   "arvexq/ui/static/sports/pull-refresh.css": "498df97b7b5627bb",
   "arvexq/ui/static/research/research_view.css": "702cfda2ceefabd8",
@@ -88,11 +88,11 @@ const layoutBaseline={
   // Re-pinned 2026-11-17 (v349): user-directed merge of the forecast
   // table into the racecard — five main tabs, the 予想 tab retired,
   // the entry tab labelled 出走表.
-  "cinematicTabs": "47b27e9effd6f873",
-  "smartRaceTopBar": "6f0925af17890feb",
+  "cinematicTabs": "adfdb0a51cafbfec",
+  "smartRaceTopBar": "7eca0afdf011818a",
   // Re-pinned 2026-11-17: user-directed removal of the yellow
   // result-status box (smartInlineResult) from the race header.
-  "smartRaceHead": "1ec9637151efc9fd",
+  "smartRaceHead": "670623a277e17c68",
   "renderPicker": "8b81f0479683023d",
   // Approved removal of adjacent AI stats globals; favoriteHomeSection body is unchanged.
   "favoriteHomeSection": "d85550a902ac987f",
