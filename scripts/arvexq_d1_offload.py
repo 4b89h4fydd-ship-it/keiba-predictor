@@ -46,7 +46,7 @@ import time
 import urllib.parse
 import urllib.request
 import urllib.error
-from datetime import date as date_type, timedelta
+from datetime import date as date_type, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 BASE = os.environ.get('ARVEXQ_API_BASE', 'https://kraiz-api.4b89h4fydd.workers.dev')
@@ -302,7 +302,7 @@ def update_index(archive_dir, manifests):
 
 def mode_export(args):
     today = date_type.fromisoformat(args.today) if args.today \
-        else date_type.now(ZoneInfo('Asia/Tokyo'))
+        else datetime.now(ZoneInfo('Asia/Tokyo')).date()
     before_date = cutoff_for(today, args.keep_days)
     audit_before = audit_totals(storage_audit())
     index = export_index()
@@ -364,7 +364,7 @@ def mode_verify(args):
 
 def mode_prune(args):
     today = date_type.fromisoformat(args.today) if args.today \
-        else date_type.now(ZoneInfo('Asia/Tokyo'))
+        else datetime.now(ZoneInfo('Asia/Tokyo')).date()
     before_date = cutoff_for(today, args.keep_days)
     probe = call('/api/admin/snapshot-prune', {'before_date': before_date, 'items': []})
     assert probe.get('ok'), 'snapshot-prune readiness probe failed'
