@@ -146,11 +146,24 @@ jobs:
           known_single_bundle = actual in (
               'ce3fdf05cc0708a11ad4f633e7cbc008397a7870b687ab10b5f6317f8cca56cf',
               '31cca428ec3814e58aa641779d0ead386b372e4d239aadee3547f92ee0956e79',
-              '18a2df0003f99a830afd5b9cf95a6cf3f1660bf318845c5e5b12cb552866ee8b')
+              '18a2df0003f99a830afd5b9cf95a6cf3f1660bf318845c5e5b12cb552866ee8b',
+              # Added 2026-11-21: current production bundle as audited by
+              # the failed Run #65 guard itself (single module
+              # worker-entry-overlay.js, 93015 bytes). Composition was
+              # verified against repository sources (overlay wrap of the
+              # repo workers/api.mjs lineage: preserved source + display
+              # overlay + risk label + admin modules); see the D1 offload
+              # report (hidden_files/d1-offload-20261121/REPORT.md).
+              'e051336f0b9311709fb8a59d7efdf1f576d647ab80020306a68fcafac12729ba9')
           generic_live_bundle = (not known_single_bundle and
               actual != 'a0566c29acc986a1804a17b01b91fa0afde2fe70111f6483cfc3a216f18fd6ba' and
               len(modules) >= 1 and
-              all(marker in source for marker in (b'export default', b'fetch', b'/api/day',
+              # esbuild rewrites `export default` to
+              # `export { x as default }`, so a wrangler-produced bundle
+              # never contains the literal b'export default'. Accept both
+              # forms, exactly as the known-bundle branch below does.
+              (b'export default' in source or b'as default' in source) and
+              all(marker in source for marker in (b'fetch', b'/api/day',
                   b'/api/race/', b'/api/sync', b'race_details', b'DB')))
           if generic_live_bundle:
               # Preserve every deployed module verbatim.  Only a uniquely
@@ -170,7 +183,7 @@ jobs:
                   assert name not in module_names, 'UNKNOWN_BUNDLE_DUPLICATE_MODULE'
                   module_names.append(name)
                   (directory/name).write_bytes(body)
-                  if b'export default' in body and b'fetch' in body:
+                  if (b'export default' in body or b'as default' in body) and b'fetch' in body:
                       entry.append(name)
               # The live source map identifies worker-entry.js as the public
               # module; worker.js is its imported legacy implementation and
