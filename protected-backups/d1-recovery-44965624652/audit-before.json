@@ -1,0 +1,133 @@
+{
+  "ok": true,
+  "version": "arvexq-readonly-storage-v1",
+  "sql_writes": 0,
+  "queries": {
+    "page_count": {
+      "error": "D1_ERROR: not authorized: SQLITE_AUTH"
+    },
+    "page_size": {
+      "results": [
+        {
+          "page_size": 4096
+        }
+      ],
+      "meta": {
+        "served_by": "v3-prod",
+        "served_by_region": "APAC",
+        "served_by_colo": "NRT",
+        "served_by_primary": true,
+        "timings": {
+          "sql_duration_ms": 0.0996
+        },
+        "duration": 0.0996,
+        "changes": 0,
+        "last_row_id": 0,
+        "changed_db": false,
+        "size_after": 499974144,
+        "rows_read": 0,
+        "rows_written": 0,
+        "total_attempts": 1
+      }
+    },
+    "details": {
+      "results": [
+        {
+          "rows": 6349,
+          "payload_bytes": 483861902,
+          "first_date": "2025-12-23",
+          "last_date": "2026-11-22"
+        }
+      ],
+      "meta": {
+        "served_by": "v3-prod",
+        "served_by_region": "APAC",
+        "served_by_colo": "NRT",
+        "served_by_primary": true,
+        "timings": {
+          "sql_duration_ms": 2415.9811
+        },
+        "duration": 2415.9811,
+        "changes": 0,
+        "last_row_id": 0,
+        "changed_db": false,
+        "size_after": 499974144,
+        "rows_read": 6349,
+        "rows_written": 0,
+        "total_attempts": 1
+      }
+    },
+    "summaries": {
+      "results": [
+        {
+          "rows": 6445
+        }
+      ],
+      "meta": {
+        "served_by": "v3-prod",
+        "served_by_region": "APAC",
+        "served_by_colo": "NRT",
+        "served_by_primary": true,
+        "timings": {
+          "sql_duration_ms": 0.9221
+        },
+        "duration": 0.9221,
+        "changes": 0,
+        "last_row_id": 0,
+        "changed_db": false,
+        "size_after": 499974144,
+        "rows_read": 6445,
+        "rows_written": 0,
+        "total_attempts": 1
+      }
+    },
+    "odds_current": {
+      "results": [
+        {
+          "rows": 20927
+        }
+      ],
+      "meta": {
+        "served_by": "v3-prod",
+        "served_by_region": "APAC",
+        "served_by_colo": "NRT",
+        "served_by_primary": true,
+        "timings": {
+          "sql_duration_ms": 2.2016
+        },
+        "duration": 2.2016,
+        "changes": 0,
+        "last_row_id": 0,
+        "changed_db": false,
+        "size_after": 499974144,
+        "rows_read": 20927,
+        "rows_written": 0,
+        "total_attempts": 1
+      }
+    },
+    "odds_history": {
+      "results": [
+        {
+          "rows": 0
+        }
+      ],
+      "meta": {
+        "served_by": "v3-prod",
+        "served_by_region": "APAC",
+        "served_by_colo": "NRT",
+        "served_by_primary": true,
+        "timings": {
+          "sql_duration_ms": 0.2944
+        },
+        "duration": 0.2944,
+        "changes": 0,
+        "last_row_id": 0,
+        "changed_db": false,
+        "size_after": 499974144,
+        "rows_read": 0,
+        "rows_written": 0,
+        "total_attempts": 1
+      }
+    }
+  }
+}
