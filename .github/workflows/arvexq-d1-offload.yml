@@ -1,0 +1,134 @@
+name: ARVEXQ D1 Details Offload (Archive + Verified Prune)
+# Steady-state offload of old race_details payloads out of Cloudflare D1.
+#
+# Design (user-approved 2026-11-21): past race details are stored as files,
+# D1 keeps only the most recent days (default 30). The export job archives
+# every older race_details row byte-exactly (per-date gzip JSONL + sha256
+# manifest) onto the dedicated branch `archive/d1-details`. The prune job
+# then re-verifies the archive FROM A FRESH CHECKOUT of that branch and
+# asks the API (POST /api/admin/snapshot-prune) to delete each row; the
+# server deletes only rows whose current payload SHA-256 equals the
+# archived hash and whose race_date is older than the cutoff
+# (compare-and-delete). Nothing is deleted without that double proof.
+#
+# Triggers: manual dispatch and a weekly schedule ONLY. There is NO push
+# trigger, so uploading this file never starts a run by itself.
+#   - workflow_dispatch: prune is a dry-run unless execute_prune=true.
+#   - schedule (Mon 04:00 JST): prune executes for real (steady state).
+# The prune step needs /api/admin/snapshot-prune to be deployed first
+# (workers/api_snapshot_prune.mjs via arvexq-api-storage-deploy.yml);
+# without it the prune job fails loudly at its readiness probe while the
+# export job still archives safely.
+on:
+  workflow_dispatch:
+    inputs:
+      keep_days:
+        description: "Days of race_details to keep in D1"
+        type: number
+        default: 30
+      execute_prune:
+        description: "Actually delete archived rows (false = dry-run only)"
+        type: boolean
+        default: false
+      max_dates:
+        description: "Export at most this many dates per run (0 = no limit; use for the first bulk offload)"
+        type: number
+        default: 0
+  schedule:
+    - cron: '0 19 * * 0' # Sunday 19:00 UTC = Monday 04:00 JST
+permissions:
+  contents: write
+concurrency:
+  group: arvexq-d1-offload
+  cancel-in-progress: false
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      ARCHIVE_BRANCH: archive/d1-details
+      KEEP_DAYS: ${{ inputs.keep_days || 30 }}
+      MAX_DATES: ${{ inputs.max_dates || 0 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare archive branch checkout
+        run: |
+          REMOTE="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          if git ls-remote --exit-code --heads "$REMOTE" "$ARCHIVE_BRANCH" >/dev/null 2>&1; then
+            git clone --depth 1 --branch "$ARCHIVE_BRANCH" "$REMOTE" archive
+          else
+            echo "archive branch does not exist yet; creating it"
+            mkdir archive
+            cd archive
+            git init -b "$ARCHIVE_BRANCH"
+            git remote add origin "$REMOTE"
+            echo '{"version":"arvexq-d1-details-archive-v1","dates":{}}' > index.json
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add index.json
+            git commit -m "Initialize D1 details archive"
+            git push origin "HEAD:$ARCHIVE_BRANCH"
+          fi
+      - name: Export old race_details to the archive branch
+        run: |
+          ARGS="--archive-dir archive --keep-days $KEEP_DAYS"
+          if [ "$MAX_DATES" != "0" ]; then ARGS="$ARGS --max-dates $MAX_DATES"; fi
+          python main/scripts/arvexq_d1_offload.py export $ARGS
+      - name: Publish archive updates
+        run: |
+          cd archive
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          if git diff --cached --quiet; then
+            echo "archive unchanged"
+          else
+            git commit -m "D1 details offload export (keep ${KEEP_DAYS} days)"
+            git push origin "HEAD:$ARCHIVE_BRANCH"
+          fi
+  prune:
+    needs: export
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+      ARCHIVE_BRANCH: archive/d1-details
+      KEEP_DAYS: ${{ inputs.keep_days || 30 }}
+      EXECUTE_PRUNE: ${{ github.event_name == 'schedule' || inputs.execute_prune }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+      - uses: actions/checkout@v4
+        with:
+          ref: archive/d1-details
+          path: archive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify archive and prune D1 (hash-verified deletes only)
+        run: |
+          python main/scripts/arvexq_d1_offload.py verify --archive-dir archive
+          ARGS="--archive-dir archive --keep-days $KEEP_DAYS --report archive/runs/${{ github.run_id }}.json"
+          if [ "$EXECUTE_PRUNE" = "true" ]; then ARGS="$ARGS --execute"; fi
+          mkdir -p archive/runs
+          python main/scripts/arvexq_d1_offload.py prune $ARGS
+      - name: Publish prune run report to the archive branch
+        if: always()
+        run: |
+          cd archive
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add runs
+          if git diff --cached --quiet; then
+            echo "no run report to publish"
+          else
+            git commit -m "D1 details offload prune report (run ${{ github.run_id }})"
+            git push origin "HEAD:$ARCHIVE_BRANCH" || echo "report push failed"
+          fi
