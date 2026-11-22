@@ -1,0 +1,101 @@
+name: ARVEXQ Static API
+
+# Regenerates the same-origin static API packs (arvexq/ui/static/api-static)
+# that the app now reads first, so the public read path does not depend on
+# the D1-backed Worker API.  Transitional generator: it reads the day back
+# from the API exactly like the posting scripts do and republishes it as
+# static files.  While the API is unavailable the generator fails soft and
+# the last committed packs stay deployed.
+#
+# The end state is for the prefetch / publish lanes to feed the same
+# builder from their local payloads (--input), removing the read-back.
+
+on:
+  workflow_run:
+    workflows: ["ARVEXQ Full Prefetch", "arvexq-rewrite-publish", "ARVEXQ Realtime Sync"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    # Safety net only (schedules have starved before): every 30 min,
+    # JST 05:30-23:30 (UTC 20:30 prev day - 14:30).
+    - cron: "*/30 0-14,20-23 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target date (YYYY-MM-DD); empty = today and tomorrow JST"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: arvexq-static-api
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate static API packs
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          set -u
+          if [ -n "$INPUT_DATE" ]; then
+            DATES="$INPUT_DATE"
+          else
+            DATES="$(TZ=Asia/Tokyo date +%F) $(TZ=Asia/Tokyo date -d '+1 day' +%F)"
+          fi
+          ok=0
+          for d in $DATES; do
+            if python scripts/arvexq_static_api_build.py --fetch-date "$d" \
+                 --out-dir arvexq/ui/static/api-static --prune-days 14; then
+              ok=1
+            else
+              echo "::warning::Static API generation failed for $d (API unavailable?); keeping last packs"
+            fi
+          done
+          echo "generated_any=$ok" >> "$GITHUB_ENV"
+      - name: Commit packs and dispatch web deploy
+        if: env.generated_any == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add arvexq/ui/static/api-static
+          if git diff --cached --quiet; then
+            echo "STATIC_API_UNCHANGED"
+            exit 0
+          fi
+          git config user.name "ARVEXQ Static API Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: static api packs"
+          done_push=0
+          for try in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              done_push=1
+              break
+            fi
+            git fetch origin main
+            git -c rebase.autoStash=true pull --rebase origin main
+            # Re-check after rebase: another run may have landed the same packs.
+            git add arvexq/ui/static/api-static
+            if git diff --cached --quiet && git diff origin/main --quiet -- arvexq/ui/static/api-static; then
+              done_push=1
+              break
+            fi
+          done
+          if [ "$done_push" -ne 1 ]; then
+            echo "::error::Static API packs could not be published"
+            exit 1
+          fi
+          # GITHUB_TOKEN pushes do not trigger push workflows; deploy explicitly.
+          gh workflow run arvexq-web-deploy.yml --ref main || echo "::warning::Static API committed; Web Deploy dispatch not accepted"
+          echo "STATIC_API_PUBLISHED"
