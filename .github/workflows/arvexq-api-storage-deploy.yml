@@ -154,7 +154,7 @@ jobs:
               # repo workers/api.mjs lineage: preserved source + display
               # overlay + risk label + admin modules); see the D1 offload
               # report (hidden_files/d1-offload-20261121/REPORT.md).
-              'e051336f0b9311709fb8a59d7efdf1f576d647ab80020306a68fcafac12729ba9')
+              'e051336f0b9311709fb8a59d7efd1f576d647ab80020306a68fcafac12729ba9')
           generic_live_bundle = (not known_single_bundle and
               actual != 'a0566c29acc986a1804a17b01b91fa0afde2fe70111f6483cfc3a216f18fd6ba' and
               len(modules) >= 1 and
