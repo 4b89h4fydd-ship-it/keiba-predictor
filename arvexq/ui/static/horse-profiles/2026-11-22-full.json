@@ -1,0 +1,6713 @@
+{
+ "version": "arvexq-horse-profiles-v1",
+ "date": "2026-11-22",
+ "horses": {
+  "2024106580": {
+   "name": "マシュマロデイズ",
+   "sire": "ホットロッドチャーリー",
+   "dam": "プロレタリアト",
+   "damSire": "ハーツクライ",
+   "sireSire": "Oxbow",
+   "sireDam": "Indian Miss",
+   "damDam": "アガルタ",
+   "sireSireSire": "Awesome Again",
+   "sireSireDam": "Tizamazing",
+   "sireDamSire": "Indian Charlie",
+   "sireDamDam": "Glacken's Gal",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "キングカメハメハ",
+   "damDamDam": "ブロードアピール",
+   "owner": "吉岡亨浩",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "プロレタリアトの2025",
+     "wins": 0,
+     "note": "牡2025 ナダル"
+    },
+    {
+     "name": "インサラータ",
+     "wins": 1,
+     "note": "牝2023 ニューイヤーズデイ 地方1勝"
+    },
+    {
+     "name": "デンジエンド",
+     "wins": 0,
+     "note": "牡2022 サトノクラウン"
+    },
+    {
+     "name": "シンプロレタリアト",
+     "wins": 1,
+     "note": "牝2021 サトノクラウン 地方1勝"
+    },
+    {
+     "name": "リックスター",
+     "wins": 1,
+     "note": "牝2020 エピファネイア 1勝"
+    },
+    {
+     "name": "オルタナティブス",
+     "wins": 0,
+     "note": "牡2019 エピファネイア"
+    }
+   ]
+  },
+  "2024105771": {
+   "name": "エイントノーウェイ",
+   "sire": "Curlin",
+   "dam": "エイントイージー",
+   "damSire": "Into Mischief",
+   "sireSire": "Smart Strike",
+   "sireDam": "Sherriff's Deputy",
+   "damDam": "Ameristralia",
+   "sireSireSire": "Mr. Prospector",
+   "sireSireDam": "Classy 'n Smart",
+   "sireDamSire": "Deputy Minister",
+   "sireDamDam": "Barbarika",
+   "damSireSire": "Harlan's Holiday",
+   "damSireDam": "Leslie's Lady",
+   "damDamSire": "Fastnet Rock",
+   "damDamDam": "Heart Ashley",
+   "owner": "社台レースホース",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "エイントノーラブ",
+     "wins": 0,
+     "note": "牡2025 キズナ 中央現役"
+    }
+   ]
+  },
+  "2024104814": {
+   "name": "リケアワルツ",
+   "sire": "シニスターミニスター",
+   "dam": "リビングマイライフ",
+   "damSire": "ダイワメジャー",
+   "sireSire": "Old Trieste",
+   "sireDam": "Sweet Minister",
+   "damDam": "アルーリングライフ",
+   "sireSireSire": "A.P. Indy",
+   "sireSireDam": "Lovlier Linda",
+   "sireDamSire": "The Prime Minister",
+   "sireDamDam": "Sweet Blue",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "フレンチデピュティ",
+   "damDamDam": "アルーリングアクト",
+   "owner": "稲場澄",
+   "producer": "野坂牧場",
+   "siblings": [
+    {
+     "name": "リビングマイライフの2025",
+     "wins": 0,
+     "note": "牡2025 タイトルホルダー"
+    },
+    {
+     "name": "ネオアンボウ",
+     "wins": 0,
+     "note": "牡2023 デクラレーションオブウォー"
+    },
+    {
+     "name": "ライヴクリーク",
+     "wins": 0,
+     "note": "牝2022 モズアスコット"
+    },
+    {
+     "name": "ベアデザイア",
+     "wins": 0,
+     "note": "牡2021 カリフォルニアクローム"
+    }
+   ]
+  },
+  "2024102531": {
+   "name": "ヒガンバナ",
+   "sire": "ホッコータルマエ",
+   "dam": "アイリッシュビート",
+   "damSire": "ハーツクライ",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "マダムチェロキー",
+   "damDam": "ヒラボクビジン",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "Cherokee Run",
+   "sireDamDam": "アンフォイルド",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "ブライアンズタイム",
+   "damDamDam": "オリジナルスピン",
+   "owner": "村木慎吾",
+   "producer": "高昭牧場",
+   "siblings": [
+    {
+     "name": "ルアグロール",
+     "wins": 1,
+     "note": "セ2023 リオンディーズ 地方1勝"
+    },
+    {
+     "name": "ビートウマザンマイ",
+     "wins": 2,
+     "note": "牝2022 シニスターミニスター 地方2勝"
+    },
+    {
+     "name": "サガノオウマサン",
+     "wins": 4,
+     "note": "牡2021 シャンハイボビー 地方4勝"
+    }
+   ]
+  },
+  "2024103960": {
+   "name": "タマモウララカ",
+   "sire": "エスポワールシチー",
+   "dam": "チャームドリーム",
+   "damSire": "フレンチデピュティ",
+   "sireSire": "ゴールドアリュール",
+   "sireDam": "エミネントシチー",
+   "damDam": "ドリーミーアイ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ニキーヤ",
+   "sireDamSire": "ブライアンズタイム",
+   "sireDamDam": "ヘップバーンシチー",
+   "damSireSire": "Deputy Minister",
+   "damSireDam": "Mitterand",
+   "damDamSire": "カコイーシーズ",
+   "damDamDam": "アイシャドー",
+   "owner": "タマモ",
+   "producer": "守矢牧場",
+   "siblings": [
+    {
+     "name": "チャームドリームの2025",
+     "wins": 0,
+     "note": "牝2025 ミスターメロディ"
+    },
+    {
+     "name": "タマモレイメイ",
+     "wins": 0,
+     "note": "牝2023 パイロ"
+    },
+    {
+     "name": "タマモマサユメ",
+     "wins": 0,
+     "note": "牝2022 ルヴァンスレーヴ"
+    },
+    {
+     "name": "タマモソリスト",
+     "wins": 1,
+     "note": "牡2020 シャンハイボビー 地方1勝"
+    },
+    {
+     "name": "タマモモンレーブ",
+     "wins": 4,
+     "note": "牡2019 クリエイターII 1勝、地方3勝"
+    },
+    {
+     "name": "チャームドリームの2018",
+     "wins": 0,
+     "note": "牝2018 ワンダーアキュート"
+    },
+    {
+     "name": "タマモパッション",
+     "wins": 3,
+     "note": "牝2017 パイロ 3勝"
+    },
+    {
+     "name": "タマモサンシーロ",
+     "wins": 4,
+     "note": "牡2016 アッミラーレ 4勝"
+    },
+    {
+     "name": "タマモカプチーノ",
+     "wins": 5,
+     "note": "牝2015 ジョーカプチーノ 地方5勝"
+    },
+    {
+     "name": "タマモエルドラド",
+     "wins": 4,
+     "note": "牝2014 ゴールドアリュール 地方4勝"
+    },
+    {
+     "name": "タマモフィーヴァ",
+     "wins": 0,
+     "note": "牡2013 スペシャルウィーク"
+    }
+   ]
+  },
+  "2024107251": {
+   "name": "アップルペアー",
+   "sire": "スマートファルコン",
+   "dam": "メイプルシャイン",
+   "damSire": "タイムパラドックス",
+   "sireSire": "ゴールドアリュール",
+   "sireDam": "ケイシュウハーブ",
+   "damDam": "サキノスイセイ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ニキーヤ",
+   "sireDamSire": "ミシシッピアン",
+   "sireDamDam": "キョウエイシラユキ",
+   "damSireSire": "ブライアンズタイム",
+   "damSireDam": "ジョリーザザ",
+   "damDamSire": "ジョリーズヘイロー",
+   "damDamDam": "アンバーダイアン",
+   "owner": "節英司",
+   "producer": "静内山田牧場",
+   "siblings": [
+    {
+     "name": "メイプルシャインの2025",
+     "wins": 0,
+     "note": "牡2025 ストラクター"
+    }
+   ]
+  },
+  "2024101641": {
+   "name": "テムバンヴァン",
+   "sire": "ヴァンゴッホ",
+   "dam": "ラブリイステラ",
+   "damSire": "クロフネ",
+   "sireSire": "アメリカンファラオ",
+   "sireDam": "Imagine",
+   "damDam": "タイキステラ",
+   "sireSireSire": "Pioneerof the Nile",
+   "sireSireDam": "Littleprincessemma",
+   "sireDamSire": "Sadler's Wells",
+   "sireDamDam": "Doff the Derby",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "Miswaki",
+   "damDamDam": "ロイヤルブライド",
+   "owner": "竹園正繼",
+   "producer": "カナイシスタッド",
+   "siblings": [
+    {
+     "name": "ラブリイステラの2025",
+     "wins": 0,
+     "note": "牝2025 ヴァンゴッホ"
+    },
+    {
+     "name": "ツカイノトリ",
+     "wins": 1,
+     "note": "牝2023 ヴァンゴッホ 地方1勝"
+    },
+    {
+     "name": "ゲンパチスラッガー",
+     "wins": 0,
+     "note": "牡2022 マジェスティックウォリアー"
+    },
+    {
+     "name": "ゲンパチマッケン",
+     "wins": 0,
+     "note": "牡2021 ホッコータルマエ"
+    },
+    {
+     "name": "サスケブリッコ",
+     "wins": 3,
+     "note": "牝2020 トゥザグローリー 地方3勝"
+    },
+    {
+     "name": "ゲンパチラブハート",
+     "wins": 6,
+     "note": "牝2019 マジェスティックウォリアー 地方6勝"
+    },
+    {
+     "name": "ゲンパチハマジ",
+     "wins": 8,
+     "note": "牡2018 ダンカーク 3勝、地方5勝"
+    },
+    {
+     "name": "シャイニーステラ",
+     "wins": 2,
+     "note": "牝2017 ダンカーク 地方2勝"
+    },
+    {
+     "name": "ゲンパチルシファー",
+     "wins": 5,
+     "note": "牡2016 トゥザグローリー 5勝、1着-プロキオンS(G3)"
+    },
+    {
+     "name": "ナチュラルウインド",
+     "wins": 5,
+     "note": "牡2015 ヴリル 地方5勝"
+    }
+   ]
+  },
+  "2024104373": {
+   "name": "ポアサムシュガー",
+   "sire": "ホットロッドチャーリー",
+   "dam": "コマンドゥールキイ",
+   "damSire": "フジキセキ",
+   "sireSire": "Oxbow",
+   "sireDam": "Indian Miss",
+   "damDam": "ジェネロジー",
+   "sireSireSire": "Awesome Again",
+   "sireSireDam": "Tizamazing",
+   "sireDamSire": "Indian Charlie",
+   "sireDamDam": "Glacken's Gal",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ミルレーサー",
+   "damDamSire": "ジェイドロバリー",
+   "damDamDam": "キンスフォーク",
+   "owner": "シュガーベイビーサラブレッドクラブ",
+   "producer": "今牧場",
+   "siblings": [
+    {
+     "name": "シュガービスケッツ",
+     "wins": 1,
+     "note": "牝2023 マインドユアビスケッツ 1勝"
+    },
+    {
+     "name": "ミーントゥビー",
+     "wins": 2,
+     "note": "牝2022 リアルインパクト 2勝、中央現役"
+    },
+    {
+     "name": "モデュレーション",
+     "wins": 1,
+     "note": "牝2021 リアルスティール 地方1勝"
+    },
+    {
+     "name": "テンコマンドゥール",
+     "wins": 1,
+     "note": "牡2020 エイシンフラッシュ 1勝"
+    }
+   ]
+  },
+  "2024104450": {
+   "name": "アディエル",
+   "sire": "ヘニーヒューズ",
+   "dam": "ミレフォリウム",
+   "damSire": "ルーラーシップ",
+   "sireSire": "ヘネシー",
+   "sireDam": "Meadow Flyer",
+   "damDam": "ペンテシレイア",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Island Kitty",
+   "sireDamSire": "Meadowlake",
+   "sireDamDam": "Shortley",
+   "damSireSire": "キングカメハメハ",
+   "damSireDam": "エアグルーヴ",
+   "damDamSire": "ネオユニヴァース",
+   "damDamDam": "アコースティクス",
+   "owner": "岡浩二",
+   "producer": "サンデーヒルズ",
+   "siblings": [
+    {
+     "name": "オテンバムスメ",
+     "wins": 4,
+     "note": "牝2021 セレスハント 地方4勝、中央現役"
+    }
+   ]
+  },
+  "2024101545": {
+   "name": "バッテリー",
+   "sire": "ブリックスアンドモルタル",
+   "dam": "ダンシングチコ",
+   "damSire": "ダイワメジャー",
+   "sireSire": "Giant's Causeway",
+   "sireDam": "Beyond the Waves",
+   "damDam": "ダンシングエディ",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Mariah's Storm",
+   "sireDamSire": "Ocean Crest",
+   "sireDamDam": "Excedent",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "Moscow Ballet",
+   "damDamDam": "Duchess of Ack",
+   "owner": "石瀬浩三",
+   "producer": "赤田牧場",
+   "siblings": [
+    {
+     "name": "ダンシングチコの2025",
+     "wins": 0,
+     "note": "牝2025 ルーラーシップ"
+    },
+    {
+     "name": "プレシャスフェザー",
+     "wins": 0,
+     "note": "牝2023 シルバーステート"
+    },
+    {
+     "name": "オロパタジン",
+     "wins": 2,
+     "note": "牡2022 ノヴェリスト 1勝、地方1勝"
+    }
+   ]
+  },
+  "2024100576": {
+   "name": "カフジペピーノ",
+   "sire": "ファインニードル",
+   "dam": "カフジアリエス",
+   "damSire": "ジャスタウェイ",
+   "sireSire": "アドマイヤムーン",
+   "sireDam": "ニードルクラフト",
+   "damDam": "ピュアマインド",
+   "sireSireSire": "エンドスウィープ",
+   "sireSireDam": "マイケイティーズ",
+   "sireDamSire": "Mark of Esteem",
+   "sireDamDam": "Sharp Point",
+   "damSireSire": "ハーツクライ",
+   "damSireDam": "シビル",
+   "damDamSire": "ティンバーカントリー",
+   "damDamDam": "スプリングアマイン",
+   "owner": "加藤千豊",
+   "producer": "スマイルファーム",
+   "siblings": [
+    {
+     "name": "カフジアリエスの2025",
+     "wins": 0,
+     "note": "牡2025 タワーオブロンドン"
+    },
+    {
+     "name": "カフジマリボー",
+     "wins": 0,
+     "note": "牡2023 ハービンジャー"
+    },
+    {
+     "name": "カフジジャワ",
+     "wins": 4,
+     "note": "牡2022 サトノクラウン 地方4勝"
+    }
+   ]
+  },
+  "2024101879": {
+   "name": "バンブトンウーノ",
+   "sire": "ヴァンゴッホ",
+   "dam": "バンブトンハート",
+   "damSire": "サウスヴィグラス",
+   "sireSire": "アメリカンファラオ",
+   "sireDam": "Imagine",
+   "damDam": "ニースセブンティン",
+   "sireSireSire": "Pioneerof the Nile",
+   "sireSireDam": "Littleprincessemma",
+   "sireDamSire": "Sadler's Wells",
+   "sireDamDam": "Doff the Derby",
+   "damSireSire": "エンドスウィープ",
+   "damSireDam": "ダーケストスター",
+   "damDamSire": "ナリタトップロード",
+   "damDamDam": "バンブトンニース",
+   "owner": "樋口正蔵",
+   "producer": "谷川牧場",
+   "siblings": [
+    {
+     "name": "バンブトンコール",
+     "wins": 0,
+     "note": "牡2023 クリソベリル"
+    }
+   ]
+  },
+  "2024105425": {
+   "name": "ナムラレーヴ",
+   "sire": "リアルスティール",
+   "dam": "レーヴドモンド",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "レーヴディソール",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "アグネスタキオン",
+   "damDamDam": "レーヴドスカー",
+   "owner": "奈村睦弘",
+   "producer": "土田農場",
+   "siblings": [
+    {
+     "name": "ノーテンピーカン",
+     "wins": 3,
+     "note": "牡2023 カリフォルニアクローム 地方3勝"
+    }
+   ]
+  },
+  "2024104861": {
+   "name": "ベイビーブラザー",
+   "sire": "ホットロッドチャーリー",
+   "dam": "テツナゴオ",
+   "damSire": "ハーツクライ",
+   "sireSire": "Oxbow",
+   "sireDam": "Indian Miss",
+   "damDam": "フライトオブエンジェルス",
+   "sireSireSire": "Awesome Again",
+   "sireSireDam": "Tizamazing",
+   "sireDamSire": "Indian Charlie",
+   "sireDamDam": "Glacken's Gal",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "アフリート",
+   "damDamDam": "Intently",
+   "owner": "小林祐介",
+   "producer": "服部牧場",
+   "siblings": [
+    {
+     "name": "ジュニアスウィート",
+     "wins": 0,
+     "note": "牝2023 マジェスティックウォリアー"
+    },
+    {
+     "name": "ヤングアメリカンズ",
+     "wins": 1,
+     "note": "牡2022 ホッコータルマエ 1勝、中央現役"
+    },
+    {
+     "name": "キミハスコール",
+     "wins": 2,
+     "note": "牡2021 コパノリッキー 2勝、中央現役"
+    },
+    {
+     "name": "グッドロマンス",
+     "wins": 4,
+     "note": "牝2020 コパノリッキー 1勝、地方3勝"
+    },
+    {
+     "name": "リッキーマジック",
+     "wins": 3,
+     "note": "牝2019 コパノリッキー 3勝"
+    },
+    {
+     "name": "キラットアラシ",
+     "wins": 3,
+     "note": "牝2018 サウスヴィグラス 地方3勝"
+    },
+    {
+     "name": "キラットダイヤ",
+     "wins": 12,
+     "note": "牝2017 サウスヴィグラス 2勝、地方10勝"
+    },
+    {
+     "name": "テツナゴオの2016",
+     "wins": 0,
+     "note": "牡2016 サウスヴィグラス"
+    }
+   ]
+  },
+  "2024101328": {
+   "name": "テーオーレコード",
+   "sire": "タワーオブロンドン",
+   "dam": "ペイシャドリーム",
+   "damSire": "ディープブリランテ",
+   "sireSire": "Raven's Pass",
+   "sireDam": "スノーパイン",
+   "damDam": "ドリームプレイ",
+   "sireSireSire": "Elusive Quality",
+   "sireSireDam": "Ascutney",
+   "sireDamSire": "Dalakhani",
+   "sireDamDam": "シンコウエルメス",
+   "damSireSire": "ディープインパクト",
+   "damSireDam": "ラヴアンドバブルズ",
+   "damDamSire": "コマンダーインチーフ",
+   "damDamDam": "シネマライフ",
+   "owner": "小笹公也",
+   "producer": "川向高橋育成牧場",
+   "siblings": [
+    {
+     "name": "ペイシャプレイ",
+     "wins": 1,
+     "note": "牝2023 マクフィ 地方1勝"
+    }
+   ]
+  },
+  "2024105042": {
+   "name": "シングインザレイン",
+   "sire": "マジェスティックウォリアー",
+   "dam": "スノードリーム",
+   "damSire": "スウェプトオーヴァーボード",
+   "sireSire": "A.P. Indy",
+   "sireDam": "Dream Supreme",
+   "damDam": "マルカジュリエット",
+   "sireSireSire": "Seattle Slew",
+   "sireSireDam": "Weekend Surprise",
+   "sireDamSire": "Seeking the Gold",
+   "sireDamDam": "Spinning Round",
+   "damSireSire": "エンドスウィープ",
+   "damSireDam": "Sheer Ice",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "クルーピアレディー",
+   "owner": "三田昌宏",
+   "producer": "前谷牧場",
+   "siblings": [
+    {
+     "name": "スノードリームの2025",
+     "wins": 0,
+     "note": "牡2025 ルヴァンスレーヴ"
+    },
+    {
+     "name": "ワルトシュタイン",
+     "wins": 1,
+     "note": "セ2023 マジェスティックウォリアー 1勝、中央現役"
+    },
+    {
+     "name": "スターアイズ",
+     "wins": 1,
+     "note": "牝2022 ルヴァンスレーヴ 地方1勝"
+    },
+    {
+     "name": "マオノリオル",
+     "wins": 1,
+     "note": "牝2021 ワールドエース 地方1勝"
+    },
+    {
+     "name": "ノベンバーステップ",
+     "wins": 6,
+     "note": "牡2020 モーリス 地方6勝"
+    }
+   ]
+  },
+  "2024104203": {
+   "name": "ウィナーズクロノ",
+   "sire": "フィレンツェファイア",
+   "dam": "サンバビーン",
+   "damSire": "スズカマンボ",
+   "sireSire": "Poseidon's Warrior",
+   "sireDam": "My Every Wish",
+   "damDam": "カーリービッド",
+   "sireSireSire": "Speightstown",
+   "sireSireDam": "Poised to Pounce",
+   "sireDamSire": "Langfuhr",
+   "sireDamDam": "Mille Lacs",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スプリングマンボ",
+   "damDamSire": "ティッカネン",
+   "damDamDam": "カーフィリィ",
+   "owner": "仲尾正人",
+   "producer": "岡田牧場",
+   "siblings": [
+    {
+     "name": "サンバビーンの2023",
+     "wins": 0,
+     "note": "牡2023 ヴァンゴッホ"
+    },
+    {
+     "name": "ヴィライザベル",
+     "wins": 5,
+     "note": "牝2021 タリスマニック 地方5勝"
+    },
+    {
+     "name": "ヒロシゲアトム",
+     "wins": 4,
+     "note": "牡2019 シニスターミニスター 地方4勝"
+    },
+    {
+     "name": "ヒロシゲサウザント",
+     "wins": 5,
+     "note": "牡2018 ヘニーヒューズ 地方5勝"
+    }
+   ]
+  },
+  "2024102868": {
+   "name": "プラナベルデ",
+   "sire": "インディチャンプ",
+   "dam": "ブーケトウショウ",
+   "damSire": "サクラバクシンオー",
+   "sireSire": "ステイゴールド",
+   "sireDam": "ウィルパワー",
+   "damDam": "マザートウショウ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "キングカメハメハ",
+   "sireDamDam": "トキオリアリティー",
+   "damSireSire": "サクラユタカオー",
+   "damSireDam": "サクラハゴロモ",
+   "damDamSire": "スティールハート",
+   "damDamDam": "エイティトウショウ",
+   "owner": "安原浩司",
+   "producer": "村下清志",
+   "siblings": [
+    {
+     "name": "ブーケトウショウの2025",
+     "wins": 0,
+     "note": "牡2025 ニューイヤーズデイ"
+    },
+    {
+     "name": "リヴァーブ",
+     "wins": 0,
+     "note": "牡2022 シルバーステート"
+    },
+    {
+     "name": "ガンバルフトシ",
+     "wins": 4,
+     "note": "牡2021 レッドファルクス 地方4勝"
+    },
+    {
+     "name": "クリダーム",
+     "wins": 2,
+     "note": "牡2020 ハーツクライ 2勝、2着-函館2歳S(G3)"
+    },
+    {
+     "name": "リボーントウショウ",
+     "wins": 1,
+     "note": "牝2019 ブラックタイド 地方1勝"
+    },
+    {
+     "name": "イズジョードリーム",
+     "wins": 11,
+     "note": "牡2018 キンシャサノキセキ 地方11勝"
+    },
+    {
+     "name": "ペプチドサクラ",
+     "wins": 0,
+     "note": "牝2017 キズナ"
+    },
+    {
+     "name": "ブーケアルメリア",
+     "wins": 0,
+     "note": "牝2016 ストロングリターン"
+    },
+    {
+     "name": "ミトノブラック",
+     "wins": 4,
+     "note": "牡2015 ゴールドヘイロー 1勝、地方3勝"
+    }
+   ]
+  },
+  "2024101517": {
+   "name": "カレラ",
+   "sire": "ビッグアーサー",
+   "dam": "バーグマン",
+   "damSire": "ヴァーミリアン",
+   "sireSire": "サクラバクシンオー",
+   "sireDam": "シヤボナ",
+   "damDam": "エトワールステージ",
+   "sireSireSire": "サクラユタカオー",
+   "sireSireDam": "サクラハゴロモ",
+   "sireDamSire": "Kingmambo",
+   "sireDamDam": "Relish",
+   "damSireSire": "エルコンドルパサー",
+   "damSireDam": "スカーレットレディ",
+   "damDamSire": "デヒア",
+   "damDamDam": "ベツェニーズスター",
+   "owner": "中辻明",
+   "producer": "高村伸一",
+   "siblings": [
+    {
+     "name": "バーグマンの2025",
+     "wins": 0,
+     "note": "牡2025 ビッグアーサー"
+    },
+    {
+     "name": "バースフラワー",
+     "wins": 0,
+     "note": "牝2022 ビッグアーサー"
+    }
+   ]
+  },
+  "2024101234": {
+   "name": "スターオブファイア",
+   "sire": "カラヴァッジオ",
+   "dam": "オンクーラン",
+   "damSire": "ジャスタウェイ",
+   "sireSire": "Scat Daddy",
+   "sireDam": "Mekko Hokte",
+   "damDam": "メイキアシー",
+   "sireSireSire": "ヨハネスブルグ",
+   "sireSireDam": "Love Style",
+   "sireDamSire": "Holy Bull",
+   "sireDamDam": "Aerosilver",
+   "damSireSire": "ハーツクライ",
+   "damSireDam": "シビル",
+   "damDamSire": "Sadler's Wells",
+   "damDamDam": "Gwynn",
+   "owner": "ＫＨレーシング",
+   "producer": "山田政宏",
+   "siblings": [
+    {
+     "name": "オンクーランの2025",
+     "wins": 0,
+     "note": "牡2025 カラヴァッジオ"
+    },
+    {
+     "name": "レイオブファイア",
+     "wins": 1,
+     "note": "牡2023 ニューイヤーズデイ 1勝"
+    }
+   ]
+  },
+  "2024101199": {
+   "name": "パロディ",
+   "sire": "ミスターメロディ",
+   "dam": "ペロチャン",
+   "damSire": "サクラプレジデント",
+   "sireSire": "Scat Daddy",
+   "sireDam": "Trusty Lady",
+   "damDam": "ジョウノエンジェル",
+   "sireSireSire": "ヨハネスブルグ",
+   "sireSireDam": "Love Style",
+   "sireDamSire": "Deputy Minister",
+   "sireDamDam": "Klassy Kim",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "セダンフォーエバー",
+   "damDamSire": "トウショウボーイ",
+   "damDamDam": "ザンベージ",
+   "owner": "カナヤマホールディングス",
+   "producer": "門別山際牧場",
+   "siblings": [
+    {
+     "name": "ペロチャンの2025",
+     "wins": 0,
+     "note": "牡2025 チュウワウィザード"
+    },
+    {
+     "name": "フジガイフウ",
+     "wins": 3,
+     "note": "牡2023 ミスターメロディ 3勝、中央現役"
+    },
+    {
+     "name": "トーケンクミー",
+     "wins": 3,
+     "note": "牝2022 ルヴァンスレーヴ 地方3勝"
+    },
+    {
+     "name": "ドゥグラン",
+     "wins": 3,
+     "note": "牝2021 ビッグアーサー 地方3勝"
+    },
+    {
+     "name": "ワラ",
+     "wins": 9,
+     "note": "牡2020 コパノリッキー 地方9勝"
+    },
+    {
+     "name": "ゲコクジョウ",
+     "wins": 1,
+     "note": "牡2019 ロゴタイプ 地方1勝"
+    },
+    {
+     "name": "ピースワンスパーダ",
+     "wins": 2,
+     "note": "牡2018 ベルシャザール 地方2勝"
+    },
+    {
+     "name": "ライチェフェイス",
+     "wins": 3,
+     "note": "牡2017 キングヘイロー 1勝、地方2勝"
+    }
+   ]
+  },
+  "2024104520": {
+   "name": "スマートメモリー",
+   "sire": "サリオス",
+   "dam": "スマートグランデ",
+   "damSire": "ドレフォン",
+   "sireSire": "ハーツクライ",
+   "sireDam": "サロミナ",
+   "damDam": "スマートアイリス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "アイリッシュダンス",
+   "sireDamSire": "Lomitas",
+   "sireDamDam": "Saldentigerin",
+   "damSireSire": "Gio Ponti",
+   "damSireDam": "Eltimaas",
+   "damDamSire": "ディープインパクト",
+   "damDamDam": "チェリーラブ",
+   "owner": "大川徹",
+   "producer": "静内山田牧場",
+   "siblings": []
+  },
+  "2024104738": {
+   "name": "ドリームハロウ",
+   "sire": "デクラレーションオブウォー",
+   "dam": "ルルパンブルー",
+   "damSire": "ジャングルポケット",
+   "sireSire": "War Front",
+   "sireDam": "Tempo West",
+   "damDam": "ガトーショコラ",
+   "sireSireSire": "Danzig",
+   "sireSireDam": "Starry Dreamer",
+   "sireDamSire": "Rahy",
+   "sireDamDam": "Tempo",
+   "damSireSire": "トニービン",
+   "damSireDam": "ダンスチャーマー",
+   "damDamSire": "フジキセキ",
+   "damDamDam": "スリーフェアリー",
+   "owner": "齊藤直信",
+   "producer": "千代田牧場",
+   "siblings": [
+    {
+     "name": "キングブルー",
+     "wins": 3,
+     "note": "牡2021 ロードカナロア 3勝、中央現役"
+    },
+    {
+     "name": "サトノシトラス",
+     "wins": 0,
+     "note": "牡2020 サトノダイヤモンド"
+    },
+    {
+     "name": "ヴァジュランダ",
+     "wins": 1,
+     "note": "牡2018 ルーラーシップ 1勝"
+    },
+    {
+     "name": "ブルーアズール",
+     "wins": 3,
+     "note": "牝2017 スクリーンヒーロー 地方3勝"
+    },
+    {
+     "name": "プラネットアース",
+     "wins": 0,
+     "note": "牡2016 ダイワメジャー"
+    },
+    {
+     "name": "ライラックカラー",
+     "wins": 6,
+     "note": "牡2015 ルーラーシップ 6勝"
+    },
+    {
+     "name": "リセット",
+     "wins": 9,
+     "note": "牡2014 シンボリクリスエス 地方9勝"
+    },
+    {
+     "name": "ファインドミー",
+     "wins": 3,
+     "note": "牝2012 シンボリクリスエス 地方3勝"
+    },
+    {
+     "name": "ルルパンジョンヌ",
+     "wins": 0,
+     "note": "牡2011 アドマイヤムーン"
+    }
+   ]
+  },
+  "2024102554": {
+   "name": "ブランル",
+   "sire": "ビッグアーサー",
+   "dam": "ゴーゴーチアフル",
+   "damSire": "ゴールドアリュール",
+   "sireSire": "サクラバクシンオー",
+   "sireDam": "シヤボナ",
+   "damDam": "マスターチアフル",
+   "sireSireSire": "サクラユタカオー",
+   "sireSireDam": "サクラハゴロモ",
+   "sireDamSire": "Kingmambo",
+   "sireDamDam": "Relish",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ニキーヤ",
+   "damDamSire": "ボストンハーバー",
+   "damDamDam": "ホッコービューティ",
+   "owner": "高昭牧場",
+   "producer": "高昭牧場",
+   "siblings": [
+    {
+     "name": "ゴーゴーチアフルの2023",
+     "wins": 0,
+     "note": "牝2023 マテラスカイ"
+    }
+   ]
+  },
+  "2024102894": {
+   "name": "レッドガレオン",
+   "sire": "ルヴァンスレーヴ",
+   "dam": "レッドシャーロット",
+   "damSire": "ロードカナロア",
+   "sireSire": "シンボリクリスエス",
+   "sireDam": "マエストラーレ",
+   "damDam": "シルバーフォックス",
+   "sireSireSire": "Kris S.",
+   "sireSireDam": "Tee Kay",
+   "sireDamSire": "ネオユニヴァース",
+   "sireDamDam": "オータムブリーズ",
+   "damSireSire": "キングカメハメハ",
+   "damSireDam": "レディブラッサム",
+   "damDamSire": "クロフネ",
+   "damDamDam": "ビーポジティブ",
+   "owner": "東京ホースレーシング",
+   "producer": "吉田ファーム",
+   "siblings": [
+    {
+     "name": "レッドシャーロットの2025",
+     "wins": 0,
+     "note": "牡2025 コントレイル"
+    },
+    {
+     "name": "レッドレベンディス",
+     "wins": 2,
+     "note": "牡2023 クリソベリル 2勝、中央現役"
+    },
+    {
+     "name": "レッドアーネスト",
+     "wins": 0,
+     "note": "牡2022 スワーヴリチャード"
+    }
+   ]
+  },
+  "2024100719": {
+   "name": "シルヴァニクス",
+   "sire": "シルバーステート",
+   "dam": "アンチャン",
+   "damSire": "ゼンノロブロイ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "シルヴァースカヤ",
+   "damDam": "アンナモンダ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Silver Hawk",
+   "sireDamDam": "Boubskaia",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ローミンレイチェル",
+   "damDamSire": "Monsun",
+   "damDamDam": "Anna of Kiev",
+   "owner": "田畑利彦",
+   "producer": "チャンピオンズファーム",
+   "siblings": [
+    {
+     "name": "シーズンインザサン",
+     "wins": 1,
+     "note": "牝2023 ミッキーアイル 地方1勝"
+    },
+    {
+     "name": "キッズウルマ",
+     "wins": 2,
+     "note": "牝2022 レイデオロ 地方2勝"
+    },
+    {
+     "name": "ハマサン",
+     "wins": 1,
+     "note": "牡2021 ドゥラメンテ 地方1勝"
+    },
+    {
+     "name": "コパカバーナビーチ",
+     "wins": 0,
+     "note": "牝2020 モーリス"
+    },
+    {
+     "name": "ロードマーサ",
+     "wins": 0,
+     "note": "牡2019 ロードカナロア"
+    },
+    {
+     "name": "ソルティエラ",
+     "wins": 3,
+     "note": "牝2018 エピファネイア 地方3勝"
+    }
+   ]
+  },
+  "2024105742": {
+   "name": "ドラゴンアンセム",
+   "sire": "スワーヴリチャード",
+   "dam": "アンコールピース",
+   "damSire": "ネオユニヴァース",
+   "sireSire": "ハーツクライ",
+   "sireDam": "ピラミマ",
+   "damDam": "トレアンサンブル",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "アイリッシュダンス",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "キャリアコレクション",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ポインテッドパス",
+   "damDamSire": "トニービン",
+   "damDamDam": "ダイナアクトレス",
+   "owner": "窪田芳郎",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "アンコールピースの2025",
+     "wins": 0,
+     "note": "牡2025 エピファネイア"
+    },
+    {
+     "name": "キーパフォーマー",
+     "wins": 3,
+     "note": "牝2021 キタサンブラック 3勝、中央現役"
+    },
+    {
+     "name": "サトノストロング",
+     "wins": 1,
+     "note": "セ2019 ストロングリターン 1勝"
+    },
+    {
+     "name": "ピースマッチング",
+     "wins": 3,
+     "note": "セ2018 スウェプトオーヴァーボード 2勝、地方1勝"
+    },
+    {
+     "name": "シャドウセッション",
+     "wins": 2,
+     "note": "セ2016 ストロングリターン 2勝"
+    }
+   ]
+  },
+  "2024104169": {
+   "name": "ホウオウトリリオン",
+   "sire": "ハービンジャー",
+   "dam": "ホウオウプリンセス",
+   "damSire": "ディープインパクト",
+   "sireSire": "Dansili",
+   "sireDam": "Penang Pearl",
+   "damDam": "スノースタイル",
+   "sireSireSire": "デインヒル",
+   "sireSireDam": "Hasili",
+   "sireDamSire": "Bering",
+   "sireDamDam": "Guapa",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "ホワイトマズル",
+   "damDamDam": "シャルムダンサー",
+   "owner": "小笹芳央",
+   "producer": "岡田スタッド",
+   "siblings": []
+  },
+  "2024106186": {
+   "name": "クオーレサンライズ",
+   "sire": "コントレイル",
+   "dam": "ウィープノーモア",
+   "damSire": "Mineshaft",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "Crosswinds",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "A.P. Indy",
+   "damSireDam": "Prospectors Delite",
+   "damDamSire": "Storm Cat",
+   "damDamDam": "Flute",
+   "owner": "松岡隆雄",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ウィープノーモアの2025",
+     "wins": 0,
+     "note": "牝2025 キタサンブラック"
+    },
+    {
+     "name": "サトノグロリア",
+     "wins": 2,
+     "note": "牡2023 サートゥルナーリア 2勝、中央現役"
+    },
+    {
+     "name": "スピントロニクス",
+     "wins": 0,
+     "note": "牡2022 ドゥラメンテ"
+    },
+    {
+     "name": "ウィープディライト",
+     "wins": 3,
+     "note": "セ2021 ドゥラメンテ 3勝、中央現役"
+    },
+    {
+     "name": "キープスマイリング",
+     "wins": 2,
+     "note": "牝2020 Quality Road 2勝"
+    }
+   ]
+  },
+  "2024102305": {
+   "name": "メイショウジェード",
+   "sire": "ダノンキングリー",
+   "dam": "メイショウブーケ",
+   "damSire": "フレンチデピュティ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マイグッドネス",
+   "damDam": "アドマイヤベリー",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Caressing",
+   "damSireSire": "Deputy Minister",
+   "damSireDam": "Mitterand",
+   "damDamSire": "ダンスインザダーク",
+   "damDamDam": "ブリリアントベリー",
+   "owner": "松本好隆",
+   "producer": "三嶋牧場",
+   "siblings": [
+    {
+     "name": "メイショウブーケの2025",
+     "wins": 0,
+     "note": "牡2025 ゴールドシップ"
+    },
+    {
+     "name": "メイショウコハル",
+     "wins": 0,
+     "note": "牝2023 ダノンキングリー"
+    },
+    {
+     "name": "メイショウアゴナス",
+     "wins": 1,
+     "note": "牡2022 スワーヴリチャード 1勝、中央現役"
+    },
+    {
+     "name": "メイショウライジン",
+     "wins": 1,
+     "note": "牡2020 シルバーステート 地方1勝"
+    },
+    {
+     "name": "メイショウヒメゴゼ",
+     "wins": 7,
+     "note": "牝2019 マジェスティックウォリアー 1勝、地方6勝"
+    }
+   ]
+  },
+  "2024102885": {
+   "name": "マハロハ",
+   "sire": "コントレイル",
+   "dam": "カリンカ",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "グレナディーン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "スペシャルウィーク",
+   "damDamDam": "タックスヘイブン",
+   "owner": "寺田寿男",
+   "producer": "吉田ファーム",
+   "siblings": [
+    {
+     "name": "カリンカの2025",
+     "wins": 0,
+     "note": "牝2025 コントレイル"
+    },
+    {
+     "name": "バディ",
+     "wins": 1,
+     "note": "牡2023 キズナ 1勝、中央現役"
+    }
+   ]
+  },
+  "2024106033": {
+   "name": "ヒロノリホープ",
+   "sire": "ロゴタイプ",
+   "dam": "マイジェン",
+   "damSire": "Fusaichi Pegasus",
+   "sireSire": "ローエングリン",
+   "sireDam": "ステレオタイプ",
+   "damDam": "Mekko Hokte",
+   "sireSireSire": "Singspiel",
+   "sireSireDam": "カーリング",
+   "sireDamSire": "サンデーサイレンス",
+   "sireDamDam": "スターバレリーナ",
+   "damSireSire": "Mr. Prospector",
+   "damSireDam": "Angel Fever",
+   "damDamSire": "Holy Bull",
+   "damDamDam": "Aerosilver",
+   "owner": "高原将浩",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "マイジェンの2022",
+     "wins": 0,
+     "note": "牝2022 ドレフォン"
+    },
+    {
+     "name": "エンバーク",
+     "wins": 0,
+     "note": "セ2021 ゴールドシップ"
+    },
+    {
+     "name": "サビドゥリア",
+     "wins": 0,
+     "note": "牡2020 サトノアラジン"
+    },
+    {
+     "name": "プルパレイ",
+     "wins": 4,
+     "note": "セ2019 イスラボニータ 4勝、1着-中スポ賞ファルコンS(G3)"
+    },
+    {
+     "name": "ライラテソーロ",
+     "wins": 5,
+     "note": "牡2018 ミッキーアイル 地方5勝"
+    },
+    {
+     "name": "サトノゴールド",
+     "wins": 1,
+     "note": "セ2017 ゴールドシップ 1勝、2着-札幌2歳S(G3)"
+    },
+    {
+     "name": "ネルソンタッチ",
+     "wins": 5,
+     "note": "牡2016 ディープインパクト 地方5勝"
+    },
+    {
+     "name": "セルゲイ",
+     "wins": 10,
+     "note": "牡2015 ディープインパクト 地方10勝"
+    },
+    {
+     "name": "サーワシントン",
+     "wins": 10,
+     "note": "セ2014 ディープインパクト 地方10勝"
+    },
+    {
+     "name": "レッドビアンカ",
+     "wins": 0,
+     "note": "牝2013 ハードスパン"
+    }
+   ]
+  },
+  "2024102547": {
+   "name": "キララハピネス",
+   "sire": "ヘンリーバローズ",
+   "dam": "キララチュール",
+   "damSire": "タイキシャトル",
+   "sireSire": "ディープインパクト",
+   "sireDam": "シルヴァースカヤ",
+   "damDam": "サイコーキララ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Silver Hawk",
+   "sireDamDam": "Boubskaia",
+   "damSireSire": "Devil's Bag",
+   "damSireDam": "ウェルシュマフィン",
+   "damDamSire": "リンドシェーバー",
+   "damDamDam": "サイコーロマン",
+   "owner": "上山貴永",
+   "producer": "高昭牧場",
+   "siblings": [
+    {
+     "name": "イサギ",
+     "wins": 2,
+     "note": "牡2023 リアルスティール 2勝、中央現役"
+    },
+    {
+     "name": "ゴッドトレジャー",
+     "wins": 6,
+     "note": "牡2022 シャンハイボビー 地方6勝"
+    },
+    {
+     "name": "アトモスフィア",
+     "wins": 3,
+     "note": "牡2021 コパノリッキー 地方3勝"
+    },
+    {
+     "name": "シャンボール",
+     "wins": 2,
+     "note": "牡2020 キズナ 地方2勝"
+    },
+    {
+     "name": "ジューンキララ",
+     "wins": 0,
+     "note": "牝2019 アドマイヤムーン"
+    },
+    {
+     "name": "ハッピーキララ",
+     "wins": 3,
+     "note": "牝2018 トゥザグローリー 地方3勝"
+    },
+    {
+     "name": "クリノライジン",
+     "wins": 4,
+     "note": "牡2016 トゥザグローリー 1勝、地方3勝"
+    },
+    {
+     "name": "アーツレイジング",
+     "wins": 10,
+     "note": "牝2015 プリサイスエンド 地方10勝"
+    },
+    {
+     "name": "キララチュールの2014",
+     "wins": 0,
+     "note": "牡2014 スズカマンボ"
+    },
+    {
+     "name": "ラブリーラッフル",
+     "wins": 0,
+     "note": "牝2013 キングヘイロー"
+    }
+   ]
+  },
+  "2024100038": {
+   "name": "マーヴィン",
+   "sire": "キタサンブラック",
+   "dam": "サムカインドオブブルー",
+   "damSire": "Union Rags",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "Silver Colors",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "Dixie Union",
+   "damSireDam": "Tempo",
+   "damDamSire": "Mr. Greeley",
+   "damDamDam": "Winning Colors",
+   "owner": "ケイズジャパン",
+   "producer": "天羽禮治牧場",
+   "siblings": [
+    {
+     "name": "ザナウィン",
+     "wins": 0,
+     "note": "牡2025 キズナ 中央現役"
+    },
+    {
+     "name": "アルジェンタム",
+     "wins": 1,
+     "note": "セ2023 シルバーステート 1勝、中央現役"
+    },
+    {
+     "name": "インディゴ",
+     "wins": 1,
+     "note": "セ2022 Tiz the Law 1勝、中央現役"
+    }
+   ]
+  },
+  "2024106409": {
+   "name": "デュランバローズ",
+   "sire": "マインドユアビスケッツ",
+   "dam": "スペクトロライト",
+   "damSire": "ディープインパクト",
+   "sireSire": "Posse",
+   "sireDam": "Jazzmane",
+   "damDam": "バランセラ",
+   "sireSireSire": "Silver Deputy",
+   "sireSireDam": "Raska",
+   "sireDamSire": "Toccet",
+   "sireDamDam": "Alljazz",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "Acatenango",
+   "damDamDam": "Baranciaga",
+   "owner": "猪熊広次",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "スペクトロライトの2026",
+     "wins": 0,
+     "note": "牡2026 チュウワウィザード"
+    },
+    {
+     "name": "ガーネットフレア",
+     "wins": 3,
+     "note": "牝2023 ニューイヤーズデイ 3勝、中央現役"
+    },
+    {
+     "name": "ヴィジブルライト",
+     "wins": 1,
+     "note": "牡2022 ヘニーヒューズ 地方1勝"
+    },
+    {
+     "name": "イリディセント",
+     "wins": 1,
+     "note": "牝2021 ニューイヤーズデイ 1勝"
+    },
+    {
+     "name": "ユレマー",
+     "wins": 1,
+     "note": "牝2020 モーリス 地方1勝"
+    },
+    {
+     "name": "ナイトダイバー",
+     "wins": 1,
+     "note": "牝2019 ハービンジャー 地方1勝"
+    },
+    {
+     "name": "アイリスクォーツ",
+     "wins": 3,
+     "note": "牝2018 アジアエクスプレス 1勝、地方2勝"
+    },
+    {
+     "name": "ライトウォーリア",
+     "wins": 10,
+     "note": "牡2017 マジェスティックウォリアー 5勝、地方5勝、1着-川崎記念(G1)"
+    }
+   ]
+  },
+  "2024101220": {
+   "name": "サンライズテンカ",
+   "sire": "マジェスティックウォリアー",
+   "dam": "テーオーピコタン",
+   "damSire": "ダイワメジャー",
+   "sireSire": "A.P. Indy",
+   "sireDam": "Dream Supreme",
+   "damDam": "タイセイエトワール",
+   "sireSireSire": "Seattle Slew",
+   "sireSireDam": "Weekend Surprise",
+   "sireDamSire": "Seeking the Gold",
+   "sireDamDam": "Spinning Round",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "トニービン",
+   "damDamDam": "エンスラーリング",
+   "owner": "ライフハウス",
+   "producer": "ヤナガワ牧場",
+   "siblings": [
+    {
+     "name": "モンサンヴェロニカ",
+     "wins": 2,
+     "note": "牝2023 ヴァンゴッホ 地方2勝"
+    },
+    {
+     "name": "サイモンベローチェ",
+     "wins": 1,
+     "note": "牡2022 デクラレーションオブウォー 1勝"
+    },
+    {
+     "name": "アークテーオー",
+     "wins": 0,
+     "note": "牡2020 ラブリーデイ"
+    }
+   ]
+  },
+  "2024108372": {
+   "name": "ブレイヴモナーク",
+   "sire": "Life Is Good",
+   "dam": "Isabella Sings",
+   "damSire": "エスケンデレヤ",
+   "sireSire": "Into Mischief",
+   "sireDam": "Beach Walk",
+   "damDam": "Isobel Baillie",
+   "sireSireSire": "Harlan's Holiday",
+   "sireSireDam": "Leslie's Lady",
+   "sireDamSire": "Distorted Humor",
+   "sireDamDam": "Bonnie Blue Flag",
+   "damSireSire": "Giant's Causeway",
+   "damSireDam": "Aldebaran Light",
+   "damDamSire": "Lomitas",
+   "damDamDam": "ドバイソプラノ",
+   "owner": "幅田昌伸",
+   "producer": "Siena Farms LLC",
+   "siblings": [
+    {
+     "name": "Otello",
+     "wins": 1,
+     "note": "牡2021 Curlin 海外1勝"
+    }
+   ]
+  },
+  "2024103823": {
+   "name": "リープデイリズム",
+   "sire": "ミスターメロディ",
+   "dam": "ウインマリアベール",
+   "damSire": "クロフネ",
+   "sireSire": "Scat Daddy",
+   "sireDam": "Trusty Lady",
+   "damDam": "ダイヤモンドビコー",
+   "sireSireSire": "ヨハネスブルグ",
+   "sireSireDam": "Love Style",
+   "sireDamSire": "Deputy Minister",
+   "sireDamDam": "Klassy Kim",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "ステラマドリッド",
+   "owner": "増田江利子",
+   "producer": "村上欽哉牧場",
+   "siblings": [
+    {
+     "name": "サファイアテソーロ",
+     "wins": 2,
+     "note": "牝2023 シニスターミニスター 2勝、中央現役"
+    },
+    {
+     "name": "ゼンノエヴェック",
+     "wins": 0,
+     "note": "牡2020 シャンハイボビー"
+    },
+    {
+     "name": "ゼンノテンバ",
+     "wins": 1,
+     "note": "牝2019 ドゥラメンテ 地方1勝"
+    },
+    {
+     "name": "ゼンノベールアップ",
+     "wins": 0,
+     "note": "牝2018 ドゥラメンテ"
+    },
+    {
+     "name": "クーファサンピラー",
+     "wins": 5,
+     "note": "牝2016 シンボリクリスエス 地方5勝"
+    },
+    {
+     "name": "ヴォワルドール",
+     "wins": 0,
+     "note": "牝2014 ハービンジャー"
+    }
+   ]
+  },
+  "2024105854": {
+   "name": "リベロスピリット",
+   "sire": "リアルスティール",
+   "dam": "サウンドオブフリーダム",
+   "damSire": "Duke of Marmalade",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "Paint in Green",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "デインヒル",
+   "damSireDam": "Love Me True",
+   "damDamSire": "Invincible Spirit",
+   "damDamDam": "Theory of Law",
+   "owner": "社台レースホース",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "サウンドオブフリーダムの2025",
+     "wins": 0,
+     "note": "牡2025 ダンシングプリンス"
+    },
+    {
+     "name": "ルージュロンド",
+     "wins": 2,
+     "note": "牝2021 Golden Horn 地方2勝"
+    },
+    {
+     "name": "ユージェニー",
+     "wins": 1,
+     "note": "牝2020 Le Havre 地方1勝"
+    },
+    {
+     "name": "クラシカルオーサー",
+     "wins": 1,
+     "note": "牡2019 Nathaniel 地方1勝"
+    },
+    {
+     "name": "ヒアーズトゥライフ",
+     "wins": 1,
+     "note": "牡2018 Frankel 地方1勝"
+    }
+   ]
+  },
+  "2024106174": {
+   "name": "メイワモットキラリ",
+   "sire": "リアルスティール",
+   "dam": "イルーシヴハピネス",
+   "damSire": "Frankel",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "イルーシヴウェーヴ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "Galileo",
+   "damSireDam": "Kind",
+   "damDamSire": "Elusive City",
+   "damDamDam": "Multicolour Wave",
+   "owner": "増田淳",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ジャスティンルマン",
+     "wins": 2,
+     "note": "牡2023 スワーヴリチャード 2勝、中央現役"
+    },
+    {
+     "name": "ペンテリコン",
+     "wins": 1,
+     "note": "牝2022 シルバーステート 中央現役"
+    },
+    {
+     "name": "エバーハピネス",
+     "wins": 3,
+     "note": "牝2020 ドゥラメンテ 3勝"
+    },
+    {
+     "name": "ララペティアン",
+     "wins": 0,
+     "note": "牝2019 ミッキーアイル"
+    }
+   ]
+  },
+  "2024103381": {
+   "name": "アルムランラン",
+   "sire": "マジェスティックウォリアー",
+   "dam": "タガノシャーロット",
+   "damSire": "シンボリクリスエス",
+   "sireSire": "A.P. Indy",
+   "sireDam": "Dream Supreme",
+   "damDam": "タガノディーバ",
+   "sireSireSire": "Seattle Slew",
+   "sireSireDam": "Weekend Surprise",
+   "sireDamSire": "Seeking the Gold",
+   "sireDamDam": "Spinning Round",
+   "damSireSire": "Kris S.",
+   "damSireDam": "Tee Kay",
+   "damDamSire": "フジキセキ",
+   "damDamDam": "ディーバ",
+   "owner": "崎川美枝子",
+   "producer": "新冠タガノファーム",
+   "siblings": [
+    {
+     "name": "タガノミモザ",
+     "wins": 2,
+     "note": "牝2022 ノーブルミッション 地方2勝"
+    },
+    {
+     "name": "タガノラウディー",
+     "wins": 0,
+     "note": "牝2021 デクラレーションオブウォー"
+    },
+    {
+     "name": "タガノエンデヴァー",
+     "wins": 1,
+     "note": "セ2018 リオンディーズ 地方1勝"
+    }
+   ]
+  },
+  "2024102164": {
+   "name": "ビスケインブルー",
+   "sire": "マインドユアビスケッツ",
+   "dam": "スピーナ",
+   "damSire": "ハーツクライ",
+   "sireSire": "Posse",
+   "sireDam": "Jazzmane",
+   "damDam": "ローズキャサリン",
+   "sireSireSire": "Silver Deputy",
+   "sireSireDam": "Raska",
+   "sireDamSire": "Toccet",
+   "sireDamDam": "Alljazz",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "Speightstown",
+   "damDamDam": "Great Plains Lady",
+   "owner": "ビクトリーホースランチ",
+   "producer": "ビクトリーホースランチ",
+   "siblings": [
+    {
+     "name": "スピーナの2025",
+     "wins": 0,
+     "note": "牝2025 グレナディアガーズ"
+    },
+    {
+     "name": "タイキジュビリー",
+     "wins": 0,
+     "note": "牡2023 ホッコータルマエ"
+    },
+    {
+     "name": "ロザリアン",
+     "wins": 0,
+     "note": "牝2022 サンダースノー"
+    },
+    {
+     "name": "ローズソーン",
+     "wins": 0,
+     "note": "牝2021 ラブリーデイ"
+    }
+   ]
+  },
+  "2024106817": {
+   "name": "ショーヴェントス",
+   "sire": "ルヴァンスレーヴ",
+   "dam": "ミスマリア",
+   "damSire": "ハーツクライ",
+   "sireSire": "シンボリクリスエス",
+   "sireDam": "マエストラーレ",
+   "damDam": "カレドニアレディ",
+   "sireSireSire": "Kris S.",
+   "sireSireDam": "Tee Kay",
+   "sireDamSire": "ネオユニヴァース",
+   "sireDamDam": "オータムブリーズ",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "Firebreak",
+   "damDamDam": "Granuaile O'Malley",
+   "owner": "吉冨学",
+   "producer": "上水牧場",
+   "siblings": [
+    {
+     "name": "マグボス",
+     "wins": 0,
+     "note": "牡2025 パレスマリス 中央現役"
+    },
+    {
+     "name": "パラワン",
+     "wins": 0,
+     "note": "牝2023 サートゥルナーリア"
+    },
+    {
+     "name": "スクレイピング",
+     "wins": 1,
+     "note": "セ2022 ナダル 1勝、中央現役"
+    }
+   ]
+  },
+  "2024103755": {
+   "name": "ジルドール",
+   "sire": "カリフォルニアクローム",
+   "dam": "マダムジルウェット",
+   "damSire": "フジキセキ",
+   "sireSire": "Lucky Pulpit",
+   "sireDam": "Love the Chase",
+   "damDam": "ユキノチャンプ",
+   "sireSireSire": "Pulpit",
+   "sireSireDam": "Lucky Soph",
+   "sireDamSire": "Not for Love",
+   "sireDamDam": "Chase It Down",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ミルレーサー",
+   "damDamSire": "タバスコキャット",
+   "damDamDam": "サラトガビューティ",
+   "owner": "ラ・メール",
+   "producer": "松浦牧場",
+   "siblings": [
+    {
+     "name": "マダムジルウェットの2023",
+     "wins": 0,
+     "note": "牝2023 エピカリス"
+    },
+    {
+     "name": "トランスミッション",
+     "wins": 2,
+     "note": "牡2022 エピカリス 地方2勝"
+    },
+    {
+     "name": "リズヴェリオ",
+     "wins": 0,
+     "note": "牝2021 エピカリス"
+    },
+    {
+     "name": "フランコルシャン",
+     "wins": 10,
+     "note": "牡2020 マクフィ 1勝、地方9勝"
+    },
+    {
+     "name": "パンタナル",
+     "wins": 5,
+     "note": "牡2019 ヘニーヒューズ 地方5勝"
+    },
+    {
+     "name": "ヴェロン",
+     "wins": 0,
+     "note": "牡2018 ドゥラメンテ"
+    }
+   ]
+  },
+  "2024101072": {
+   "name": "サウンドスイープ",
+   "sire": "キズナ",
+   "dam": "サウンドリアーナ",
+   "damSire": "ケイムホーム",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "オテンバコマチ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "Gone West",
+   "damSireDam": "Nice Assay",
+   "damDamSire": "ダンシングブレーヴ",
+   "damDamDam": "ボールドワン",
+   "owner": "増田雄一",
+   "producer": "本間牧場",
+   "siblings": [
+    {
+     "name": "サウンドリアーナの2025",
+     "wins": 0,
+     "note": "牝2025 スワーヴリチャード"
+    },
+    {
+     "name": "サウンドモリアーナ",
+     "wins": 6,
+     "note": "牝2022 ミッキーアイル 6勝、中央現役、1着-キーンランドC(G3)"
+    },
+    {
+     "name": "サウンドアレグリア",
+     "wins": 4,
+     "note": "牝2021 キズナ 4勝"
+    },
+    {
+     "name": "サウンドズーム",
+     "wins": 5,
+     "note": "牡2020 サトノダイヤモンド 地方5勝"
+    },
+    {
+     "name": "サウンドステラ",
+     "wins": 4,
+     "note": "牝2019 キタサンブラック 地方4勝"
+    },
+    {
+     "name": "サウンドルチア",
+     "wins": 0,
+     "note": "牝2018 スクリーンヒーロー"
+    },
+    {
+     "name": "サウンドプリズム",
+     "wins": 1,
+     "note": "牡2017 キズナ 1勝"
+    }
+   ]
+  },
+  "2024107148": {
+   "name": "アルデオリエンス",
+   "sire": "キタサンブラック",
+   "dam": "エトワールII",
+   "damSire": "Siyouni",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "Milena's Dream",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "Pivotal",
+   "damSireDam": "Sichilla",
+   "damDamSire": "Authorized",
+   "damDamDam": "Rozella",
+   "owner": "秋元竜弥",
+   "producer": "レイクヴィラファーム",
+   "siblings": [
+    {
+     "name": "エトワールIIの2025",
+     "wins": 0,
+     "note": "牝2025 キズナ"
+    },
+    {
+     "name": "レイアン",
+     "wins": 0,
+     "note": "牝2023 サートゥルナーリア 中央現役"
+    }
+   ]
+  },
+  "2024103834": {
+   "name": "ゼンノレガリア",
+   "sire": "キタサンブラック",
+   "dam": "クーファウェヌス",
+   "damSire": "Frankel",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "イーデンズコーズウェイ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "Galileo",
+   "damSireDam": "Kind",
+   "damDamSire": "Giant's Causeway",
+   "damDamDam": "North Of Eden",
+   "owner": "大迫久美子",
+   "producer": "村上欽哉牧場",
+   "siblings": [
+    {
+     "name": "クーファウェヌスの2025",
+     "wins": 0,
+     "note": "牡2025 イクイノックス"
+    },
+    {
+     "name": "ゼンノスタニング",
+     "wins": 0,
+     "note": "牡2023 シルバーステート"
+    }
+   ]
+  },
+  "2024107245": {
+   "name": "ウンメイ",
+   "sire": "スワーヴリチャード",
+   "dam": "モルフェキイ",
+   "damSire": "モルフェデスペクタ",
+   "sireSire": "ハーツクライ",
+   "sireDam": "ピラミマ",
+   "damDam": "ハセノグッドダンス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "アイリッシュダンス",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "キャリアコレクション",
+   "damSireSire": "デヒア",
+   "damSireDam": "Mary's Spirit",
+   "damDamSire": "ダンスインザダーク",
+   "damDamDam": "ハッピーマサコ",
+   "owner": "幅田京子",
+   "producer": "坂本智広",
+   "siblings": [
+    {
+     "name": "モルフェキイの2025",
+     "wins": 0,
+     "note": "牡2025 キセキ"
+    },
+    {
+     "name": "モルフェヴォロンテ",
+     "wins": 0,
+     "note": "牝2022 イスラボニータ"
+    },
+    {
+     "name": "ソルベット",
+     "wins": 6,
+     "note": "牝2021 オルフェーヴル 地方6勝"
+    },
+    {
+     "name": "アコニャン",
+     "wins": 0,
+     "note": "牝2020 リオンディーズ"
+    },
+    {
+     "name": "ホクセンダンスキイ",
+     "wins": 0,
+     "note": "牝2019 リオンディーズ"
+    },
+    {
+     "name": "ケンアンビシャス",
+     "wins": 4,
+     "note": "牡2018 トゥザワールド 4勝"
+    },
+    {
+     "name": "キーミー",
+     "wins": 0,
+     "note": "牝2017 トウケイヘイロー"
+    },
+    {
+     "name": "ジュンリュウセー",
+     "wins": 1,
+     "note": "牝2016 ローレルゲレイロ 地方1勝"
+    },
+    {
+     "name": "ホクセンジョウオー",
+     "wins": 2,
+     "note": "牝2015 サムライハート 2勝"
+    },
+    {
+     "name": "コスモジャーベ",
+     "wins": 3,
+     "note": "牡2013 ソングオブウインド 3勝"
+    },
+    {
+     "name": "モルフェワイン",
+     "wins": 19,
+     "note": "牝2011 ソングオブウインド 地方19勝"
+    }
+   ]
+  },
+  "2024102943": {
+   "name": "インスピリット",
+   "sire": "エフフォーリア",
+   "dam": "アシェット",
+   "damSire": "アドマイヤムーン",
+   "sireSire": "エピファネイア",
+   "sireDam": "ケイティーズハート",
+   "damDam": "アッシュケーク",
+   "sireSireSire": "シンボリクリスエス",
+   "sireSireDam": "シーザリオ",
+   "sireDamSire": "ハーツクライ",
+   "sireDamDam": "ケイティーズファースト",
+   "damSireSire": "エンドスウィープ",
+   "damSireDam": "マイケイティーズ",
+   "damDamSire": "タイキシャトル",
+   "damDamDam": "ケイアイグローリー",
+   "owner": "ターフ・スポート",
+   "producer": "大狩部牧場",
+   "siblings": [
+    {
+     "name": "アシェットの2026",
+     "wins": 0,
+     "note": "牡2026 Pearl Secret"
+    },
+    {
+     "name": "ストレイトシックス",
+     "wins": 0,
+     "note": "牡2025 ウエストオーバー 中央現役"
+    },
+    {
+     "name": "ペリジーフルムーン",
+     "wins": 0,
+     "note": "牡2023 ミスチヴィアスアレックス"
+    }
+   ]
+  },
+  "2024106733": {
+   "name": "サフランローブ",
+   "sire": "レイデオロ",
+   "dam": "レッドラヴィータ",
+   "damSire": "スペシャルウィーク",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "ラドラーダ",
+   "damDam": "ディクシージャズ",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "シンボリクリスエス",
+   "sireDamDam": "レディブロンド",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "キャンペンガール",
+   "damDamSire": "トニービン",
+   "damDamDam": "ディクシースプラッシュ",
+   "owner": "吉田和美",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "レッドラヴィータの2025",
+     "wins": 0,
+     "note": "牡2025 シュネルマイスター"
+    },
+    {
+     "name": "ミッキーラヴィータ",
+     "wins": 0,
+     "note": "牝2023 モーリス 中央現役"
+    },
+    {
+     "name": "ルージュナリッシュ",
+     "wins": 1,
+     "note": "牝2022 ドレフォン 1勝、中央現役"
+    },
+    {
+     "name": "キャネル",
+     "wins": 4,
+     "note": "牡2021 ブリックスアンドモルタル 4勝、中央現役"
+    },
+    {
+     "name": "デュメイカズマ",
+     "wins": 1,
+     "note": "牡2020 ハービンジャー 地方1勝"
+    },
+    {
+     "name": "マテンロウスカイ",
+     "wins": 5,
+     "note": "セ2019 モーリス 5勝、1着-中山記念(G2)"
+    },
+    {
+     "name": "ベストシンガー",
+     "wins": 1,
+     "note": "牝2018 ロードカナロア 1勝"
+    }
+   ]
+  },
+  "2024104087": {
+   "name": "ブブカ",
+   "sire": "エフフォーリア",
+   "dam": "ローズアダージョ",
+   "damSire": "ディープインパクト",
+   "sireSire": "エピファネイア",
+   "sireDam": "ケイティーズハート",
+   "damDam": "ファーストナイト",
+   "sireSireSire": "シンボリクリスエス",
+   "sireSireDam": "シーザリオ",
+   "sireDamSire": "ハーツクライ",
+   "sireDamDam": "ケイティーズファースト",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "Sadler's Wells",
+   "damDamDam": "Morning Devotion",
+   "owner": "杉澤真吾",
+   "producer": "上野正恵",
+   "siblings": [
+    {
+     "name": "キョウエイクローム",
+     "wins": 0,
+     "note": "牝2023 カリフォルニアクローム"
+    },
+    {
+     "name": "ベルサ",
+     "wins": 1,
+     "note": "牝2022 マクフィ 1勝、中央現役"
+    },
+    {
+     "name": "ミリオンジェンヌ",
+     "wins": 3,
+     "note": "牝2021 アジアエクスプレス 地方3勝"
+    },
+    {
+     "name": "グロー",
+     "wins": 3,
+     "note": "牡2019 エピファネイア 地方3勝"
+    },
+    {
+     "name": "バスク",
+     "wins": 0,
+     "note": "牡2018 ドゥラメンテ"
+    },
+    {
+     "name": "ムジカ",
+     "wins": 1,
+     "note": "牝2017 エピファネイア 1勝、2着-関西TVローズS(G2)"
+    },
+    {
+     "name": "ヒルド",
+     "wins": 4,
+     "note": "牝2016 ロードカナロア 地方4勝"
+    },
+    {
+     "name": "ショウナンラヴィ",
+     "wins": 0,
+     "note": "牝2015 キングカメハメハ"
+    }
+   ]
+  },
+  "2024102777": {
+   "name": "サチノリボーン",
+   "sire": "ルーラーシップ",
+   "dam": "モハー",
+   "damSire": "バトルプラン",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "エアグルーヴ",
+   "damDam": "サイタ",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "トニービン",
+   "sireDamDam": "ダイナカール",
+   "damSireSire": "エンパイアメーカー",
+   "damSireDam": "Flanders",
+   "damDamSire": "ネオユニヴァース",
+   "damDamDam": "プレイザフィールド",
+   "owner": "佐藤好美",
+   "producer": "ヒダカファーム",
+   "siblings": [
+    {
+     "name": "サンシャルル",
+     "wins": 0,
+     "note": "牝2025 ジャスタウェイ"
+    },
+    {
+     "name": "ティラーノ",
+     "wins": 2,
+     "note": "牡2023 ゴールドシップ 2勝、中央現役"
+    }
+   ]
+  },
+  "2024106537": {
+   "name": "フィネスブレード",
+   "sire": "ロードカナロア",
+   "dam": "フィニフティ",
+   "damSire": "ディープインパクト",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "レディブラッサム",
+   "damDam": "ココシュニック",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "サラトガデュー",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "クロフネ",
+   "damDamDam": "ゴールドティアラ",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "フィニフティの2025",
+     "wins": 0,
+     "note": "牝2025 ナダル"
+    },
+    {
+     "name": "オカノティアラ",
+     "wins": 2,
+     "note": "牝2023 マクフィ 地方2勝"
+    },
+    {
+     "name": "ロンドボス",
+     "wins": 3,
+     "note": "牝2022 モーリス 3勝、中央現役"
+    }
+   ]
+  },
+  "2024106121": {
+   "name": "アキュティアマ",
+   "sire": "コントレイル",
+   "dam": "アスコルティ",
+   "damSire": "Danehill Dancer",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "リッスン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "デインヒル",
+   "damSireDam": "Mira Adonde",
+   "damDamSire": "Sadler's Wells",
+   "damDamDam": "Brigid",
+   "owner": "ＴＮレーシング",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "リゾナンツァ",
+     "wins": 0,
+     "note": "牡2025 イクイノックス 中央現役"
+    },
+    {
+     "name": "ダノンアスコルティ",
+     "wins": 1,
+     "note": "牝2023 キタサンブラック 1勝、中央現役"
+    },
+    {
+     "name": "コンサートマスター",
+     "wins": 0,
+     "note": "牡2022 サトノダイヤモンド"
+    },
+    {
+     "name": "アスコリピチェーノ",
+     "wins": 6,
+     "note": "牝2021 ダイワメジャー 5勝、海外1勝、1着-阪神ジュベナイルF(G1)、ヴィクトリアマイル(G1)、1351ターフスプリ(G2)、新潟2歳S(G3)、京成杯オータムH(G3)"
+    },
+    {
+     "name": "アスコルティアーモ",
+     "wins": 4,
+     "note": "牝2020 キタサンブラック 4勝"
+    },
+    {
+     "name": "アスコルターレ",
+     "wins": 3,
+     "note": "牡2018 ドゥラメンテ 3勝"
+    },
+    {
+     "name": "アストンクリントン",
+     "wins": 1,
+     "note": "牡2017 ハーツクライ 1勝"
+    }
+   ]
+  },
+  "2024105106": {
+   "name": "サトノセブンス",
+   "sire": "キタサンブラック",
+   "dam": "クロンヌデトワール",
+   "damSire": "オルフェーヴル",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "スターズインハーアイズ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "ステイゴールド",
+   "damSireDam": "オリエンタルアート",
+   "damDamSire": "Woodman",
+   "damDamDam": "ウインドインハーヘア",
+   "owner": "里見治",
+   "producer": "矢野牧場",
+   "siblings": [
+    {
+     "name": "クロンヌデトワールの2025",
+     "wins": 0,
+     "note": "牝2025 コントレイル"
+    },
+    {
+     "name": "ディアデムドール",
+     "wins": 0,
+     "note": "牝2023 サートゥルナーリア"
+    },
+    {
+     "name": "クロンヌデトワールの2022",
+     "wins": 0,
+     "note": "牝2022 ルヴァンスレーヴ"
+    }
+   ]
+  },
+  "2024107004": {
+   "name": "ベイカーズダズン",
+   "sire": "オルフェーヴル",
+   "dam": "サーティーンスクエアド",
+   "damSire": "Liaison",
+   "sireSire": "ステイゴールド",
+   "sireDam": "オリエンタルアート",
+   "damDam": "House of Fortune",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "メジロマックイーン",
+   "sireDamDam": "エレクトロアート",
+   "damSireSire": "Indian Charlie",
+   "damSireDam": "Galloping Gal",
+   "damDamSire": "Free House",
+   "damDamDam": "So Fortunate",
+   "owner": "キャロットファーム",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "サーティーンスクエアドの2025",
+     "wins": 0,
+     "note": "牝2025 ルヴァンスレーヴ"
+    },
+    {
+     "name": "ルートサーティーン",
+     "wins": 1,
+     "note": "セ2023 イスラボニータ 1勝、中央現役"
+    },
+    {
+     "name": "オンザスクエア",
+     "wins": 2,
+     "note": "牝2022 Vekoma 2勝"
+    },
+    {
+     "name": "サーティーンスクエアドの2021",
+     "wins": 0,
+     "note": "牝2021 Advertise"
+    },
+    {
+     "name": "セブンキューブド",
+     "wins": 2,
+     "note": "牡2020 Showcasing 地方2勝"
+    }
+   ]
+  },
+  "2022102756": {
+   "name": "オドラニャソンソン",
+   "sire": "ディープブリランテ",
+   "dam": "キイレ",
+   "damSire": "フジキセキ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴアンドバブルズ",
+   "damDam": "ラブイズトゥルー",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Loup Sauvage",
+   "sireDamDam": "バブルドリーム",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ミルレーサー",
+   "damDamSire": "フォーティナイナー",
+   "damDamDam": "ヒトメボレ",
+   "owner": "ＪＰＮ技研",
+   "producer": "木村牧場",
+   "siblings": [
+    {
+     "name": "キイレの2025",
+     "wins": 0,
+     "note": "牝2025 ニューイヤーズデイ"
+    },
+    {
+     "name": "キサラフラッシュ",
+     "wins": 0,
+     "note": "牝2023 エイシンフラッシュ"
+    },
+    {
+     "name": "キタノアイザック",
+     "wins": 0,
+     "note": "牡2021 ホークビル"
+    },
+    {
+     "name": "ジャスティスボス",
+     "wins": 1,
+     "note": "牡2020 シビルウォー 地方1勝"
+    },
+    {
+     "name": "ツノチャン",
+     "wins": 0,
+     "note": "牝2019 メイショウサムソン"
+    },
+    {
+     "name": "マチブセ",
+     "wins": 0,
+     "note": "牡2017 アポロキングダム"
+    },
+    {
+     "name": "キイレの2016",
+     "wins": 0,
+     "note": "牡2016 アポロキングダム"
+    },
+    {
+     "name": "クスリバコ",
+     "wins": 2,
+     "note": "牡2015 ローエングリン 地方2勝"
+    },
+    {
+     "name": "ショウブニデル",
+     "wins": 4,
+     "note": "牡2014 ロードアルティマ 1勝、地方3勝"
+    },
+    {
+     "name": "ニャントカナル",
+     "wins": 0,
+     "note": "牝2013 メイショウボーラー"
+    }
+   ]
+  },
+  "2022106673": {
+   "name": "スズノソレイユ",
+   "sire": "ディスクリートキャット",
+   "dam": "グラヴィオーラ",
+   "damSire": "サウスヴィグラス",
+   "sireSire": "Forestry",
+   "sireDam": "Pretty Discreet",
+   "damDam": "カクテルラウンジ",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Shared Interest",
+   "sireDamSire": "Private Account",
+   "sireDamDam": "Pretty Persuasive",
+   "damSireSire": "エンドスウィープ",
+   "damSireDam": "ダーケストスター",
+   "damDamSire": "タニノギムレット",
+   "damDamDam": "ランニングヒロイン",
+   "owner": "小紫嘉之",
+   "producer": "ハクツ牧場",
+   "siblings": [
+    {
+     "name": "グラヴィオーラの2025",
+     "wins": 0,
+     "note": "牡2025 シャンハイボビー"
+    },
+    {
+     "name": "ウィルミスチヴァス",
+     "wins": 4,
+     "note": "牡2023 オルフェーヴル 地方4勝"
+    },
+    {
+     "name": "ファットドラゴン",
+     "wins": 5,
+     "note": "牡2021 ディスクリートキャット 地方5勝"
+    }
+   ]
+  },
+  "2022104644": {
+   "name": "ペンテリコン",
+   "sire": "シルバーステート",
+   "dam": "イルーシヴハピネス",
+   "damSire": "Frankel",
+   "sireSire": "ディープインパクト",
+   "sireDam": "シルヴァースカヤ",
+   "damDam": "イルーシヴウェーヴ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Silver Hawk",
+   "sireDamDam": "Boubskaia",
+   "damSireSire": "Galileo",
+   "damSireDam": "Kind",
+   "damDamSire": "Elusive City",
+   "damDamDam": "Multicolour Wave",
+   "owner": "キーファーズ",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "メイワモットキラリ",
+     "wins": 0,
+     "note": "牡2024 リアルスティール 中央現役"
+    },
+    {
+     "name": "ジャスティンルマン",
+     "wins": 2,
+     "note": "牡2023 スワーヴリチャード 2勝、中央現役"
+    },
+    {
+     "name": "エバーハピネス",
+     "wins": 3,
+     "note": "牝2020 ドゥラメンテ 3勝"
+    },
+    {
+     "name": "ララペティアン",
+     "wins": 0,
+     "note": "牝2019 ミッキーアイル"
+    }
+   ]
+  },
+  "2023103808": {
+   "name": "スターフュージョン",
+   "sire": "ナダル",
+   "dam": "ピースバーグ",
+   "damSire": "Sageburg",
+   "sireSire": "Blame",
+   "sireDam": "Ascending Angel",
+   "damDam": "Peace Talk",
+   "sireSireSire": "Arch",
+   "sireSireDam": "Liable",
+   "sireDamSire": "Pulpit",
+   "sireDamDam": "Solar Colony",
+   "damSireSire": "ヨハネスブルグ",
+   "damSireDam": "Sage Et Jolie",
+   "damDamSire": "Sadler's Wells",
+   "damDamDam": "Pampa Bella",
+   "owner": "ＫＲジャパン",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "トクシーラヴ",
+     "wins": 0,
+     "note": "牝2025 コントレイル 中央現役"
+    },
+    {
+     "name": "カンポランパンテ",
+     "wins": 0,
+     "note": "牡2024 ナダル 中央現役"
+    },
+    {
+     "name": "イスラパシフィカ",
+     "wins": 0,
+     "note": "牝2022 イスラボニータ"
+    },
+    {
+     "name": "ニコラウス",
+     "wins": 5,
+     "note": "牡2021 リアルスティール 2勝、地方3勝"
+    },
+    {
+     "name": "センスオブピース",
+     "wins": 0,
+     "note": "牝2020 オルフェーヴル"
+    },
+    {
+     "name": "ピースエンジェル",
+     "wins": 0,
+     "note": "牝2019 Dark Angel"
+    },
+    {
+     "name": "ピースフルタイム",
+     "wins": 11,
+     "note": "牡2017 デクラレーションオブウォー 地方11勝"
+    }
+   ]
+  },
+  "2023103755": {
+   "name": "エシェックオロワ",
+   "sire": "ミッキーアイル",
+   "dam": "ウィズエモーション",
+   "damSire": "クロフネ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "スターアイル",
+   "damDam": "ミスアルダント",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "ロックオブジブラルタル",
+   "sireDamDam": "アイルドフランス",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "マガロ",
+   "owner": "吉田照哉",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "アンネモア",
+     "wins": 0,
+     "note": "牝2025 マインドユアビスケッツ 中央現役"
+    },
+    {
+     "name": "ワンコール",
+     "wins": 0,
+     "note": "牝2024 ルーラーシップ 中央現役"
+    },
+    {
+     "name": "アルカナエ",
+     "wins": 4,
+     "note": "セ2022 カリフォルニアクローム 地方4勝"
+    },
+    {
+     "name": "テンプーシャオン",
+     "wins": 1,
+     "note": "牡2020 ドレフォン 1勝、中央現役"
+    }
+   ]
+  },
+  "2019103285": {
+   "name": "クリノミニスター",
+   "sire": "シニスターミニスター",
+   "dam": "アイムヒアー",
+   "damSire": "プリサイスエンド",
+   "sireSire": "Old Trieste",
+   "sireDam": "Sweet Minister",
+   "damDam": "イケイケモンチッチ",
+   "sireSireSire": "A.P. Indy",
+   "sireSireDam": "Lovlier Linda",
+   "sireDamSire": "The Prime Minister",
+   "sireDamDam": "Sweet Blue",
+   "damSireSire": "エンドスウィープ",
+   "damSireDam": "Precisely",
+   "damDamSire": "デインヒル",
+   "damDamDam": "モンチッチ",
+   "owner": "栗本守",
+   "producer": "三石川上牧場",
+   "siblings": [
+    {
+     "name": "シークユアドリーム",
+     "wins": 0,
+     "note": "牡2024 ホッコータルマエ"
+    },
+    {
+     "name": "ピカンチフラワー",
+     "wins": 2,
+     "note": "牝2022 ホッコータルマエ 地方2勝"
+    },
+    {
+     "name": "シャイニングローズ",
+     "wins": 3,
+     "note": "牝2021 ホッコータルマエ 地方3勝"
+    },
+    {
+     "name": "アイムヒアーの2016",
+     "wins": 0,
+     "note": "牡2016 ヘニーヒューズ"
+    }
+   ]
+  },
+  "2022101539": {
+   "name": "ラフォン",
+   "sire": "シニスターミニスター",
+   "dam": "スイートマルセル",
+   "damSire": "ワイルドラッシュ",
+   "sireSire": "Old Trieste",
+   "sireDam": "Sweet Minister",
+   "damDam": "スイートフルーレ",
+   "sireSireSire": "A.P. Indy",
+   "sireSireDam": "Lovlier Linda",
+   "sireDamSire": "The Prime Minister",
+   "sireDamDam": "Sweet Blue",
+   "damSireSire": "Wild Again",
+   "damSireDam": "Rose Park",
+   "damDamSire": "Green Desert",
+   "damDamDam": "Kenbu",
+   "owner": "長谷川祐司",
+   "producer": "シンボリ牧場",
+   "siblings": [
+    {
+     "name": "スイートマルセルの2025",
+     "wins": 0,
+     "note": "牡2025 ホットロッドチャーリー"
+    },
+    {
+     "name": "フジセイテン",
+     "wins": 0,
+     "note": "牝2024 チュウワウィザード 中央現役"
+    },
+    {
+     "name": "メイショウジンソウ",
+     "wins": 1,
+     "note": "牡2023 ゴールドドリーム 地方1勝"
+    },
+    {
+     "name": "マッハキング",
+     "wins": 0,
+     "note": "牡2021 コパノリッキー"
+    },
+    {
+     "name": "ムーヴ",
+     "wins": 4,
+     "note": "牡2019 ラニ 4勝、中央現役"
+    },
+    {
+     "name": "スイートアリエス",
+     "wins": 2,
+     "note": "牝2018 アジアエクスプレス 2勝"
+    },
+    {
+     "name": "レイテントロアー",
+     "wins": 2,
+     "note": "牡2017 サウスヴィグラス 2勝"
+    }
+   ]
+  },
+  "2023101577": {
+   "name": "フレイムスター",
+   "sire": "ドレフォン",
+   "dam": "テーオーヴィーナス",
+   "damSire": "ディープインパクト",
+   "sireSire": "Gio Ponti",
+   "sireDam": "Eltimaas",
+   "damDam": "シルクチャプター",
+   "sireSireSire": "Tale of the Cat",
+   "sireSireDam": "Chipeta Springs",
+   "sireDamSire": "Ghostzapper",
+   "sireDamDam": "Najecam",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "アフリート",
+   "damDamDam": "ノーブルプライド",
+   "owner": "辻子依旦",
+   "producer": "ヤナガワ牧場",
+   "siblings": [
+    {
+     "name": "テーオーヴィーナスの2025",
+     "wins": 0,
+     "note": "牡2025 スワーヴリチャード"
+    },
+    {
+     "name": "サンライズライリー",
+     "wins": 0,
+     "note": "牡2022 カリフォルニアクローム"
+    },
+    {
+     "name": "シルキーガール",
+     "wins": 3,
+     "note": "牝2021 デクラレーションオブウォー 3勝"
+    },
+    {
+     "name": "サンライズプルート",
+     "wins": 2,
+     "note": "牡2020 リオンディーズ 2勝、中央現役"
+    },
+    {
+     "name": "ケデシュ",
+     "wins": 3,
+     "note": "牝2019 リオンディーズ 3勝"
+    },
+    {
+     "name": "サイモンメガライズ",
+     "wins": 2,
+     "note": "牡2018 ケープブランコ 2勝"
+    },
+    {
+     "name": "テーオーソクラテス",
+     "wins": 7,
+     "note": "セ2017 エイシンフラッシュ 7勝、1着-小倉サマージャンプ(JG3)"
+    }
+   ]
+  },
+  "2022104426": {
+   "name": "アンピュルシオン",
+   "sire": "サトノダイヤモンド",
+   "dam": "エアラホーヤ",
+   "damSire": "ボストンハーバー",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マルペンサ",
+   "damDam": "テンザンストーム",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Orpen",
+   "sireDamDam": "Marsella",
+   "damSireSire": "Capote",
+   "damSireDam": "Harbor Springs",
+   "damDamSire": "Storm Cat",
+   "damDamDam": "Rythmical",
+   "owner": "ヒダカ・ブリーダーズ・ユニオン",
+   "producer": "藤原牧場",
+   "siblings": [
+    {
+     "name": "ラホーヤストーム",
+     "wins": 3,
+     "note": "牝2020 キタサンブラック 1勝、地方2勝"
+    },
+    {
+     "name": "ジュエルシティー",
+     "wins": 0,
+     "note": "牝2019 エピファネイア"
+    },
+    {
+     "name": "プレシオーソ",
+     "wins": 6,
+     "note": "セ2017 ブラックタイド 3勝、地方3勝"
+    },
+    {
+     "name": "ラプタス",
+     "wins": 10,
+     "note": "セ2016 ディープブリランテ 5勝、地方5勝、1着-黒船賞[指定交流](G3)、かきつばた記念(G3)、サマーチャンピオン(G3)、兵庫ゴールドトロフィ(G3)"
+    },
+    {
+     "name": "ラホーヤノキセキ",
+     "wins": 5,
+     "note": "牡2014 キンシャサノキセキ 2勝、地方3勝"
+    },
+    {
+     "name": "サンタモニカ",
+     "wins": 0,
+     "note": "牝2013 マンハッタンカフェ"
+    },
+    {
+     "name": "ラホーヤビーチ",
+     "wins": 3,
+     "note": "牝2012 タイキシャトル 3勝"
+    },
+    {
+     "name": "マジェスティハーツ",
+     "wins": 4,
+     "note": "牡2010 ハーツクライ 4勝、2着-神戸新聞杯(G2)、新潟大賞典(G3)、鳴尾記念(G3)、関屋記念(G3)"
+    },
+    {
+     "name": "ガッテンムサシ",
+     "wins": 1,
+     "note": "牡2009 スペシャルウィーク 1勝"
+    }
+   ]
+  },
+  "2023105140": {
+   "name": "サヨノパララックス",
+   "sire": "ミッキーアイル",
+   "dam": "ナリタアマリリス",
+   "damSire": "ハーツクライ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "スターアイル",
+   "damDam": "ゴールドグレース",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "ロックオブジブラルタル",
+   "sireDamDam": "アイルドフランス",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "エリシオ",
+   "damDamDam": "グレースウーマン",
+   "owner": "吉岡泰治",
+   "producer": "鮫川啓一",
+   "siblings": [
+    {
+     "name": "ジェムオブシェール",
+     "wins": 0,
+     "note": "牝2025 シャープアステカ"
+    },
+    {
+     "name": "ケルンミッチー",
+     "wins": 0,
+     "note": "牡2024 クリソベリル 中央現役"
+    },
+    {
+     "name": "クイーンカゴシマ",
+     "wins": 1,
+     "note": "牝2021 ミッキーグローリー 地方1勝"
+    },
+    {
+     "name": "カットビホッキマン",
+     "wins": 0,
+     "note": "牡2020 ホッコータルマエ"
+    }
+   ]
+  },
+  "2023101722": {
+   "name": "ジューンオアシス",
+   "sire": "ミッキーアイル",
+   "dam": "ジューンアクア",
+   "damSire": "クロフネ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "スターアイル",
+   "damDam": "アグネスナチュラル",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "ロックオブジブラルタル",
+   "sireDamDam": "アイルドフランス",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "サクラバクシンオー",
+   "damDamDam": "アグネスアテーナー",
+   "owner": "吉川潤",
+   "producer": "高昭牧場",
+   "siblings": [
+    {
+     "name": "アクアチャン",
+     "wins": 0,
+     "note": "牝2025 インディチャンプ 中央現役"
+    },
+    {
+     "name": "リンピッド",
+     "wins": 0,
+     "note": "牝2024 ジャンダルム 中央現役"
+    }
+   ]
+  },
+  "2023100144": {
+   "name": "エンブルーシャ",
+   "sire": "キタサンブラック",
+   "dam": "クリーミーボイス",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "アルーリングボイス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "フレンチデピュティ",
+   "damDamDam": "アルーリングアクト",
+   "owner": "奥雅哉",
+   "producer": "下屋敷牧場",
+   "siblings": [
+    {
+     "name": "クリーミーボイスの2025",
+     "wins": 0,
+     "note": "牝2025 イクイノックス"
+    },
+    {
+     "name": "ゲンパチリアン",
+     "wins": 0,
+     "note": "牡2024 キズナ 中央現役"
+    },
+    {
+     "name": "イガッチ",
+     "wins": 4,
+     "note": "牡2022 リアルスティール 4勝、中央現役"
+    },
+    {
+     "name": "ニューステソーロ",
+     "wins": 3,
+     "note": "牝2021 エピファネイア 3勝"
+    },
+    {
+     "name": "ビッグピエンルーフ",
+     "wins": 1,
+     "note": "牝2020 ハーツクライ 地方1勝"
+    },
+    {
+     "name": "マテンロウボイス",
+     "wins": 1,
+     "note": "牝2019 ドレフォン 1勝"
+    },
+    {
+     "name": "マテンロウオペラ",
+     "wins": 0,
+     "note": "牡2018 ハーツクライ"
+    },
+    {
+     "name": "ニシノカテリーナ",
+     "wins": 1,
+     "note": "牝2017 ジャスタウェイ 地方1勝"
+    }
+   ]
+  },
+  "2023101122": {
+   "name": "ヒッグスボソン",
+   "sire": "ファインニードル",
+   "dam": "サマーエモーション",
+   "damSire": "Dubawi",
+   "sireSire": "アドマイヤムーン",
+   "sireDam": "ニードルクラフト",
+   "damDam": "ミッドサマーフェア",
+   "sireSireSire": "エンドスウィープ",
+   "sireSireDam": "マイケイティーズ",
+   "sireDamSire": "Mark of Esteem",
+   "sireDamDam": "Sharp Point",
+   "damSireSire": "Dubai Millennium",
+   "damSireDam": "Zomaradah",
+   "damDamSire": "タニノギムレット",
+   "damDamDam": "ストロベリーフェア",
+   "owner": "ゴドルフィン",
+   "producer": "ダーレー・ジャパン・ファーム",
+   "siblings": [
+    {
+     "name": "サマーエモーションの2025",
+     "wins": 0,
+     "note": "牝2025 キタサンブラック"
+    },
+    {
+     "name": "マンナット",
+     "wins": 1,
+     "note": "牡2024 キズナ 1勝、中央現役"
+    }
+   ]
+  },
+  "2022103307": {
+   "name": "サンライズジュピタ",
+   "sire": "ディスクリートキャット",
+   "dam": "ラブリーアリュール",
+   "damSire": "ゴールドアリュール",
+   "sireSire": "Forestry",
+   "sireDam": "Pretty Discreet",
+   "damDam": "ラブリープリンセス",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Shared Interest",
+   "sireDamSire": "Private Account",
+   "sireDamDam": "Pretty Persuasive",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ニキーヤ",
+   "damDamSire": "エンドスウィープ",
+   "damDamDam": "ラブリーサンライズ",
+   "owner": "松岡隆雄",
+   "producer": "ミリオンファーム",
+   "siblings": [
+    {
+     "name": "ラブリーアリュールの2025",
+     "wins": 0,
+     "note": "牡2025 ルヴァンスレーヴ"
+    },
+    {
+     "name": "サンライズゼイン",
+     "wins": 0,
+     "note": "牡2024 ディスクリートキャット 中央現役"
+    },
+    {
+     "name": "サンライズシア",
+     "wins": 3,
+     "note": "牡2021 シャンハイボビー 1勝、地方2勝"
+    },
+    {
+     "name": "ジャンヌサンライズ",
+     "wins": 4,
+     "note": "牝2019 クリエイターII 地方4勝"
+    },
+    {
+     "name": "サンライズスカイ",
+     "wins": 0,
+     "note": "牡2018 カジノドライヴ"
+    },
+    {
+     "name": "サンライズナイト",
+     "wins": 6,
+     "note": "牡2015 クロフネ 3勝、地方3勝"
+    },
+    {
+     "name": "ラブリーミリアン",
+     "wins": 3,
+     "note": "牝2014 ヴァーミリアン 地方3勝"
+    }
+   ]
+  },
+  "2023105648": {
+   "name": "ビサーロ",
+   "sire": "キズナ",
+   "dam": "ベルクリア",
+   "damSire": "ヴァーミリアン",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "プレシャスライフ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "エルコンドルパサー",
+   "damSireDam": "スカーレットレディ",
+   "damDamSire": "タイキシャトル",
+   "damDamDam": "スターマイライフ",
+   "owner": "水上行雄",
+   "producer": "笠松牧場",
+   "siblings": [
+    {
+     "name": "ベルクリアの2025",
+     "wins": 0,
+     "note": "牡2025 シスキン"
+    },
+    {
+     "name": "ストルワート",
+     "wins": 0,
+     "note": "牡2024 シルバーステート 中央現役"
+    },
+    {
+     "name": "ベルギューン",
+     "wins": 4,
+     "note": "牝2022 ナダル 4勝、中央現役"
+    },
+    {
+     "name": "ラピダリア",
+     "wins": 2,
+     "note": "牝2021 マジェスティックウォリアー 1勝、地方1勝、中央現役"
+    }
+   ]
+  },
+  "2023105024": {
+   "name": "ダノンステート",
+   "sire": "シルバーステート",
+   "dam": "マダムヴェステル",
+   "damSire": "Into Mischief",
+   "sireSire": "ディープインパクト",
+   "sireDam": "シルヴァースカヤ",
+   "damDam": "Classic West",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Silver Hawk",
+   "sireDamDam": "Boubskaia",
+   "damSireSire": "Harlan's Holiday",
+   "damSireDam": "Leslie's Lady",
+   "damDamSire": "Gone West",
+   "damDamDam": "Dodie Mae",
+   "owner": "ダノックス",
+   "producer": "三嶋牧場",
+   "siblings": [
+    {
+     "name": "マダムヴェステルの2025",
+     "wins": 0,
+     "note": "牡2025 キズナ"
+    },
+    {
+     "name": "レクスアストラ",
+     "wins": 0,
+     "note": "牡2024 サートゥルナーリア"
+    },
+    {
+     "name": "ダノンヴェステル",
+     "wins": 1,
+     "note": "牡2022 American Pharoah 1勝"
+    }
+   ]
+  },
+  "2023104216": {
+   "name": "コワンニシタガウ",
+   "sire": "スワーヴリチャード",
+   "dam": "ロウカム",
+   "damSire": "Distorted Humor",
+   "sireSire": "ハーツクライ",
+   "sireDam": "ピラミマ",
+   "damDam": "Score",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "アイリッシュダンス",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "キャリアコレクション",
+   "damSireSire": "フォーティナイナー",
+   "damSireDam": "Danzig's Beauty",
+   "damDamSire": "A.P. Indy",
+   "damDamDam": "Educated Risk",
+   "owner": "幅田京子",
+   "producer": "大栄牧場",
+   "siblings": [
+    {
+     "name": "ロウカムの2025",
+     "wins": 0,
+     "note": "牝2025 クリソベリル"
+    },
+    {
+     "name": "シンクロニシティ",
+     "wins": 0,
+     "note": "牡2024 チュウワウィザード 中央現役"
+    },
+    {
+     "name": "アズキチャン",
+     "wins": 3,
+     "note": "牝2022 West Coast 地方3勝"
+    }
+   ]
+  },
+  "2022106940": {
+   "name": "ローレルオーブ",
+   "sire": "ウインブライト",
+   "dam": "ルージュマジック",
+   "damSire": "アフリート",
+   "sireSire": "ステイゴールド",
+   "sireDam": "サマーエタニティ",
+   "damDam": "シジェームサン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "アドマイヤコジーン",
+   "sireDamDam": "オールフォーゲラン",
+   "damSireSire": "Mr. Prospector",
+   "damSireDam": "Polite Lady",
+   "damDamSire": "Septieme Ciel",
+   "damDamDam": "Samalex",
+   "owner": "ローレルレーシング",
+   "producer": "松木加代",
+   "siblings": [
+    {
+     "name": "ルージュマジックの2025",
+     "wins": 0,
+     "note": "牝2025 インディチャンプ"
+    },
+    {
+     "name": "マイネルモンテュス",
+     "wins": 3,
+     "note": "牡2023 ゴールドシップ 地方3勝"
+    },
+    {
+     "name": "リエラ",
+     "wins": 0,
+     "note": "牝2021 ワールドエース"
+    },
+    {
+     "name": "インテリジェンヌ",
+     "wins": 0,
+     "note": "牝2020 フェノーメノ"
+    },
+    {
+     "name": "リーディングラン",
+     "wins": 2,
+     "note": "牝2019 ワールドエース 地方2勝"
+    },
+    {
+     "name": "クルシエ",
+     "wins": 2,
+     "note": "牡2017 グランプリボス 地方2勝"
+    },
+    {
+     "name": "ルージュマジックの2016",
+     "wins": 0,
+     "note": "牡2016 ファーガソン"
+    },
+    {
+     "name": "オーミスマイル",
+     "wins": 0,
+     "note": "牡2015 コンデュイット"
+    },
+    {
+     "name": "ゴーフェスタ",
+     "wins": 0,
+     "note": "牝2014 ナカヤマフェスタ"
+    },
+    {
+     "name": "ヒメタチバナ",
+     "wins": 2,
+     "note": "牝2013 ナカヤマフェスタ 2勝"
+    }
+   ]
+  },
+  "2023101097": {
+   "name": "ゴールデンテティス",
+   "sire": "リアルスティール",
+   "dam": "リオンジャック",
+   "damSire": "リオンディーズ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "クラウンドジャック",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "キングカメハメハ",
+   "damSireDam": "シーザリオ",
+   "damDamSire": "ヴィクトワールピサ",
+   "damDamDam": "ゴールデンジャック",
+   "owner": "協栄",
+   "producer": "タバタファーム",
+   "siblings": [
+    {
+     "name": "リオンジャックの2025",
+     "wins": 0,
+     "note": "牝2025 オルフェーヴル"
+    },
+    {
+     "name": "リオンジャックの2024",
+     "wins": 0,
+     "note": "牝2024 スワーヴリチャード"
+    }
+   ]
+  },
+  "2023105225": {
+   "name": "タイセイアビオン",
+   "sire": "ミッキーアイル",
+   "dam": "ディオニージア",
+   "damSire": "Tejano Run",
+   "sireSire": "ディープインパクト",
+   "sireDam": "スターアイル",
+   "damDam": "Essie's Maid",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "ロックオブジブラルタル",
+   "sireDamDam": "アイルドフランス",
+   "damSireSire": "Tejano",
+   "damSireDam": "Royal Run",
+   "damDamSire": "Linkage",
+   "damDamDam": "Essie Bs Venture",
+   "owner": "田中成奉",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "ステラマテュティナ",
+     "wins": 5,
+     "note": "牝2022 リアルインパクト 地方5勝"
+    },
+    {
+     "name": "ディオニージアの2020",
+     "wins": 0,
+     "note": "牡2020 キズナ"
+    },
+    {
+     "name": "ソレジャートポスト",
+     "wins": 1,
+     "note": "牡2019 ラブリーデイ 地方1勝"
+    },
+    {
+     "name": "モンテディオ",
+     "wins": 3,
+     "note": "牡2018 ジャスタウェイ 3勝、3着-神戸新聞杯(G2)"
+    },
+    {
+     "name": "ホロイムア",
+     "wins": 2,
+     "note": "牝2017 ジャスタウェイ 地方2勝"
+    },
+    {
+     "name": "ディオニージアの2015",
+     "wins": 0,
+     "note": "牡2015 ステイゴールド"
+    },
+    {
+     "name": "ブリシンガメン",
+     "wins": 1,
+     "note": "牝2014 ステイゴールド 1勝"
+    },
+    {
+     "name": "ブリーズドゥメール",
+     "wins": 2,
+     "note": "牝2013 ヴィクトワールピサ 地方2勝"
+    },
+    {
+     "name": "レッドイルヴェント",
+     "wins": 0,
+     "note": "牡2011 フジキセキ"
+    },
+    {
+     "name": "ディオベルタ",
+     "wins": 2,
+     "note": "牝2009 フジキセキ 2勝"
+    }
+   ]
+  },
+  "2023105287": {
+   "name": "ページターナー",
+   "sire": "エピファネイア",
+   "dam": "コールバック",
+   "damSire": "ストリートセンス",
+   "sireSire": "シンボリクリスエス",
+   "sireDam": "シーザリオ",
+   "damDam": "Quickest",
+   "sireSireSire": "Kris S.",
+   "sireSireDam": "Tee Kay",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "Street Cry",
+   "damSireDam": "Bedazzle",
+   "damDamSire": "Forest Wildcat",
+   "damDamDam": "Supercharger",
+   "owner": "金子真人ホールディングス",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "コールバックの2026",
+     "wins": 0,
+     "note": "牝2026 ナダル"
+    },
+    {
+     "name": "コールバックの2025",
+     "wins": 0,
+     "note": "牝2025 イクイノックス"
+    },
+    {
+     "name": "コールミー",
+     "wins": 0,
+     "note": "牡2022 ドゥラメンテ"
+    },
+    {
+     "name": "ジーティーパワー",
+     "wins": 0,
+     "note": "牡2021 Frankel"
+    },
+    {
+     "name": "オーディブルコール",
+     "wins": 1,
+     "note": "牝2020 Medaglia d'Oro 地方1勝"
+    },
+    {
+     "name": "Tommy Bee",
+     "wins": 0,
+     "note": "セ2019 Medaglia d'Oro"
+    }
+   ]
+  },
+  "2023106455": {
+   "name": "ノブレスラブリエ",
+   "sire": "ウインブライト",
+   "dam": "ドリームエンプレス",
+   "damSire": "Bernstein",
+   "sireSire": "ステイゴールド",
+   "sireDam": "サマーエタニティ",
+   "damDam": "Chinese Empress",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "アドマイヤコジーン",
+   "sireDamDam": "オールフォーゲラン",
+   "damSireSire": "Storm Cat",
+   "damSireDam": "La Affirmed",
+   "damDamSire": "Nijinsky",
+   "damDamDam": "Execution",
+   "owner": "サラブレッドクラブ・ラフィアン",
+   "producer": "ビッグレッドファーム",
+   "siblings": [
+    {
+     "name": "ファーストメイト",
+     "wins": 9,
+     "note": "牡2021 ゴールドシップ 地方9勝"
+    },
+    {
+     "name": "コスモパンドラ",
+     "wins": 9,
+     "note": "牝2019 ジャスタウェイ 地方9勝"
+    },
+    {
+     "name": "Bernadreamy",
+     "wins": 0,
+     "note": "牝2014 Bernardini"
+    }
+   ]
+  },
+  "2023103887": {
+   "name": "レイアン",
+   "sire": "サートゥルナーリア",
+   "dam": "エトワールII",
+   "damSire": "Siyouni",
+   "sireSire": "ロードカナロア",
+   "sireDam": "シーザリオ",
+   "damDam": "Milena's Dream",
+   "sireSireSire": "キングカメハメハ",
+   "sireSireDam": "レディブラッサム",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "Pivotal",
+   "damSireDam": "Sichilla",
+   "damDamSire": "Authorized",
+   "damDamDam": "Rozella",
+   "owner": "川勝裕之",
+   "producer": "レイクヴィラファーム",
+   "siblings": [
+    {
+     "name": "エトワールIIの2025",
+     "wins": 0,
+     "note": "牝2025 キズナ"
+    },
+    {
+     "name": "アルデオリエンス",
+     "wins": 0,
+     "note": "牝2024 キタサンブラック 中央現役"
+    }
+   ]
+  },
+  "2022107084": {
+   "name": "ウインヘリオドール",
+   "sire": "ゴールドシップ",
+   "dam": "イエローポピー",
+   "damSire": "キンシャサノキセキ",
+   "sireSire": "ステイゴールド",
+   "sireDam": "ポイントフラッグ",
+   "damDam": "オリエンタルポピー",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "メジロマックイーン",
+   "sireDamDam": "パストラリズム",
+   "damSireSire": "フジキセキ",
+   "damSireDam": "ケルトシャーン",
+   "damDamSire": "キングカメハメハ",
+   "damDamDam": "トールポピー",
+   "owner": "ウイン",
+   "producer": "メイタイファーム",
+   "siblings": [
+    {
+     "name": "イエローポピーの2025",
+     "wins": 0,
+     "note": "牝2025 ワールドプレミア"
+    },
+    {
+     "name": "イエローポピーの2024",
+     "wins": 0,
+     "note": "牝2024 ミスチヴィアスアレックス"
+    },
+    {
+     "name": "ケンブリッジ",
+     "wins": 0,
+     "note": "セ2023 ノーブルミッション"
+    }
+   ]
+  },
+  "2023105571": {
+   "name": "ドリームプレミア",
+   "sire": "ワールドプレミア",
+   "dam": "アドマイヤシリウス",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マンデラ",
+   "damDam": "アドマイヤマリリン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Acatenango",
+   "sireDamDam": "Mandellicht",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "アグネスタキオン",
+   "damDamDam": "アドマイヤラピス",
+   "owner": "大塚亮一",
+   "producer": "隆栄牧場",
+   "siblings": [
+    {
+     "name": "アンバープレミア",
+     "wins": 0,
+     "note": "牝2024 ワールドプレミア 中央現役"
+    },
+    {
+     "name": "クールメゾン",
+     "wins": 1,
+     "note": "牝2022 スワーヴリチャード 地方1勝"
+    }
+   ]
+  },
+  "2023106440": {
+   "name": "パーヴォ",
+   "sire": "ゴールドシップ",
+   "dam": "コスモピーコック",
+   "damSire": "Medicean",
+   "sireSire": "ステイゴールド",
+   "sireDam": "ポイントフラッグ",
+   "damDam": "レッドピオニー",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "メジロマックイーン",
+   "sireDamDam": "パストラリズム",
+   "damSireSire": "Machiavellian",
+   "damSireDam": "Mystic Goddess",
+   "damDamSire": "Montjeu",
+   "damDamDam": "Red Azalea",
+   "owner": "ビッグレッドファーム",
+   "producer": "ビッグレッドファーム",
+   "siblings": [
+    {
+     "name": "スターホッピング",
+     "wins": 0,
+     "note": "牡2024 ウインブライト 中央現役"
+    },
+    {
+     "name": "コスモシーウルフ",
+     "wins": 9,
+     "note": "牡2020 ゴールドシップ 地方9勝"
+    },
+    {
+     "name": "マイネルグローリエ",
+     "wins": 3,
+     "note": "牡2019 ハーツクライ 地方3勝"
+    }
+   ]
+  },
+  "2021101155": {
+   "name": "ピエナオルフェ",
+   "sire": "オルフェーヴル",
+   "dam": "ピエナブラウニー",
+   "damSire": "フジキセキ",
+   "sireSire": "ステイゴールド",
+   "sireDam": "オリエンタルアート",
+   "damDam": "ユノブラウニー",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "メジロマックイーン",
+   "sireDamDam": "エレクトロアート",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ミルレーサー",
+   "damDamSire": "ブライアンズタイム",
+   "damDamDam": "オエノセラ",
+   "owner": "本谷兼三",
+   "producer": "沖田牧場",
+   "siblings": [
+    {
+     "name": "ドライブノキセキ",
+     "wins": 0,
+     "note": "牝2025 フォーウィールドライブ"
+    },
+    {
+     "name": "テクノセンリ",
+     "wins": 0,
+     "note": "牡2024 モーニン"
+    },
+    {
+     "name": "ネオブラウニー",
+     "wins": 0,
+     "note": "牡2023 カリフォルニアクローム"
+    },
+    {
+     "name": "エムズドリーム",
+     "wins": 1,
+     "note": "牡2022 ゴールドドリーム 地方1勝"
+    },
+    {
+     "name": "ピエナケープ",
+     "wins": 0,
+     "note": "牡2019 ケープブランコ"
+    },
+    {
+     "name": "ピエナブラウニーの2018",
+     "wins": 0,
+     "note": "牝2018 パイロ"
+    },
+    {
+     "name": "ピエナラプソディ",
+     "wins": 1,
+     "note": "牝2017 ハービンジャー 地方1勝"
+    },
+    {
+     "name": "ピエナガウディ",
+     "wins": 4,
+     "note": "牡2016 シンボリクリスエス 地方4勝"
+    }
+   ]
+  },
+  "2023105337": {
+   "name": "ボンドマティーニ",
+   "sire": "レイデオロ",
+   "dam": "ラクアミ",
+   "damSire": "ダイワメジャー",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "ラドラーダ",
+   "damDam": "レイズアンドコール",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "シンボリクリスエス",
+   "sireDamDam": "レディブロンド",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "サクラバクシンオー",
+   "damDamDam": "モーリストンベル",
+   "owner": "窪田芳郎",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ラクアミの2025",
+     "wins": 0,
+     "note": "牝2025 グレナディアガーズ"
+    },
+    {
+     "name": "アルマヴェローチェ",
+     "wins": 2,
+     "note": "牝2022 ハービンジャー 2勝、中央現役、1着-阪神ジュベナイルF(G1)"
+    },
+    {
+     "name": "カリーシ",
+     "wins": 2,
+     "note": "牝2021 モーリス 2勝"
+    },
+    {
+     "name": "シテ",
+     "wins": 0,
+     "note": "牡2020 エピファネイア"
+    },
+    {
+     "name": "トーホウデュラン",
+     "wins": 1,
+     "note": "牡2019 ドレフォン 1勝"
+    }
+   ]
+  },
+  "2023107350": {
+   "name": "ペガサスジルシ",
+   "sire": "ブリックスアンドモルタル",
+   "dam": "レネットグルーヴ",
+   "damSire": "キングカメハメハ",
+   "sireSire": "Giant's Causeway",
+   "sireDam": "Beyond the Waves",
+   "damDam": "イントゥザグルーヴ",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Mariah's Storm",
+   "sireDamSire": "Ocean Crest",
+   "sireDamDam": "Excedent",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "エアグルーヴ",
+   "owner": "後藤和成",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "レネットグルーヴの2025",
+     "wins": 0,
+     "note": "牝2025 エピファネイア"
+    },
+    {
+     "name": "トゥーレジット",
+     "wins": 0,
+     "note": "牡2024 シスキン 中央現役"
+    },
+    {
+     "name": "タンテドヴィーヴル",
+     "wins": 2,
+     "note": "牡2022 ルヴァンスレーヴ 2勝、中央現役"
+    },
+    {
+     "name": "トルタディメーレ",
+     "wins": 0,
+     "note": "牝2021 モーリス"
+    },
+    {
+     "name": "ヴェイパーウェイヴ",
+     "wins": 0,
+     "note": "牝2020 サトノクラウン"
+    },
+    {
+     "name": "ローシャムパーク",
+     "wins": 6,
+     "note": "牡2019 ハービンジャー 6勝、中央現役、1着-産経賞オールカマー(G2)、函館記念(G3)"
+    },
+    {
+     "name": "ゾディアックサイン",
+     "wins": 1,
+     "note": "セ2018 モーリス 1勝"
+    },
+    {
+     "name": "スピッツェンバーグ",
+     "wins": 1,
+     "note": "牡2017 ハービンジャー 地方1勝"
+    }
+   ]
+  },
+  "2023106902": {
+   "name": "ヴァロンブローサ",
+   "sire": "コントレイル",
+   "dam": "ヴィルジニア",
+   "damSire": "Galileo",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "シルヴァースカヤ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "Sadler's Wells",
+   "damSireDam": "Urban Sea",
+   "damDamSire": "Silver Hawk",
+   "damDamDam": "Boubskaia",
+   "owner": "Ｇ１レーシング",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ヴィルジニアの2025",
+     "wins": 0,
+     "note": "牝2025 リアルスティール"
+    },
+    {
+     "name": "ヴェルドロ",
+     "wins": 1,
+     "note": "セ2022 ドゥラメンテ 地方1勝"
+    },
+    {
+     "name": "スカイサーベイ",
+     "wins": 2,
+     "note": "牡2021 キタサンブラック 2勝、中央現役"
+    },
+    {
+     "name": "ヴィクティファルス",
+     "wins": 4,
+     "note": "セ2018 ハーツクライ 3勝、地方1勝、1着-フジTVスプリングS(G2)"
+    },
+    {
+     "name": "ヴィルトゥオシタ",
+     "wins": 1,
+     "note": "牝2017 キズナ 1勝"
+    }
+   ]
+  },
+  "2023105261": {
+   "name": "アスクファイアモア",
+   "sire": "ブリックスアンドモルタル",
+   "dam": "ワイルドフラッパー",
+   "damSire": "Ghostzapper",
+   "sireSire": "Giant's Causeway",
+   "sireDam": "Beyond the Waves",
+   "damDam": "スモークンフローリック",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Mariah's Storm",
+   "sireDamSire": "Ocean Crest",
+   "sireDamDam": "Excedent",
+   "damSireSire": "Awesome Again",
+   "damSireDam": "Baby Zip",
+   "damDamSire": "Smoke Glacken",
+   "damDamDam": "Cherokyfrolicflash",
+   "owner": "廣崎利洋ＨＤ",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "ワイルドフラッパーの2025",
+     "wins": 0,
+     "note": "牡2025 イスラボニータ"
+    },
+    {
+     "name": "フィッツジェラルド",
+     "wins": 0,
+     "note": "牡2021 イスラボニータ"
+    },
+    {
+     "name": "フラッパールック",
+     "wins": 3,
+     "note": "牝2020 イスラボニータ 3勝"
+    },
+    {
+     "name": "プチティラン",
+     "wins": 2,
+     "note": "牡2016 オルフェーヴル 2勝"
+    }
+   ]
+  },
+  "2023106825": {
+   "name": "スピルイット",
+   "sire": "ブリックスアンドモルタル",
+   "dam": "アヴェンチュラ",
+   "damSire": "ジャングルポケット",
+   "sireSire": "Giant's Causeway",
+   "sireDam": "Beyond the Waves",
+   "damDam": "アドマイヤサンデー",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Mariah's Storm",
+   "sireDamSire": "Ocean Crest",
+   "sireDamDam": "Excedent",
+   "damSireSire": "トニービン",
+   "damSireDam": "ダンスチャーマー",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "ムーンインディゴ",
+   "owner": "吉田和美",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "アヴェンチュラの2025",
+     "wins": 0,
+     "note": "牝2025 サートゥルナーリア"
+    },
+    {
+     "name": "ナヴィガトーレ",
+     "wins": 0,
+     "note": "牡2022 ロードカナロア"
+    },
+    {
+     "name": "アクセッション",
+     "wins": 0,
+     "note": "牝2021 レイデオロ"
+    },
+    {
+     "name": "トラヴォルジェンテ",
+     "wins": 1,
+     "note": "牡2020 ロードカナロア 地方1勝"
+    },
+    {
+     "name": "サファル",
+     "wins": 1,
+     "note": "セ2018 キングカメハメハ 1勝"
+    },
+    {
+     "name": "カイザーライン",
+     "wins": 1,
+     "note": "牡2017 エピファネイア 1勝"
+    },
+    {
+     "name": "アヴェンチュラの2016",
+     "wins": 0,
+     "note": "牡2016 ハービンジャー"
+    },
+    {
+     "name": "デサフィアンテ",
+     "wins": 0,
+     "note": "牝2015 キングカメハメハ"
+    }
+   ]
+  },
+  "2023104506": {
+   "name": "ゴールドアクセス",
+   "sire": "ゴールドアクター",
+   "dam": "ゴールドエルフ",
+   "damSire": "キングヘイロー",
+   "sireSire": "スクリーンヒーロー",
+   "sireDam": "ヘイロンシン",
+   "damDam": "グローバルリーダー",
+   "sireSireSire": "グラスワンダー",
+   "sireSireDam": "ランニングヒロイン",
+   "sireDamSire": "キョウワアリシバ",
+   "sireDamDam": "ハッピーヒエン",
+   "damSireSire": "ダンシングブレーヴ",
+   "damSireDam": "グッバイヘイロー",
+   "damDamSire": "テンビー",
+   "damDamDam": "ホクショウマリー",
+   "owner": "居城寿与",
+   "producer": "北勝ファーム",
+   "siblings": [
+    {
+     "name": "ゴールドエルフの2025",
+     "wins": 0,
+     "note": "牝2025 ゴールドアクター"
+    },
+    {
+     "name": "ゴールドバトラー",
+     "wins": 0,
+     "note": "牡2024 ゴールドアクター 中央現役"
+    },
+    {
+     "name": "ゴールドキッカー",
+     "wins": 0,
+     "note": "牡2021 ゴールドアクター"
+    },
+    {
+     "name": "ゴールドプリンセス",
+     "wins": 4,
+     "note": "牝2020 ゴールドアクター 4勝"
+    },
+    {
+     "name": "ゴールドビンテージ",
+     "wins": 1,
+     "note": "牡2019 シルバーステート 地方1勝"
+    },
+    {
+     "name": "ゴールドミーティア",
+     "wins": 1,
+     "note": "牡2018 ブラックタイド 1勝"
+    },
+    {
+     "name": "ゴールドエルフの2016",
+     "wins": 0,
+     "note": "牡2016 シニスターミニスター"
+    }
+   ]
+  },
+  "2021102801": {
+   "name": "ドゥラシェーナ",
+   "sire": "ドゥラメンテ",
+   "dam": "ゴールドコイン",
+   "damSire": "デヒア",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "アドマイヤグルーヴ",
+   "damDam": "インキュラブルロマンティック",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "サンデーサイレンス",
+   "sireDamDam": "エアグルーヴ",
+   "damSireSire": "Deputy Minister",
+   "damSireDam": "Sister Dot",
+   "damDamSire": "Stop the Music",
+   "damDamDam": "One I Love",
+   "owner": "ヒダカ・ブリーダーズ・ユニオン",
+   "producer": "笹島政信",
+   "siblings": [
+    {
+     "name": "ゴールドサニー",
+     "wins": 0,
+     "note": "牝2020 ジャスタウェイ"
+    },
+    {
+     "name": "コルドンミノル",
+     "wins": 0,
+     "note": "牡2019 ロードカナロア"
+    },
+    {
+     "name": "ゴールドフライト",
+     "wins": 2,
+     "note": "牡2018 ロードカナロア 2勝"
+    },
+    {
+     "name": "ヒロシゲサンライズ",
+     "wins": 14,
+     "note": "牡2017 トゥザグローリー 地方14勝"
+    },
+    {
+     "name": "グランドディアマン",
+     "wins": 2,
+     "note": "牡2014 ルーラーシップ 2勝"
+    },
+    {
+     "name": "オールインワン",
+     "wins": 5,
+     "note": "牡2013 アドマイヤムーン 5勝"
+    },
+    {
+     "name": "キクノレヨン",
+     "wins": 7,
+     "note": "牝2012 エンパイアメーカー 地方7勝"
+    }
+   ]
+  },
+  "2023100297": {
+   "name": "ブラックレジェンド",
+   "sire": "ダノンレジェンド",
+   "dam": "ララエクレリゼ",
+   "damSire": "スペシャルウィーク",
+   "sireSire": "Macho Uno",
+   "sireDam": "マイグッドネス",
+   "damDam": "ローマンブリッジ",
+   "sireSireSire": "Holy Bull",
+   "sireSireDam": "Primal Force",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Caressing",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "キャンペンガール",
+   "damDamSire": "ブライアンズタイム",
+   "damDamDam": "メインリー",
+   "owner": "ＴＧレーシング",
+   "producer": "堀川洋之",
+   "siblings": [
+    {
+     "name": "ヴィーナスサワー",
+     "wins": 0,
+     "note": "牝2025 アジアエクスプレス"
+    },
+    {
+     "name": "アットラエンテ",
+     "wins": 0,
+     "note": "牝2024 エピカリス"
+    },
+    {
+     "name": "ラブゲイル",
+     "wins": 0,
+     "note": "牡2022 ラブリーデイ"
+    },
+    {
+     "name": "ライジンマル",
+     "wins": 2,
+     "note": "セ2021 アジアエクスプレス 2勝、中央現役"
+    },
+    {
+     "name": "サトミノアサヒ",
+     "wins": 8,
+     "note": "牝2020 マジェスティックウォリアー 地方8勝"
+    },
+    {
+     "name": "グッドイヤー",
+     "wins": 2,
+     "note": "牝2018 ラブリーデイ 地方2勝"
+    },
+    {
+     "name": "キャプテンカーク",
+     "wins": 4,
+     "note": "牡2017 ダンカーク 地方4勝"
+    }
+   ]
+  },
+  "2023107229": {
+   "name": "スカイストライプス",
+   "sire": "コントレイル",
+   "dam": "ポジティブマインド",
+   "damSire": "Equal Stripes",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "Paula Sexy",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "Candy Stripes",
+   "damSireDam": "Equity",
+   "damDamSire": "Ride the Rails",
+   "damDamDam": "Paula Sexta",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "リアライズレイラ",
+     "wins": 0,
+     "note": "牝2025 イクイノックス 中央現役"
+    },
+    {
+     "name": "オプティミスタ",
+     "wins": 0,
+     "note": "牝2024 コントレイル 中央現役"
+    },
+    {
+     "name": "ソルデマジョ",
+     "wins": 5,
+     "note": "牡2022 ドゥラメンテ 地方5勝"
+    },
+    {
+     "name": "シンクグッド",
+     "wins": 4,
+     "note": "牡2021 サトノダイヤモンド 地方4勝"
+    },
+    {
+     "name": "ミッキーゴーゴー",
+     "wins": 0,
+     "note": "牡2020 ドゥラメンテ"
+    }
+   ]
+  },
+  "2022104729": {
+   "name": "サマーナイト",
+   "sire": "ルーラーシップ",
+   "dam": "ガールオンファイア",
+   "damSire": "アグネスタキオン",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "エアグルーヴ",
+   "damDam": "レディブロンド",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "トニービン",
+   "sireDamDam": "ダイナカール",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アグネスフローラ",
+   "damDamSire": "Seeking the Gold",
+   "damDamDam": "ウインドインハーヘア",
+   "owner": "三田昌宏",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "フォルナカリア",
+     "wins": 2,
+     "note": "牡2023 サートゥルナーリア 地方2勝"
+    },
+    {
+     "name": "ヒシアマレット",
+     "wins": 0,
+     "note": "牝2021 ブリックスアンドモルタル"
+    },
+    {
+     "name": "コスモフランメ",
+     "wins": 0,
+     "note": "牝2020 エピファネイア"
+    },
+    {
+     "name": "ホウオウブリッツ",
+     "wins": 4,
+     "note": "牡2019 モーリス 地方4勝"
+    },
+    {
+     "name": "ホウオウライジン",
+     "wins": 5,
+     "note": "牡2016 キングカメハメハ 3勝、地方2勝"
+    },
+    {
+     "name": "アンヴァンシブル",
+     "wins": 0,
+     "note": "牡2015 ロードカナロア"
+    },
+    {
+     "name": "アグニシャイン",
+     "wins": 1,
+     "note": "牡2014 ハービンジャー 1勝"
+    }
+   ]
+  },
+  "2023102919": {
+   "name": "サイモンゼスト",
+   "sire": "サトノアラジン",
+   "dam": "ダノンエレガント",
+   "damSire": "ブライアンズタイム",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マジックストーム",
+   "damDam": "ドリームカムカム",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Foppy Dancer",
+   "damSireSire": "Roberto",
+   "damSireDam": "Kelley's Day",
+   "damDamSire": "メジロライアン",
+   "damDamDam": "ドリーミングガール",
+   "owner": "澤田昭紀",
+   "producer": "千代田牧場",
+   "siblings": [
+    {
+     "name": "ダノンエレガントの2025",
+     "wins": 0,
+     "note": "牝2025 カフェファラオ"
+    },
+    {
+     "name": "カノティエ",
+     "wins": 0,
+     "note": "牝2021 リアルスティール"
+    },
+    {
+     "name": "ファームツエンティ",
+     "wins": 4,
+     "note": "セ2020 キズナ 4勝、中央現役"
+    },
+    {
+     "name": "ブーゲンビリア",
+     "wins": 8,
+     "note": "牝2018 キズナ 地方8勝"
+    },
+    {
+     "name": "ロブソンテソーロ",
+     "wins": 2,
+     "note": "牡2017 ダイワメジャー 地方2勝"
+    },
+    {
+     "name": "セグーロ",
+     "wins": 1,
+     "note": "セ2016 ハーツクライ 1勝"
+    }
+   ]
+  },
+  "2022102952": {
+   "name": "ユージュアーナ",
+   "sire": "リアルスティール",
+   "dam": "アルボナンザ",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "エスジーボナンザ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "ブライアンズタイム",
+   "damDamDam": "エスジービアンカ",
+   "owner": "長澤稔",
+   "producer": "辻牧場",
+   "siblings": [
+    {
+     "name": "アルボナンザの2025",
+     "wins": 0,
+     "note": "牡2025 パレスマリス"
+    },
+    {
+     "name": "アルボナンザの2024",
+     "wins": 0,
+     "note": "牝2024 マカヒキ"
+    },
+    {
+     "name": "バンブラボー",
+     "wins": 0,
+     "note": "牡2023 クリソベリル"
+    },
+    {
+     "name": "メイショウシナノ",
+     "wins": 3,
+     "note": "牡2020 サトノダイヤモンド 3勝、中央現役"
+    },
+    {
+     "name": "レーヴェン",
+     "wins": 0,
+     "note": "牡2019 ハービンジャー"
+    },
+    {
+     "name": "アルボナンザの2018",
+     "wins": 0,
+     "note": "牝2018 エイシンヒカリ"
+    }
+   ]
+  },
+  "2023100989": {
+   "name": "アンティスマ",
+   "sire": "ベンバトル",
+   "dam": "オースミハナチャン",
+   "damSire": "ハーツクライ",
+   "sireSire": "Dubawi",
+   "sireDam": "Nahrain",
+   "damDam": "オースミリンド",
+   "sireSireSire": "Dubai Millennium",
+   "sireSireDam": "Zomaradah",
+   "sireDamSire": "Selkirk",
+   "sireDamDam": "Bahr",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "Woodman",
+   "damDamDam": "ダンシングアウンティー",
+   "owner": "ヒダカ・ブリーダーズ・ユニオン",
+   "producer": "白井牧場",
+   "siblings": [
+    {
+     "name": "オースミハナチャンの2024",
+     "wins": 0,
+     "note": "牝2024 ブリックスアンドモルタル"
+    },
+    {
+     "name": "アルデツヨシ",
+     "wins": 1,
+     "note": "セ2022 マインドユアビスケッツ 1勝"
+    },
+    {
+     "name": "シェーンブルーメ",
+     "wins": 1,
+     "note": "牝2020 ビーチパトロール 地方1勝"
+    }
+   ]
+  },
+  "2022100650": {
+   "name": "ロードソルスティス",
+   "sire": "サートゥルナーリア",
+   "dam": "ブリュネット",
+   "damSire": "ダイワメジャー",
+   "sireSire": "ロードカナロア",
+   "sireDam": "シーザリオ",
+   "damDam": "レディカーニバル",
+   "sireSireSire": "キングカメハメハ",
+   "sireSireDam": "レディブラッサム",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "Giant's Causeway",
+   "damDamDam": "ヴァージニー",
+   "owner": "ロードホースクラブ",
+   "producer": "ケイアイファーム",
+   "siblings": [
+    {
+     "name": "ブリュネットの2025",
+     "wins": 0,
+     "note": "牝2025 ダノンスマッシュ"
+    },
+    {
+     "name": "ロードステラート",
+     "wins": 2,
+     "note": "牡2023 キタサンブラック 地方2勝"
+    },
+    {
+     "name": "ロードブレイズ",
+     "wins": 3,
+     "note": "牡2021 ロードカナロア 3勝、中央現役"
+    },
+    {
+     "name": "パラディ",
+     "wins": 3,
+     "note": "牝2020 ロードカナロア 1勝、地方2勝"
+    },
+    {
+     "name": "ブラックオパール",
+     "wins": 8,
+     "note": "牝2019 ロードカナロア 地方8勝"
+    },
+    {
+     "name": "オンデューティ",
+     "wins": 0,
+     "note": "牡2018 ロードカナロア"
+    },
+    {
+     "name": "キュートルーラー",
+     "wins": 2,
+     "note": "牝2017 ルーラーシップ 地方2勝"
+    }
+   ]
+  },
+  "2023101694": {
+   "name": "ケンフィールド",
+   "sire": "タリスマニック",
+   "dam": "ケンブリッジハーツ",
+   "damSire": "キングヘイロー",
+   "sireSire": "Medaglia d'Oro",
+   "sireDam": "Magic Mission",
+   "damDam": "エリモファイナル",
+   "sireSireSire": "El Prado",
+   "sireSireDam": "Cappucino Bay",
+   "sireDamSire": "Machiavellian",
+   "sireDamDam": "Dream Ticket",
+   "damSireSire": "ダンシングブレーヴ",
+   "damSireDam": "グッバイヘイロー",
+   "damDamSire": "オペラハウス",
+   "damDamDam": "エリモセントラル",
+   "owner": "中西宏彰",
+   "producer": "ケンブリッジバレー",
+   "siblings": [
+    {
+     "name": "ケンヴァイオレット",
+     "wins": 0,
+     "note": "牝2022 ホークビル"
+    },
+    {
+     "name": "ケンオスロ",
+     "wins": 0,
+     "note": "牡2021 バゴ"
+    },
+    {
+     "name": "オデッセイ",
+     "wins": 10,
+     "note": "牡2019 ラニ 地方10勝"
+    },
+    {
+     "name": "ケンブリッジセンス",
+     "wins": 5,
+     "note": "牡2018 アンライバルド 地方5勝"
+    },
+    {
+     "name": "ケングリフォン",
+     "wins": 1,
+     "note": "牡2017 バトルプラン 地方1勝"
+    },
+    {
+     "name": "ケイサンブリッツ",
+     "wins": 1,
+     "note": "牝2016 エイシンアポロン 地方1勝"
+    }
+   ]
+  },
+  "2021101226": {
+   "name": "クリノフィガロ",
+   "sire": "ゴールドシップ",
+   "dam": "クリノスペシャル",
+   "damSire": "スペシャルウィーク",
+   "sireSire": "ステイゴールド",
+   "sireDam": "ポイントフラッグ",
+   "damDam": "ペパーミントグラス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ゴールデンサッシュ",
+   "sireDamSire": "メジロマックイーン",
+   "sireDamDam": "パストラリズム",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "キャンペンガール",
+   "damDamSire": "ヘクタープロテクター",
+   "damDamDam": "ミユキカマダ",
+   "owner": "栗本依利子",
+   "producer": "木村牧場",
+   "siblings": [
+    {
+     "name": "クリノレジェンド",
+     "wins": 1,
+     "note": "牡2019 ヘニーヒューズ 1勝、中央現役"
+    },
+    {
+     "name": "クリノアンビシャス",
+     "wins": 1,
+     "note": "セ2018 ホッコータルマエ 1勝"
+    },
+    {
+     "name": "クリノオオクニヌシ",
+     "wins": 2,
+     "note": "牡2016 ハービンジャー 地方2勝"
+    },
+    {
+     "name": "クリノフラゴナール",
+     "wins": 3,
+     "note": "牝2015 キングカメハメハ 地方3勝"
+    },
+    {
+     "name": "クリノライメイ",
+     "wins": 10,
+     "note": "牡2014 シンボリクリスエス 4勝、地方6勝"
+    },
+    {
+     "name": "クリノスペシャルの2012",
+     "wins": 0,
+     "note": "牡2012 バゴ"
+    },
+    {
+     "name": "クリノヒマラヤオー",
+     "wins": 5,
+     "note": "牡2010 キングカメハメハ 5勝"
+    }
+   ]
+  },
+  "2022102388": {
+   "name": "ヒミノエトワール",
+   "sire": "パイロ",
+   "dam": "ヒミノプリンセス",
+   "damSire": "マンハッタンカフェ",
+   "sireSire": "Pulpit",
+   "sireDam": "Wild Vision",
+   "damDam": "サイキックガール",
+   "sireSireSire": "A.P. Indy",
+   "sireSireDam": "Preach",
+   "sireDamSire": "Wild Again",
+   "sireDamDam": "Carol's Wonder",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "サトルチェンジ",
+   "damDamSire": "ジェネラス",
+   "damDamDam": "カムイイットー",
+   "owner": "佐々木八郎",
+   "producer": "原田新治",
+   "siblings": [
+    {
+     "name": "ヒミノイチシロ",
+     "wins": 3,
+     "note": "牡2020 ラブリーデイ 地方3勝"
+    },
+    {
+     "name": "ヒミノフラッシュ",
+     "wins": 3,
+     "note": "牡2018 エイシンフラッシュ 3勝"
+    },
+    {
+     "name": "ヒミノブルー",
+     "wins": 2,
+     "note": "牡2016 ヴァーミリアン 2勝"
+    },
+    {
+     "name": "ヒミノゴールド",
+     "wins": 1,
+     "note": "牡2015 ジャングルポケット 地方1勝"
+    },
+    {
+     "name": "ヒミノクリスエス",
+     "wins": 7,
+     "note": "セ2014 シンボリクリスエス 地方7勝"
+    }
+   ]
+  },
+  "2022104121": {
+   "name": "カウンティフェア",
+   "sire": "サートゥルナーリア",
+   "dam": "カウントオンイット",
+   "damSire": "クロフネ",
+   "sireSire": "ロードカナロア",
+   "sireDam": "シーザリオ",
+   "damDam": "グローバルピース",
+   "sireSireSire": "キングカメハメハ",
+   "sireSireDam": "レディブラッサム",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "エミネントガール",
+   "owner": "飯田正剛",
+   "producer": "千代田牧場",
+   "siblings": [
+    {
+     "name": "ミッドシップ",
+     "wins": 0,
+     "note": "牡2025 パレスマリス"
+    },
+    {
+     "name": "フォーシュアリー",
+     "wins": 0,
+     "note": "牡2024 サートゥルナーリア 中央現役"
+    },
+    {
+     "name": "アイアムアッパレ",
+     "wins": 0,
+     "note": "牡2023 リオンディーズ"
+    },
+    {
+     "name": "カウントオンイットの2021",
+     "wins": 0,
+     "note": "牝2021 レイデオロ"
+    }
+   ]
+  },
+  "2022100080": {
+   "name": "リカントロポ",
+   "sire": "グレーターロンドン",
+   "dam": "ホワイトアルバム",
+   "damSire": "クロフネ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロンドンブリッジ",
+   "damDam": "マッキーロイヤル",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "ドクターデヴィアス",
+   "sireDamDam": "オールフォーロンドン",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "フジキセキ",
+   "damDamDam": "クリアーチャンス",
+   "owner": "薪浦亨",
+   "producer": "荻伏三好ファーム",
+   "siblings": [
+    {
+     "name": "オクトパスガーデン",
+     "wins": 0,
+     "note": "牡2024 グローリーヴェイズ 中央現役"
+    },
+    {
+     "name": "ウロボロス",
+     "wins": 1,
+     "note": "牡2021 リアルスティール 地方1勝"
+    },
+    {
+     "name": "レヴィアタン",
+     "wins": 4,
+     "note": "牡2020 パイロ 地方4勝"
+    },
+    {
+     "name": "ジェイソン",
+     "wins": 0,
+     "note": "牡2019 オルフェーヴル"
+    },
+    {
+     "name": "リーベ",
+     "wins": 2,
+     "note": "牝2018 ヴィクトワールピサ 地方2勝"
+    },
+    {
+     "name": "クリスティ",
+     "wins": 5,
+     "note": "牝2017 キズナ 5勝、3着-関東オークス(G2)"
+    },
+    {
+     "name": "ヒッチコック",
+     "wins": 2,
+     "note": "牡2016 オルフェーヴル 2勝"
+    }
+   ]
+  },
+  "2023104690": {
+   "name": "ネッタイヤライ",
+   "sire": "コントレイル",
+   "dam": "サンライズシェル",
+   "damSire": "キンシャサノキセキ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ロードクロサイト",
+   "damDam": "シェルズレイ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Unbridled's Song",
+   "sireDamDam": "Folklore",
+   "damSireSire": "フジキセキ",
+   "damSireDam": "ケルトシャーン",
+   "damDamSire": "クロフネ",
+   "damDamDam": "オイスターチケット",
+   "owner": "犬塚悠治郎",
+   "producer": "メイタイファーム",
+   "siblings": [
+    {
+     "name": "ドウケシ",
+     "wins": 0,
+     "note": "牡2024 オルフェーヴル 中央現役"
+    },
+    {
+     "name": "ルディシャ",
+     "wins": 4,
+     "note": "牡2022 レイデオロ 地方4勝、中央現役"
+    },
+    {
+     "name": "パリッドキャリア",
+     "wins": 3,
+     "note": "牡2021 ヘニーヒューズ 地方3勝"
+    },
+    {
+     "name": "ミコマザーパール",
+     "wins": 0,
+     "note": "牝2020 ミッキーアイル"
+    }
+   ]
+  },
+  "2022106735": {
+   "name": "ランドプリメーロ",
+   "sire": "Saxon Warrior",
+   "dam": "バーベードス",
+   "damSire": "Dalakhani",
+   "sireSire": "ディープインパクト",
+   "sireDam": "メイビー",
+   "damDam": "Beirut",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Galileo",
+   "sireDamDam": "Sumora",
+   "damSireSire": "Darshaan",
+   "damSireDam": "Daltawa",
+   "damDamSire": "Turtle Island",
+   "damDamDam": "Bajonette",
+   "owner": "木村昌三",
+   "producer": "パカパカファーム",
+   "siblings": [
+    {
+     "name": "スマイルサンクス",
+     "wins": 0,
+     "note": "牡2025 カフェファラオ"
+    },
+    {
+     "name": "ミヤギクレスト",
+     "wins": 0,
+     "note": "牡2024 クリソベリル"
+    },
+    {
+     "name": "アミナス",
+     "wins": 2,
+     "note": "牡2023 モズアスコット 地方2勝"
+    }
+   ]
+  },
+  "2018106354": {
+   "name": "バガン",
+   "sire": "バゴ",
+   "dam": "トーコーユズキ",
+   "damSire": "ディープインパクト",
+   "sireSire": "Nashwan",
+   "sireDam": "Moonlight's Box",
+   "damDam": "ピンクプルメリア",
+   "sireSireSire": "Blushing Groom",
+   "sireSireDam": "Height of Fashion",
+   "sireDamSire": "Nureyev",
+   "sireDamDam": "Coup de Genie",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "Caerleon",
+   "damDamDam": "ティグレスダムール",
+   "owner": "カナヤマホールディングス",
+   "producer": "辻牧場",
+   "siblings": [
+    {
+     "name": "サトノボルテクス",
+     "wins": 0,
+     "note": "牡2024 ルーラーシップ 中央現役"
+    },
+    {
+     "name": "メイショウノヴァス",
+     "wins": 0,
+     "note": "牡2023 ノーブルミッション"
+    },
+    {
+     "name": "バギーウィップ",
+     "wins": 4,
+     "note": "牡2022 ナダル 3勝、地方1勝"
+    },
+    {
+     "name": "フルドライヴ",
+     "wins": 0,
+     "note": "牡2021 キタサンミカヅキ"
+    },
+    {
+     "name": "サトノクローク",
+     "wins": 3,
+     "note": "牡2020 サトノクラウン 3勝、中央現役"
+    },
+    {
+     "name": "パトリックハンサム",
+     "wins": 4,
+     "note": "牡2019 バゴ 4勝、中央現役"
+    },
+    {
+     "name": "ライワルツ",
+     "wins": 3,
+     "note": "牝2016 ロードカナロア 地方3勝"
+    },
+    {
+     "name": "クレヴァーパッチ",
+     "wins": 2,
+     "note": "牡2015 ハードスパン 2勝"
+    },
+    {
+     "name": "ブランウェン",
+     "wins": 2,
+     "note": "牝2014 ワークフォース 地方2勝"
+    }
+   ]
+  },
+  "2022101697": {
+   "name": "グラフィティアート",
+   "sire": "サンダースノー",
+   "dam": "モケット",
+   "damSire": "Maria's Mon",
+   "sireSire": "Helmet",
+   "sireDam": "Eastern Joy",
+   "damDam": "エターナルレーヴ",
+   "sireSireSire": "Exceed And Excel",
+   "sireSireDam": "Accessories",
+   "sireDamSire": "Dubai Destination",
+   "sireDamDam": "Red Slippers",
+   "damSireSire": "Wavering Monarch",
+   "damSireDam": "Carlotta Maria",
+   "damDamSire": "Diesis",
+   "damDamDam": "Northern Eternity",
+   "owner": "ゴドルフィン",
+   "producer": "ダーレー・ジャパン・ファーム",
+   "siblings": [
+    {
+     "name": "ユキホムラ",
+     "wins": 0,
+     "note": "牝2023 サンダースノー"
+    },
+    {
+     "name": "ニューブラック",
+     "wins": 1,
+     "note": "牡2020 ブラックタイド 地方1勝"
+    },
+    {
+     "name": "パイロアクティヴ",
+     "wins": 0,
+     "note": "セ2019 パイロ"
+    },
+    {
+     "name": "ポディウム",
+     "wins": 1,
+     "note": "牡2016 モンテロッソ 1勝"
+    },
+    {
+     "name": "ロケット",
+     "wins": 4,
+     "note": "牝2015 ディープスカイ 4勝"
+    },
+    {
+     "name": "ウィーヴァー",
+     "wins": 0,
+     "note": "牝2014 ストリートセンス"
+    },
+    {
+     "name": "フラマブル",
+     "wins": 1,
+     "note": "牝2013 パイロ 1勝"
+    },
+    {
+     "name": "インフェルノ",
+     "wins": 4,
+     "note": "セ2012 パイロ 4勝"
+    },
+    {
+     "name": "コーデュロイ",
+     "wins": 0,
+     "note": "牡2011 コマンズ"
+    },
+    {
+     "name": "モンタージュ",
+     "wins": 0,
+     "note": "牝2010 アドマイヤムーン"
+    }
+   ]
+  },
+  "2021103449": {
+   "name": "モアニ",
+   "sire": "ジャスタウェイ",
+   "dam": "ポートキャンベル",
+   "damSire": "ルーラーシップ",
+   "sireSire": "ハーツクライ",
+   "sireDam": "シビル",
+   "damDam": "レディクローリス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "アイリッシュダンス",
+   "sireDamSire": "Wild Again",
+   "sireDamDam": "シャロン",
+   "damSireSire": "キングカメハメハ",
+   "damSireDam": "エアグルーヴ",
+   "damDamSire": "フォーティナイナー",
+   "damDamDam": "シンコウラブリイ",
+   "owner": "佐藤理",
+   "producer": "ウエスタンファーム",
+   "siblings": [
+    {
+     "name": "ポートキャンベルの2025",
+     "wins": 0,
+     "note": "牝2025 ジャスタウェイ"
+    },
+    {
+     "name": "ダンシングアウェイ",
+     "wins": 2,
+     "note": "牡2023 ジャスタウェイ 地方2勝"
+    },
+    {
+     "name": "メイデンヘッド",
+     "wins": 1,
+     "note": "牝2022 パイロ 地方1勝"
+    },
+    {
+     "name": "イサチルアルマーレ",
+     "wins": 0,
+     "note": "牡2020 モンテロッソ"
+    },
+    {
+     "name": "スプリングレーヌ",
+     "wins": 4,
+     "note": "牝2019 モンテロッソ 地方4勝"
+    }
+   ]
+  },
+  "2021106690": {
+   "name": "ペルフェツィオーネ",
+   "sire": "ルーラーシップ",
+   "dam": "クレオール",
+   "damSire": "チチカステナンゴ",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "エアグルーヴ",
+   "damDam": "リンガフランカ",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "トニービン",
+   "sireDamDam": "ダイナカール",
+   "damSireSire": "Smadoun",
+   "damSireDam": "スマラ",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "フランクアーギュメント",
+   "owner": "ローレルレーシング",
+   "producer": "ハシモトファーム",
+   "siblings": [
+    {
+     "name": "キュルリン",
+     "wins": 0,
+     "note": "牝2024 ブリックスアンドモルタル"
+    },
+    {
+     "name": "ハイヴァン",
+     "wins": 0,
+     "note": "牡2023 サンダースノー"
+    },
+    {
+     "name": "オカメノコイ",
+     "wins": 3,
+     "note": "牝2022 パイロ 3勝、中央現役"
+    },
+    {
+     "name": "ノヴィアル",
+     "wins": 0,
+     "note": "牝2020 サトノクラウン"
+    },
+    {
+     "name": "エスペラント",
+     "wins": 1,
+     "note": "セ2019 エピファネイア 1勝"
+    }
+   ]
+  },
+  "2021103227": {
+   "name": "ジャズ",
+   "sire": "ルーラーシップ",
+   "dam": "カンタービレ",
+   "damSire": "ディープインパクト",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "エアグルーヴ",
+   "damDam": "シャンロッサ",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "トニービン",
+   "sireDamDam": "ダイナカール",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "Galileo",
+   "damDamDam": "Palacoona",
+   "owner": "石川達絵",
+   "producer": "三嶋牧場",
+   "siblings": [
+    {
+     "name": "ミュージシャン",
+     "wins": 3,
+     "note": "牡2022 ブリックスアンドモルタル 3勝、中央現役"
+    }
+   ]
+  },
+  "2023105810": {
+   "name": "オックスアイ",
+   "sire": "ダノンプレミアム",
+   "dam": "ハリケーンフラッグ",
+   "damSire": "Storm Cat",
+   "sireSire": "ディープインパクト",
+   "sireDam": "インディアナギャル",
+   "damDam": "Pennant Champion",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Intikhab",
+   "sireDamDam": "Genial Jenny",
+   "damSireSire": "Storm Bird",
+   "damSireDam": "Terlingua",
+   "damDamSire": "Mr. Prospector",
+   "damDamDam": "Personal Ensign",
+   "owner": "中村祐子",
+   "producer": "ケイアイファーム",
+   "siblings": [
+    {
+     "name": "タイフーンナイン",
+     "wins": 1,
+     "note": "牝2024 ダノンプレミアム 1勝、中央現役"
+    },
+    {
+     "name": "ハリーフラッグ",
+     "wins": 5,
+     "note": "牝2022 モーリス 地方5勝"
+    },
+    {
+     "name": "ウインドスピード",
+     "wins": 0,
+     "note": "牡2021 ドゥラメンテ"
+    },
+    {
+     "name": "ハーディネス",
+     "wins": 2,
+     "note": "牝2019 ドゥラメンテ 地方2勝"
+    },
+    {
+     "name": "フォーチュンフラグ",
+     "wins": 0,
+     "note": "牝2018 オルフェーヴル"
+    },
+    {
+     "name": "トルネードフラッグ",
+     "wins": 0,
+     "note": "牝2017 キングカメハメハ"
+    },
+    {
+     "name": "デュアラブル",
+     "wins": 2,
+     "note": "牝2016 Curlin 2勝"
+    }
+   ]
+  },
+  "2023107241": {
+   "name": "バルセシート",
+   "sire": "キズナ",
+   "dam": "マラコスタムブラダ",
+   "damSire": "Lizard Island",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "Mapul Wells",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "Danehill Dancer",
+   "damSireDam": "Add",
+   "damDamSire": "Poliglote",
+   "damDamDam": "Pulma",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "マラコスタムブラダの2025",
+     "wins": 0,
+     "note": "牝2025 スワーヴリチャード"
+    },
+    {
+     "name": "エスタンシア",
+     "wins": 0,
+     "note": "牝2022 ドゥラメンテ"
+    },
+    {
+     "name": "ジャスティンボルト",
+     "wins": 2,
+     "note": "牡2020 キタサンブラック 地方2勝"
+    },
+    {
+     "name": "スパイダーバローズ",
+     "wins": 0,
+     "note": "牡2019 ハーツクライ"
+    },
+    {
+     "name": "グラティアス",
+     "wins": 2,
+     "note": "牡2018 ハーツクライ 2勝、1着-京成杯(G3)"
+    },
+    {
+     "name": "レシステンシア",
+     "wins": 5,
+     "note": "牝2017 ダイワメジャー 5勝、1着-阪神ジュベナイルF(G1)、産経賞セントウルS(G2)、KBSファンタジーS(G3)、阪急杯(G3)"
+    },
+    {
+     "name": "ミッキーブラック",
+     "wins": 3,
+     "note": "牡2016 ブラックタイド 3勝"
+    }
+   ]
+  },
+  "2023103474": {
+   "name": "アイガーリー",
+   "sire": "モズアスコット",
+   "dam": "チョコレートバイン",
+   "damSire": "ディープインパクト",
+   "sireSire": "Frankel",
+   "sireDam": "India",
+   "damDam": "シャンクシー",
+   "sireSireSire": "Galileo",
+   "sireSireDam": "Kind",
+   "sireDamSire": "ヘネシー",
+   "sireDamDam": "Misty Hour",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ウインドインハーヘア",
+   "damDamSire": "Zilzal",
+   "damDamDam": "Rich and Riotous",
+   "owner": "小谷野宗靖",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "チョコレートバインの2025",
+     "wins": 0,
+     "note": "牡2025 シャンハイボビー"
+    },
+    {
+     "name": "チョコレートバインの2021",
+     "wins": 0,
+     "note": "牝2021 ドゥラメンテ"
+    },
+    {
+     "name": "プレサージオ",
+     "wins": 0,
+     "note": "牡2020 ハービンジャー"
+    },
+    {
+     "name": "レイトカンセイオー",
+     "wins": 3,
+     "note": "牡2019 ハービンジャー 3勝"
+    },
+    {
+     "name": "ファッジブラウニー",
+     "wins": 0,
+     "note": "牡2018 エイシンフラッシュ"
+    }
+   ]
+  },
+  "2023103861": {
+   "name": "タナブイハチターボ",
+   "sire": "イスラボニータ",
+   "dam": "ラブリーアモン",
+   "damSire": "ソングオブウインド",
+   "sireSire": "フジキセキ",
+   "sireDam": "イスラコジーン",
+   "damDam": "ミスアモン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ミルレーサー",
+   "sireDamSire": "Cozzene",
+   "sireDamDam": "Isla Mujeres",
+   "damSireSire": "エルコンドルパサー",
+   "damSireDam": "メモリアルサマー",
+   "damDamSire": "メジロライアン",
+   "damDamDam": "クリアモン",
+   "owner": "田中俊彰",
+   "producer": "平岡牧場",
+   "siblings": [
+    {
+     "name": "ユナホークパワー",
+     "wins": 0,
+     "note": "牝2022 イスラボニータ"
+    },
+    {
+     "name": "プランドールユー",
+     "wins": 1,
+     "note": "牝2020 ゴールドアクター 地方1勝"
+    }
+   ]
+  },
+  "2023104034": {
+   "name": "テイエムスティール",
+   "sire": "リアルスティール",
+   "dam": "マルキーズ",
+   "damSire": "ヴィクトワールピサ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "フレンチリヴィエラ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "ネオユニヴァース",
+   "damSireDam": "ホワイトウォーターアフェア",
+   "damDamSire": "フレンチデピュティ",
+   "damDamDam": "Actinella",
+   "owner": "竹園正繼",
+   "producer": "カミイスタット",
+   "siblings": [
+    {
+     "name": "マルキーズの2025",
+     "wins": 0,
+     "note": "牝2025 サリオス"
+    },
+    {
+     "name": "テムレーション",
+     "wins": 1,
+     "note": "牡2024 デクラレーションオブウォー 1勝、中央現役"
+    }
+   ]
+  },
+  "2022106920": {
+   "name": "ニューオーリンズ",
+   "sire": "リアルスティール",
+   "dam": "ハニードント",
+   "damSire": "クロフネ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "ラヴズオンリーミー",
+   "damDam": "マッキーロイヤル",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Monevassia",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "フジキセキ",
+   "damDamDam": "クリアーチャンス",
+   "owner": "薪浦州平",
+   "producer": "松浦牧場",
+   "siblings": [
+    {
+     "name": "ハニードントの2025",
+     "wins": 0,
+     "note": "牝2025 グローリーヴェイズ"
+    },
+    {
+     "name": "キャラバン",
+     "wins": 0,
+     "note": "牡2024 アルアイン"
+    },
+    {
+     "name": "ジャズホリック",
+     "wins": 0,
+     "note": "牝2023 コパノリッキー"
+    },
+    {
+     "name": "ラヴィアン",
+     "wins": 13,
+     "note": "牝2020 リオンディーズ 地方13勝"
+    },
+    {
+     "name": "ブルーノート",
+     "wins": 2,
+     "note": "牡2019 コパノリッキー 1勝、地方1勝、中央現役"
+    }
+   ]
+  },
+  "2019102102": {
+   "name": "ゲキザル",
+   "sire": "ザファクター",
+   "dam": "トゥモローズライト",
+   "damSire": "アフリート",
+   "sireSire": "War Front",
+   "sireDam": "Greyciousness",
+   "damDam": "オースミサツキ",
+   "sireSireSire": "Danzig",
+   "sireSireDam": "Starry Dreamer",
+   "sireDamSire": "Miswaki",
+   "sireDamDam": "Skatingonthinice",
+   "damSireSire": "Mr. Prospector",
+   "damSireDam": "Polite Lady",
+   "damDamSire": "ブライアンズタイム",
+   "damDamDam": "ルナパーク",
+   "owner": "橘倍男",
+   "producer": "広富牧場",
+   "siblings": [
+    {
+     "name": "スペースアギト",
+     "wins": 3,
+     "note": "牡2020 ダノンレジェンド 地方3勝"
+    },
+    {
+     "name": "カシノモナカ",
+     "wins": 0,
+     "note": "牝2017 ベルシャザール"
+    },
+    {
+     "name": "カシノサツキ",
+     "wins": 1,
+     "note": "牝2016 ロジユニヴァース 地方1勝"
+    },
+    {
+     "name": "トゥモローズアイ",
+     "wins": 2,
+     "note": "牝2015 ネオユニヴァース 地方2勝"
+    },
+    {
+     "name": "ファーストホープ",
+     "wins": 1,
+     "note": "牡2014 トランセンド 地方1勝"
+    },
+    {
+     "name": "ドーンフライト",
+     "wins": 0,
+     "note": "牡2013 キャプテントゥーレ"
+    }
+   ]
+  },
+  "2020104845": {
+   "name": "ギーロカスタル",
+   "sire": "マインドユアビスケッツ",
+   "dam": "エナチャン",
+   "damSire": "キンシャサノキセキ",
+   "sireSire": "Posse",
+   "sireDam": "Jazzmane",
+   "damDam": "エンジェルシード",
+   "sireSireSire": "Silver Deputy",
+   "sireSireDam": "Raska",
+   "sireDamSire": "Toccet",
+   "sireDamDam": "Alljazz",
+   "damSireSire": "フジキセキ",
+   "damSireDam": "ケルトシャーン",
+   "damDamSire": "Broad Brush",
+   "damDamDam": "Fara's Team",
+   "owner": "桑畑夏美",
+   "producer": "前谷武志",
+   "siblings": [
+    {
+     "name": "フランソワーズ",
+     "wins": 1,
+     "note": "牝2024 エフフォーリア 1勝、中央現役"
+    },
+    {
+     "name": "エナノムスメ",
+     "wins": 0,
+     "note": "牝2023 サトノダイヤモンド"
+    },
+    {
+     "name": "エナノキセキ",
+     "wins": 4,
+     "note": "牝2021 サトノダイヤモンド 地方4勝"
+    },
+    {
+     "name": "セルバーグ",
+     "wins": 5,
+     "note": "牡2019 エピファネイア 5勝、1着-中京記念(G3)"
+    },
+    {
+     "name": "エナジーボーイ",
+     "wins": 2,
+     "note": "セ2018 カレンブラックヒル 地方2勝"
+    },
+    {
+     "name": "エンジェルエナ",
+     "wins": 0,
+     "note": "牝2017 エピファネイア"
+    }
+   ]
+  },
+  "2022105094": {
+   "name": "コーラルクラウン",
+   "sire": "サートゥルナーリア",
+   "dam": "モルジアナ",
+   "damSire": "Dubawi",
+   "sireSire": "ロードカナロア",
+   "sireDam": "シーザリオ",
+   "damDam": "サマーハ",
+   "sireSireSire": "キングカメハメハ",
+   "sireSireDam": "レディブラッサム",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "Dubai Millennium",
+   "damSireDam": "Zomaradah",
+   "damDamSire": "Singspiel",
+   "damDamDam": "Genovefa",
+   "owner": "シルクレーシング",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "モルジアナの2025",
+     "wins": 0,
+     "note": "牡2025 ピクシーナイト"
+    },
+    {
+     "name": "タクティシアン",
+     "wins": 1,
+     "note": "牡2024 サリオス 1勝、中央現役"
+    },
+    {
+     "name": "ガラベイヤ",
+     "wins": 2,
+     "note": "牝2023 アルアイン 2勝、中央現役"
+    },
+    {
+     "name": "マーシャルテイル",
+     "wins": 0,
+     "note": "牡2021 ミッキーアイル"
+    },
+    {
+     "name": "マローディープ",
+     "wins": 4,
+     "note": "セ2020 スクリーンヒーロー 地方4勝"
+    },
+    {
+     "name": "コラリン",
+     "wins": 2,
+     "note": "牝2019 ダイワメジャー 2勝"
+    }
+   ]
+  },
+  "2022105808": {
+   "name": "トゥロン",
+   "sire": "ナダル",
+   "dam": "スパイラルステップ",
+   "damSire": "シンボリクリスエス",
+   "sireSire": "Blame",
+   "sireDam": "Ascending Angel",
+   "damDam": "スパイラルリング",
+   "sireSireSire": "Arch",
+   "sireSireDam": "Liable",
+   "sireDamSire": "Pulpit",
+   "sireDamDam": "Solar Colony",
+   "damSireSire": "Kris S.",
+   "damSireDam": "Tee Kay",
+   "damDamSire": "エンドスウィープ",
+   "damDamDam": "ウェディングバンド",
+   "owner": "吉田勝己",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "スパイス",
+     "wins": 0,
+     "note": "牡2025 キセキ 中央現役"
+    },
+    {
+     "name": "ペンダント",
+     "wins": 3,
+     "note": "牝2023 オルフェーヴル 2勝、地方1勝、中央現役、1着-関東オークス(G2)"
+    },
+    {
+     "name": "エートラックス",
+     "wins": 5,
+     "note": "牡2021 ニューイヤーズデイ 3勝、地方2勝、1着-兵庫チャンピオンシッ(G2)、東京スプリント競走(G3)"
+    },
+    {
+     "name": "スパイラルステップの2020",
+     "wins": 0,
+     "note": "牝2020 キズナ"
+    },
+    {
+     "name": "ハッピースパイラル",
+     "wins": 3,
+     "note": "牝2019 リオンディーズ 地方3勝"
+    }
+   ]
+  },
+  "2022104600": {
+   "name": "イマージョン",
+   "sire": "ロードカナロア",
+   "dam": "アディクティド",
+   "damSire": "ディクタット",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "レディブラッサム",
+   "damDam": "Astica",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "サラトガデュー",
+   "damSireSire": "ウォーニング",
+   "damSireDam": "アルヴォラ",
+   "damDamSire": "Surumu",
+   "damDamDam": "Auenliebe",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "クレイヴィング",
+     "wins": 0,
+     "note": "牡2024 インディチャンプ"
+    },
+    {
+     "name": "リコラピッド",
+     "wins": 0,
+     "note": "牝2023 レイデオロ"
+    },
+    {
+     "name": "アッファシナンテ",
+     "wins": 0,
+     "note": "牝2021 キズナ"
+    },
+    {
+     "name": "アルアリング",
+     "wins": 0,
+     "note": "牝2020 ロードカナロア"
+    },
+    {
+     "name": "ヴェルナー",
+     "wins": 1,
+     "note": "牡2018 キングカメハメハ 地方1勝"
+    },
+    {
+     "name": "サクセッション",
+     "wins": 6,
+     "note": "セ2017 キングカメハメハ 6勝、1着-新潟ジャンプS(JG3)"
+    },
+    {
+     "name": "アディクション",
+     "wins": 0,
+     "note": "牝2016 ハーツクライ"
+    },
+    {
+     "name": "アリストライン",
+     "wins": 1,
+     "note": "牝2015 ハーツクライ 1勝"
+    },
+    {
+     "name": "クルーガー",
+     "wins": 6,
+     "note": "牡2012 キングカメハメハ 6勝、1着-読売マイラーズC(G2)、ダービー卿チャレンジ(G3)"
+    },
+    {
+     "name": "アウストル",
+     "wins": 0,
+     "note": "牡2011 Monsun"
+    }
+   ]
+  },
+  "2022105853": {
+   "name": "ヴィリアリート",
+   "sire": "ナダル",
+   "dam": "メリーウィドウ",
+   "damSire": "ゴールドアリュール",
+   "sireSire": "Blame",
+   "sireDam": "Ascending Angel",
+   "damDam": "ウエディングメリー",
+   "sireSireSire": "Arch",
+   "sireSireDam": "Liable",
+   "sireDamSire": "Pulpit",
+   "sireDamDam": "Solar Colony",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ニキーヤ",
+   "damDamSire": "アフリート",
+   "damDamDam": "ジュエルダンサー",
+   "owner": "シルクレーシング",
+   "producer": "社台コーポレーション白老ファーム",
+   "siblings": [
+    {
+     "name": "メリーウィドウの2025",
+     "wins": 0,
+     "note": "牡2025 マインドユアビスケッツ"
+    },
+    {
+     "name": "シブレット",
+     "wins": 0,
+     "note": "牝2024 ルヴァンスレーヴ 中央現役"
+    },
+    {
+     "name": "ヴィリアズソング",
+     "wins": 0,
+     "note": "牝2023 ルーラーシップ"
+    },
+    {
+     "name": "インテルメディオ",
+     "wins": 2,
+     "note": "セ2021 ドレフォン 2勝、中央現役"
+    },
+    {
+     "name": "ヴァランシエンヌ",
+     "wins": 2,
+     "note": "牝2019 ドレフォン 2勝"
+    },
+    {
+     "name": "ジュディッタ",
+     "wins": 4,
+     "note": "牝2018 ダノンレジェンド 4勝"
+    }
+   ]
+  },
+  "2018101989": {
+   "name": "ジョディーズマロン",
+   "sire": "ディスクリートキャット",
+   "dam": "ジョディーズロマン",
+   "damSire": "サムライハート",
+   "sireSire": "Forestry",
+   "sireDam": "Pretty Discreet",
+   "damDam": "ジョディーディア",
+   "sireSireSire": "Storm Cat",
+   "sireSireDam": "Shared Interest",
+   "sireDamSire": "Private Account",
+   "sireDamDam": "Pretty Persuasive",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "エアグルーヴ",
+   "damDamSire": "Woodman",
+   "damDamDam": "Graceful Jody",
+   "owner": "ローレルレーシング",
+   "producer": "新冠橋本牧場",
+   "siblings": [
+    {
+     "name": "ジョディーズロマンの2026",
+     "wins": 0,
+     "note": "牝2026 レモンポップ"
+    },
+    {
+     "name": "ジョディーズロマンの2025",
+     "wins": 0,
+     "note": "牝2025 パンサラッサ"
+    },
+    {
+     "name": "パーレンチャン",
+     "wins": 0,
+     "note": "牝2024 ゴールドアクター 中央現役"
+    },
+    {
+     "name": "キアヌ",
+     "wins": 1,
+     "note": "牡2022 ディスクリートキャット 1勝、中央現役"
+    },
+    {
+     "name": "ローレルロイズ",
+     "wins": 0,
+     "note": "牡2021 モーリス"
+    },
+    {
+     "name": "テンフェリーチェ",
+     "wins": 6,
+     "note": "牝2020 ディスクリートキャット 地方6勝"
+    },
+    {
+     "name": "サバンナチャンス",
+     "wins": 2,
+     "note": "牝2019 ダンカーク 1勝、地方1勝"
+    }
+   ]
+  },
+  "2021105753": {
+   "name": "フェンダー",
+   "sire": "モーリス",
+   "dam": "プリンセスロック",
+   "damSire": "スウィフトカレント",
+   "sireSire": "スクリーンヒーロー",
+   "sireDam": "メジロフランシス",
+   "damDam": "ノーストバード",
+   "sireSireSire": "グラスワンダー",
+   "sireSireDam": "ランニングヒロイン",
+   "sireDamSire": "カーネギー",
+   "sireDamDam": "メジロモントレー",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ホワイトウォーターアフェア",
+   "damDamSire": "ジェネラス",
+   "damDamDam": "アジャストビート",
+   "owner": "シルクレーシング",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "プリンセスロックの2026",
+     "wins": 0,
+     "note": "牝2026 シスキン"
+    },
+    {
+     "name": "プリンセスロックの2025",
+     "wins": 0,
+     "note": "牝2025 シュネルマイスター"
+    },
+    {
+     "name": "ダンディゾン",
+     "wins": 0,
+     "note": "牡2024 ドレフォン 中央現役"
+    },
+    {
+     "name": "プリンセスロックの2023",
+     "wins": 0,
+     "note": "牡2023 ポエティックフレア"
+    },
+    {
+     "name": "ロビンソン",
+     "wins": 0,
+     "note": "牡2022 ルヴァンスレーヴ"
+    },
+    {
+     "name": "ブトンドール",
+     "wins": 2,
+     "note": "牝2020 ビッグアーサー 2勝、1着-函館2歳S(G3)"
+    },
+    {
+     "name": "カンタルーパ",
+     "wins": 0,
+     "note": "牝2019 ヘニーヒューズ"
+    }
+   ]
+  },
+  "2022105964": {
+   "name": "スニーカースキル",
+   "sire": "キズナ",
+   "dam": "ストリートバンド",
+   "damSire": "Istan",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "Street Minstrel",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "Gone West",
+   "damSireDam": "Ronda",
+   "damDamSire": "Street Cry",
+   "damDamDam": "Minstrel's Lassie",
+   "owner": "藤田晋",
+   "producer": "レイクヴィラファーム",
+   "siblings": [
+    {
+     "name": "ストリートバンドの2025",
+     "wins": 0,
+     "note": "牝2025 サートゥルナーリア"
+    },
+    {
+     "name": "サンライズレガシー",
+     "wins": 0,
+     "note": "牡2024 コントレイル 中央現役"
+    },
+    {
+     "name": "リアンドゥクール",
+     "wins": 3,
+     "note": "牝2023 キズナ 3勝、中央現役"
+    }
+   ]
+  },
+  "2021109027": {
+   "name": "テーオールビー",
+   "sire": "サンダースノー",
+   "dam": "レディロックバンド",
+   "damSire": "マンハッタンカフェ",
+   "sireSire": "Helmet",
+   "sireDam": "Eastern Joy",
+   "damDam": "ルンバロッカ",
+   "sireSireSire": "Exceed And Excel",
+   "sireSireDam": "Accessories",
+   "sireDamSire": "Dubai Destination",
+   "sireDamDam": "Red Slippers",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "サトルチェンジ",
+   "damDamSire": "Sri Pekan",
+   "damDamDam": "Rumba Azul",
+   "owner": "小笹公也",
+   "producer": "風ノ丘ファーム",
+   "siblings": [
+    {
+     "name": "レディロックバンドの2025",
+     "wins": 0,
+     "note": "牡2025 サンダースノー"
+    },
+    {
+     "name": "マルカボヌール",
+     "wins": 1,
+     "note": "牡2023 ルヴァンスレーヴ 地方1勝"
+    },
+    {
+     "name": "ロックマジェスティ",
+     "wins": 7,
+     "note": "牡2022 アメリカンペイトリオット 地方7勝"
+    }
+   ]
+  },
+  "2022101043": {
+   "name": "メイケイレイン",
+   "sire": "レイデオロ",
+   "dam": "ベルライン",
+   "damSire": "ダイワメジャー",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "ラドラーダ",
+   "damDam": "カリズマティックゴールド",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "シンボリクリスエス",
+   "sireDamDam": "レディブロンド",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "カリズマティック",
+   "damDamDam": "Color of Gold",
+   "owner": "名古屋競馬",
+   "producer": "厚賀古川牧場",
+   "siblings": [
+    {
+     "name": "サロメマニフィック",
+     "wins": 0,
+     "note": "牝2025 ドレフォン 中央現役"
+    },
+    {
+     "name": "ベルクラージュ",
+     "wins": 0,
+     "note": "牝2024 サートゥルナーリア 中央現役"
+    },
+    {
+     "name": "ジャーナーリア",
+     "wins": 0,
+     "note": "牡2023 サートゥルナーリア 中央現役"
+    },
+    {
+     "name": "ベルピット",
+     "wins": 25,
+     "note": "牡2020 パイロ 地方25勝、2着-JBC2歳優駿(G3)"
+    },
+    {
+     "name": "ベルラインの2019",
+     "wins": 0,
+     "note": "牡2019 ラニ"
+    },
+    {
+     "name": "ベルク",
+     "wins": 0,
+     "note": "牝2018 フリオーソ"
+    }
+   ]
+  },
+  "2022106604": {
+   "name": "ヤマニンシュラ",
+   "sire": "ダイワメジャー",
+   "dam": "ヤマニンアタシャン",
+   "damSire": "フレンチデピュティ",
+   "sireSire": "サンデーサイレンス",
+   "sireDam": "スカーレットブーケ",
+   "damDam": "ヤマニンパンテール",
+   "sireSireSire": "Halo",
+   "sireSireDam": "Wishing Well",
+   "sireDamSire": "ノーザンテースト",
+   "sireDamDam": "スカーレットインク",
+   "damSireSire": "Deputy Minister",
+   "damSireDam": "Mitterand",
+   "damDamSire": "ニホンピロウイナー",
+   "damDamDam": "ヤマニンアリュール",
+   "owner": "土井肇",
+   "producer": "錦岡牧場",
+   "siblings": [
+    {
+     "name": "ヤマニンアタシャンの2025",
+     "wins": 0,
+     "note": "牡2025 グローリーヴェイズ"
+    },
+    {
+     "name": "ヤマニンアタシャンの2024",
+     "wins": 0,
+     "note": "牝2024 サトノクラウン"
+    },
+    {
+     "name": "ヤマニンフェイエル",
+     "wins": 1,
+     "note": "牡2023 フィエールマン 1勝、中央現役"
+    },
+    {
+     "name": "ヤマニンアストロン",
+     "wins": 4,
+     "note": "牡2021 ディーマジェスティ 4勝、中央現役"
+    },
+    {
+     "name": "ヤマニンリジッド",
+     "wins": 4,
+     "note": "牡2020 レッドファルクス 地方4勝"
+    },
+    {
+     "name": "ヤマニンライバリー",
+     "wins": 6,
+     "note": "牡2019 ディープブリランテ 地方6勝"
+    }
+   ]
+  },
+  "2020109094": {
+   "name": "ナスノカンゲツ",
+   "sire": "ダイワメジャー",
+   "dam": "フリスコベイ",
+   "damSire": "ハードスパン",
+   "sireSire": "サンデーサイレンス",
+   "sireDam": "スカーレットブーケ",
+   "damDam": "Frisco Belle",
+   "sireSireSire": "Halo",
+   "sireSireDam": "Wishing Well",
+   "sireDamSire": "ノーザンテースト",
+   "sireDamDam": "スカーレットインク",
+   "damSireSire": "Danzig",
+   "damSireDam": "Turkish Tryst",
+   "damDamSire": "El Prado",
+   "damDamDam": "Runaway Ashleigh",
+   "owner": "那須野牧場",
+   "producer": "恵比寿興業株式会社那須野牧場",
+   "siblings": [
+    {
+     "name": "ランズエンド",
+     "wins": 0,
+     "note": "牡2024 ヘニーヒューズ 中央現役"
+    },
+    {
+     "name": "シャインフォーミー",
+     "wins": 1,
+     "note": "牝2023 アドマイヤマーズ 1勝、中央現役"
+    },
+    {
+     "name": "シスコスター",
+     "wins": 1,
+     "note": "牝2021 モーリス 地方1勝"
+    },
+    {
+     "name": "ブッシュガーデン",
+     "wins": 3,
+     "note": "牝2019 リオンディーズ 3勝"
+    },
+    {
+     "name": "レッドウッドヒル",
+     "wins": 0,
+     "note": "牝2018 ヴィクトワールピサ"
+    },
+    {
+     "name": "クサヒバリ",
+     "wins": 2,
+     "note": "牝2017 エピファネイア 地方2勝"
+    },
+    {
+     "name": "ナスノダケ",
+     "wins": 2,
+     "note": "牡2016 ヘニーヒューズ 2勝"
+    }
+   ]
+  },
+  "2023190001": {
+   "name": "エルデナリ",
+   "sire": "カラヴァッジオ",
+   "dam": "Erdana",
+   "damSire": "Sea The Stars",
+   "sireSire": "Scat Daddy",
+   "sireDam": "Mekko Hokte",
+   "damDam": "Ervedya",
+   "sireSireSire": "ヨハネスブルグ",
+   "sireSireDam": "Love Style",
+   "sireDamSire": "Holy Bull",
+   "sireDamDam": "Aerosilver",
+   "damSireSire": "Cape Cross",
+   "damSireDam": "Urban Sea",
+   "damDamSire": "Siyouni",
+   "damDamDam": "Elva",
+   "owner": "Aga Khan Studs SCEA",
+   "siblings": []
+  },
+  "2022105185": {
+   "name": "エンブロイダリー",
+   "sire": "アドマイヤマーズ",
+   "dam": "ロッテンマイヤー",
+   "damSire": "クロフネ",
+   "sireSire": "ダイワメジャー",
+   "sireDam": "ヴィアメディチ",
+   "damDam": "アーデルハイト",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "スカーレットブーケ",
+   "sireDamSire": "Medicean",
+   "sireDamDam": "Via Milano",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "アグネスタキオン",
+   "damDamDam": "ビワハイジ",
+   "owner": "シルクレーシング",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ロッテンマイヤーの2025",
+     "wins": 0,
+     "note": "牡2025 リオンディーズ"
+    },
+    {
+     "name": "ヨハンナ",
+     "wins": 0,
+     "note": "牝2024 クリソベリル 中央現役"
+    },
+    {
+     "name": "バートラガッツ",
+     "wins": 2,
+     "note": "牡2023 リアルスティール 2勝、中央現役"
+    },
+    {
+     "name": "ゼーゼマン",
+     "wins": 1,
+     "note": "牡2021 エピファネイア 1勝"
+    }
+   ]
+  },
+  "2022105891": {
+   "name": "ドラゴンブースト",
+   "sire": "スクリーンヒーロー",
+   "dam": "トーコーディオーネ",
+   "damSire": "エンパイアメーカー",
+   "sireSire": "グラスワンダー",
+   "sireDam": "ランニングヒロイン",
+   "damDam": "タイキメビウス",
+   "sireSireSire": "Silver Hawk",
+   "sireSireDam": "Ameriflora",
+   "sireDamSire": "サンデーサイレンス",
+   "sireDamDam": "ダイナアクトレス",
+   "damSireSire": "Unbridled",
+   "damSireDam": "Toussaud",
+   "damDamSire": "ダンスオブライフ",
+   "damDamDam": "タイキミステリー",
+   "owner": "水谷美穂",
+   "producer": "ゼットステーブル",
+   "siblings": [
+    {
+     "name": "トーコーディオーネの2025",
+     "wins": 0,
+     "note": "牡2025 シニスターミニスター"
+    },
+    {
+     "name": "マジェスタス",
+     "wins": 0,
+     "note": "牝2024 ゴールドドリーム"
+    },
+    {
+     "name": "シスタードラゴン",
+     "wins": 0,
+     "note": "牝2023 ダノンスマッシュ"
+    },
+    {
+     "name": "カーマンライン",
+     "wins": 1,
+     "note": "セ2021 ネオユニヴァース 1勝、中央現役"
+    },
+    {
+     "name": "ロゴナンバーワン",
+     "wins": 0,
+     "note": "牝2020 ロゴタイプ"
+    }
+   ]
+  },
+  "2021105724": {
+   "name": "シックスペンス",
+   "sire": "キズナ",
+   "dam": "フィンレイズラッキーチャーム",
+   "damSire": "Twirling Candy",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "Day of Victory",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "Candy Ride",
+   "damSireDam": "House of Danzing",
+   "damDamSire": "Victory Gallop",
+   "damDamDam": "Gather the Day",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "フィンレイズラッキーチャームの2025",
+     "wins": 0,
+     "note": "牡2025 コントレイル"
+    },
+    {
+     "name": "フィールドノート",
+     "wins": 2,
+     "note": "牡2022 ロードカナロア 2勝、中央現役"
+    }
+   ]
+  },
+  "2022105396": {
+   "name": "アドマイヤズーム",
+   "sire": "モーリス",
+   "dam": "ダイワズーム",
+   "damSire": "ハーツクライ",
+   "sireSire": "スクリーンヒーロー",
+   "sireDam": "メジロフランシス",
+   "damDam": "フォルナリーナ",
+   "sireSireSire": "グラスワンダー",
+   "sireSireDam": "ランニングヒロイン",
+   "sireDamSire": "カーネギー",
+   "sireDamDam": "メジロモントレー",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "アイリッシュダンス",
+   "damDamSire": "Capote",
+   "damDamDam": "プレイヤーホイール",
+   "owner": "近藤旬子",
+   "producer": "社台ファーム",
+   "siblings": [
+    {
+     "name": "バルディリオ",
+     "wins": 0,
+     "note": "牡2024 ブリックスアンドモルタル"
+    },
+    {
+     "name": "タイセイシュネル",
+     "wins": 0,
+     "note": "牝2019 ノヴェリスト"
+    },
+    {
+     "name": "ダノンブレット",
+     "wins": 4,
+     "note": "牡2018 キングカメハメハ 4勝"
+    },
+    {
+     "name": "ヴィアメント",
+     "wins": 8,
+     "note": "セ2017 キングカメハメハ 5勝、地方3勝"
+    }
+   ]
+  },
+  "2022101765": {
+   "name": "ピコローズ",
+   "sire": "サトノダイヤモンド",
+   "dam": "ルージュノアール",
+   "damSire": "ストーミングホーム",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マルペンサ",
+   "damDam": "フェアリーブレス",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Orpen",
+   "sireDamDam": "Marsella",
+   "damSireSire": "Machiavellian",
+   "damSireDam": "Try to Catch Me",
+   "damDamSire": "フレンチデピュティ",
+   "damDamDam": "スイートマイハート",
+   "owner": "ビジュピコ",
+   "producer": "チャンピオンズファーム",
+   "siblings": [
+    {
+     "name": "ルージュノアールの2025",
+     "wins": 0,
+     "note": "牝2025 キズナ"
+    },
+    {
+     "name": "スーパーハイウェイ",
+     "wins": 0,
+     "note": "牡2023 アメリカンペイトリオット"
+    },
+    {
+     "name": "ドレッド",
+     "wins": 5,
+     "note": "牡2021 ドレフォン 地方5勝"
+    },
+    {
+     "name": "ルンバフラメンコ",
+     "wins": 0,
+     "note": "牝2020 キンシャサノキセキ"
+    },
+    {
+     "name": "キッショウ",
+     "wins": 2,
+     "note": "牝2019 キンシャサノキセキ 2勝"
+    },
+    {
+     "name": "アールラプチャー",
+     "wins": 3,
+     "note": "牝2018 ミッキーアイル 3勝"
+    }
+   ]
+  },
+  "2020101607": {
+   "name": "ココナッツブラウン",
+   "sire": "キタサンブラック",
+   "dam": "ルアーズストリート",
+   "damSire": "キングカメハメハ",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "フィラストリート",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "Kingmambo",
+   "damSireDam": "マンファス",
+   "damDamSire": "Cozzene",
+   "damDamDam": "Phydilla",
+   "owner": "下河辺隆行",
+   "producer": "下河辺牧場",
+   "siblings": [
+    {
+     "name": "ルアーズストリートの2025",
+     "wins": 0,
+     "note": "牝2025 キタサンブラック"
+    },
+    {
+     "name": "ユイノサシガネ",
+     "wins": 1,
+     "note": "牡2023 アルアイン 地方1勝"
+    },
+    {
+     "name": "デュバルストリート",
+     "wins": 0,
+     "note": "牡2021 マジェスティックウォリアー"
+    },
+    {
+     "name": "エコロガナドール",
+     "wins": 1,
+     "note": "牡2019 オルフェーヴル 地方1勝"
+    },
+    {
+     "name": "サンフローリス",
+     "wins": 3,
+     "note": "牝2018 ハーツクライ 地方3勝"
+    },
+    {
+     "name": "グレートバローズ",
+     "wins": 6,
+     "note": "セ2017 ディープインパクト 5勝、地方1勝"
+    },
+    {
+     "name": "ルーナクオーレ",
+     "wins": 0,
+     "note": "牝2016 ディープインパクト"
+    },
+    {
+     "name": "サトノジーガー",
+     "wins": 0,
+     "note": "牡2014 ディープインパクト"
+    }
+   ]
+  },
+  "2023107166": {
+   "name": "ロデオドライブ",
+   "sire": "サートゥルナーリア",
+   "dam": "ビバリーヒルズ",
+   "damSire": "スニッツェル",
+   "sireSire": "ロードカナロア",
+   "sireDam": "シーザリオ",
+   "damDam": "ブリリアントベリー",
+   "sireSireSire": "キングカメハメハ",
+   "sireSireDam": "レディブラッサム",
+   "sireDamSire": "スペシャルウィーク",
+   "sireDamDam": "キロフプリミエール",
+   "damSireSire": "Redoute's Choice",
+   "damSireDam": "Snippets' Lass",
+   "damDamSire": "ノーザンテースト",
+   "damDamDam": "クラフテイワイフ",
+   "owner": "吉田勝己",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "ビバリードリーム",
+     "wins": 0,
+     "note": "牝2025 ミスターメロディ"
+    },
+    {
+     "name": "スリーピース",
+     "wins": 4,
+     "note": "セ2022 ミッキーアイル 4勝、中央現役"
+    },
+    {
+     "name": "ズバットマサムネ",
+     "wins": 2,
+     "note": "セ2021 キンシャサノキセキ 2勝、中央現役"
+    },
+    {
+     "name": "キトリ",
+     "wins": 1,
+     "note": "牝2020 キタサンブラック 1勝"
+    },
+    {
+     "name": "ヒドゥンヒルズ",
+     "wins": 0,
+     "note": "牡2019 シルバーステート"
+    },
+    {
+     "name": "デイトンウェイ",
+     "wins": 1,
+     "note": "牡2018 リアルインパクト 1勝"
+    }
+   ]
+  },
+  "2021100913": {
+   "name": "ジューンテイク",
+   "sire": "キズナ",
+   "dam": "アドマイヤサブリナ",
+   "damSire": "シンボリクリスエス",
+   "sireSire": "ディープインパクト",
+   "sireDam": "キャットクイル",
+   "damDam": "ツィンクルヴェール",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "Pacific Princess",
+   "damSireSire": "Kris S.",
+   "damSireDam": "Tee Kay",
+   "damDamSire": "サンデーサイレンス",
+   "damDamDam": "ツィンクルブライド",
+   "owner": "吉川潤",
+   "producer": "ヒダカファーム",
+   "siblings": [
+    {
+     "name": "アドマイヤサブリナの2025",
+     "wins": 0,
+     "note": "牡2025 キタサンブラック"
+    },
+    {
+     "name": "ジューンセレッソ",
+     "wins": 0,
+     "note": "牝2022 ドレフォン"
+    },
+    {
+     "name": "ジューンオレンジ",
+     "wins": 4,
+     "note": "牝2020 ジャスタウェイ 4勝、3着-フィリーズレビュー(G2)、中京記念(G3)"
+    },
+    {
+     "name": "ジューンベロシティ",
+     "wins": 11,
+     "note": "牡2018 ロードカナロア 11勝、中央現役、1着-東京ハイジャンプ(JG2)、阪神ジャンプS(JG3)、東京ジャンプS(JG3)"
+    }
+   ]
+  },
+  "2021100953": {
+   "name": "ウォーターリヒト",
+   "sire": "ドレフォン",
+   "dam": "ウォーターピオニー",
+   "damSire": "ヴィクトワールピサ",
+   "sireSire": "Gio Ponti",
+   "sireDam": "Eltimaas",
+   "damDam": "マチカネハヤテ",
+   "sireSireSire": "Tale of the Cat",
+   "sireSireDam": "Chipeta Springs",
+   "sireDamSire": "Ghostzapper",
+   "sireDamDam": "Najecam",
+   "damSireSire": "ネオユニヴァース",
+   "damSireDam": "ホワイトウォーターアフェア",
+   "damDamSire": "サクラバクシンオー",
+   "damDamDam": "ベルセゾン",
+   "owner": "山岡正人",
+   "producer": "伏木田牧場",
+   "siblings": [
+    {
+     "name": "ウォーターピオニーの2025",
+     "wins": 0,
+     "note": "牝2025 ドレフォン"
+    },
+    {
+     "name": "ウォーターガルーダ",
+     "wins": 0,
+     "note": "牡2024 レイデオロ 中央現役"
+    },
+    {
+     "name": "ウォーターガーベラ",
+     "wins": 1,
+     "note": "牝2022 レイデオロ 1勝、中央現役、2着-チューリップ賞(G2)"
+    }
+   ]
+  },
+  "2019104476": {
+   "name": "ガイアフォース",
+   "sire": "キタサンブラック",
+   "dam": "ナターレ",
+   "damSire": "クロフネ",
+   "sireSire": "ブラックタイド",
+   "sireDam": "シュガーハート",
+   "damDam": "ロージーチャーム",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "サクラバクシンオー",
+   "sireDamDam": "オトメゴコロ",
+   "damSireSire": "フレンチデピュティ",
+   "damSireDam": "ブルーアヴェニュー",
+   "damDamSire": "ダンスインザダーク",
+   "damDamDam": "クリスマスローズ",
+   "owner": "ＫＲジャパン",
+   "producer": "追分ファーム",
+   "siblings": [
+    {
+     "name": "ナターレの2025",
+     "wins": 0,
+     "note": "牡2025 ルヴァンスレーヴ"
+    },
+    {
+     "name": "ツリートッパー",
+     "wins": 0,
+     "note": "牡2024 ドレフォン 中央現役"
+    },
+    {
+     "name": "ノチェブエナ",
+     "wins": 0,
+     "note": "牝2023 キタサンブラック"
+    },
+    {
+     "name": "ジョワイユノエル",
+     "wins": 1,
+     "note": "牝2022 キタサンブラック 1勝、中央現役"
+    },
+    {
+     "name": "インナースティール",
+     "wins": 8,
+     "note": "牡2020 リアルスティール 地方8勝"
+    },
+    {
+     "name": "ナヴィリオ",
+     "wins": 3,
+     "note": "牡2018 ジャスタウェイ 地方3勝"
+    },
+    {
+     "name": "ナビダードゥ",
+     "wins": 2,
+     "note": "牝2017 フェノーメノ 地方2勝"
+    },
+    {
+     "name": "ユール",
+     "wins": 0,
+     "note": "牡2016 キングカメハメハ"
+    },
+    {
+     "name": "ヴィジリア",
+     "wins": 1,
+     "note": "牡2015 キングカメハメハ 地方1勝"
+    }
+   ]
+  },
+  "2021105864": {
+   "name": "ワールズエンド",
+   "sire": "ロードカナロア",
+   "dam": "リラヴァティ",
+   "damSire": "ゼンノロブロイ",
+   "sireSire": "キングカメハメハ",
+   "sireDam": "レディブラッサム",
+   "damDam": "シンハリーズ",
+   "sireSireSire": "Kingmambo",
+   "sireSireDam": "マンファス",
+   "sireDamSire": "Storm Cat",
+   "sireDamDam": "サラトガデュー",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "ローミンレイチェル",
+   "damDamSire": "Singspiel",
+   "damDamDam": "Baize",
+   "owner": "キャロットファーム",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "リラヴァティの2025",
+     "wins": 0,
+     "note": "牡2025 ウエストオーバー"
+    },
+    {
+     "name": "リラヴァティの2024",
+     "wins": 0,
+     "note": "牡2024 ドレフォン"
+    },
+    {
+     "name": "シーギリヤロック",
+     "wins": 1,
+     "note": "牡2023 リオンディーズ 1勝、中央現役"
+    },
+    {
+     "name": "サラスヴァティー",
+     "wins": 2,
+     "note": "牝2022 レイデオロ 2勝、中央現役"
+    },
+    {
+     "name": "マックロスキー",
+     "wins": 2,
+     "note": "牡2020 ルーラーシップ 地方2勝"
+    },
+    {
+     "name": "ホートンプレインズ",
+     "wins": 0,
+     "note": "牝2019 エピファネイア"
+    },
+    {
+     "name": "ストゥーティ",
+     "wins": 3,
+     "note": "牝2018 モーリス 3勝、3着-チューリップ賞(G2)"
+    }
+   ]
+  },
+  "2023103268": {
+   "name": "レザベーション",
+   "sire": "ダノンプレミアム",
+   "dam": "プレノタート",
+   "damSire": "ジャングルポケット",
+   "sireSire": "ディープインパクト",
+   "sireDam": "インディアナギャル",
+   "damDam": "セクシーココナッツ",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Intikhab",
+   "sireDamDam": "Genial Jenny",
+   "damSireSire": "トニービン",
+   "damSireDam": "ダンスチャーマー",
+   "damDamSire": "ダンスインザダーク",
+   "damDamDam": "ココパシオン",
+   "owner": "中村伊三美",
+   "producer": "松田牧場",
+   "siblings": [
+    {
+     "name": "イサチルオアシス",
+     "wins": 3,
+     "note": "牝2022 アルアイン 地方3勝"
+    },
+    {
+     "name": "ゴールウェイガール",
+     "wins": 4,
+     "note": "牝2021 キンシャサノキセキ 地方4勝"
+    },
+    {
+     "name": "タイムラプス",
+     "wins": 0,
+     "note": "牝2019 ロードカナロア"
+    },
+    {
+     "name": "イズジョーレーヌ",
+     "wins": 0,
+     "note": "牝2018 ドゥラメンテ"
+    },
+    {
+     "name": "ノーブルブレイド",
+     "wins": 1,
+     "note": "牝2017 エピファネイア 地方1勝"
+    },
+    {
+     "name": "ココナツクラッシュ",
+     "wins": 2,
+     "note": "牡2016 キングズベスト 地方2勝"
+    }
+   ]
+  },
+  "2023106920": {
+   "name": "スターアニス",
+   "sire": "ドレフォン",
+   "dam": "エピセアローム",
+   "damSire": "ダイワメジャー",
+   "sireSire": "Gio Ponti",
+   "sireDam": "Eltimaas",
+   "damDam": "ラタフィア",
+   "sireSireSire": "Tale of the Cat",
+   "sireSireDam": "Chipeta Springs",
+   "sireDamSire": "Ghostzapper",
+   "sireDamDam": "Najecam",
+   "damSireSire": "サンデーサイレンス",
+   "damSireDam": "スカーレットブーケ",
+   "damDamSire": "Cozzene",
+   "damDamDam": "Sakura Fabulous",
+   "owner": "吉田勝己",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "エピセアロームの2025",
+     "wins": 0,
+     "note": "牝2025 シュネルマイスター"
+    },
+    {
+     "name": "ハートノート",
+     "wins": 1,
+     "note": "牝2024 エフフォーリア 1勝、中央現役"
+    },
+    {
+     "name": "エピセアロームの2021",
+     "wins": 0,
+     "note": "牡2021 レイデオロ"
+    },
+    {
+     "name": "バルサムノート",
+     "wins": 5,
+     "note": "牡2020 モーリス 5勝"
+    },
+    {
+     "name": "エピセアロームの2017",
+     "wins": 0,
+     "note": "牡2017 エピファネイア"
+    },
+    {
+     "name": "シトラスノート",
+     "wins": 3,
+     "note": "牝2016 ロードカナロア 3勝"
+    }
+   ]
+  },
+  "2021105565": {
+   "name": "エコロブルーム",
+   "sire": "ダイワメジャー",
+   "dam": "シュガーショック",
+   "damSire": "Candy Ride",
+   "sireSire": "サンデーサイレンス",
+   "sireDam": "スカーレットブーケ",
+   "damDam": "Enthusiastically",
+   "sireSireSire": "Halo",
+   "sireSireDam": "Wishing Well",
+   "sireDamSire": "ノーザンテースト",
+   "sireDamDam": "スカーレットインク",
+   "damSireSire": "Ride the Rails",
+   "damSireDam": "Candy Girl",
+   "damDamSire": "Distorted Humor",
+   "damDamDam": "Unbridled Hope",
+   "owner": "原村正紀",
+   "producer": "ノーザンファーム",
+   "siblings": [
+    {
+     "name": "シュガーショックの2025",
+     "wins": 0,
+     "note": "牝2025 イクイノックス"
+    },
+    {
+     "name": "フロントページ",
+     "wins": 0,
+     "note": "牡2024 キズナ 中央現役"
+    },
+    {
+     "name": "ショウナンバンライ",
+     "wins": 4,
+     "note": "牡2023 オルフェーヴル 4勝、中央現役"
+    },
+    {
+     "name": "トロピカルレイン",
+     "wins": 0,
+     "note": "牝2022 サートゥルナーリア"
+    },
+    {
+     "name": "ミッキーマカロン",
+     "wins": 2,
+     "note": "牝2020 キタサンブラック 2勝"
+    },
+    {
+     "name": "スパイダーゴールド",
+     "wins": 4,
+     "note": "牡2019 ダイワメジャー 4勝"
+    },
+    {
+     "name": "ラーゴム",
+     "wins": 4,
+     "note": "牡2018 オルフェーヴル 4勝、1着-きさらぎ賞(G3)"
+    },
+    {
+     "name": "アドマイヤメティス",
+     "wins": 3,
+     "note": "牝2017 ディープインパクト 3勝"
+    }
+   ]
+  },
+  "2020105018": {
+   "name": "スズハローム",
+   "sire": "サトノダイヤモンド",
+   "dam": "アイライン",
+   "damSire": "ローレルゲレイロ",
+   "sireSire": "ディープインパクト",
+   "sireDam": "マルペンサ",
+   "damDam": "ローレルシャイン",
+   "sireSireSire": "サンデーサイレンス",
+   "sireSireDam": "ウインドインハーヘア",
+   "sireDamSire": "Orpen",
+   "sireDamDam": "Marsella",
+   "damSireSire": "キングヘイロー",
+   "damSireDam": "ビッグテンビー",
+   "damDamSire": "コマンダーインチーフ",
+   "damDamDam": "アラマサゴールド",
+   "owner": "森達郎",
+   "producer": "アラキファーム",
+   "siblings": [
+    {
+     "name": "スズシャロン",
+     "wins": 0,
+     "note": "牝2023 レイデオロ"
+    },
+    {
+     "name": "トニーテソーロ",
+     "wins": 6,
+     "note": "牡2021 ヘニーヒューズ 1勝、地方5勝"
+    }
+   ]
+  },
+  "2021110030": {
+   "name": "アンパドゥ",
+   "sire": "Iffraaj",
+   "dam": "Latharna Skies",
+   "damSire": "Dubawi",
+   "sireSire": "Zafonic",
+   "sireDam": "Pastorale",
+   "damDam": "Firth of Lorne",
+   "sireSireSire": "Gone West",
+   "sireSireDam": "Zaizafon",
+   "sireDamSire": "Nureyev",
+   "sireDamDam": "Park Appeal",
+   "damSireSire": "Dubai Millennium",
+   "damSireDam": "Zomaradah",
+   "damDamSire": "デインヒル",
+   "damDamDam": "Kerrera",
+   "owner": "ゴドルフィン",
+   "producer": "Godolphin",
+   "siblings": [
+    {
+     "name": "リヤドスカイライン",
+     "wins": 0,
+     "note": "牝2022 Masar"
+    }
+   ]
+  },
+  "2021110031": {
+   "name": "オフトレイル",
+   "sire": "Farhh",
+   "dam": "ローズトレイル",
+   "damSire": "Kingmambo",
+   "sireSire": "Pivotal",
+   "sireDam": "Gonbarda",
+   "damDam": "Mannington",
+   "sireSireSire": "Polar Falcon",
+   "sireSireDam": "Fearless Revival",
+   "sireDamSire": "Lando",
+   "sireDamDam": "Gonfalon",
+   "damSireSire": "Mr. Prospector",
+   "damSireDam": "Miesque",
+   "damDamSire": "デインヒル",
+   "damDamDam": "Bint Marscay",
+   "owner": "ゴドルフィン",
+   "producer": "Godolphin",
+   "siblings": [
+    {
+     "name": "アーザムローズ",
+     "wins": 0,
+     "note": "牝2018 Golden Horn"
+    },
+    {
+     "name": "イヴニングブルーム",
+     "wins": 0,
+     "note": "牝2016 アドマイヤムーン 中央現役"
+    },
+    {
+     "name": "リーディングエッジ",
+     "wins": 1,
+     "note": "セ2015 New Approach 1勝"
+    },
+    {
+     "name": "Rosa Imperial",
+     "wins": 0,
+     "note": "牝2013 Pivotal 3着-ロートシルト賞(G1)"
+    }
+   ]
+  }
+ }
+}
