@@ -11526,5 +11526,49 @@
     "source": "production",
     "segment": "nar",
     "track": "高知"
+  },
+  "nar-2026-11-21-高知-09": {
+    "id": "nar-2026-11-21-高知-09",
+    "date": "2026-11-21",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 6,
+    "hit": true,
+    "source": "production",
+    "segment": "nar",
+    "track": "高知"
+  },
+  "nar-2026-11-21-高知-10": {
+    "id": "nar-2026-11-21-高知-10",
+    "date": "2026-11-21",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 6,
+    "hit": false,
+    "source": "production",
+    "segment": "nar",
+    "track": "高知"
+  },
+  "nar-2026-11-21-高知-11": {
+    "id": "nar-2026-11-21-高知-11",
+    "date": "2026-11-21",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 5,
+    "hit": false,
+    "source": "production",
+    "segment": "nar",
+    "track": "高知"
+  },
+  "nar-2026-11-21-高知-12": {
+    "id": "nar-2026-11-21-高知-12",
+    "date": "2026-11-21",
+    "model": "arvexq-rewrite-v3-v9b",
+    "kind": "ワイド",
+    "points": 6,
+    "hit": true,
+    "source": "production",
+    "segment": "nar",
+    "track": "高知"
   }
 }
