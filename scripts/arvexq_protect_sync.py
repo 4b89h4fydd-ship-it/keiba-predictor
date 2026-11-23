@@ -149,6 +149,23 @@ def _fetch_display_restored(base: str, rid: str) -> dict[str, Any]:
             # stored state; protect_detail re-checks the same
             # predicate and admits only a result-only write over it.
             return candidate
+        # The deployed worker's display view serves the stored detail
+        # verbatim; when the stored detail itself was overwritten
+        # with the projection's shape (2026-11-23: eleven published
+        # races during the morning recovery), the blocks are gone
+        # from storage but the sealed unified product and the publish
+        # marker survive in the same detail. Rebuild the blocks from
+        # that sealed product — receipt-verified, self-checked
+        # against the sealed ticket plan — instead of failing every
+        # lane closed. Races that were never published do not need a
+        # pass here: their stored details carry the prepared status
+        # stamps, not the projection's, so they never reach this
+        # branch (verified against the stored details of the
+        # unpublished 2026-11-23 Tokyo 1R / 5R and Fukushima 5R).
+        from scripts.arvexq_sealed_restore import sealed_product_restore
+        restored = sealed_product_restore(candidate)
+        if restored is not None:
+            return restored
         raise RuntimeError(
             "D1 display view could not restore the tombstoned forecast: "
             + rid)
@@ -486,23 +503,45 @@ def protect_detail(old: dict[str, Any] | None, incoming: dict[str, Any]) -> dict
         # would be deleted from the incoming write. That is exactly
         # how nine races lost their stored prediction blocks on
         # 2026-11-05 after a projection-shaped write flipped their
-        # stored status. Restore the stored view from the sealed
-        # pre-off archive instead, or fail closed.
+        # stored status. Restore the stored view from a verified
+        # original (the sealed pre-off archive, or the sealed unified
+        # product the detail itself carries) instead, or fail closed.
         restored = _archive_restored_detail(old)
         if restored is not None:
             old = restored
-        elif not _compact_tombstone_result_write(old, incoming):
-            raise RuntimeError(
-                "stored forecast is tombstoned in the API projection "
-                "and carries no verified pre-off archive; failing "
-                "closed rather than restoring from the tombstone: "
-                + str(old.get("id") or ""))
-        # Otherwise the write is result-only over a compact tombstone
-        # that holds no forecast blocks at all: keep the stub as `old`.
-        # The generic protection below still restores every
-        # forecast-shaped key from it (the stub shares only the status
-        # stamps and text with the write) and the genuine-publish path
-        # can never trigger, because the write's status is not "ready".
+        elif _compact_tombstone_result_write(old, incoming):
+            # Result-only write over a compact tombstone that holds
+            # no forecast blocks at all: keep the stub as `old` (the
+            # generic protection below still restores every
+            # forecast-shaped key from it, and the genuine-publish
+            # path can never trigger because the write's status is
+            # not "ready").
+            pass
+        else:
+            # No pre-off archive: the stored detail may still carry
+            # its sealed unified product (the 2026-11-23 overwrite
+            # stripped the derived blocks but left the product and
+            # the publish marker in place). Rebuild the blocks from
+            # the product — receipt-verified and self-checked — and
+            # protect against the restored publication. Anything else
+            # keeps failing closed: a tombstoned detail alone cannot
+            # prove no forecast existed (the same overwrite could
+            # have taken the product with the blocks), and races that
+            # were never published never reach this branch — their
+            # stored details carry the prepared status stamps, not
+            # the projection's (verified 2026-11-23 against the
+            # stored Tokyo 1R / 5R and Fukushima 5R details).
+            from scripts.arvexq_sealed_restore import (
+                sealed_product_restore)
+            sealed = sealed_product_restore(old)
+            if sealed is not None:
+                old = sealed
+            else:
+                raise RuntimeError(
+                    "stored forecast is tombstoned in the API projection "
+                    "and carries no verified pre-off archive; failing "
+                    "closed rather than restoring from the tombstone: "
+                    + str(old.get("id") or ""))
     out = copy.deepcopy(incoming)
     if not isinstance(old, dict):
         return out
@@ -742,7 +781,20 @@ def guard(body: dict[str, Any], read=fetch_current, *, base: str) -> dict[str, A
             # and relied entirely on upstream filtering.
             continue
         old = read(base, str(detail["id"]))
-        updated.append(protect_detail(old, detail))
+        protected = protect_detail(old, detail)
+        if (_projection_tombstone(protected)
+                and isinstance(protected.get("unifiedForecast"), dict)):
+            # Never emit a write that stores the projection's shape
+            # over a race that carries a sealed forecast: that is the
+            # exact overwrite that destroyed the stored blocks on
+            # 2026-11-05 and again on 2026-11-23. protect_detail has
+            # already restored or failed closed for every restorable
+            # case, so a tombstone-shaped output here means the write
+            # itself is the projection — refuse the batch.
+            raise RuntimeError(
+                "refusing to emit a projection-tombstone write over a "
+                "sealed forecast: " + str(detail["id"]))
+        updated.append(protected)
     if out.get("details") is not None:
         out["details"] = updated
     return out
