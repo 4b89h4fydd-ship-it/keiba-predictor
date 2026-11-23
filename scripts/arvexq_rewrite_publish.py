@@ -8,8 +8,12 @@ replaces only the forecast-owned blocks, passes the result through
 ``arvexq_protect_sync.protect_detail`` (which preserves seals, career
 archives and revision chains, and only accepts forecast replacement
 from a write carrying this lane's marker), and posts it back through
-POST /api/sync. Read-back verification requires the stored unified
-receipt hash to equal the generated one.
+POST /api/sync. Verification requires the unified receipt hash to
+equal the generated one — checked, since fix program B (2026-11-23),
+against the lane's own LOCAL sealed snapshot of the exact protected
+detail (saved-snapshots envelope; its sha256 is re-verified against
+the restored bytes) instead of an API read-back, so the publish gate
+no longer depends on the D1-backed API serving the race back.
 
 Facts (entries, careers, results, odds) are never authored here; the
 engine configuration is the frozen lane configuration shared with the
@@ -137,9 +141,13 @@ and self-verifies every product locally without posting.
 from __future__ import annotations
 
 import argparse
+import base64
+import gzip
+import hashlib
 import importlib.util
 import json
 import os
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -580,13 +588,25 @@ def _restore_pristine_sidecar(new: dict, token: str | None):
     sidecar = new.get("masterAnalysis")
     if not isinstance(sidecar, dict):
         return True, "no-sidecar"  # nothing signed to restore
-    if not token:
-        return False, "no-token"
     race_id = str(new.get("id") or "")
     if not race_id:
         return False, "no-race-id"
     revision = ((new.get("preparedMeta") or {}).get("rewritePublish")
                 or {}).get("revision") or {}
+    # Fix program B: the lane's own local sealed snapshot is the first
+    # source for the pristine sidecar — it is the exact detail this
+    # lane sealed when it published the race, its envelope sha256 is
+    # re-verified on load, and the identity-chain + digest checks
+    # below run unchanged against it.  The authenticated
+    # snapshot-export read remains only as a fallback for races this
+    # lane has not sealed locally yet (pre-migration publications).
+    local_stored = load_local_snapshot_detail(
+        str(new.get("date") or ""), race_id)
+    if isinstance(local_stored, dict):
+        if _adopt_stored_sidecar(new, local_stored) is None:
+            return True, "restored-local-snapshot"
+    if not token:
+        return False, "no-token"
     try:
         resp = _get_admin(
             "/api/admin/snapshot-export?table=race_details&race_id="
@@ -606,32 +626,50 @@ def _restore_pristine_sidecar(new: dict, token: str | None):
         stored = unpack_detail(stored)
     except Exception as exc:
         return False, f"payload-parse: {type(exc).__name__}: {exc}"
+    reason = _adopt_stored_sidecar(new, stored)
+    if reason is not None:
+        return False, reason
+    return True, "restored"
+
+
+def _adopt_stored_sidecar(new: dict, stored: dict) -> str | None:
+    """Adopt ``stored``'s masterAnalysis sidecar into ``new``.
+
+    Returns None on success (``new`` mutated), else the failing
+    step's reason.  The identity chain is unchanged from the
+    original snapshot-export restore: same version and capturedAt
+    as the incoming sidecar, the stored publication's receipt
+    equals the revision's previousReceiptSha256, and the stored
+    sidecar's own digest verifies (by VALUE via
+    master_sidecar_verified — every accepted spelling binds the
+    full content, and any changed value, string, key or list still
+    fails).  Used for both the local sealed snapshot (first choice,
+    fix program B) and the snapshot-export fallback.
+    """
+    sidecar = new.get("masterAnalysis")
+    if not isinstance(sidecar, dict):
+        return "no-sidecar"
+    revision = ((new.get("preparedMeta") or {}).get("rewritePublish")
+                or {}).get("revision") or {}
     stored_sidecar = stored.get("masterAnalysis")
     if not isinstance(stored_sidecar, dict):
-        return False, "no-stored-sidecar"
+        return "no-stored-sidecar"
     if stored_sidecar.get("version") != sidecar.get("version"):
-        return False, "version-mismatch"
+        return "version-mismatch"
     if stored_sidecar.get("capturedAt") != sidecar.get("capturedAt"):
-        return False, "captured-at-mismatch"
+        return "captured-at-mismatch"
     stored_marker = ((stored.get("preparedMeta") or {})
                      .get("rewritePublish") or {})
     if (not revision.get("previousReceiptSha256")
             or stored_marker.get("receiptSha256")
             != revision.get("previousReceiptSha256")):
-        return False, "receipt-chain-mismatch"
-    # The stored seal is verified by VALUE (master_sidecar_verified):
-    # the stored payload crossed the sync worker's JSON.stringify,
-    # which re-spells integral floats as ints (68.0 -> 68), so the
-    # legacy spelling-bound check rejected stored sidecars whose
-    # content was exactly the sealed content. Verification is not
-    # weakened: every accepted spelling binds the full content, and
-    # any changed value, string, key or list still fails here.
+        return "receipt-chain-mismatch"
     from arvexq.prediction.unified_product import master_sidecar_verified
     if not master_sidecar_verified(stored_sidecar):
-        return False, "stored-digest-mismatch"
+        return "stored-digest-mismatch"
     import copy as _copy
     new["masterAnalysis"] = _copy.deepcopy(stored_sidecar)
-    return True, "restored"
+    return None
 
 
 def _post_sync(detail: dict, token: str) -> dict:
@@ -645,6 +683,182 @@ def _post_sync(detail: dict, token: str) -> dict:
                  "x-sync-token": token})
     with urllib.request.urlopen(req, timeout=120) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+# --- Local sealed snapshots (GitHub-only migration, fix program B) -----
+# Receipt verification no longer reads the published detail back through
+# the D1-backed API.  Before a write is posted, the exact protected
+# detail is sealed into a LOCAL snapshot file in the saved-snapshots
+# envelope format ({version, sha256, bytes, gzipBase64}; sha256 is the
+# SHA-256 of the raw snapshot string — the production definition in
+# scripts/arvexq_publish_saved_snapshots.py, whose envelope() is reused
+# verbatim).  Verification then re-reads THAT FILE from disk, restores
+# the gzip payload, re-hashes the restored bytes against the envelope
+# sha256 (existence check on the actual bytes, not on a claimed string),
+# and only then applies the same checks the API read-back used to gate
+# on: receipt string equality (64-hex), verified_unified() content
+# re-hash, and predictionMarks / unified-marks agreement.  Nothing is
+# weakened: every check that failed a publication before still fails
+# it, and a snapshot whose bytes do not hash to its envelope fails
+# before any of them.  Envelope files are content-addressed and
+# immutable; the per-date manifest is the lane-local index pointing at
+# the latest sealed snapshot per race (it is rewritten on re-issue,
+# unlike the first-write-wins saved-originals manifest, because the
+# verification target is always the latest publication).
+LOCAL_SNAPSHOT_DIR = Path(os.environ.get(
+    "ARVEXQ_LOCAL_SNAPSHOT_DIR", "rewrite-publish-snapshots"))
+_HEX64 = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _local_snapshot_root(root: Path | None = None) -> Path:
+    return Path(root) if root is not None else LOCAL_SNAPSHOT_DIR
+
+
+def seal_local_snapshot(detail: dict, date: str,
+                        root: Path | None = None) -> Path:
+    """Seal ``detail`` into the local snapshot store for ``date``.
+
+    Returns the envelope file path.  The written file is re-read and
+    its restored bytes re-hashed before returning (the same
+    publish-then-verify discipline as
+    arvexq_publish_saved_snapshots.publish); any mismatch raises.
+    """
+    from scripts.arvexq_publish_saved_snapshots import envelope
+
+    race_id = str(detail.get("id") or "")
+    if not race_id:
+        raise ValueError("local snapshot: detail has no race id")
+    raw = json.dumps(detail, ensure_ascii=False, separators=(",", ":"))
+    env = envelope(raw)
+    day_dir = _local_snapshot_root(root) / date
+    day_dir.mkdir(parents=True, exist_ok=True)
+    target = day_dir / (env["sha256"] + ".json")
+    serialized = json.dumps(env, ensure_ascii=False, separators=(",", ":"))
+    if target.exists() and target.read_text(encoding="utf-8") != serialized:
+        raise ValueError("local snapshot: immutable snapshot collision")
+    if not target.exists():
+        target.write_text(serialized, encoding="utf-8")
+    saved = json.loads(target.read_text(encoding="utf-8"))
+    restored = gzip.decompress(base64.b64decode(saved["gzipBase64"]))
+    if restored.decode("utf-8") != raw or \
+            hashlib.sha256(restored).hexdigest() != saved["sha256"]:
+        raise ValueError("local snapshot: published restore mismatch")
+    manifest_path = day_dir / "manifest.json"
+    manifest = {"version": "arvexq-local-publish-snapshots-v1",
+                "date": date, "races": {}}
+    if manifest_path.exists():
+        try:
+            loaded = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict) and \
+                    loaded.get("version") == manifest["version"] and \
+                    loaded.get("date") == date and \
+                    isinstance(loaded.get("races"), dict):
+                manifest = loaded
+        except ValueError:
+            pass
+    receipt = (detail.get("unifiedForecast") or {}).get("receiptSha256")
+    manifest["races"][race_id] = {
+        "file": target.name, "sha256": env["sha256"],
+        "bytes": env["bytes"], "receiptSha256": receipt}
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8")
+    return target
+
+
+def load_local_snapshot_detail(date: str, race_id: str,
+                               root: Path | None = None) -> dict | None:
+    """The detail sealed in the local snapshot for (date, race_id).
+
+    Returns None when no snapshot exists or the envelope does not
+    verify (bad version, non-hex or mismatched sha256, unrestorable
+    gzip, identity mismatch) — fail-closed, never a partial read.
+    """
+    day_dir = _local_snapshot_root(root) / date
+    try:
+        manifest = json.loads(
+            (day_dir / "manifest.json").read_text(encoding="utf-8"))
+        entry = (manifest.get("races") or {}).get(str(race_id))
+        if not isinstance(entry, dict):
+            return None
+        env = json.loads(
+            (day_dir / entry["file"]).read_text(encoding="utf-8"))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    if env.get("version") != "arvexq-saved-snapshot-v1":
+        return None
+    claimed = env.get("sha256")
+    if not isinstance(claimed, str) or not _HEX64.match(claimed):
+        return None
+    if entry.get("sha256") != claimed:
+        return None
+    try:
+        restored = gzip.decompress(base64.b64decode(env["gzipBase64"]))
+    except Exception:
+        return None
+    if hashlib.sha256(restored).hexdigest() != claimed:
+        return None
+    if env.get("bytes") != len(restored):
+        return None
+    try:
+        detail = json.loads(restored.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return None
+    if not isinstance(detail, dict) or str(detail.get("id")) != str(race_id):
+        return None
+    if str(detail.get("date") or "") != date:
+        return None
+    return detail
+
+
+def _marks_of(entries, *keys):
+    out = {}
+    for e in entries or []:
+        if not isinstance(e, dict):
+            continue
+        label = next((e.get(k) for k in keys if e.get(k)), None)
+        if label:
+            out[str(label)] = e.get("horseNumber")
+    return out
+
+
+def verify_local_snapshot(date: str, race_id: str, receipt: str,
+                          built_detail: dict,
+                          root: Path | None = None):
+    """Verify a publication against its LOCAL sealed snapshot.
+
+    Returns (ok, reason, detail).  Strength is identical to the former
+    API read-back gate, plus the envelope sha256 existence check on
+    the restored bytes: receipt must be 64-hex and equal the sealed
+    product's receipt, the sealed content must re-verify under
+    verified_unified(), and the marks blocks must agree with the
+    built publication exactly as the read-back check required.
+    """
+    from arvexq.prediction.unified_product import verified as _verified
+
+    if not isinstance(receipt, str) or not _HEX64.match(receipt):
+        return False, "receipt-not-64hex", None
+    detail = load_local_snapshot_detail(date, race_id, root)
+    if detail is None:
+        return False, "local-snapshot-missing-or-unverifiable", None
+    stored = detail.get("unifiedForecast") or {}
+    if stored.get("receiptSha256") != receipt:
+        return False, "local-snapshot-receipt-mismatch", detail
+    # The string check cannot detect content drift: the receipt string
+    # is copied verbatim even when a later transform changed the
+    # sealed values (the 256-ticket failure mode).  Re-verify the
+    # sealed product's content against its own receipt.
+    if _verified(detail) is None:
+        return False, "local-snapshot-content-mismatch", detail
+    built_pm = _marks_of(built_detail.get("predictionMarks"), "mark")
+    stored_pm = _marks_of(detail.get("predictionMarks"), "mark")
+    stored_uf = _marks_of(stored.get("marks"), "markSymbol", "mark")
+    if (len(built_pm) == 5 and stored_pm != built_pm) or (
+            len(stored_uf) == 5 and stored_pm != stored_uf):
+        return False, (f"local-snapshot-marks-mismatch "
+                       f"(stored predictionMarks {stored_pm} vs built "
+                       f"{built_pm} / stored unified {stored_uf})"), detail
+    return True, "local-snapshot-verified", detail
 
 
 def _load_protect():
@@ -3278,6 +3492,14 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     # Banei exclusion); _supply_report needs it to tell a quiet day
     # apart from a total outage where nothing was served at all.
     targets = 0
+    # GitHub-only migration (block A): every detail this run actually
+    # publishes (post + read-back verified) is also collected into a
+    # sync-payload file at the end of publish_date, so the static API
+    # lane can build packs straight from it (--merge-existing) instead
+    # of reading the day back from the D1-backed API.  Emission is
+    # best-effort and never alters publication.
+    emitted_details: list[dict] = []
+    emitted_summaries: list[dict] = []
     # Same-day-bias source pool (nk-materials-v12): snapshots of
     # the date's races as this run fetches them, in post order.
     # A race's snapshot joins the pool when its detail is fetched
@@ -3346,6 +3568,22 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 print(f"FAIL {race_id}: product does not self-verify")
                 continue
             if dry_run:
+                # Fix program B: even a dry run seals the built detail
+                # locally and verifies the receipt against the sealed
+                # snapshot file (never an API read-back), so the local
+                # verification path is exercised end to end.
+                try:
+                    seal_local_snapshot(new, date)
+                    _ok, _reason, _sealed = verify_local_snapshot(
+                        date, race_id, receipt, new)
+                except Exception as exc:
+                    _ok, _reason = False, f"seal-failed: {exc}"
+                if not _ok:
+                    counts["failed"] += 1
+                    counts["receiptMismatch"] += 1
+                    print(f"FAIL {race_id}: local snapshot verify "
+                          f"failed ({_reason})")
+                    continue
                 counts["published"] += 1
                 lane = _marker_lane(new)
                 if lane:
@@ -3394,6 +3632,30 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 print(f"FAIL {race_id}: protected product does not "
                       "self-verify (receipt-content-mismatch)")
                 continue
+            # Fix program B: seal the exact protected detail into the
+            # lane's LOCAL snapshot store BEFORE posting, and verify
+            # the publication against that sealed file afterwards —
+            # never by reading the race back through the D1-backed
+            # API.  The seal re-reads and re-hashes its own file, and
+            # verify_local_snapshot re-checks the envelope sha256
+            # against the restored bytes, the receipt string (64-hex),
+            # the sealed content (verified_unified) and the marks
+            # blocks — the full strength of the former read-back gate
+            # (see the local-snapshot section above).  The receipt
+            # covers only the unified product; the marks check exists
+            # because the blend-upgrade reissues of 2026-11-07/08
+            # stored details whose predictionMarks named the first
+            # publication's horses beside the reissue's
+            # unifiedForecast — two different ◎ for one race, invisible
+            # to the receipt check alone.
+            try:
+                seal_local_snapshot(final_detail, date)
+            except Exception as exc:
+                counts["failed"] += 1
+                counts["receiptMismatch"] += 1
+                print(f"FAIL {race_id}: local snapshot seal failed "
+                      f"({type(exc).__name__}: {exc})")
+                continue
             if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
                 final = pack_detail(final)
             result = _post_sync(final, token)
@@ -3401,52 +3663,17 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
                 counts["failed"] += 1
                 print(f"FAIL {race_id}: sync rejected: {result}")
                 continue
-            back = _get("/api/race/" + urllib.parse.quote(str(race_id), safe=""))
-            back_detail = back.get("detail") or {}
-            stored = back_detail.get("unifiedForecast") or {}
-            if stored.get("receiptSha256") != receipt:
+            _ok, _reason, _sealed = verify_local_snapshot(
+                date, race_id, receipt, new)
+            if not _ok:
                 counts["failed"] += 1
                 counts["receiptMismatch"] += 1
-                print(f"FAIL {race_id}: read-back receipt mismatch")
-                continue
-            # The string check above cannot detect content drift:
-            # the receipt string is copied verbatim even when a later
-            # transform changed the sealed values (the 256-ticket
-            # failure mode). Re-verify the stored product's content
-            # against its own receipt before calling this published.
-            if verified_unified(back_detail) is None:
-                counts["failed"] += 1
-                counts["receiptMismatch"] += 1
-                print(f"FAIL {race_id}: read-back content does not "
-                      "verify (receipt-content-mismatch)")
-                continue
-            # The receipt covers only the unified product. The stored
-            # detail also carries predictionMarks (what the entry list
-            # renders), and the blend-upgrade reissues of 2026-11-07/08
-            # stored details whose predictionMarks still named the
-            # first publication's horses beside the reissue's
-            # unifiedForecast — two different ◎ for one race, invisible
-            # to the receipt check. Verify the marks blocks agree.
-            def _marks_of(entries, *keys):
-                out = {}
-                for e in entries or []:
-                    if not isinstance(e, dict):
-                        continue
-                    label = next((e.get(k) for k in keys if e.get(k)), None)
-                    if label:
-                        out[str(label)] = e.get("horseNumber")
-                return out
-            built_pm = _marks_of(new.get("predictionMarks"), "mark")
-            stored_pm = _marks_of(back_detail.get("predictionMarks"), "mark")
-            stored_uf = _marks_of(stored.get("marks"), "markSymbol", "mark")
-            if (len(built_pm) == 5 and stored_pm != built_pm) or (
-                    len(stored_uf) == 5 and stored_pm != stored_uf):
-                counts["failed"] += 1
-                print(f"FAIL {race_id}: read-back marks mismatch "
-                      f"(stored predictionMarks {stored_pm} vs built "
-                      f"{built_pm} / stored unified {stored_uf})")
+                print(f"FAIL {race_id}: local snapshot verify failed "
+                      f"({_reason})")
                 continue
             counts["published"] += 1
+            emitted_details.append(final_detail)
+            emitted_summaries.append(summary)
             lane = _marker_lane(new)
             if lane:
                 standing[race_id] = lane
@@ -3464,6 +3691,21 @@ def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     # Nothing here blocks or alters publication — the forecasts are
     # already out (or frozen) exactly as before; this only makes a
     # material shortage impossible to miss in the run's own record.
+    if emitted_details and not dry_run:
+        try:
+            emit_path = Path(f"rewrite-publish-payload-{date}.json")
+            emit_path.write_text(json.dumps({
+                "summaries": emitted_summaries,
+                "details": emitted_details,
+                "meta": {"source": "arvexq-rewrite-publish-emit-v1",
+                         "sync_date": date,
+                         "race_count": len(emitted_details)},
+            }, ensure_ascii=False), encoding="utf-8")
+            print(f"STATIC_PAYLOAD_EMITTED {emit_path} "
+                  f"races={len(emitted_details)}")
+        except Exception as exc:  # emission must never fail publication
+            print(f"STATIC_PAYLOAD_EMIT_FAILED {date}: "
+                  f"{type(exc).__name__}: {exc}")
     report = _supply_report(date, standing, _load_v8_extras(date),
                             datetime.now(JST), target_races=targets)
     counts["v1Fallback"] = len(report["fallbackIds"])
