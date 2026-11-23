@@ -5,6 +5,7 @@ __pycache__/
 
 # build output (Cloudflare builds dist/ from build_static.py)
 dist/
+dist-live-relay/
 
 # local/runtime data
 .arvexq-data/
@@ -17,6 +18,10 @@ dist/
 
 # logs
 *.log
+
+# rewrite-publish lane-local sealed snapshots (fix program B: the
+# receipt-verification store; runtime output, not a committed pack)
+rewrite-publish-snapshots/
 
 # GitHub Actions / local workflow temp files
 bundle.json
