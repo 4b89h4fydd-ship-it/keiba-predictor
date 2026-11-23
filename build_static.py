@@ -170,6 +170,33 @@ manifest = manifest.replace("arvexq-icon-v175-192.png","arvexq-icon-v364-192.png
 manifest = manifest.replace("arvexq-icon-v175-512.png","arvexq-icon-v364-512.png")
 sw = strings["SW"]
 
+# GitHub Pages project-site builds set ARVEXQ_BASE_PATH=/keiba-predictor/
+# so the generated HTML's root-absolute asset references, the web app
+# manifest, and the runtime base global (window.ARVEXQ_BASE_PATH, read
+# by the app's static-pack URL builders) all carry the subpath.  When
+# the variable is unset (Workers production, served from the origin
+# root) nothing is rewritten and the output is unchanged.
+import os
+
+_raw_base = os.environ.get("ARVEXQ_BASE_PATH", "").strip()
+BASE_PATH = ""
+if _raw_base:
+    BASE_PATH = "/" + _raw_base.strip("/") + "/"
+    if not re.fullmatch(r"/[A-Za-z0-9._\-/]+/", BASE_PATH):
+        raise RuntimeError(f"invalid ARVEXQ_BASE_PATH: {_raw_base!r}")
+if BASE_PATH:
+    index_html = index_html.replace(
+        "<head>",
+        '<head>\n<script>window.ARVEXQ_BASE_PATH="' + BASE_PATH + '";</script>',
+        1,
+    )
+    index_html = re.sub(
+        r'((?:href|src)=")/',
+        lambda match: match.group(1) + BASE_PATH,
+        index_html,
+    )
+    manifest = manifest.replace('":"/', '":"' + BASE_PATH)
+
 # Production adapters and frames are assembled from independent source modules.
 # The static builder must never install a prediction model.
 
@@ -237,6 +264,12 @@ compat_app = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v3
 compat_arvexq = ("v328","v327","v326","v325","v324","v323","v322","v321","v320","v319","v318","v317","v316","v315","v314","v313","v312","v308","v307","v306","v305","v303")
 for name in ("manifest-arvexq-v363.webmanifest", "manifest-arvexq-v362.webmanifest","manifest-arvexq-v361.webmanifest","manifest-arvexq-v360.webmanifest","manifest-arvexq-v181.webmanifest","manifest-arvexq-v175.webmanifest","manifest-arvexq-v173.webmanifest","manifest-arvexq-v130.webmanifest"):
     (DIST / name).write_text(manifest, encoding="utf-8")
+if BASE_PATH:
+    # index.html links the current-version manifest, which on Workers
+    # is served by the FastAPI backend (no static file exists in dist).
+    # Pages has no backend fallback, so emit it for Pages builds only,
+    # with the base-prefixed URLs prepared above.
+    (DIST / f"manifest-arvexq-{BUILD_VERSION}.webmanifest").write_text(manifest, encoding="utf-8")
 (DIST / "sw.js").write_text(sw, encoding="utf-8")
 (DIST / f"sw-{BUILD_VERSION}-reset.js").write_text(sw, encoding="utf-8")
 for legacy_sw in ("v328", "v327", "v326", "v325", "v324", "v323", "v322", "v321", "v320", "v319", "v318"):
