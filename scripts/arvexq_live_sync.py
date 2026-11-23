@@ -3,8 +3,9 @@
 """ARVEXQ lightweight live-sync lane.
 
 FULL PREFETCH owns stable card/analysis data. RESULT REPAIR owns long-tail
-result misses. LIVE SYNC reads the rich D1 detail as its merge base and changes
-volatile fields only. Prediction is recomputed only before post time and only
+result misses. LIVE SYNC reads the rich stored detail as its merge base
+(the D1 API, or the committed static packs when ARVEXQ_BASE_DETAIL_DIR
+is set — Cloudflare exit) and changes volatile fields only. Prediction is recomputed only before post time and only
 when an analysis-relevant live input (body weight/scratch/weather/going) changed.
 """
 from __future__ import annotations
@@ -37,6 +38,13 @@ from arvexq.prediction.prerace_archive import post_at
 
 JST = timezone(timedelta(hours=9))
 D1_BASE = os.getenv("CLOUDFLARE_API_BASE", "https://kraiz-api.4b89h4fydd.workers.dev").rstrip("/")
+# Cloudflare exit (2026-11-23): when ARVEXQ_BASE_DETAIL_DIR points at a
+# static pack tree, the merge-base detail is read from the committed
+# packs (<dir>/race/<race_id>.json, whose "detail" member is the pack
+# equivalent of the API race body) and the Worker API is never called.
+# The converted sync workflow sets it; leaving it unset preserves the
+# legacy D1 behaviour for the not-yet-converted lane.
+BASE_DETAIL_DIR = os.getenv("ARVEXQ_BASE_DETAIL_DIR", "").strip()
 LIVE_HORSE_FIELDS = (
     "winOdds", "popularity", "bodyWeight", "bodyWeightChange",
     "status", "scratched", "oddsSource", "oddsForecast",
@@ -79,7 +87,22 @@ def snapshot(rid: str) -> dict[str, Any] | None:
         return d
 
 
+def _fetch_pack_detail(rid: str) -> dict[str, Any] | None:
+    path = Path(BASE_DETAIL_DIR) / "race" / f"{rid}.json"
+    try:
+        body = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print("PACK_BASE_FETCH_ERROR", rid, type(exc).__name__, exc)
+        return None
+    detail = body.get("detail") if isinstance(body, dict) else None
+    # Same race binding as the API path below: accept only the
+    # requested race's own detail.
+    return detail if isinstance(detail, dict) and str(detail.get("id") or "") == rid else None
+
+
 def fetch_d1_detail(rid: str) -> dict[str, Any] | None:
+    if BASE_DETAIL_DIR:
+        return _fetch_pack_detail(rid)
     url = f"{D1_BASE}/api/race/{urllib.parse.quote(rid, safe='')}?t={int(time.time())}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "ARVEXQ-LiveSync/1"})
