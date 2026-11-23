@@ -1,0 +1,94 @@
+# Manual deploy of the detached live-odds relay worker (GitHub-only
+# migration, block C). The relay serves only /api/live-odds/* from its
+# own bundled odds-sources / odds-backups assets; it has no D1 binding
+# and no other routes. Delivery stays with GitHub Pages / the web
+# worker; this workflow ships the relay only.
+#
+# Auth uses the same repository secrets as arvexq-web-deploy.yml:
+# CLOUDFLARE_API_TOKEN (already deploys the production web worker via
+# wrangler, so it carries Workers deploy permission) and
+# CLOUDFLARE_ACCOUNT_ID. If the deploy step still fails with an
+# authentication / permission error, fall back to the Cloudflare
+# dashboard path described in the migration MANIFEST
+# (hidden_files/github-only-migration-20261123/cutover-fix-set2).
+name: ARVEXQ Live Relay Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arvexq-live-relay-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build relay assets (odds-sources + odds-backups only)
+        shell: bash
+        run: |
+          python scripts/arvexq_build_live_relay_assets.py
+          test -d dist-live-relay/odds-sources
+          test -d dist-live-relay/odds-backups
+          ls dist-live-relay/odds-sources | tail -3
+      - name: Check Cloudflare credentials
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo '::error::Missing GitHub Actions secret CLOUDFLARE_API_TOKEN'
+            exit 1
+          fi
+      - name: Deploy live relay worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_ACCOUNT_ID" ]; then
+            export CLOUDFLARE_ACCOUNT_ID="$CF_ACCOUNT_ID"
+          fi
+          npx --yes wrangler@4 deploy --config wrangler-live.toml
+      - name: Report and probe relay URL
+        shell: bash
+        run: |
+          RELAY='https://arvexq-live-relay.4b89h4fydd.workers.dev'
+          echo "Relay origin: $RELAY" >> "$GITHUB_STEP_SUMMARY"
+          echo "Expected relay origin: $RELAY"
+          # The root path must be the relay's own 404 (it serves nothing
+          # but /api/live-odds/*); any HTTP response proves it is up.
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$RELAY/" || true)"
+          echo "GET $RELAY/ -> $code (404 expected)"
+          # Probe one real race id from the newest bundled manifest.
+          python - <<'PY'
+          import glob, json
+          from pathlib import Path
+          files = sorted(glob.glob("dist-live-relay/odds-sources/*.json"))
+          if files:
+              data = json.loads(Path(files[-1]).read_text(encoding="utf-8"))
+              race_id = next(iter(data.get("races") or {}), "")
+              Path("relay-probe-id.txt").write_text(race_id, encoding="utf-8")
+              print("probe race id:", race_id)
+          PY
+          if [ -s relay-probe-id.txt ]; then
+            RID="$(cat relay-probe-id.txt)"
+            echo "GET $RELAY/api/live-odds/$RID ->"
+            curl -sS --max-time 30 -w '\nHTTP %{http_code}\n' "$RELAY/api/live-odds/$RID" | head -c 600 || true
+            echo
+            echo 'CORS check (Origin: https://4b89h4fydd-ship-it.github.io):'
+            curl -sS --max-time 30 -D - -o /dev/null -H 'Origin: https://4b89h4fydd-ship-it.github.io' "$RELAY/api/live-odds/$RID" \
+              | grep -i 'access-control-allow-origin' \
+              || echo '::warning::No Access-Control-Allow-Origin header on probe response'
+          fi
