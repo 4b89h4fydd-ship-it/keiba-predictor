@@ -1091,9 +1091,16 @@ var instantTrackDetails={},trackSnapshotJobs={};
 // app: when a static pack is missing, callers surface their existing
 // no-data state instead of escaping to the API.  (Live odds keep their
 // own relay transport in research/live_odds.js and are unaffected.)
-function staticDayUrl(date){return '/api-static/day/'+encodeURIComponent(String(date||''))+'.json'}
-function staticRaceUrl(id){return '/api-static/race/'+encodeURIComponent(String(id||''))+'.json'}
-function staticRevisionsUrl(id){return '/api-static/revisions/'+encodeURIComponent(String(id||''))+'.json'}
+// Deployment base path.  The Workers production build is served from
+// the origin root and never sets window.ARVEXQ_BASE_PATH, so this
+// returns '/' and every URL below is byte-identical to the historical
+// root-absolute form.  The GitHub Pages build (build_static.py with
+// ARVEXQ_BASE_PATH=/keiba-predictor/) injects the global so the same
+// code resolves assets and static packs under the project subpath.
+function arvexqBasePath(){var b=String(window.ARVEXQ_BASE_PATH||'/');if(b.charAt(0)!=='/')b='/'+b;if(b.charAt(b.length-1)!=='/')b=b+'/';return b}
+function staticDayUrl(date){return arvexqBasePath()+'api-static/day/'+encodeURIComponent(String(date||''))+'.json'}
+function staticRaceUrl(id){return arvexqBasePath()+'api-static/race/'+encodeURIComponent(String(id||''))+'.json'}
+function staticRevisionsUrl(id){return arvexqBasePath()+'api-static/revisions/'+encodeURIComponent(String(id||''))+'.json'}
 function fetchDaySummaries(date){
   return edgeFetchJson(staticDayUrl(date),6500).then(function(body){
     if(!body||body.ok===false||!Array.isArray(body.races)||(body.date&&String(body.date)!==String(date)))
@@ -2449,7 +2456,7 @@ document.addEventListener('click',function(e){
 function renderPicker(){var a=state.races.filter(function(r){return r.circuit===state.circuit});a.sort(function(x,y){return (x.track||'').localeCompare(y.track||'ja')||n(x.raceNumber)-n(y.raceNumber)});return'<div class="shell">'+header("全レース",true,state.date+'・'+state.circuit)+'<main class="main"><section class="card"><div class="picker-list">'+(a.length?a.map(function(r){return'<button class="picker-item '+(isFinal(r)?'final':'')+'" data-race="'+esc(r.id)+'"><span>'+esc(r.track)+' '+esc(r.raceNumber)+'R　'+esc(r.title||"")+'</span><span class="picker-side"><strong>'+(isFinal(r)?'確定':(isFlash(r)?'速報':timeHtml(r)))+'</strong></span></button>'}).join(""):'<div class="empty">レースデータなし</div>')+'</div></section></main></div>'}
 var VENUE_PHOTOS={};
 function cinematicContext(r){var circuit=r&&r.circuit||state.circuit,rows=state.races.filter(function(x){return x.circuit===circuit}),venues=[];(circuit==='中央'?['中山','阪神','札幌','中京'].concat(CENTRAL.filter(function(t){return ['中山','阪神','札幌','中京'].indexOf(t)<0})):LOCAL).forEach(function(track){var races=rows.filter(function(x){return x.track===track});if(races.length)venues.push({track:track,count:races.length})});if(r&&!venues.some(function(v){return v.track===r.track}))venues.push({track:r.track,count:1});var track=r&&r.track||state.track||(venues[0]&&venues[0].track)||'',races=rows.filter(function(x){return x.track===track}).sort(function(a,b){return n(a.raceNumber)-n(b.raceNumber)}),featured=r||races.find(function(x){return n(x.raceNumber)===1})||races[0]||null;return{circuit:circuit,venues:venues,track:track,races:races,featured:featured}}
-function cinematicHero(){return '<header class="cinema-hero"><img class="cinema-hero-image" src="/arvexq-horse-hero-v365.webp" alt="" fetchpriority="high"><div class="cinema-tools"><time>'+esc(state.date.replace(/-/g,'.'))+'</time><button data-action="reload" aria-label="更新" title="更新">↻</button></div></header>'}
+function cinematicHero(){return '<header class="cinema-hero"><img class="cinema-hero-image" src="'+arvexqBasePath()+'arvexq-horse-hero-v365.webp" alt="" fetchpriority="high"><div class="cinema-tools"><time>'+esc(state.date.replace(/-/g,'.'))+'</time><button data-action="reload" aria-label="更新" title="更新">↻</button></div></header>'}
 function cinematicControls(circuit){return '<div class="cinema-controls"><div class="cinema-circuit" aria-label="開催区分"><button data-circuit="中央" class="'+(circuit==='中央'?'active':'')+'">中央</button><button data-circuit="地方" class="'+(circuit==='地方'?'active':'')+'">地方</button></div>'+dateStrip()+'<label class="cinema-calendar" title="日付を選択"><span aria-hidden="true">▦</span><input id="date" type="date" value="'+esc(state.date)+'" aria-label="開催日"></label></div>'}
 function dateStrip(){var center=new Date(state.date+'T12:00:00'),out='';for(var i=-7;i<=2;i++){var d=new Date(center);d.setDate(d.getDate()+i);var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),label=(d.getMonth()+1)+'/'+d.getDate()+' ('+'日月火水木金土'[d.getDay()]+')';out+='<button data-date="'+key+'" class="'+(key===state.date?'active':'')+'" aria-pressed="'+(key===state.date)+'">'+label+'</button>'}return '<nav class="date-strip" aria-label="開催日">'+out+'</nav>'}
 function cinematicVenues(ctx){return '<nav class="cinema-venues">'+ctx.venues.map(function(v){return '<button class="cinema-venue '+(ctx.track===v.track?'active':'')+'" data-track="'+esc(v.track)+'"><strong>'+esc(v.track)+'</strong><small>全'+v.count+'R</small></button>'}).join('')+'</nav>'}
@@ -2904,7 +2911,7 @@ function returnToToday(){
 function smartHomeHero(){
   var shared=window.ARVEXQUnifiedHome;
   if(shared)return shared.hero();
-  return '<div class="arv-unified-hero"><img src="/arvexq-brush-logo.svg?v=brush-20261014" alt="ARVEXQ"></div>';
+  return '<div class="arv-unified-hero"><img src="'+arvexqBasePath()+'arvexq-brush-logo.svg?v=brush-20261014" alt="ARVEXQ"></div>';
 }
 // Unused legacy home hub removed; unified horse home is authoritative.
 // Shared by the horse-only home and the selected/special subpages.
@@ -4303,7 +4310,7 @@ function goBack(){
 }
 var navigationRestoring=false,routeKey=null;
 function locationState(){return {tab:state.detailTab||'出走表',date:state.date,circuit:state.circuit,track:state.track,picker:state.picker,home:state.homePage||'',pick_circuit:state.pickCircuit||'',ai_track:state.aiStatsTrack||'',race_id:String(state.raceLoading||(state.race&&state.race.id)||''),horse:null,stack:state.raceStack.map(function(r){return r.id}),returnPicker:state.raceReturnPicker}}
-function syncLocation(){if(navigationRestoring||!window.history)return;var view=locationState(),key=JSON.stringify(view);if(key===routeKey)return;var u=new URL(window.location.href);u.pathname=view.race_id?'/race':(view.track?'/venue':(view.home?'/section':'/'));['date','circuit','track','race_id','horse','tab','home','pick_circuit','ai_track'].forEach(function(k){if(view[k])u.searchParams.set(k,view[k]);else u.searchParams.delete(k)});if(view.picker)u.searchParams.set('picker','1');else u.searchParams.delete('picker');u.searchParams.delete('pwa');var prior=window.history.state||{},depth=n(prior.keibaDepth);if(routeKey===null)window.history.replaceState({keibaDepth:depth,view:view},'',u);else window.history.pushState({keibaDepth:depth+1,view:view},'',u);routeKey=key}
+function syncLocation(){if(navigationRestoring||!window.history)return;var view=locationState(),key=JSON.stringify(view);if(key===routeKey)return;var u=new URL(window.location.href);u.pathname=arvexqBasePath()+(view.race_id?'race':(view.track?'venue':(view.home?'section':'')));['date','circuit','track','race_id','horse','tab','home','pick_circuit','ai_track'].forEach(function(k){if(view[k])u.searchParams.set(k,view[k]);else u.searchParams.delete(k)});if(view.picker)u.searchParams.set('picker','1');else u.searchParams.delete('picker');u.searchParams.delete('pwa');var prior=window.history.state||{},depth=n(prior.keibaDepth);if(routeKey===null)window.history.replaceState({keibaDepth:depth,view:view},'',u);else window.history.pushState({keibaDepth:depth+1,view:view},'',u);routeKey=key}
 function normalizeInitialAppLaunch(){
   try{
     var standalone=!!((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true);
@@ -4476,7 +4483,7 @@ function load(force){
   // Morning selections are an immutable dated static artifact, independent
   // of live odds, late diagnosis, and mutable D1 summary schemas.
   function requestMorningArchive(){
-    fetch('/morning-picks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d)+'&t='+seq,{cache:'no-store'})
+    fetch(arvexqBasePath()+'morning-picks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d)+'&t='+seq,{cache:'no-store'})
       .then(function(response){return response.ok?response.json():null})
       .then(async function(payload){
         if(window.ARVEXQSavedTicketReceipt)await window.ARVEXQSavedTicketReceipt.load(d,edgeFetchJson);
@@ -4499,7 +4506,7 @@ function load(force){
   if(state.morningArchive&&state.morningArchive.date!==d)state.morningArchive=null;
   requestMorningArchive();
   if(state.selectionArchive&&state.selectionArchive.date!==d)state.selectionArchive=null;
-  if(String(d)>='2026-11-11')fetch('/selection-decisions/'+encodeURIComponent(d)+'.json?t='+seq,{cache:'no-store'})
+  if(String(d)>='2026-11-11')fetch(arvexqBasePath()+'selection-decisions/'+encodeURIComponent(d)+'.json?t='+seq,{cache:'no-store'})
     .then(function(r){return r.ok?r.json():null}).then(function(payload){
       if(seq!==state.requestSeq||state.date!==d||!payload||payload.version!=='arvexq-ticket-selection-v2'||
          payload.date!==d||!payload.races||Array.isArray(payload.races))return;
@@ -4509,7 +4516,7 @@ function load(force){
   // predictions when its dated sealed archive is absent. Surface failures visibly.
   function requestV26Marks(){
     state.v26ArchiveStatus={date:d,state:'loading'};
-    fetch('/v26-marks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d)+'&t='+seq,{cache:'no-store'})
+    fetch(arvexqBasePath()+'v26-marks/'+encodeURIComponent(d)+'.json?day='+encodeURIComponent(d)+'&t='+seq,{cache:'no-store'})
       .then(function(response){
         if(response.status===404)return {missing:true};
         if(!response.ok)throw new Error('v26 archive HTTP '+response.status);
@@ -4874,7 +4881,7 @@ function horseProfileKey(h,r){
 function requestHorseProfiles(date){
   if(!date||horseProfilesState.requested[date])return;
   horseProfilesState.requested[date]=1;
-  fetch('/horse-profiles/'+encodeURIComponent(date)+'.json',{cache:'no-store'})
+  fetch(arvexqBasePath()+'horse-profiles/'+encodeURIComponent(date)+'.json',{cache:'no-store'})
     .then(function(res){return res.ok?res.json():null})
     .then(function(payload){
       if(!payload||payload.date!==date||!payload.horses||typeof payload.horses!=='object')return;
