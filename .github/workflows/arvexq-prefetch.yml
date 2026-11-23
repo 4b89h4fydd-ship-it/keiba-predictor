@@ -248,38 +248,6 @@ jobs:
           fi
           git checkout -B prefetch-continue HEAD
 
-      - name: Persist collected facts using the existing D1 sync pipeline
-        continue-on-error: true
-        run: |
-          # Cloudflare exit (2026-11-23): this step no longer feeds this
-          # lane's own analysis (persisted-facts.json is built locally
-          # below). It remains ONLY as the input store of the
-          # rewrite-publish lane, whose producer still reads the API.
-          # Fail-soft: a D1 failure here must not block issuance.
-          RACES=$(jq '.meta.race_count // 0' prefetch-facts.json)
-          if [ "$RACES" -le 0 ]; then
-            echo "D1_FACTS_NO_RACES"
-            exit 0
-          fi
-          python scripts/arvexq_fetch_d1_bundle.py \
-            --api-base "$CLOUDFLARE_API_BASE" --date "$TARGET_DATE" \
-            --out facts-current-d1.json --report facts-current-d1-report.json \
-            --workers 4 --retries 6 --allow-missing-details --allow-empty-day
-          python scripts/arvexq_select_prefetch_repairs.py \
-            --prepared prefetch-facts.json --current facts-current-d1.json \
-            --out facts-sync-payload.json --report facts-sync-selection.json \
-            --facts-only
-          python scripts/arvexq_sync_batches.py \
-            --input facts-sync-payload.json --out-dir facts-sync-batches
-          COUNT=$(find facts-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
-          test "$COUNT" -gt 0
-          for file in facts-sync-batches/batch-*.json; do
-            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
-            python scripts/arvexq_d1_capacity_guard.py \
-              --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000
-            PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
-          done
-          echo "D1_FACTS_SYNC_DONE batches=$COUNT"
 
       - name: Build persisted facts from collected local facts
         run: |
@@ -311,25 +279,36 @@ jobs:
             --source prefetch-facts.json --saved persisted-facts.json \
             --report persisted-evidence-check.json
           echo "LOCAL_PERSISTED_FACTS_VERIFIED"
-      - name: Publish rewrite forecasts for the persisted day (piggyback)
+      - name: Publish rewrite forecasts for the persisted day (local input, GitHub-only)
         continue-on-error: true
         run: |
-          # Piggyback on the collection lane: this run has just persisted
-          # the target day's facts in D1 (the rewrite lane's input store), so publish the
-          # rewrite forecasts for exactly that date now instead of waiting
-          # for the standalone publish workflow's schedule (whose GitHub
-          # cron runs were observed hours late or dropped outright). The
-          # standalone arvexq-rewrite-publish workflow remains in place as
-          # redundancy; publishing is idempotent (started/finished races
-          # are skipped, receipts are verified), and this step must never
-          # fail the collection job, hence continue-on-error.
-          if [ -z "$SYNC_TOKEN" ]; then
-            echo "::warning::PIGGYBACK_PUBLISH_SKIPPED missing SYNC_TOKEN"
-            exit 0
-          fi
-          echo "PIGGYBACK_PUBLISH date=$TARGET_DATE"
-          ARVEXQ_API_BASE="$CLOUDFLARE_API_BASE" \
-            python3 scripts/arvexq_rewrite_publish.py --date "$TARGET_DATE"
+          # Cloudflare exit (2026-11-23): the piggyback publish no
+          # longer round-trips through D1.  The facts this run just
+          # collected are already local (persisted-facts.json, built
+          # above), so the rewrite producer reads them plus the
+          # committed packs — its prior published state — and posts
+          # nothing: publication is the lane's local sealed snapshot
+          # plus the emitted rewrite-publish-payload-<date>.json,
+          # which the merge step further below overlays onto the
+          # packs (and the staged artifact lets the static API
+          # follow-up lane merge if that push is deferred).  The
+          # standalone arvexq-rewrite-publish workflow remains in
+          # place as redundancy; publishing is idempotent (started
+          # or finished races are skipped, frozen races stay
+          # frozen, receipts are verified locally), and this step
+          # must never fail the collection job, hence
+          # continue-on-error.  No SYNC_TOKEN, no API base: nothing
+          # here depends on Cloudflare any more.
+          # Refresh the pack tree first, so the prior state the
+          # publish reads is the freshest committed one.
+          git fetch origin main
+          git checkout origin/main -- arvexq/ui/static/api-static || \
+            echo "::warning::No committed packs to read prior state from; publishing from facts alone"
+          echo "LOCAL_PUBLISH date=$TARGET_DATE"
+          python3 scripts/arvexq_rewrite_publish.py \
+            --date "$TARGET_DATE" --local-input \
+            --local-day-file persisted-facts.json \
+            --local-packs-dir arvexq/ui/static/api-static
 
       - name: Analyze only persisted local facts and prepare original marks and bets
         if: env.ARVEXQ_DAY_AHEAD != '1'
@@ -468,6 +447,49 @@ jobs:
             echo "::warning::STATIC_API_FALLBACK_SKIP no local prefetch-payload.json; packs keep last published state"
           fi
           git checkout -B prefetch-continue HEAD || true
+
+      - name: Merge emitted rewrite payload into static packs (GitHub-only)
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Overlay the rewrite publications this run emitted onto
+          # the committed packs.  This must come AFTER the full
+          # pack build above: the analyzed payload that build
+          # consumes carries no rewrite forecast blocks (its sealed
+          # originals record prediction/bet absent for every race),
+          # so a merge placed before it would be overwritten by the
+          # build in the same run.  The standalone publish workflow
+          # merges its own emitted payloads the same way.  Fail-soft
+          # by design: the helper always exits 0, and the staged
+          # artifact below lets the static API follow-up lane apply
+          # the same merge when this push is deferred.
+          for f in rewrite-publish-payload-*.json; do
+            [ -s "$f" ] || continue
+            bash scripts/arvexq_static_api_lane_publish.sh "$f" merge
+          done
+          git checkout -B prefetch-continue HEAD || true
+          # Stage the same payload for the static API follow-up
+          # lane (uploaded by the next step under the run's shared
+          # issued-payload artifact name).  This step is not
+          # day-ahead guarded: the day-ahead publish is the
+          # piggyback's main purpose, and its payload must not be
+          # lost when this run collected tomorrow's card.
+          mkdir -p issued-payloads
+          for f in rewrite-publish-payload-*.json; do
+            [ -s "$f" ] || continue
+            cp "$f" issued-payloads/
+          done
+
+      - name: Upload rewrite issued payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-prefetch-${{ github.run_id }}
+          path: issued-payloads
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Stage issued payload for the static API follow-up lane
         if: always() && env.ARVEXQ_DAY_AHEAD != '1'
