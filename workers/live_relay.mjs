@@ -7,8 +7,12 @@
 // as the main dist, so manifest verification is unchanged.
 import {sourceOdds} from './live_odds.mjs';
 import {savedOdds} from './saved_odds.mjs';
-export default {
-  async fetch(request,env,ctx){
+// The handler below is the original web.mjs live-odds branch, unchanged.
+// The default export wraps it to add CORS: once the app is served from
+// GitHub Pages it calls this relay cross-origin, and browsers would block
+// the responses without an explicit grant. The endpoint is a public
+// read-only odds feed, so the grant is '*'.
+async function handle(request,env,ctx){
     const url=new URL(request.url);
     if(!url.pathname.startsWith('/api/live-odds/'))
       return new Response('Not Found',{status:404,headers:{'Cache-Control':'no-store'}});
@@ -46,5 +50,18 @@ export default {
        return Response.json(source?{ok:false,race_id:source.id,odds:[],oddsStatus:'unavailable',refreshFailed:true,error:'official odds unavailable'}:{ok:false,error:'official odds source manifest unavailable',odds:[]},
          {status:source?200:503,headers:{'Cache-Control':'no-store'}});
     }
+}
+export default {
+  async fetch(request,env,ctx){
+    if(request.method==='OPTIONS')
+      return new Response(null,{status:204,headers:{
+        'Access-Control-Allow-Origin':'*',
+        'Access-Control-Allow-Methods':'GET, OPTIONS',
+        'Access-Control-Max-Age':'86400',
+        'Cache-Control':'no-store'}});
+    const response=await handle(request,env,ctx);
+    const headers=new Headers(response.headers);
+    headers.set('Access-Control-Allow-Origin','*');
+    return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
   }
 };
