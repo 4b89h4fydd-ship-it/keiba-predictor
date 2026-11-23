@@ -196,6 +196,15 @@ if BASE_PATH:
         index_html,
     )
     manifest = manifest.replace('":"/', '":"' + BASE_PATH)
+    # The bundled stylesheet references background imagery with
+    # root-absolute url()s (hero, detail, pace preview); prefix those
+    # too, or they 404 under the Pages subpath. Workers builds never
+    # enter this block, so their CSS output is unchanged.
+    css = re.sub(
+        r"url\((['\"]?)/",
+        lambda match: "url(" + match.group(1) + BASE_PATH,
+        css,
+    )
 
 # Production adapters and frames are assembled from independent source modules.
 # The static builder must never install a prediction model.
