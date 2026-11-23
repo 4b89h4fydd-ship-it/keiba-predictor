@@ -1,0 +1,572 @@
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "date": "2026-10-18",
+  "exported_at": "2026-11-23T00:41:37Z",
+  "race_count": 80,
+  "payload_bytes_total": 930281,
+  "archive_file": "details/2026-10-18.jsonl.gz",
+  "archive_bytes": 295420,
+  "archive_sha256": "db0bdeb71b5d5501e0be4d9115e09efc7bbc0ec0053ba130e8ad73e47de9876e",
+  "races": [
+    {
+      "race_id": "jra-2026-10-18-京都-01",
+      "sha256": "50f4ad11450ca77216b6181c55670779c274825b1fa4e2d81899f681f0e117f4",
+      "bytes": 11506,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-02",
+      "sha256": "a780f6a6aa5ebe2e4db47adb14bf16540fe033c9b0414657ef3fc58d21bc3579",
+      "bytes": 8873,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-03",
+      "sha256": "e9c3c23eae8a9ad6e572ae248aa32515201c08794e1cd8dc29a2c581f768e3ed",
+      "bytes": 12351,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-04",
+      "sha256": "b7855c07bb04a22bc132e280a8cb5416c53746e33f3cefd0015baed335bd7518",
+      "bytes": 13648,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-05",
+      "sha256": "dbeaf0e166fc488a58ae6a448c3d5082f367b607e68a917941db21bb9c2a021f",
+      "bytes": 5753,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-06",
+      "sha256": "a78be7fc20dc29fa2af66f88aacd57d22b91198b6df2a6e4c5901fce2e0b5f8b",
+      "bytes": 12011,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-07",
+      "sha256": "a172bfbe89aa52738ae8416ded92ec45e8ee6fa837d574bbe1ca7d1454794d38",
+      "bytes": 8864,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-08",
+      "sha256": "c781169c45f11da88ae96a819edc3eb0422730a63c63cafe4b437c460ed4802a",
+      "bytes": 12376,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-09",
+      "sha256": "d911cb1555b577bf52ad91a43a027c1ecfa2e7c63f2e5a7945b355c1b8b44a84",
+      "bytes": 9704,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-10",
+      "sha256": "99de9fcd1ca765231172dc8512651afa0af02448859a460745e5d94bae65c233",
+      "bytes": 11220,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-11",
+      "sha256": "7533be17282a43ddf930ff6cc49f02eca9dad7a3a9c9d20312d13db31b6cc0a6",
+      "bytes": 18436,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-京都-12",
+      "sha256": "a3bd98def09fc3cafd885afacdf0f185d35512e6f78a8622cc2dcbbd13206774",
+      "bytes": 12549,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-01",
+      "sha256": "fdf583c3fa7736aa7b1b89d1357e542e7b18cc0e3acc5911c8d85bd13b7c9c83",
+      "bytes": 15045,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-02",
+      "sha256": "c0be8d80c0a8cfbdbe01cbbc59d0345b17aaf0e4cbad2e4098366ca99566dedf",
+      "bytes": 16728,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-03",
+      "sha256": "f1c6af49f01d5d9bf872e7a8254478e34d33466ea5b63eba36063f42c36b7927",
+      "bytes": 15067,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-04",
+      "sha256": "56a24a69d24ba91bab0df01d40cce77bba6067fdc3484c291d54e23b0f27efdb",
+      "bytes": 16110,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-05",
+      "sha256": "7917e0569bc673b19d778708e6ddab724252bc15ba564946a13c211ee90afb6f",
+      "bytes": 12725,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-06",
+      "sha256": "89c7f09bc737998fbe57e3570f75f26e317713c0444cd131527571530bf60518",
+      "bytes": 13388,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-07",
+      "sha256": "e800643b23b95859f5b46d60b4d2b176186c65bc771bd3f36ffd7fb2dc253782",
+      "bytes": 16474,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-08",
+      "sha256": "f09bc3cef5e619c4551779f12bdb931e364d4ed82e13279313743097b83e7af1",
+      "bytes": 15499,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-09",
+      "sha256": "6e43166cc18e564f0afd8fc95e9cb80ad5b5b204d4d61c78e446aacf5108b52b",
+      "bytes": 15275,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-10",
+      "sha256": "fb697a5d2ebdcea44e1fd6e3a96b650360117808d0e9a2c8400113c403fd3bf7",
+      "bytes": 18768,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-11",
+      "sha256": "500c5ae7f9712f35557be6ba08e50047ed942de3874c06abf02b5d0cf4f351ef",
+      "bytes": 12698,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-新潟-12",
+      "sha256": "63523afde368b750ed9a50b5ff9ed68f88ce15a535e5d59c39847b34e6d363a2",
+      "bytes": 13199,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-01",
+      "sha256": "e4122b31c8807b3b880afb0b81f360bf814e608863be5ff68c3559456a7e13e5",
+      "bytes": 11250,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-02",
+      "sha256": "94013a6cf13fc7c05a21af5c1d8ed1572a86faac53feae5e061ac74640a7dd99",
+      "bytes": 11075,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-03",
+      "sha256": "a34639dd81b87dc2ca6749cb942537151a4540b86b0417978204bf0b56a8734c",
+      "bytes": 12371,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-04",
+      "sha256": "dd7a2942a7bf84c636bc9d014ebe9a5f124b786b74b1bf7b53d86b90ae94a872",
+      "bytes": 11157,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-05",
+      "sha256": "588a55fc23ecfddb3ba89ba9690e84575ac220520063f8a83a2279323532a291",
+      "bytes": 7215,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-06",
+      "sha256": "d301ecf13c190f905019d7363fd1c205dab08fa8952f436287402bf12e9a839d",
+      "bytes": 9218,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-07",
+      "sha256": "05701370018f369af8afe002f12cb59f1e4f1dc3eab6aed78e129cb3aaaed971",
+      "bytes": 11880,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-08",
+      "sha256": "d99cd8ac2a6ab0c93e10015f3c23c1179953fc71b4335284f71a370deee4790c",
+      "bytes": 15812,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-09",
+      "sha256": "2f65fce0fa5bdb882aae23e2690c132a8dc682a6b9e93eb23346e7068c53daf1",
+      "bytes": 6556,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-10",
+      "sha256": "2deaa31f9165dad24be770188bbb0aee7137cc0b8584c6bc376870433bb27381",
+      "bytes": 10682,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-11",
+      "sha256": "e52bee80fe62463fd127fd121ac32d16402c656bbb9649d468218142d7913437",
+      "bytes": 16089,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-10-18-東京-12",
+      "sha256": "eb1f0fbaaa8fee676cb458e961c1cc55ba9956cd3f61918b9c2e48521d5ff68d",
+      "bytes": 15395,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-01",
+      "sha256": "9eb04c9b1301e4b0e6d9411353290f4ac624c86dd96986ef963609f54bd27d9b",
+      "bytes": 8793,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-02",
+      "sha256": "0a17a4f0184997958ede85638a10266bcf64d452c8e1d6ca8c2b5c40ca3f0900",
+      "bytes": 11848,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-03",
+      "sha256": "dfdbbac998e19a89b041a49b5379da2b02ef12866d8f0e7559af91b252656eb4",
+      "bytes": 12131,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-04",
+      "sha256": "77c933d49a0ee1f09f5877f098cc5f8e368d35237d6fe2b2ea749d7666014786",
+      "bytes": 12485,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-05",
+      "sha256": "1ff56fb583c781a2bc05ec82cb09a2f236056230f6ca55c971e2d3c191f0ace3",
+      "bytes": 12180,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-06",
+      "sha256": "18f380e586f0ee52b7094ee57d9477401e6ba34a626d26b9f75e13e621c82d3b",
+      "bytes": 11432,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-07",
+      "sha256": "e7d3afb3e69456d9b42d77981fe9b3a6727dc5b91d65cdc1e0b5a9ac7ed3b596",
+      "bytes": 12076,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-08",
+      "sha256": "02540b460ab4d0f5c82a835e20a947c85005fc378fdee7cbcb0ae55fd37415e6",
+      "bytes": 10624,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-09",
+      "sha256": "399604010ea48b045e5cc4041302ae1288ba3e155b83d0f0f805a8f0bc6bc988",
+      "bytes": 9290,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-10",
+      "sha256": "2838ff706ab37514be30e82486dfa361b2edf2ff218ff7eb7c28ee2229ba4412",
+      "bytes": 11424,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-佐賀-11",
+      "sha256": "5b70e674de85ab0ec84e4e0f3f0ec152dc563f9d580d1ebe53af10c1a9216d02",
+      "bytes": 14269,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-01",
+      "sha256": "5f28b5ca6d53df323bd1713ea91b7e2b941a0d7d753b50f6333c07d6fa8392a9",
+      "bytes": 11309,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-02",
+      "sha256": "be321a5acba4111132f6d072093d95ecf808fe1a363d6561bad09a3b3a29fbaa",
+      "bytes": 9335,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-03",
+      "sha256": "72f982bb50e868e3325b6ab0fa94a56f26bf3079959ecf9c57e51278f385b99c",
+      "bytes": 9752,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-04",
+      "sha256": "52fda890126791ea90be74b4be54ae8b66df8c4c8284388c589565d163637203",
+      "bytes": 11233,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-05",
+      "sha256": "eda150acd85331ec9a636222d39ee19b801c6b50efbae36191f1724daedd3ccf",
+      "bytes": 11154,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-06",
+      "sha256": "51e006204a4c9e191c18d45f287276edc7c16ec8ab94db1c5542d705e4b0a8d5",
+      "bytes": 10050,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-07",
+      "sha256": "ed0f387bcdce185118ec41b616d38436ceb90d985acbb3b8bb82de08b3975f87",
+      "bytes": 10796,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-08",
+      "sha256": "b309c2e9b93957d5a842ee6928231ca760b7448d4e9408ad1c35b9a174ac5449",
+      "bytes": 11906,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-09",
+      "sha256": "a989479a9d0fdc341efe0bece638fab1d03a301285ede115ac6f421e1edfcb40",
+      "bytes": 10016,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-10",
+      "sha256": "a8f81f5ab9b541f4cdc737c5584647795a9a0651b232bbd87e3e2cfa8ede4694",
+      "bytes": 11287,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-11",
+      "sha256": "08fbb1149acf89511f278017d3ad541b13ece43bee8671c4bc35b20556a4990d",
+      "bytes": 11863,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-盛岡-12",
+      "sha256": "bb7c38240f542a855ba2c1d729da73ef9e6944260edc05870294c690bb7703ce",
+      "bytes": 12668,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-01",
+      "sha256": "82a8a6abe657cf81f3b34ccbc7b7054deafb2630b6e5741ae6502d0a3b3c5098",
+      "bytes": 10406,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-02",
+      "sha256": "fff59dbd9f6e8f9c118344417f924db6746c9a6de06d5f0b7582c4424bff0442",
+      "bytes": 8416,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-03",
+      "sha256": "6a8ed1ca63ae93d9936265cb3b79564d63b10000b64d8322c93619abf24acc2b",
+      "bytes": 10281,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-04",
+      "sha256": "33055d0a52aee944c6107f07fafd451f1041eb8049a4af799660922c092aa9b9",
+      "bytes": 7894,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-05",
+      "sha256": "5e7196bc24b5d03e2845b632d7d14be25821df02bc5ba92f72c594c70f48a35a",
+      "bytes": 9252,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-06",
+      "sha256": "97629d3ff21be527b177c548fe6ec784a21ca0740e6da26848cb9ac4ed962cfa",
+      "bytes": 10033,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-07",
+      "sha256": "11c5f22094fb565d0429829882f2237644efec4cfac0768a89f5a0d7aea24e2b",
+      "bytes": 10821,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-08",
+      "sha256": "22b68be352869dc5d36b78c865ae17456cc902f4f1573bf5736e0e2f2dec8f3d",
+      "bytes": 11900,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-09",
+      "sha256": "c29aeeb01a0a8dc74b3bd120e5a55bfbcdf470867cb61b57ba36d24a8d69bd59",
+      "bytes": 11610,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-金沢-10",
+      "sha256": "bfcbd5f4a0363a808b44f0fe38e4565a08c791ed5b9df58b748f2853f486477c",
+      "bytes": 9364,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-01",
+      "sha256": "b241ce87174c523575f6ed38245423dc9ccdb5f191fea7f3d20b0810d5efac87",
+      "bytes": 6794,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-02",
+      "sha256": "40e6e12fb93b532853c677fcaca99d9c09560e21fbe6ce9cf1a322edfe6df00e",
+      "bytes": 8447,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-03",
+      "sha256": "d5705f9398082b931caebf79974141fbc424e9ea6f39604da023031759c77c75",
+      "bytes": 7171,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-04",
+      "sha256": "fb90b40c4437211df5f9d210540f17c0d58db42c79bde7c43dce3700cb3ee1b6",
+      "bytes": 10116,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-05",
+      "sha256": "17683028e9eab31dda829cf921a3efbe2d2ad93b7f7e8a3c9e338bcef8f054ab",
+      "bytes": 11971,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-06",
+      "sha256": "c7061af2f823df4dac8149bed815576e249759985a19ddab76d787cdfef9e7d3",
+      "bytes": 11370,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-07",
+      "sha256": "b43e6a69f20a8ca27fa429d2a3b45a4ee1c087aa4890cc389d54fc95bfd95b39",
+      "bytes": 12818,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-08",
+      "sha256": "170d2570b9e3c77dff65eaeadf822fa549fd1229fb9a8ce0484b0c0bf54aa696",
+      "bytes": 11315,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-09",
+      "sha256": "5c5fdb503a2e5b3dc990192cc0edef6e9c40e018d34562988f227d7a5893aebb",
+      "bytes": 10646,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-10",
+      "sha256": "f0b732d1c055cca6ebf4c4d42355e5bb47409e7be415c03b7fe1a51d53b27f35",
+      "bytes": 12551,
+      "analysis_ready": 1,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-10-18-高知-11",
+      "sha256": "97d3f02c109afb21fae1e0314163f48bee9de460607c499e47c7dd5f09009c98",
+      "bytes": 12217,
+      "analysis_ready": 1,
+      "updated_at": 0
+    }
+  ]
+}

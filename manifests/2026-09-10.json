@@ -1,0 +1,19 @@
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "date": "2026-09-10",
+  "exported_at": "2026-11-23T00:28:23Z",
+  "race_count": 1,
+  "payload_bytes_total": 4134,
+  "archive_file": "details/2026-09-10.jsonl.gz",
+  "archive_bytes": 2421,
+  "archive_sha256": "650d0a439a2b29feb986a1aa0ee965d34f4727730c66e48207611ddd80aa2aa4",
+  "races": [
+    {
+      "race_id": "nar-2026-09-10-川崎-10",
+      "sha256": "1307c4e7fe3a10991c47c2a220de26103eebadacb47b9071ed85d531009ac9e4",
+      "bytes": 4134,
+      "analysis_ready": 0,
+      "updated_at": 0
+    }
+  ]
+}

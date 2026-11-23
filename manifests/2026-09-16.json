@@ -1,0 +1,40 @@
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "date": "2026-09-16",
+  "exported_at": "2026-11-23T00:29:13Z",
+  "race_count": 4,
+  "payload_bytes_total": 15724,
+  "archive_file": "details/2026-09-16.jsonl.gz",
+  "archive_bytes": 6981,
+  "archive_sha256": "6ee63120f9bb3fec3b25ae293c1281162d8ca168072f1bb394115b9825937e19",
+  "races": [
+    {
+      "race_id": "nar-2026-09-16-門別-09",
+      "sha256": "b7fa4b3a2187655a6169c8d367edc6c3626d4afaef6496ddc62a54717cf0f5d2",
+      "bytes": 3784,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-16-門別-10",
+      "sha256": "6a05750a63b0e489873475037856914ee8d36d2cfd474bd8619cbf21dcd2bcfe",
+      "bytes": 4009,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-16-門別-11",
+      "sha256": "0d16efb4653c014d23eb1ca5917b16dafa3b9470e7a2c9887b3c8d5c1e1a2197",
+      "bytes": 3621,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-16-門別-12",
+      "sha256": "f8d093aea620f7cea2e1903345db84652e191719f9ae742558a9a032782bdf66",
+      "bytes": 4310,
+      "analysis_ready": 0,
+      "updated_at": 0
+    }
+  ]
+}

@@ -1,1 +1,1062 @@
-{"version":"arvexq-d1-details-archive-v1","dates":{}}
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "dates": {
+    "2025-12-23": {
+      "races": 1,
+      "payload_bytes": 5205,
+      "archive_bytes": 2801,
+      "archive_sha256": "9e5fb2755b2c7b639aa96fe505efada49ecbb29c903cbc4056baa66ff430067e",
+      "manifest": "manifests/2025-12-23.json",
+      "file": "details/2025-12-23.jsonl.gz"
+    },
+    "2025-12-24": {
+      "races": 1,
+      "payload_bytes": 5966,
+      "archive_bytes": 3118,
+      "archive_sha256": "bda6bde24844af2a9591a68770a7378faf99fbf4a36cd3fc2288003c3d57fc2d",
+      "manifest": "manifests/2025-12-24.json",
+      "file": "details/2025-12-24.jsonl.gz"
+    },
+    "2025-12-25": {
+      "races": 36,
+      "payload_bytes": 211836,
+      "archive_bytes": 73089,
+      "archive_sha256": "2c1559d30a5ca5c2e5cc7c120a1a0c233e08b5065c18645f3a8b50f1b722e06d",
+      "manifest": "manifests/2025-12-25.json",
+      "file": "details/2025-12-25.jsonl.gz"
+    },
+    "2025-12-26": {
+      "races": 23,
+      "payload_bytes": 123337,
+      "archive_bytes": 43645,
+      "archive_sha256": "22fd697d276f4db28cb677e6030492bec00c7f31fe603d392956d79265df949b",
+      "manifest": "manifests/2025-12-26.json",
+      "file": "details/2025-12-26.jsonl.gz"
+    },
+    "2025-12-28": {
+      "races": 53,
+      "payload_bytes": 338310,
+      "archive_bytes": 115872,
+      "archive_sha256": "5ba2177f579a3f20300666c69ca73e463e49cc4123d662f7f180964e0fe8e1f4",
+      "manifest": "manifests/2025-12-28.json",
+      "file": "details/2025-12-28.jsonl.gz"
+    },
+    "2025-12-29": {
+      "races": 59,
+      "payload_bytes": 332329,
+      "archive_bytes": 114015,
+      "archive_sha256": "7ab202ff9e4963b62f1c37c345671dc014460c9584a3a110d5d02c5ecf76b0c3",
+      "manifest": "manifests/2025-12-29.json",
+      "file": "details/2025-12-29.jsonl.gz"
+    },
+    "2025-12-30": {
+      "races": 47,
+      "payload_bytes": 270367,
+      "archive_bytes": 92957,
+      "archive_sha256": "50a336193424da16cfa1e4391d1c127b7b52a8cc47f3f5e37718bedff47aca66",
+      "manifest": "manifests/2025-12-30.json",
+      "file": "details/2025-12-30.jsonl.gz"
+    },
+    "2025-12-31": {
+      "races": 2,
+      "payload_bytes": 11319,
+      "archive_bytes": 4985,
+      "archive_sha256": "7476df2a34b0ff6b58611fadfd8644d4305c9146a116479b46cbc1697bd78084",
+      "manifest": "manifests/2025-12-31.json",
+      "file": "details/2025-12-31.jsonl.gz"
+    },
+    "2026-01-01": {
+      "races": 35,
+      "payload_bytes": 206026,
+      "archive_bytes": 71174,
+      "archive_sha256": "87cbc80035afed2ee2aafd3f383410103acd32e8761985afb083527c87326d7a",
+      "manifest": "manifests/2026-01-01.json",
+      "file": "details/2026-01-01.jsonl.gz"
+    },
+    "2026-01-05": {
+      "races": 26,
+      "payload_bytes": 155579,
+      "archive_bytes": 54302,
+      "archive_sha256": "146e9e376dea8375e91d1226c5e222ac8788aed89464bc33d97a0088f3f2852f",
+      "manifest": "manifests/2026-01-05.json",
+      "file": "details/2026-01-05.jsonl.gz"
+    },
+    "2026-01-06": {
+      "races": 23,
+      "payload_bytes": 124959,
+      "archive_bytes": 44011,
+      "archive_sha256": "e426ee1b79c3af52d54613e6ae0dbc8bab00ccb4b0e6008d09705d3f82b2adf6",
+      "manifest": "manifests/2026-01-06.json",
+      "file": "details/2026-01-06.jsonl.gz"
+    },
+    "2026-01-07": {
+      "races": 34,
+      "payload_bytes": 195700,
+      "archive_bytes": 70122,
+      "archive_sha256": "022f1e9b2ce4f015190008d31dfcf1caed24aa94fbe0838f4e59f81bc7200d88",
+      "manifest": "manifests/2026-01-07.json",
+      "file": "details/2026-01-07.jsonl.gz"
+    },
+    "2026-01-08": {
+      "races": 34,
+      "payload_bytes": 187569,
+      "archive_bytes": 65114,
+      "archive_sha256": "d5cac52337e3de00a96f393f5939ce7181edd2d10dba57aa073410cb5e46cc3d",
+      "manifest": "manifests/2026-01-08.json",
+      "file": "details/2026-01-08.jsonl.gz"
+    },
+    "2026-01-09": {
+      "races": 23,
+      "payload_bytes": 127356,
+      "archive_bytes": 44808,
+      "archive_sha256": "57ca2899d65bd5b6034d1a315c852b0238e26dfe77031de58e70aa35fe03f788",
+      "manifest": "manifests/2026-01-09.json",
+      "file": "details/2026-01-09.jsonl.gz"
+    },
+    "2026-01-10": {
+      "races": 46,
+      "payload_bytes": 298822,
+      "archive_bytes": 100568,
+      "archive_sha256": "4e2c779deb88ea6dda12cd48f38cb02796c5b5c916f541f15b6295e83db8c0e6",
+      "manifest": "manifests/2026-01-10.json",
+      "file": "details/2026-01-10.jsonl.gz"
+    },
+    "2026-01-11": {
+      "races": 24,
+      "payload_bytes": 201362,
+      "archive_bytes": 75401,
+      "archive_sha256": "a62c0ce7364c6c8e84f49415aa873ca53c5721d4f0f8f35dc7443201b3cf2866",
+      "manifest": "manifests/2026-01-11.json",
+      "file": "details/2026-01-11.jsonl.gz"
+    },
+    "2026-01-12": {
+      "races": 47,
+      "payload_bytes": 311334,
+      "archive_bytes": 104410,
+      "archive_sha256": "6e69be141ab06c4dd5036c936eb4c02367acbebfae031d39529b5f1968339535",
+      "manifest": "manifests/2026-01-12.json",
+      "file": "details/2026-01-12.jsonl.gz"
+    },
+    "2026-01-13": {
+      "races": 46,
+      "payload_bytes": 265016,
+      "archive_bytes": 90950,
+      "archive_sha256": "a2dc38365875e377f26e7b7d0e0719eda891bd43b6eb5abc65a72f78f586c306",
+      "manifest": "manifests/2026-01-13.json",
+      "file": "details/2026-01-13.jsonl.gz"
+    },
+    "2026-01-14": {
+      "races": 36,
+      "payload_bytes": 215923,
+      "archive_bytes": 73766,
+      "archive_sha256": "5be85ac4f72b19dfb01f703c09fb08f1a6396fff579a26addae60ebbb9427944",
+      "manifest": "manifests/2026-01-14.json",
+      "file": "details/2026-01-14.jsonl.gz"
+    },
+    "2026-01-15": {
+      "races": 36,
+      "payload_bytes": 206984,
+      "archive_bytes": 71589,
+      "archive_sha256": "f8389635bfa5355b73858e6daf5c6c2daa0d3584b8fa4e19ad0c1104dc4c3bab",
+      "manifest": "manifests/2026-01-15.json",
+      "file": "details/2026-01-15.jsonl.gz"
+    },
+    "2026-01-16": {
+      "races": 24,
+      "payload_bytes": 143869,
+      "archive_bytes": 49531,
+      "archive_sha256": "5f3ac3a64ff21f69baf2b7ff5115822bb8dbe6f1daa1d4e44668b0fb099cde97",
+      "manifest": "manifests/2026-01-16.json",
+      "file": "details/2026-01-16.jsonl.gz"
+    },
+    "2026-01-17": {
+      "races": 25,
+      "payload_bytes": 162860,
+      "archive_bytes": 55643,
+      "archive_sha256": "879dbb19558012a9b2294a55c9d83f5f24f712408555f05471f986917a8827fa",
+      "manifest": "manifests/2026-01-17.json",
+      "file": "details/2026-01-17.jsonl.gz"
+    },
+    "2026-01-18": {
+      "races": 32,
+      "payload_bytes": 198237,
+      "archive_bytes": 67822,
+      "archive_sha256": "6657705e4ddca1d1fc0126db42fc4ee85a3e3665c57ffb21a9a6112fd7a360d6",
+      "manifest": "manifests/2026-01-18.json",
+      "file": "details/2026-01-18.jsonl.gz"
+    },
+    "2026-01-19": {
+      "races": 24,
+      "payload_bytes": 148475,
+      "archive_bytes": 52916,
+      "archive_sha256": "e5c11f8e525669c7eea7c5d38343309f507562d2819885d97d672b3ec0e65c50",
+      "manifest": "manifests/2026-01-19.json",
+      "file": "details/2026-01-19.jsonl.gz"
+    },
+    "2026-01-20": {
+      "races": 45,
+      "payload_bytes": 250208,
+      "archive_bytes": 87058,
+      "archive_sha256": "202fbae856b0c8d552797183a6382c3942153c3f2062f89be70c2329d10f2113",
+      "manifest": "manifests/2026-01-20.json",
+      "file": "details/2026-01-20.jsonl.gz"
+    },
+    "2026-01-21": {
+      "races": 43,
+      "payload_bytes": 237714,
+      "archive_bytes": 82367,
+      "archive_sha256": "38672f5e6cbf81cbf0793adadd7edd156ca9f590a3e4e23b8d1d3d995167de09",
+      "manifest": "manifests/2026-01-21.json",
+      "file": "details/2026-01-21.jsonl.gz"
+    },
+    "2026-01-22": {
+      "races": 35,
+      "payload_bytes": 200656,
+      "archive_bytes": 69929,
+      "archive_sha256": "2f9ac84198ccbfbceb81ae8ff714c7eed647fd9c22c013200652112d1a8b108e",
+      "manifest": "manifests/2026-01-22.json",
+      "file": "details/2026-01-22.jsonl.gz"
+    },
+    "2026-01-23": {
+      "races": 24,
+      "payload_bytes": 132502,
+      "archive_bytes": 46596,
+      "archive_sha256": "5b247984f74a12e27e6745a1e35e560ba4a1a0e5969a4280bbddf58ab36d274a",
+      "manifest": "manifests/2026-01-23.json",
+      "file": "details/2026-01-23.jsonl.gz"
+    },
+    "2026-01-24": {
+      "races": 32,
+      "payload_bytes": 214180,
+      "archive_bytes": 71696,
+      "archive_sha256": "e31c5e987a28091009aac83baba134eb48f3bf13464895204178ec4b8637b45a",
+      "manifest": "manifests/2026-01-24.json",
+      "file": "details/2026-01-24.jsonl.gz"
+    },
+    "2026-01-25": {
+      "races": 23,
+      "payload_bytes": 124421,
+      "archive_bytes": 43938,
+      "archive_sha256": "cdd2b4bd79e60302573a4801d9521a9dc00c3ef958ae6e0d0777b7f55c45fc4e",
+      "manifest": "manifests/2026-01-25.json",
+      "file": "details/2026-01-25.jsonl.gz"
+    },
+    "2026-01-26": {
+      "races": 35,
+      "payload_bytes": 205586,
+      "archive_bytes": 70896,
+      "archive_sha256": "a84a1965a2d46b6d945ffd7a00d4dd98987e01d817740ef4cb555adfee617147",
+      "manifest": "manifests/2026-01-26.json",
+      "file": "details/2026-01-26.jsonl.gz"
+    },
+    "2026-01-27": {
+      "races": 46,
+      "payload_bytes": 276684,
+      "archive_bytes": 95362,
+      "archive_sha256": "ae71f1cf6cb16cc566d0c6ae73ffe6224784a74feabd8bf7faafc9a13ba17f14",
+      "manifest": "manifests/2026-01-27.json",
+      "file": "details/2026-01-27.jsonl.gz"
+    },
+    "2026-01-28": {
+      "races": 36,
+      "payload_bytes": 212581,
+      "archive_bytes": 72624,
+      "archive_sha256": "49f679f5aab93ec569ffe0e57c5c730f85d8f61af53733d69d5dfaec95b540af",
+      "manifest": "manifests/2026-01-28.json",
+      "file": "details/2026-01-28.jsonl.gz"
+    },
+    "2026-01-29": {
+      "races": 48,
+      "payload_bytes": 281593,
+      "archive_bytes": 96691,
+      "archive_sha256": "d95a65f54781e5643321a1c9c4cf216ab54e20b107c1f64cb6a40bfce108c149",
+      "manifest": "manifests/2026-01-29.json",
+      "file": "details/2026-01-29.jsonl.gz"
+    },
+    "2026-01-30": {
+      "races": 24,
+      "payload_bytes": 144315,
+      "archive_bytes": 49916,
+      "archive_sha256": "0c3cee6bc57156f54a44ffd754d203c3014143b1e2feeb2f7d3a2c10b17b79a9",
+      "manifest": "manifests/2026-01-30.json",
+      "file": "details/2026-01-30.jsonl.gz"
+    },
+    "2026-01-31": {
+      "races": 36,
+      "payload_bytes": 238547,
+      "archive_bytes": 80591,
+      "archive_sha256": "371f070dd8e54534322de43f0a670cc4cea941263ebfc5af8d1807f7066a8f7a",
+      "manifest": "manifests/2026-01-31.json",
+      "file": "details/2026-01-31.jsonl.gz"
+    },
+    "2026-02-01": {
+      "races": 58,
+      "payload_bytes": 371967,
+      "archive_bytes": 125238,
+      "archive_sha256": "85c4e9c66e63da6c68da65d72ac51f8d463d8c4d7b1efa22428f6b3a0ae92dd8",
+      "manifest": "manifests/2026-02-01.json",
+      "file": "details/2026-02-01.jsonl.gz"
+    },
+    "2026-02-06": {
+      "races": 24,
+      "payload_bytes": 138481,
+      "archive_bytes": 50025,
+      "archive_sha256": "a642db33676b3139d3a0072c1d5ebd3200a0dff668ee0c372de577a32568105a",
+      "manifest": "manifests/2026-02-06.json",
+      "file": "details/2026-02-06.jsonl.gz"
+    },
+    "2026-02-07": {
+      "races": 43,
+      "payload_bytes": 290787,
+      "archive_bytes": 98461,
+      "archive_sha256": "e6b1d6c609132751ff887adf50141a44bc8db7d75be792cb1bc1f9966fef45ed",
+      "manifest": "manifests/2026-02-07.json",
+      "file": "details/2026-02-07.jsonl.gz"
+    },
+    "2026-02-08": {
+      "races": 22,
+      "payload_bytes": 128930,
+      "archive_bytes": 46535,
+      "archive_sha256": "df0ba428d6da337067dffad8b625431c4d6ff2055b95d5176adaee484f83d757",
+      "manifest": "manifests/2026-02-08.json",
+      "file": "details/2026-02-08.jsonl.gz"
+    },
+    "2026-02-09": {
+      "races": 24,
+      "payload_bytes": 152306,
+      "archive_bytes": 53702,
+      "archive_sha256": "bfe8b32df4a279f77d6a5e7cb6245ce112affbdc8be74c7ce6ff00a1f4c0f01c",
+      "manifest": "manifests/2026-02-09.json",
+      "file": "details/2026-02-09.jsonl.gz"
+    },
+    "2026-02-10": {
+      "races": 66,
+      "payload_bytes": 415000,
+      "archive_bytes": 143026,
+      "archive_sha256": "a0b0fe818417682d8bf8b28add8bd78ea34b92d36fb97697e836ed554f3bc794",
+      "manifest": "manifests/2026-02-10.json",
+      "file": "details/2026-02-10.jsonl.gz"
+    },
+    "2026-02-12": {
+      "races": 48,
+      "payload_bytes": 291939,
+      "archive_bytes": 103181,
+      "archive_sha256": "0c36a59441ef976867e94476d087b50c44fea72fb3df66afc65e090a7b82e04b",
+      "manifest": "manifests/2026-02-12.json",
+      "file": "details/2026-02-12.jsonl.gz"
+    },
+    "2026-02-19": {
+      "races": 13,
+      "payload_bytes": 85999,
+      "archive_bytes": 30773,
+      "archive_sha256": "6340bfd2469d287111dada0b16fc44eed63175917ebe13d77e36ede1cbe35b3c",
+      "manifest": "manifests/2026-02-19.json",
+      "file": "details/2026-02-19.jsonl.gz"
+    },
+    "2026-02-27": {
+      "races": 36,
+      "payload_bytes": 213398,
+      "archive_bytes": 75905,
+      "archive_sha256": "93b020b1a4ee81a4298e86625bee3b25ba319eac07964cf9e0313db8c407f1d7",
+      "manifest": "manifests/2026-02-27.json",
+      "file": "details/2026-02-27.jsonl.gz"
+    },
+    "2026-03-09": {
+      "races": 47,
+      "payload_bytes": 283867,
+      "archive_bytes": 100887,
+      "archive_sha256": "1813a0196a275f5f494e1c515793f22e1aae51e9c5b06787882cdc01f79273a8",
+      "manifest": "manifests/2026-03-09.json",
+      "file": "details/2026-03-09.jsonl.gz"
+    },
+    "2026-03-10": {
+      "races": 69,
+      "payload_bytes": 412606,
+      "archive_bytes": 145217,
+      "archive_sha256": "8702238ab680dfd4ea2f6ecc7bf75967b722686e6e22033d8670459d8d77733d",
+      "manifest": "manifests/2026-03-10.json",
+      "file": "details/2026-03-10.jsonl.gz"
+    },
+    "2026-03-11": {
+      "races": 68,
+      "payload_bytes": 398591,
+      "archive_bytes": 142215,
+      "archive_sha256": "6ae9e4c85768dbb367727b9d52da7361bc2304c598a3c2875e5bf07da78086e3",
+      "manifest": "manifests/2026-03-11.json",
+      "file": "details/2026-03-11.jsonl.gz"
+    },
+    "2026-03-12": {
+      "races": 58,
+      "payload_bytes": 335304,
+      "archive_bytes": 119442,
+      "archive_sha256": "947a52e5231030971df0d4b1ea0a85c5e21b0da41640fd0869177a7ddbfac73a",
+      "manifest": "manifests/2026-03-12.json",
+      "file": "details/2026-03-12.jsonl.gz"
+    },
+    "2026-03-13": {
+      "races": 36,
+      "payload_bytes": 206609,
+      "archive_bytes": 74036,
+      "archive_sha256": "ea6aec2228dbab6e6e3159a36cafc4a5d423abe52c7bd2934167e3ea1799ddbe",
+      "manifest": "manifests/2026-03-13.json",
+      "file": "details/2026-03-13.jsonl.gz"
+    },
+    "2026-03-15": {
+      "races": 61,
+      "payload_bytes": 374090,
+      "archive_bytes": 129274,
+      "archive_sha256": "fcb2148e6ffd3863df7d51b1f072c24e482d1380656e922f47563f1c8164234f",
+      "manifest": "manifests/2026-03-15.json",
+      "file": "details/2026-03-15.jsonl.gz"
+    },
+    "2026-03-19": {
+      "races": 35,
+      "payload_bytes": 200235,
+      "archive_bytes": 72038,
+      "archive_sha256": "c8510e74dfb913cf692f819bd210b18eb35f8ea923fadbd5a59bf0b54b4bcaab",
+      "manifest": "manifests/2026-03-19.json",
+      "file": "details/2026-03-19.jsonl.gz"
+    },
+    "2026-03-20": {
+      "races": 36,
+      "payload_bytes": 202942,
+      "archive_bytes": 73664,
+      "archive_sha256": "c2628aac34e83b042f52c77b2ed8cd3ead534e3176f2f1a96ddd5d27f4f23ff2",
+      "manifest": "manifests/2026-03-20.json",
+      "file": "details/2026-03-20.jsonl.gz"
+    },
+    "2026-03-21": {
+      "races": 25,
+      "payload_bytes": 162870,
+      "archive_bytes": 56036,
+      "archive_sha256": "5e7eecb487ec356959c49616a07c7361c39a0d589e204edd6d7efff0fcda9df3",
+      "manifest": "manifests/2026-03-21.json",
+      "file": "details/2026-03-21.jsonl.gz"
+    },
+    "2026-03-22": {
+      "races": 67,
+      "payload_bytes": 438246,
+      "archive_bytes": 150880,
+      "archive_sha256": "66f0fbee999c9754be091bca7a5324b9333f8a491ef3d7bec749e2d70726ae01",
+      "manifest": "manifests/2026-03-22.json",
+      "file": "details/2026-03-22.jsonl.gz"
+    },
+    "2026-03-23": {
+      "races": 44,
+      "payload_bytes": 296162,
+      "archive_bytes": 113180,
+      "archive_sha256": "62a25485bac5c0ba5388d7fa8763215476a59274c6256fda0df6c7bbe2820c54",
+      "manifest": "manifests/2026-03-23.json",
+      "file": "details/2026-03-23.jsonl.gz"
+    },
+    "2026-03-24": {
+      "races": 70,
+      "payload_bytes": 410452,
+      "archive_bytes": 144580,
+      "archive_sha256": "09540a60c0fb810bcdec2212d0cd9226b426c2fd7f867c99737580ad33c85355",
+      "manifest": "manifests/2026-03-24.json",
+      "file": "details/2026-03-24.jsonl.gz"
+    },
+    "2026-03-25": {
+      "races": 45,
+      "payload_bytes": 264407,
+      "archive_bytes": 93570,
+      "archive_sha256": "5a7a71a74a7de4e91da9d6f133835998a941f96eb00bea1568428789a59ed780",
+      "manifest": "manifests/2026-03-25.json",
+      "file": "details/2026-03-25.jsonl.gz"
+    },
+    "2026-03-26": {
+      "races": 36,
+      "payload_bytes": 214515,
+      "archive_bytes": 76347,
+      "archive_sha256": "149a5891ba35239700f3e2aea5d873f9b3ee309dd1340625c36d1bf89d12910e",
+      "manifest": "manifests/2026-03-26.json",
+      "file": "details/2026-03-26.jsonl.gz"
+    },
+    "2026-03-27": {
+      "races": 35,
+      "payload_bytes": 200154,
+      "archive_bytes": 71904,
+      "archive_sha256": "28473cc3fff366517c5d6c9dc507e8880d72b6e317b9ec5f409cfeb5fa18df91",
+      "manifest": "manifests/2026-03-27.json",
+      "file": "details/2026-03-27.jsonl.gz"
+    },
+    "2026-03-28": {
+      "races": 57,
+      "payload_bytes": 373596,
+      "archive_bytes": 128986,
+      "archive_sha256": "0b32b46488383751a29e9f715268f168d6e29d065e9bff2190b0bcc527727848",
+      "manifest": "manifests/2026-03-28.json",
+      "file": "details/2026-03-28.jsonl.gz"
+    },
+    "2026-03-29": {
+      "races": 62,
+      "payload_bytes": 393245,
+      "archive_bytes": 135063,
+      "archive_sha256": "bb77dd1bc05278d17b3bc80db03e289e32348c539266cce2182487b2830749ad",
+      "manifest": "manifests/2026-03-29.json",
+      "file": "details/2026-03-29.jsonl.gz"
+    },
+    "2026-03-30": {
+      "races": 34,
+      "payload_bytes": 193012,
+      "archive_bytes": 68864,
+      "archive_sha256": "a1437d783b1b3ff195a8118d4efb6cb6a900c05c31d35dd96003c089653cb2e2",
+      "manifest": "manifests/2026-03-30.json",
+      "file": "details/2026-03-30.jsonl.gz"
+    },
+    "2026-03-31": {
+      "races": 47,
+      "payload_bytes": 270274,
+      "archive_bytes": 95880,
+      "archive_sha256": "bd61b56bbbe0a6a800bc63ea68040eb491dfd19ed2e146cb4acbf3d99b6370c9",
+      "manifest": "manifests/2026-03-31.json",
+      "file": "details/2026-03-31.jsonl.gz"
+    },
+    "2026-04-01": {
+      "races": 24,
+      "payload_bytes": 142611,
+      "archive_bytes": 51980,
+      "archive_sha256": "984293f99e2f7a9147ffe1b0bfe62af6acbcb746e4c5d3d79d244ccf982407c4",
+      "manifest": "manifests/2026-04-01.json",
+      "file": "details/2026-04-01.jsonl.gz"
+    },
+    "2026-04-02": {
+      "races": 35,
+      "payload_bytes": 199781,
+      "archive_bytes": 73642,
+      "archive_sha256": "14088bb681cb4178a949d635fc9872f35487902f3dd6404e7274acbedd1e2805",
+      "manifest": "manifests/2026-04-02.json",
+      "file": "details/2026-04-02.jsonl.gz"
+    },
+    "2026-04-03": {
+      "races": 36,
+      "payload_bytes": 189270,
+      "archive_bytes": 68451,
+      "archive_sha256": "515a77a84f33f6083e10e027e1e3afbba436dcd0a68f3b5d12e3d3a098e6f74b",
+      "manifest": "manifests/2026-04-03.json",
+      "file": "details/2026-04-03.jsonl.gz"
+    },
+    "2026-04-06": {
+      "races": 35,
+      "payload_bytes": 202243,
+      "archive_bytes": 72077,
+      "archive_sha256": "ee96eeea4e7c8f27694b2b0b9850cd26c3b7b8016d5240415e7c01161db8126f",
+      "manifest": "manifests/2026-04-06.json",
+      "file": "details/2026-04-06.jsonl.gz"
+    },
+    "2026-04-07": {
+      "races": 59,
+      "payload_bytes": 337710,
+      "archive_bytes": 119528,
+      "archive_sha256": "715bf7e9c930bc6652c1b955c003a7cdd1054f530ac04ed9ede0dc7f42f7e0ba",
+      "manifest": "manifests/2026-04-07.json",
+      "file": "details/2026-04-07.jsonl.gz"
+    },
+    "2026-04-10": {
+      "races": 35,
+      "payload_bytes": 198510,
+      "archive_bytes": 71102,
+      "archive_sha256": "9e08f376e9e434f713881a9a54babd5d77b5c4a1fd0504b5f396e61a976f37e9",
+      "manifest": "manifests/2026-04-10.json",
+      "file": "details/2026-04-10.jsonl.gz"
+    },
+    "2026-04-11": {
+      "races": 58,
+      "payload_bytes": 384794,
+      "archive_bytes": 129225,
+      "archive_sha256": "e26d6fb95bc4eb9a9ed0e886586e744e9f4e9502aa81e0c01a5bb28232c7e64f",
+      "manifest": "manifests/2026-04-11.json",
+      "file": "details/2026-04-11.jsonl.gz"
+    },
+    "2026-04-12": {
+      "races": 71,
+      "payload_bytes": 446769,
+      "archive_bytes": 152987,
+      "archive_sha256": "1c465fa2fef4573e264db548349820554dd80663535472264887220bc329372b",
+      "manifest": "manifests/2026-04-12.json",
+      "file": "details/2026-04-12.jsonl.gz"
+    },
+    "2026-04-13": {
+      "races": 36,
+      "payload_bytes": 211597,
+      "archive_bytes": 74893,
+      "archive_sha256": "9e6791b1446c1f98a287cd30e9fbe3889f4639064f447bac04157532348153c1",
+      "manifest": "manifests/2026-04-13.json",
+      "file": "details/2026-04-13.jsonl.gz"
+    },
+    "2026-04-14": {
+      "races": 46,
+      "payload_bytes": 264500,
+      "archive_bytes": 93050,
+      "archive_sha256": "26b7b2f9883b41327ed4b5e3bd97422d62ed7798f7e0f0ea0a1e23ee6f2a3fb0",
+      "manifest": "manifests/2026-04-14.json",
+      "file": "details/2026-04-14.jsonl.gz"
+    },
+    "2026-04-16": {
+      "races": 46,
+      "payload_bytes": 271729,
+      "archive_bytes": 96009,
+      "archive_sha256": "b4be2c27a0543ad9676fa26efdbcdf97833364f62c99f017a219a49ac4ef7bd1",
+      "manifest": "manifests/2026-04-16.json",
+      "file": "details/2026-04-16.jsonl.gz"
+    },
+    "2026-04-17": {
+      "races": 36,
+      "payload_bytes": 194048,
+      "archive_bytes": 69689,
+      "archive_sha256": "e3cb4a142e33656eacbf8c5375ca2bb0cf6ded95353fe281a391d1c15f8dead4",
+      "manifest": "manifests/2026-04-17.json",
+      "file": "details/2026-04-17.jsonl.gz"
+    },
+    "2026-04-21": {
+      "races": 43,
+      "payload_bytes": 241409,
+      "archive_bytes": 86028,
+      "archive_sha256": "989bcd9fdbfede4fc81fe4a7ff5845c3efde80f26c216f67febc0fcfeda376ad",
+      "manifest": "manifests/2026-04-21.json",
+      "file": "details/2026-04-21.jsonl.gz"
+    },
+    "2026-04-23": {
+      "races": 47,
+      "payload_bytes": 281358,
+      "archive_bytes": 99310,
+      "archive_sha256": "1baa9983f6c1fa90b7c0a95244d8b3fe0232d7bfac1beb85baf0d66117ac0e62",
+      "manifest": "manifests/2026-04-23.json",
+      "file": "details/2026-04-23.jsonl.gz"
+    },
+    "2026-04-24": {
+      "races": 36,
+      "payload_bytes": 212609,
+      "archive_bytes": 77642,
+      "archive_sha256": "51ef9e8ab07cd27c2ef70222950be46a8aa9378a7f76ee4c8362f1d8c63943f5",
+      "manifest": "manifests/2026-04-24.json",
+      "file": "details/2026-04-24.jsonl.gz"
+    },
+    "2026-04-25": {
+      "races": 11,
+      "payload_bytes": 80417,
+      "archive_bytes": 27469,
+      "archive_sha256": "0215a434ae292f301d1165e563d5ac3850f497160b7c0e2c8ad0ef6042552f4e",
+      "manifest": "manifests/2026-04-25.json",
+      "file": "details/2026-04-25.jsonl.gz"
+    },
+    "2026-04-26": {
+      "races": 57,
+      "payload_bytes": 378333,
+      "archive_bytes": 127617,
+      "archive_sha256": "7ac32132dc7ac04663f8cdd7d2a16ee6574a59850d185569c04de34adc2ea139",
+      "manifest": "manifests/2026-04-26.json",
+      "file": "details/2026-04-26.jsonl.gz"
+    },
+    "2026-08-19": {
+      "races": 1,
+      "payload_bytes": 4521,
+      "archive_bytes": 2599,
+      "archive_sha256": "c500ebb0129f8c8bd7d775c376bb87c0c8700a1c91a2fa2ad448aad10d4fdbbf",
+      "manifest": "manifests/2026-08-19.json",
+      "file": "details/2026-08-19.jsonl.gz"
+    },
+    "2026-08-20": {
+      "races": 4,
+      "payload_bytes": 16808,
+      "archive_bytes": 7422,
+      "archive_sha256": "2fdca4b018c5cdeae190eb1ae80c8739636933f6b24919151241beaac52d18f0",
+      "manifest": "manifests/2026-08-20.json",
+      "file": "details/2026-08-20.jsonl.gz"
+    },
+    "2026-08-23": {
+      "races": 1,
+      "payload_bytes": 4394,
+      "archive_bytes": 2531,
+      "archive_sha256": "960163f5f7d80274cc47eecb503b0342429e054d8eb5c5c2496d44d14e05e47b",
+      "manifest": "manifests/2026-08-23.json",
+      "file": "details/2026-08-23.jsonl.gz"
+    },
+    "2026-08-24": {
+      "races": 1,
+      "payload_bytes": 4671,
+      "archive_bytes": 2575,
+      "archive_sha256": "cc6a07081c0007e31b59021f547e762755cb4661902b8ecfc9875a90ad89a251",
+      "manifest": "manifests/2026-08-24.json",
+      "file": "details/2026-08-24.jsonl.gz"
+    },
+    "2026-08-25": {
+      "races": 2,
+      "payload_bytes": 9101,
+      "archive_bytes": 4348,
+      "archive_sha256": "0fc4d27832777c0ce9c065c323bc3787b00395bd07c04e631d41f54db17ce179",
+      "manifest": "manifests/2026-08-25.json",
+      "file": "details/2026-08-25.jsonl.gz"
+    },
+    "2026-08-26": {
+      "races": 1,
+      "payload_bytes": 4674,
+      "archive_bytes": 2636,
+      "archive_sha256": "3c99b924f3b76c9738c4a878fa150758a778db44264b582778cfd86bb3cd2760",
+      "manifest": "manifests/2026-08-26.json",
+      "file": "details/2026-08-26.jsonl.gz"
+    },
+    "2026-08-27": {
+      "races": 2,
+      "payload_bytes": 8767,
+      "archive_bytes": 4250,
+      "archive_sha256": "be5df209023ca2df5d1faa943936f60dac4371a2edd76183359c49f1e463d851",
+      "manifest": "manifests/2026-08-27.json",
+      "file": "details/2026-08-27.jsonl.gz"
+    },
+    "2026-08-28": {
+      "races": 1,
+      "payload_bytes": 4673,
+      "archive_bytes": 2594,
+      "archive_sha256": "89713a650b83c237ae263f0a666e148c102ff3db4801d77b41a9935d159a9fe8",
+      "manifest": "manifests/2026-08-28.json",
+      "file": "details/2026-08-28.jsonl.gz"
+    },
+    "2026-09-01": {
+      "races": 2,
+      "payload_bytes": 7984,
+      "archive_bytes": 3941,
+      "archive_sha256": "5e2fa3fd3258548f56c7301c72954b8fdb558946f7a0870cd1eb84592f3301ae",
+      "manifest": "manifests/2026-09-01.json",
+      "file": "details/2026-09-01.jsonl.gz"
+    },
+    "2026-09-02": {
+      "races": 6,
+      "payload_bytes": 24275,
+      "archive_bytes": 10171,
+      "archive_sha256": "2c07e5197989760b981ad384fbffb589fe004481728c74ff36d406792386d008",
+      "manifest": "manifests/2026-09-02.json",
+      "file": "details/2026-09-02.jsonl.gz"
+    },
+    "2026-09-03": {
+      "races": 1,
+      "payload_bytes": 4327,
+      "archive_bytes": 2498,
+      "archive_sha256": "2590591c338749ed9ec50036a275b8d18429d7ac5ed4b5d5ddddec8547fd6ac9",
+      "manifest": "manifests/2026-09-03.json",
+      "file": "details/2026-09-03.jsonl.gz"
+    },
+    "2026-09-09": {
+      "races": 4,
+      "payload_bytes": 16431,
+      "archive_bytes": 7265,
+      "archive_sha256": "21d24f6d7638c2e4a761bd9749661bab538334fa31c4885082ebcb1ebfbaa5b6",
+      "manifest": "manifests/2026-09-09.json",
+      "file": "details/2026-09-09.jsonl.gz"
+    },
+    "2026-09-10": {
+      "races": 1,
+      "payload_bytes": 4134,
+      "archive_bytes": 2421,
+      "archive_sha256": "650d0a439a2b29feb986a1aa0ee965d34f4727730c66e48207611ddd80aa2aa4",
+      "manifest": "manifests/2026-09-10.json",
+      "file": "details/2026-09-10.jsonl.gz"
+    },
+    "2026-09-14": {
+      "races": 36,
+      "payload_bytes": 218294,
+      "archive_bytes": 77400,
+      "archive_sha256": "6d62c62b25d7cc17af857700918cb04c9153fd2aeddc3e25fdce4bbfce3d6ea6",
+      "manifest": "manifests/2026-09-14.json",
+      "file": "details/2026-09-14.jsonl.gz"
+    },
+    "2026-09-15": {
+      "races": 60,
+      "payload_bytes": 352564,
+      "archive_bytes": 125057,
+      "archive_sha256": "481279520c4f6f932b16329a0700f34fc5205710971400f42913e69bb9034225",
+      "manifest": "manifests/2026-09-15.json",
+      "file": "details/2026-09-15.jsonl.gz"
+    },
+    "2026-09-16": {
+      "races": 4,
+      "payload_bytes": 15724,
+      "archive_bytes": 6981,
+      "archive_sha256": "6ee63120f9bb3fec3b25ae293c1281162d8ca168072f1bb394115b9825937e19",
+      "manifest": "manifests/2026-09-16.json",
+      "file": "details/2026-09-16.jsonl.gz"
+    },
+    "2026-09-17": {
+      "races": 9,
+      "payload_bytes": 37164,
+      "archive_bytes": 15123,
+      "archive_sha256": "07c96b698356201a434e109b13d8d32b368474c0456f87facba85d15da249761",
+      "manifest": "manifests/2026-09-17.json",
+      "file": "details/2026-09-17.jsonl.gz"
+    },
+    "2026-09-18": {
+      "races": 18,
+      "payload_bytes": 72190,
+      "archive_bytes": 28386,
+      "archive_sha256": "d8b722cfe5986b6c8491996f9cd98eacdadf6d7a71402542e586e8afa4921aa2",
+      "manifest": "manifests/2026-09-18.json",
+      "file": "details/2026-09-18.jsonl.gz"
+    },
+    "2026-09-21": {
+      "races": 1,
+      "payload_bytes": 4176,
+      "archive_bytes": 2465,
+      "archive_sha256": "ab02f05646e7fe7c87258b5caec970fe1350f18d1f6a34aa9a0824fca3154bbd",
+      "manifest": "manifests/2026-09-21.json",
+      "file": "details/2026-09-21.jsonl.gz"
+    },
+    "2026-09-22": {
+      "races": 71,
+      "payload_bytes": 438630,
+      "archive_bytes": 163505,
+      "archive_sha256": "ddcf53ba30fac710c1c10d2516d9f6b5b17b4d812aa34206914ded2a7d78c0e5",
+      "manifest": "manifests/2026-09-22.json",
+      "file": "details/2026-09-22.jsonl.gz"
+    },
+    "2026-09-23": {
+      "races": 59,
+      "payload_bytes": 180666,
+      "archive_bytes": 73886,
+      "archive_sha256": "45d25405bc689d14cc7966e6ae282c9ab54b7758e4166bfb83d7399ee55d416f",
+      "manifest": "manifests/2026-09-23.json",
+      "file": "details/2026-09-23.jsonl.gz"
+    },
+    "2026-09-24": {
+      "races": 47,
+      "payload_bytes": 134258,
+      "archive_bytes": 54932,
+      "archive_sha256": "5879b783cba632578bc27683b70acb2763aed6c5399367f3c0d39ef170381114",
+      "manifest": "manifests/2026-09-24.json",
+      "file": "details/2026-09-24.jsonl.gz"
+    },
+    "2026-09-25": {
+      "races": 35,
+      "payload_bytes": 102455,
+      "archive_bytes": 42421,
+      "archive_sha256": "566239edc31de7db73e733849d79a292c38463d08ba27c37cfd75da207a3aa51",
+      "manifest": "manifests/2026-09-25.json",
+      "file": "details/2026-09-25.jsonl.gz"
+    },
+    "2026-09-26": {
+      "races": 45,
+      "payload_bytes": 309692,
+      "archive_bytes": 111987,
+      "archive_sha256": "518fc6e18424d4abe9f3432d47d62763a6f16a47d3b6e96db55cd8dd5a7b2d08",
+      "manifest": "manifests/2026-09-26.json",
+      "file": "details/2026-09-26.jsonl.gz"
+    },
+    "2026-09-27": {
+      "races": 57,
+      "payload_bytes": 389214,
+      "archive_bytes": 141047,
+      "archive_sha256": "8da7535a65def5630f536988609088d7981d5ad99dcbcf223eb03620c1e8d3d6",
+      "manifest": "manifests/2026-09-27.json",
+      "file": "details/2026-09-27.jsonl.gz"
+    },
+    "2026-09-28": {
+      "races": 35,
+      "payload_bytes": 189020,
+      "archive_bytes": 69183,
+      "archive_sha256": "38b6616a6d0f95fb3cc73162796339bc7041a9dd1345421c44c7d59a6c01b214",
+      "manifest": "manifests/2026-09-28.json",
+      "file": "details/2026-09-28.jsonl.gz"
+    },
+    "2026-09-29": {
+      "races": 59,
+      "payload_bytes": 328810,
+      "archive_bytes": 117805,
+      "archive_sha256": "db0c83085295e5fcccd5cd388457ecd7275b5bd58c79b2546054eb8fb0be6ca3",
+      "manifest": "manifests/2026-09-29.json",
+      "file": "details/2026-09-29.jsonl.gz"
+    },
+    "2026-09-30": {
+      "races": 48,
+      "payload_bytes": 277409,
+      "archive_bytes": 101779,
+      "archive_sha256": "3079bdcbf885a992c71bc1fa2f96534da401c5d4790a985c3dafdf458061d8ad",
+      "manifest": "manifests/2026-09-30.json",
+      "file": "details/2026-09-30.jsonl.gz"
+    },
+    "2026-10-01": {
+      "races": 58,
+      "payload_bytes": 317463,
+      "archive_bytes": 111803,
+      "archive_sha256": "0a8aae4c7c3438fadf750445e2f5ab3a170bfd85277e973faa1c8cb9cdaaa2f8",
+      "manifest": "manifests/2026-10-01.json",
+      "file": "details/2026-10-01.jsonl.gz"
+    },
+    "2026-10-02": {
+      "races": 36,
+      "payload_bytes": 195847,
+      "archive_bytes": 68757,
+      "archive_sha256": "e5c39a5bfbd2594df47a001a2b5b1d2c865d7d1edb1ef6ce3640d7b900a824b8",
+      "manifest": "manifests/2026-10-02.json",
+      "file": "details/2026-10-02.jsonl.gz"
+    },
+    "2026-10-03": {
+      "races": 36,
+      "payload_bytes": 7925381,
+      "archive_bytes": 5841633,
+      "archive_sha256": "9c32140393441e2c53403b5a5b1d39f7316c1a7302f55476ad0d30b5ea94a8db",
+      "manifest": "manifests/2026-10-03.json",
+      "file": "details/2026-10-03.jsonl.gz"
+    },
+    "2026-10-04": {
+      "races": 65,
+      "payload_bytes": 793666,
+      "archive_bytes": 434671,
+      "archive_sha256": "0eb0d4e4485aa120b435da82f7d03100fcf857478d1ff40d607ee9fe4d4d687c",
+      "manifest": "manifests/2026-10-04.json",
+      "file": "details/2026-10-04.jsonl.gz"
+    },
+    "2026-10-05": {
+      "races": 33,
+      "payload_bytes": 177876,
+      "archive_bytes": 63635,
+      "archive_sha256": "7034ee2d55ef43ed36e401b687fed29bd3b658a4c0f2f7fcfdd75bcec29c0fbc",
+      "manifest": "manifests/2026-10-05.json",
+      "file": "details/2026-10-05.jsonl.gz"
+    },
+    "2026-10-06": {
+      "races": 58,
+      "payload_bytes": 422521,
+      "archive_bytes": 147894,
+      "archive_sha256": "c4dca9fce1ca569b5ac138693a287ad788bc732fd1fbcc50007d007ff29ee3a5",
+      "manifest": "manifests/2026-10-06.json",
+      "file": "details/2026-10-06.jsonl.gz"
+    },
+    "2026-10-07": {
+      "races": 47,
+      "payload_bytes": 342039,
+      "archive_bytes": 136535,
+      "archive_sha256": "d51a4168d3dd24ed6a2ceed5eda296535dcb6efbf2ad393253ed7fd12d032915",
+      "manifest": "manifests/2026-10-07.json",
+      "file": "details/2026-10-07.jsonl.gz"
+    },
+    "2026-10-08": {
+      "races": 47,
+      "payload_bytes": 353043,
+      "archive_bytes": 140028,
+      "archive_sha256": "276818165674c75fe0f1348fa54ffaf3929782ace3e66e2037b851dffe2ab72d",
+      "manifest": "manifests/2026-10-08.json",
+      "file": "details/2026-10-08.jsonl.gz"
+    },
+    "2026-10-09": {
+      "races": 34,
+      "payload_bytes": 245873,
+      "archive_bytes": 97819,
+      "archive_sha256": "3e77f955a7047cf19140f1d14cc3a0d74cf79e5b3acce683b931a40ebb86ff86",
+      "manifest": "manifests/2026-10-09.json",
+      "file": "details/2026-10-09.jsonl.gz"
+    },
+    "2026-10-10": {
+      "races": 47,
+      "payload_bytes": 440773,
+      "archive_bytes": 172845,
+      "archive_sha256": "9e4ee60a405c281531470f5a92ab5e745d3d69aebec39f1e1bee7fb0caa261c4",
+      "manifest": "manifests/2026-10-10.json",
+      "file": "details/2026-10-10.jsonl.gz"
+    },
+    "2026-10-11": {
+      "races": 68,
+      "payload_bytes": 613614,
+      "archive_bytes": 240937,
+      "archive_sha256": "963b5bfc58130ca9f61fa5ed0837630074c0972c1bfa02dc98b24a1111f04aac",
+      "manifest": "manifests/2026-10-11.json",
+      "file": "details/2026-10-11.jsonl.gz"
+    },
+    "2026-10-12": {
+      "races": 59,
+      "payload_bytes": 550984,
+      "archive_bytes": 217070,
+      "archive_sha256": "b0596df76e88f9cdb9c3f224db6ee6339a46e952ddb3fa69307a3597013608eb",
+      "manifest": "manifests/2026-10-12.json",
+      "file": "details/2026-10-12.jsonl.gz"
+    },
+    "2026-10-13": {
+      "races": 58,
+      "payload_bytes": 454168,
+      "archive_bytes": 181302,
+      "archive_sha256": "df48f7e59848394985d0e6b154eddf1ad890e0c4e9e3a24f05cfdc843962c666",
+      "manifest": "manifests/2026-10-13.json",
+      "file": "details/2026-10-13.jsonl.gz"
+    },
+    "2026-10-14": {
+      "races": 48,
+      "payload_bytes": 384820,
+      "archive_bytes": 152737,
+      "archive_sha256": "0b0cd5458cf4b95a7607343839aaae4c7bfadbf10ee6d6755fface90a54931f4",
+      "manifest": "manifests/2026-10-14.json",
+      "file": "details/2026-10-14.jsonl.gz"
+    },
+    "2026-10-15": {
+      "races": 48,
+      "payload_bytes": 366189,
+      "archive_bytes": 146380,
+      "archive_sha256": "e0fe0f28c497ddc81ae9d98695d15afeb33353439bf5f59cd368971c20c2b685",
+      "manifest": "manifests/2026-10-15.json",
+      "file": "details/2026-10-15.jsonl.gz"
+    },
+    "2026-10-16": {
+      "races": 36,
+      "payload_bytes": 269072,
+      "archive_bytes": 107504,
+      "archive_sha256": "5cadcee6863c58c83d07aadb69ca9d54fe3ad2a834dfb75c9ee814a9b4d41a9f",
+      "manifest": "manifests/2026-10-16.json",
+      "file": "details/2026-10-16.jsonl.gz"
+    },
+    "2026-10-17": {
+      "races": 58,
+      "payload_bytes": 679107,
+      "archive_bytes": 233576,
+      "archive_sha256": "56fe0ec371018f81c674c2abaa33a0dfebd75d044c49082af42ba03f7bd0281e",
+      "manifest": "manifests/2026-10-17.json",
+      "file": "details/2026-10-17.jsonl.gz"
+    },
+    "2026-10-18": {
+      "races": 80,
+      "payload_bytes": 930281,
+      "archive_bytes": 295420,
+      "archive_sha256": "db0bdeb71b5d5501e0be4d9115e09efc7bbc0ec0053ba130e8ad73e47de9876e",
+      "manifest": "manifests/2026-10-18.json",
+      "file": "details/2026-10-18.jsonl.gz"
+    },
+    "2026-10-19": {
+      "races": 47,
+      "payload_bytes": 510915,
+      "archive_bytes": 164149,
+      "archive_sha256": "3c0d44e5f60e3b7c0059e1fe1a97550bcd4ffc941b2aa41dc2432a7825f01b7e",
+      "manifest": "manifests/2026-10-19.json",
+      "file": "details/2026-10-19.jsonl.gz"
+    },
+    "2026-10-20": {
+      "races": 48,
+      "payload_bytes": 536800,
+      "archive_bytes": 173478,
+      "archive_sha256": "71de139518c03a57ca5bf92797f258fd3bf6e42aa6df79e77ab52e68d93ed59b",
+      "manifest": "manifests/2026-10-20.json",
+      "file": "details/2026-10-20.jsonl.gz"
+    },
+    "2026-10-21": {
+      "races": 48,
+      "payload_bytes": 574940,
+      "archive_bytes": 180958,
+      "archive_sha256": "0da2bbdbebb8bc71cc721834d82906c698ab422749d4012e938404ff8641ad20",
+      "manifest": "manifests/2026-10-21.json",
+      "file": "details/2026-10-21.jsonl.gz"
+    },
+    "2026-10-22": {
+      "races": 48,
+      "payload_bytes": 545386,
+      "archive_bytes": 175269,
+      "archive_sha256": "ceffc602419a37288a0741af5ee21c31725c30811d16e06774b182e1b2c4ba3c",
+      "manifest": "manifests/2026-10-22.json",
+      "file": "details/2026-10-22.jsonl.gz"
+    },
+    "2026-10-23": {
+      "races": 36,
+      "payload_bytes": 374171,
+      "archive_bytes": 131097,
+      "archive_sha256": "8729f63e7d0a6d852e18f67bf22afc24e14fc797d14553245bd53ffab8dab5e5",
+      "manifest": "manifests/2026-10-23.json",
+      "file": "details/2026-10-23.jsonl.gz"
+    }
+  },
+  "updated_at": "2026-11-23T00:43:30Z"
+}

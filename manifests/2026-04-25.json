@@ -1,0 +1,89 @@
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "date": "2026-04-25",
+  "exported_at": "2026-11-23T00:27:41Z",
+  "race_count": 11,
+  "payload_bytes_total": 80417,
+  "archive_file": "details/2026-04-25.jsonl.gz",
+  "archive_bytes": 27469,
+  "archive_sha256": "0215a434ae292f301d1165e563d5ac3850f497160b7c0e2c8ad0ef6042552f4e",
+  "races": [
+    {
+      "race_id": "jra-2026-04-25-京都-01",
+      "sha256": "b0879cdd29494c150ae0ea8d0469c21a1407f68783ff649829a39a17a212f07f",
+      "bytes": 7627,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-京都-02",
+      "sha256": "56368eaf735956df2139d0459f93c725f3a9574927cc287b937add21379af3ff",
+      "bytes": 7586,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-京都-03",
+      "sha256": "6b4d22ccb59eab181fd3521796a2231dd2f60ba1d1d24b988d35f6ab1dbdb10b",
+      "bytes": 7277,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-京都-04",
+      "sha256": "9a4225a47c8d63c5c6aa79eb08e98679dcaae09591866deabcd5bf9ea45dfbe2",
+      "bytes": 6071,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-東京-01",
+      "sha256": "d60af58a730b2b64c342f54c51f356b3c02d743afc7f008c9807a8d0489ccc89",
+      "bytes": 7011,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-東京-02",
+      "sha256": "de1d55431ce95ebe127fb0fe148f6f2f56532b1c43daf4e85449514ae6d50941",
+      "bytes": 7618,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-東京-03",
+      "sha256": "65ea6f3670a0bfad431c1477ac086dd1c340f7a1c3b1b008cf9b8ae14972d159",
+      "bytes": 6736,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-福島-01",
+      "sha256": "91dd80c98575a2660bd5f03e6f63adbb61a2632b209a4b441d09918af2f4672b",
+      "bytes": 7368,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-福島-02",
+      "sha256": "a8cedfaa91fe6d1d4937810897ed4dec62f6cb2b1fb4bed8a7062c4e95de72a9",
+      "bytes": 7722,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-福島-03",
+      "sha256": "f95efed542a6a8f54bee347657008bb4c6ab786cdf3ec2d417fa412d7c05d084",
+      "bytes": 7677,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "jra-2026-04-25-福島-04",
+      "sha256": "ff7e8453ad0fcde67ba6f669663e6b82acf9b028fd3c84627be8da050b24fd69",
+      "bytes": 7724,
+      "analysis_ready": 0,
+      "updated_at": 0
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "version": "arvexq-d1-details-archive-v1",
+  "date": "2026-09-17",
+  "exported_at": "2026-11-23T00:29:17Z",
+  "race_count": 9,
+  "payload_bytes_total": 37164,
+  "archive_file": "details/2026-09-17.jsonl.gz",
+  "archive_bytes": 15123,
+  "archive_sha256": "07c96b698356201a434e109b13d8d32b368474c0456f87facba85d15da249761",
+  "races": [
+    {
+      "race_id": "nar-2026-09-17-名古屋-01",
+      "sha256": "5dae6ac37456757f5742d577fd6e075f1db22339dba471aa2dd816ac042e25c7",
+      "bytes": 3943,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-03",
+      "sha256": "48770eb7be18a9cc573e02edd4b93d0ce930a229e922ce2480ed7f690d19128b",
+      "bytes": 3764,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-04",
+      "sha256": "89ce13d33bcab4011e54bd0009494dd4e28baa82c6e2cd6a5c34617b6b51c217",
+      "bytes": 3773,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-06",
+      "sha256": "ec38b6670acb31630989184ad0ddaf8360a7bbc35f973b44716741d00bd4b8ab",
+      "bytes": 4274,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-07",
+      "sha256": "a0d7d744cddc5855c282236118bfd064fd0d96089ea3168aadcc56d396f3c10f",
+      "bytes": 4307,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-11",
+      "sha256": "902d5ee0ecf4ddad23d5a2d79f6248b92763964d494c7a7569e0f4d766360a23",
+      "bytes": 4359,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-名古屋-12",
+      "sha256": "9b0a1d946d6e8df3793bf0e673a7a93cbc1c0fa23a340693e8d6057cab0df2f9",
+      "bytes": 4344,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-門別-01",
+      "sha256": "a1388460bddc18b14d3756dca769296a21b0a8b6dca348d19d057380361345ad",
+      "bytes": 4299,
+      "analysis_ready": 0,
+      "updated_at": 0
+    },
+    {
+      "race_id": "nar-2026-09-17-門別-10",
+      "sha256": "f183059858f22bc3d7d99cd1505870aaade24d0f3b5ac12a8f347a8aea30e09b",
+      "bytes": 4101,
+      "analysis_ready": 0,
+      "updated_at": 0
+    }
+  ]
+}
