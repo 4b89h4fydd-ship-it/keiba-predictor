@@ -52,9 +52,19 @@ from results.
 Acceptance is deliberately narrow (fail closed otherwise):
 
 - the detail is projection-tombstone shaped;
-- the product verifies (``unified_product.verified``) and its receipt
-  equals the lane marker's receipt, and the marker's ``publishedAt``
-  equals the product's ``capturedAt``;
+- the product verifies as a sealed record (``unified_product.
+  verified_sealed``: the receipt binds the content and the roster is
+  bound to the full card, so a runner scratched AFTER sealing — still
+  on the card, still in the roster — does not void the seal; the
+  stricter ``verified`` binding to active runners stays the gate for
+  serving a forecast as current) and its receipt equals the lane
+  marker's receipt, and the product's ``capturedAt`` is one of the
+  marker's publication stamps (``publishedAt`` for an unrevised or
+  re-captured publication; ``firstPublishedAt`` for a surgical
+  revision such as the place-EV upgrade, which re-seals the product
+  in place and keeps the first publication's ``capturedAt`` while
+  the marker's ``publishedAt`` advances to the revision time —
+  Mizusawa 8R, 2026-11-23);
 - the marker is one of the publish lane's known ability lanes
   (``v9b-cal-market`` / ``v8-elo-speed2`` / ``v1-prior`` — the jumps
   lane), whose prediction-block shapes are mirrored from
@@ -125,10 +135,11 @@ def _regenerate_tickets(detail: dict[str, Any],
     from rewrite.analysis.tickets import generate_tickets
 
     # The runner set is the product's own diagnosis set, NOT the
-    # detail's card: a scratched runner stays on the card but is not
-    # part of the sealed forecast (verified() binds the roster to the
-    # active runners), and the original blocks were built from the
-    # forecast's runners only.
+    # detail's card: a runner scratched before sealing is on the card
+    # but not in the sealed forecast, and a runner scratched after
+    # sealing is in both — either way the original blocks were built
+    # from the forecast's runners only, so the diagnosis set is the
+    # set that reproduces the sealed ticket plan.
     diagnosis = {}
     for entry in product.get("diagnosis") or []:
         if isinstance(entry, dict) and isinstance(
@@ -214,8 +225,14 @@ def sealed_product_restore(detail: Any) -> dict[str, Any] | None:
     from scripts.arvexq_protect_sync import _projection_tombstone
     if not _projection_tombstone(detail):
         return None
-    from arvexq.prediction.unified_product import MODEL_VERSION, verified
-    product = verified(detail)
+    from arvexq.prediction.unified_product import (
+        MODEL_VERSION, verified_sealed)
+    # Sealed-record verification, not current authorization: the
+    # 2026-11-23 Mizusawa 9R product stopped passing verified() when
+    # its #3 was scratched after publication (the roster binds to
+    # active runners there), while the seal itself is intact — the
+    # restore rebuilds the pre-off record, scratches included.
+    product = verified_sealed(detail)
     if product is None:
         return None
     meta = detail.get("preparedMeta") or {}
@@ -226,7 +243,17 @@ def sealed_product_restore(detail: Any) -> dict[str, Any] | None:
         return None
     if marker.get("receiptSha256") != product.get("receiptSha256"):
         return None
-    if marker.get("publishedAt") != product.get("capturedAt"):
+    # The product's capture stamp must be one of the marker's own
+    # publication stamps.  An unrevised (or re-capturing) publication
+    # has publishedAt == capturedAt; a surgical revision (the lane's
+    # place-EV upgrade, _apply_place_ev_upgrade) re-seals the product
+    # in place — capturedAt stays at the first publication, the
+    # marker's firstPublishedAt points at it, and publishedAt
+    # advances to the revision time.  The receipt equality above is
+    # the content binding; this is the chain-consistency check that
+    # a marker transplanted from another publication fails.
+    if product.get("capturedAt") not in {
+            marker.get("publishedAt"), marker.get("firstPublishedAt")}:
         return None
     lane_shape = LANE_SHAPES.get(str(marker.get("abilityLane") or ""))
     if lane_shape is None:
