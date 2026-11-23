@@ -737,6 +737,48 @@ jobs:
               --report morning-d1-audit.json
           fi
 
+      - name: Build static API packs from local payload (parallel, migration block A)
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GitHub-only migration block A: build the day's static packs
+          # directly from this lane's own prefetch-payload.json, in
+          # parallel with the D1 sync above (which stays untouched).
+          # Fail-soft by design: the helper always exits 0.
+          # Fix program B (2026-11-23): if: always() above — a hard
+          # failure in the D1 persist / D1 read-back verification steps
+          # must not skip pack generation: prefetch-payload.json is
+          # already complete locally at that point, so the packs are
+          # built from it alone as the fallback.  When no local payload
+          # exists the helper warns and skips (nothing is fabricated;
+          # a facts-only payload is NOT used for a full build, since
+          # its mark-less details would overwrite good packs).
+          if [ -s prefetch-payload.json ]; then
+            bash scripts/arvexq_static_api_lane_publish.sh prefetch-payload.json full
+          else
+            echo "::warning::STATIC_API_FALLBACK_SKIP no local prefetch-payload.json; packs keep last published state"
+          fi
+          git checkout -B prefetch-continue HEAD || true
+
+      - name: Stage issued payload for the static API follow-up lane
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
+        run: |
+          mkdir -p issued-payloads
+          if [ -s prefetch-payload.json ]; then
+            cp prefetch-payload.json "issued-payloads/prefetch-payload-$TARGET_DATE.json"
+          fi
+
+      - name: Upload issued payload artifact
+        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-prefetch-${{ github.run_id }}
+          path: issued-payloads
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Stop ARVEXQ
         if: always()
         run: |
