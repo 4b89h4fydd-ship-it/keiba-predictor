@@ -334,6 +334,59 @@ magnitude 0.10, none of them validated:
         stamped bias-pace-trial-20261119 on every publication
         it touches, with the day's sampleRaces on the stamp.
 
+    full-coverage terms (2026-11-23, nk-materials-v14) — wired
+        by the user's instruction "全部取れて全部効いてるように
+        しろ" (collect EVERYTHING and make ALL of it count),
+        after the full-coverage audit found five more collected
+        materials that reached the file but no term read:
+
+        nk_best     the speed page's best index, through
+            integrated_eval's own last_vs_best feature (latest
+            index minus the horse's best): computed inside
+            integrate() since v1 and reported in its detail,
+            but no weight ever read it. The adapter applies it
+            as a post-integrate logit shift (integrated_eval is
+            frozen and has no weight slot the adapter may set
+            for this feature alone), +0.10 rewarding a latest
+            run at the horse's demonstrated peak (0 = at peak).
+        siblings    the pedigree block's sibling record (count
+            / total wins from the collected horse profiles),
+            scored as wins per sibling shrunk toward 1.0 with
+            prior strength 2 siblings. Until v14 the pedigree
+            term read sireCourse only and the siblings rode
+            unread. +0.10.
+        press_rating  the newspaper rating （レーティング） the
+            builder carries as pressRating when a collection
+            saves one. No current collection saves the key, so
+            the term is armed but dataless today — it lights
+            the day a rating is collected, and its coverage is
+            counted so the zero stays on the record. +0.10.
+        pace_early  the AI pace forecast's start / corner3
+            positions, as a sibling of the corner4 pace term:
+            the same signed construction (sign of the pace
+            label times the mean early percentile centred on
+            0.5), so the early shape of the forecast counts
+            alongside the late shape instead of being carried
+            unread. +0.10.
+        odds_forecast  netkeiba's published FORECAST win odds
+            (the materials file's forecastWin — NOT the
+            market's actual odds; it is never promoted to the
+            actual cells), scored as -log(forecastWin) so a
+            shorter forecast price reads higher. This is
+            netkeiba's own expectation as a material, distinct
+            from the odds-movement family, which keeps its
+            actual-odds definitions. +0.10.
+
+        All five are UNVALIDATED trial terms at +0.10, applied
+        as post-integrate logit shifts under the same liveness
+        rule as horse-analysis (at least three scored runners
+        and differing scores), stamped
+        full-coverage-trial-20261123 on every publication any
+        of them touches. Their movement is measured in the
+        2026-11-23 full-coverage REPORT's ablation (each family
+        removed in turn over real packs; a family that does not
+        move the numbers is reported as such, not as wired).
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -383,7 +436,15 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # still-pre-post races: every v12-stamped race with a materials
 # entry re-issues exactly once through the full rebuild, which
 # re-derives the marks from the adjusted probabilities.
-NK_MATERIALS_VERSION = "nk-materials-v13"
+# nk-materials-v14 (2026-11-23): the full-coverage wiring (see
+# the module docstring): five collected-but-unread materials
+# gain trial terms (nk_best / siblings / press_rating /
+# pace_early / odds_forecast), and the builder's
+# details-independent joins restore pedigree / sireCourse /
+# courseJockey / courseTrainer on days with no race-details
+# input. The bump re-issues v13-stamped pre-race races once so
+# the new terms and the restored blocks reach them.
+NK_MATERIALS_VERSION = "nk-materials-v14"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -540,6 +601,26 @@ NK_BIAS_PACE_LABEL = (
     "unvalidated)")
 NK_BIAS_PACE_TRIAL = "bias-pace-trial-20261119"
 
+# Full-coverage terms (2026-11-23, nk-materials-v14): TRIAL
+# weights, UNVALIDATED — see the module docstring. Five
+# collected materials that reached the materials file unread
+# (nk_best's last_vs_best, the pedigree siblings, the
+# newspaper rating, the pace forecast's early phases, and
+# netkeiba's forecast win odds) join as post-integrate logit
+# shifts at +0.10 each, under the horse-analysis liveness rule.
+FULL_COVERAGE_WEIGHT = 0.10
+NK_FULL_COVERAGE_LABEL = (
+    "full-coverage-trial-20261123(nk-best+0.10/siblings+0.10/"
+    "press-rating+0.10/pace-early+0.10/odds-forecast+0.10;"
+    "unvalidated)")
+NK_FULL_COVERAGE_TRIAL = "full-coverage-trial-20261123"
+FULL_COVERAGE_TERMS = ("nk_best", "siblings", "press_rating",
+                       "pace_early", "odds_forecast")
+# Siblings shrinkage: wins per sibling toward a generic 1.0
+# wins per sibling, with the strength of 2 prior siblings.
+SIBLING_PRIOR_COUNT = 2.0
+SIBLING_PRIOR_WINS_PER = 1.0
+
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
 
@@ -585,6 +666,84 @@ def pace_score(pace, label):
     if pct is None:
         return None
     return sign * (pct - 0.5) * 2.0
+
+
+def nk_best_score(horse):
+    """last_vs_best for one parsed materials horse: the latest
+    speed index (the last non-null entry of nk_recent) minus
+    the horse's own best index (nk_best) — integrated_eval's
+    own trend feature, which its frozen weights never read.
+    0 means the latest run equals the horse's demonstrated
+    peak; negative is the headroom below it. None when either
+    side is missing — no evidence, no term."""
+    if not isinstance(horse, dict):
+        return None
+    best = _num(horse.get("nk_best"))
+    recent = horse.get("nk_recent")
+    if best is None or not isinstance(recent, list):
+        return None
+    pts = [v for v in recent if v is not None]
+    if not pts:
+        return None
+    return pts[-1] - best
+
+
+def siblings_score(pedigree):
+    """The pedigree block's sibling record as one score: wins
+    per sibling, shrunk toward SIBLING_PRIOR_WINS_PER with
+    prior strength SIBLING_PRIOR_COUNT siblings, so a single
+    prolific sibling does not read as a proven family. None
+    when the block or the siblings cell is missing or carries
+    no siblings — no evidence, no term."""
+    if not isinstance(pedigree, dict):
+        return None
+    sib = pedigree.get("siblings")
+    if not isinstance(sib, dict):
+        return None
+    count = _num(sib.get("count"))
+    wins = _num(sib.get("wins"))
+    if count is None or wins is None or count <= 0:
+        return None
+    return (wins + SIBLING_PRIOR_COUNT * SIBLING_PRIOR_WINS_PER) / (
+        count + SIBLING_PRIOR_COUNT)
+
+
+def pace_early_score(pace, label):
+    """The pace term's early-phase sibling (see the module
+    docstring): sign(label) * (mean start / corner3 percentile
+    - 0.5) * 2, over the early phases the horse carries. None
+    when the label carries no direction or the horse has no
+    early forecast position."""
+    sign = _PACE_SIGNS.get(label) if isinstance(label, str) else None
+    if sign is None or not isinstance(pace, dict):
+        return None
+    pcts = []
+    for phase in ("start", "corner3"):
+        cell = pace.get(phase)
+        if not isinstance(cell, dict):
+            continue
+        pct = _num(cell.get("pct"))
+        if pct is not None:
+            pcts.append(pct)
+    if not pcts:
+        return None
+    return sign * (sum(pcts) / len(pcts) - 0.5) * 2.0
+
+
+def odds_forecast_score(odds):
+    """netkeiba's published FORECAST win odds as one score:
+    -log(forecastWin), so a shorter forecast price reads
+    higher. This is the forecast line under its own name — it
+    is NOT the market's actual odds and never feeds the
+    odds-movement features. None when the block carries no
+    forecast line (or a line of 1.0 or less, which is not an
+    odds value) — no evidence, no term."""
+    if not isinstance(odds, dict):
+        return None
+    fw = _num(odds.get("forecastWin"))
+    if fw is None or fw <= 1.0:
+        return None
+    return -math.log(fw)
 
 
 def parse_materials_payload(payload) -> dict:
@@ -731,6 +890,11 @@ def materials_fingerprint(entry) -> dict:
         # arrive after first publication re-qualifies like any
         # other material growth.
         "comment": 0, "grade": 0,
+        # 2026-11-23 (v14): the full-coverage families join the
+        # fingerprint on the same rule — material growth in any
+        # of them re-qualifies a frozen race.
+        "nk_best": 0, "siblings": 0, "press_rating": 0,
+        "pace_early": 0, "odds_forecast": 0,
     }
     if not isinstance(entry, dict):
         return counts
@@ -775,6 +939,16 @@ def materials_fingerprint(entry) -> dict:
             counts["course_jockey"] += 1
         if person_course_score(persons.get("trainer")) is not None:
             counts["course_trainer"] += 1
+        if nk_best_score(horse) is not None:
+            counts["nk_best"] += 1
+        if siblings_score(horse.get("pedigree")) is not None:
+            counts["siblings"] += 1
+        if horse.get("pressRating") is not None:
+            counts["press_rating"] += 1
+        if pace_early_score(horse.get("pace"), pace_label) is not None:
+            counts["pace_early"] += 1
+        if odds_forecast_score(horse.get("odds")) is not None:
+            counts["odds_forecast"] += 1
     return counts
 
 
@@ -1350,6 +1524,15 @@ def apply_nk_materials(forecast: RaceForecast, entry,
                 (mat.get("coursePersons") or {}).get("jockey")),
             "cp_trainer": person_course_score(
                 (mat.get("coursePersons") or {}).get("trainer")),
+            # Full-coverage families (v14, 2026-11-23 — see the
+            # module docstring): the raw blocks the new terms
+            # read, scored below as post-integrate logit shifts.
+            # nk_best_score reads this dict's own nk_recent /
+            # nk_best keys, already carried above for integrate().
+            "pedigree_block": mat.get("pedigree"),
+            "press_rating": mat.get("pressRating"),
+            "pace_block": mat.get("pace"),
+            "odds_block": mat.get("odds"),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -1450,6 +1633,42 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         total = sum(shifted.values())
         probs = {n: p / total for n, p in shifted.items()}
         cp_applied.append(kind)
+    # Full-coverage terms (2026-11-23 trial, nk-materials-v14
+    # — see the module docstring): the same post-integrate
+    # logit shift, once per family, under the same liveness
+    # rule (at least three scored runners and differing
+    # scores). A family whose material a day does not carry
+    # (press_rating until a collection saves ratings) simply
+    # never shifts, and its coverage count below stays on the
+    # record at 0.
+    fc_scores = {
+        "nk_best": [nk_best_score(h) for h in horses],
+        "siblings": [siblings_score(h.get("pedigree_block"))
+                     for h in horses],
+        "press_rating": [h.get("press_rating") for h in horses],
+        "pace_early": [pace_early_score(
+            h.get("pace_block"), entry.get("paceLabel"))
+            for h in horses],
+        "odds_forecast": [odds_forecast_score(h.get("odds_block"))
+                          for h in horses],
+    }
+    fc_applied: list = []
+    for term_name in FULL_COVERAGE_TERMS:
+        scores = fc_scores[term_name]
+        coverage[term_name] = sum(
+            1 for s in scores if s is not None)
+        fc_z = _zscores(scores)
+        if not any(z is not None and z != 0.0 for z in fc_z):
+            continue
+        shifted = {}
+        for h, z in zip(horses, fc_z):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(FULL_COVERAGE_WEIGHT * z)
+                if z is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
+        fc_applied.append(term_name)
     # Same-day bias pace term (2026-11-19 trial — see the
     # module docstring): the publish lane's overlay of the
     # day's bias read on this race's pace forecast, applied
@@ -1553,12 +1772,17 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     if cp_applied:
         label_parts.append(NK_COURSE_PERSONS_LABEL)
         info["coursePersonsTrial"] = NK_COURSE_PERSONS_TRIAL
+    if fc_applied:
+        label_parts.append(NK_FULL_COVERAGE_LABEL)
+        info["fullCoverageTrial"] = NK_FULL_COVERAGE_TRIAL
+        info["fullCoverageTerms"] = fc_applied
     if bp_applied:
         label_parts.append(NK_BIAS_PACE_LABEL)
         info["biasPaceTrial"] = NK_BIAS_PACE_TRIAL
     if len(label_parts) > 1:
         info["weights"] = "+".join(label_parts)
     if not ha_applied and not cp_applied and not bp_applied \
+            and not fc_applied \
             and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
@@ -1596,6 +1820,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         post_terms.add("horse_analysis")
     for kind in cp_applied:
         post_terms.add(f"course_{kind}")
+    post_terms.update(fc_applied)
     if bp_applied:
         post_terms.add("bias_pace")
     if post_terms:
