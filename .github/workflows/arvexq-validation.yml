@@ -315,12 +315,12 @@ jobs:
               raise SystemExit('legacy combined or network-based AI path must not exist')
           missing=[x for x in prefetch_required if x not in prefetch]
           if missing:raise SystemExit('prefetch must explicitly materialize and retain diagnosis: '+repr(missing))
-          workflow_required=['--phase\', \'collect','--phase\', \'analyze','persisted-facts.json','D1_STORED_EVIDENCE_VERIFIED','D1_MISSING_CARDS','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','Stop bootstrap server to release SQLite writers','arvexq_sqlite_health.py']
+          workflow_required=['--phase\', \'collect','--phase\', \'analyze','persisted-facts.json','LOCAL_PERSISTED_FACTS_VERIFIED','arvexq_verify_persisted_inputs.py','persisted-evidence-check.json','ARVEXQ_PREFETCH_WORKERS: "1"','ARVEXQ_PREFETCH_ANALYSIS_WORKERS: "1"','Validate restored SQLite cache','Stop bootstrap server to release SQLite writers','arvexq_sqlite_health.py']
           missing=[x for x in workflow_required if x not in prefetch_workflow]
           if missing:raise SystemExit('prefetch workflow correctness guard missing: '+repr(missing))
           order=('Collect racecards and full careers','Persist collected facts using the existing D1 sync pipeline',
-                 'Read D1 facts back and require identical horse/history evidence',
-                 'Analyze only persisted D1 data','Freeze morning selected and special predictions')
+                 'Build persisted facts from collected local facts',
+                 'Analyze only persisted local facts','Freeze morning selected and special predictions')
           positions=[prefetch_workflow.find(label) for label in order]
           if -1 in positions or positions!=sorted(positions):
               raise SystemExit('prediction must never precede persisted verified facts')
