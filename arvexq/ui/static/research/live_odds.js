@@ -27,12 +27,18 @@
       sourcePublishedAt:body.sourcePublishedAt||'',popularitySource:body.popularitySource||'',
       oddsUpdatedAt:latest?new Date(latest*1000).toISOString():body.oddsUpdatedAt||''};
   }
+  // Live odds come from the detached relay worker (GitHub-only migration,
+  // block C). The app may be served from GitHub Pages, where an
+  // origin-relative '/api/live-odds/' cannot reach the relay, so the
+  // relay origin is absolute. The relay itself implements the saved /
+  // unavailable fallbacks server-side; the retired D1-backed API worker
+  // fallback (kraiz-api /api/odds/) is intentionally gone.
+  var RELAY_ORIGIN='https://arvexq-live-relay.4b89h4fydd.workers.dev';
   function fetch(id,fetchJson,force){
     var key=String(id||'');if(!key)return Promise.reject(Error('race id required'));
     if(!pending[key])pending[key]=Promise.resolve().then(function(){
-      return fetchJson('/api/live-odds/'+encodeURIComponent(key)+(force?'?force=1':''),6500)
-        .then(function(body){return normalize(body,key)})
-        .catch(function(){return fetchJson('https://kraiz-api.4b89h4fydd.workers.dev/api/odds/'+encodeURIComponent(key)+'?t='+Date.now(),6500).then(function(body){return normalize(body,key)})});
+      return fetchJson(RELAY_ORIGIN+'/api/live-odds/'+encodeURIComponent(key)+(force?'?force=1':''),6500)
+        .then(function(body){return normalize(body,key)});
     }).finally(function(){delete pending[key]});
     return pending[key];
   }
