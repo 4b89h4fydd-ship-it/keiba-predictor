@@ -57,7 +57,11 @@ on:
         type: string
 
 permissions:
-  contents: read
+  # contents: write is for the migration block A static pack step below
+  # (it commits only arvexq/ui/static/api-static packs, like the other
+  # lanes' static publishers); the publish step itself stays read-only
+  # against the repository.
+  contents: write
 
 # Serialize this workflow's own runs: a schedule run and a
 # workflow_run follow-up (or two follow-ups from back-to-back
@@ -87,6 +91,41 @@ jobs:
           else
             python3 scripts/arvexq_rewrite_publish.py 2>&1 | tee publish-run.log
           fi
+      - name: Build static API packs from emitted publish payload (parallel, migration block A)
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GitHub-only migration block A: arvexq_rewrite_publish.py now
+          # also emits rewrite-publish-payload-<date>.json holding the
+          # exact details it published and verified.  Overlay each onto
+          # the committed packs, in parallel with the D1 POST above
+          # (which stays untouched).  Fail-soft: helper exits 0.
+          for f in rewrite-publish-payload-*.json; do
+            [ -s "$f" ] || continue
+            bash scripts/arvexq_static_api_lane_publish.sh "$f" merge
+          done
+          git checkout -B publish-continue HEAD || true
+
+      - name: Upload issued payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-rewrite-${{ github.run_id }}
+          path: rewrite-publish-payload-*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload local sealed snapshots (fix program B receipt-verification store)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-local-snapshots-${{ github.run_number }}
+          path: rewrite-publish-snapshots
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Upload publish audit log
         if: always()
         uses: actions/upload-artifact@v4
