@@ -54,16 +54,30 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True),
                          "roster_incomplete")
 
-    def test_workflow_facts_only_stage_and_retired_d1_overlay(self) -> None:
+    def test_workflow_d1_facts_stage_retired_and_local_publish(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
-        fact_stage = workflow.split("Persist collected facts using the existing D1 sync pipeline",1)[1].split(
-            "Build persisted facts from collected local facts",1)[0]
-        self.assertIn("--facts-only", fact_stage)
-        # Cloudflare exit (2026-11-23): the analyzed payload is published
-        # only as static packs; the D1 overlay chain is retired.
+        # Cloudflare exit (2026-11-23): the D1 facts sync stage and
+        # the D1 overlay chain are retired.  The rewrite publish
+        # reads the locally built persisted facts plus the
+        # committed packs, between the persisted-facts build and
+        # the analysis stage, and posts nothing.
+        self.assertNotIn(
+            "Persist collected facts using the existing D1 sync pipeline",
+            workflow)
         self.assertNotIn("Select only missing or thin D1 details", workflow)
         self.assertNotIn("Push prepared day repairs to D1 in safe batches", workflow)
         self.assertNotIn("Verify prepared day and analysis from D1", workflow)
+        publish_stage = workflow.split(
+            "Publish rewrite forecasts for the persisted day (local input, GitHub-only)", 1)[1].split(
+            "Analyze only persisted local facts", 1)[0]
+        self.assertIn("--local-input", publish_stage)
+        self.assertIn("persisted-facts.json", publish_stage)
+        # No token gate and no API base in the executable lines:
+        # the step must run (and publish) with Cloudflare gone.
+        self.assertNotIn("PIGGYBACK_PUBLISH_SKIPPED", publish_stage)
+        self.assertNotIn("secrets.", publish_stage)
+        self.assertNotIn('ARVEXQ_API_BASE="$CLOUDFLARE_API_BASE"',
+                         publish_stage)
 
     def test_partial_roster_with_ai_is_still_a_repair(self) -> None:
         prepared = race(self.id, (1, 2, 3, 4))

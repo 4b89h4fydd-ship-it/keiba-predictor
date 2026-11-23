@@ -90,8 +90,8 @@ class PersistedInputTests(unittest.TestCase):
         prefetch = (ROOT / ".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         steps = [
             "Collect racecards and full careers without running predictions",
-            "Persist collected facts using the existing D1 sync pipeline",
             "Build persisted facts from collected local facts",
+            "Publish rewrite forecasts for the persisted day (local input, GitHub-only)",
             "Analyze only persisted local facts and prepare original marks and bets",
             "Freeze morning selected and special predictions for all races",
         ]
@@ -100,6 +100,14 @@ class PersistedInputTests(unittest.TestCase):
         self.assertIn("'--phase', 'collect'", prefetch)
         self.assertIn("'--phase', 'analyze'", prefetch)
         self.assertIn("LOCAL_PERSISTED_FACTS_VERIFIED", prefetch)
+        # Cloudflare exit (2026-11-23): the D1 facts sync stage is
+        # retired, and the rewrite publish runs on local input.
+        self.assertNotIn(
+            "Persist collected facts using the existing D1 sync pipeline",
+            prefetch)
+        self.assertIn("--local-input", prefetch)
+        self.assertIn("Merge emitted rewrite payload into static packs",
+                      prefetch)
         result = (ROOT / ".github/workflows/arvexq-result-repair.yml").read_text(encoding="utf-8")
         self.assertIn("--allow-empty-day", result)
         self.assertIn("arvexq_restore_result_day.py", result)

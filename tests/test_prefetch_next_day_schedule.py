@@ -106,8 +106,8 @@ class PrefetchNextDayScheduleTest(unittest.TestCase):
             "Discover all officially available races",
             "Collect racecards and full careers without running predictions",
             "Publish lightweight racecards independent of D1 capacity",
-            "Persist collected facts using the existing D1 sync pipeline",
             "Build persisted facts from collected local facts",
+            "Publish rewrite forecasts for the persisted day (local input, GitHub-only)",
         ):
             with self.subTest(step=name):
                 self.assertNotIn("ARVEXQ_DAY_AHEAD", step_block(self.workflow, name))
