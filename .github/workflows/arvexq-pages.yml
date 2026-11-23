@@ -50,11 +50,18 @@ jobs:
           python scripts/arvexq_independence_audit.py
       - name: Build static app
         shell: bash
+        env:
+          # Project-site subpath: without this the generated HTML and
+          # the app's fetch builders use origin-root absolute paths,
+          # which 404 under https://<owner>.github.io/keiba-predictor/.
+          ARVEXQ_BASE_PATH: '/keiba-predictor/'
         run: |
           python build_static.py
           test -s dist/index.html
           test -s dist/version.json
           grep -qi '<html' dist/index.html
+          grep -q 'window.ARVEXQ_BASE_PATH="/keiba-predictor/";' dist/index.html
+          grep -q 'src="/keiba-predictor/app-' dist/index.html
       - name: Assert published site stays under the GitHub Pages 1GB limit
         shell: bash
         run: |
