@@ -1,33 +1,42 @@
 name: ARVEXQ Static API
 
 # Regenerates the same-origin static API packs (arvexq/ui/static/api-static)
-# that the app now reads first, so the public read path does not depend on
-# the D1-backed Worker API.  Transitional generator: it reads the day back
-# from the API exactly like the posting scripts do and republishes it as
-# static files.  While the API is unavailable the generator fails soft and
-# the last committed packs stay deployed.
+# that the app reads first, so the public read path does not depend on
+# the D1-backed Worker API.
 #
-# The end state is for the prefetch / publish lanes to feed the same
-# builder from their local payloads (--input), removing the read-back.
+# GitHub-only migration, block A (2026-11-23): the packs are now built
+# ONLY from lane payloads via `arvexq_static_api_build.py --input`.
+# The old transitional read-back (`--fetch-date`, which re-read the day
+# from the D1-backed API) is removed from this workflow: a standalone
+# run has no payload of its own, so this workflow is the follow-up path
+# for lanes that uploaded an issued-payload artifact but whose in-run
+# pack publish was deferred (push race, outage).  The lanes themselves
+# also build and commit packs in-run from the same payloads
+# (scripts/arvexq_static_api_lane_publish.sh), in parallel with — not
+# instead of — their existing D1 sync steps.
+#
+# Artifact contract (uploaded by prefetch / sync / rewrite-publish):
+#   artifact name:  arvexq-issued-payload-*
+#   files:          prefetch-payload-<date>.json        (full day)
+#                   live-payload-<date>.json            (delta, merge)
+#                   rewrite-publish-payload-<date>.json (delta, merge)
+# Full payloads are applied first, then deltas are merged on top.
 
 on:
   workflow_run:
     workflows: ["ARVEXQ Full Prefetch", "arvexq-rewrite-publish", "ARVEXQ Realtime Sync"]
     types: [completed]
     branches: [main]
-  schedule:
-    # Safety net only (schedules have starved before): every 30 min,
-    # JST 05:30-23:30 (UTC 20:30 prev day - 14:30).
-    - cron: "*/30 0-14,20-23 * * *"
   workflow_dispatch:
     inputs:
-      date:
-        description: "Target date (YYYY-MM-DD); empty = today and tomorrow JST"
+      payload_run_id:
+        description: "Run id that uploaded an arvexq-issued-payload-* artifact; empty = triggering run only"
         required: false
         type: string
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: arvexq-static-api
@@ -44,30 +53,56 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Generate static API packs
-        env:
-          INPUT_DATE: ${{ inputs.date }}
+      - name: Download issued payload artifact from the triggering lane run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: arvexq-issued-payload-*
+          merge-multiple: true
+          path: payload-in
+          run-id: ${{ inputs.payload_run_id || github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+        continue-on-error: true
+      - name: Generate static API packs from lane payloads (--input only)
         run: |
           set -u
-          if [ -n "$INPUT_DATE" ]; then
-            DATES="$INPUT_DATE"
-          else
-            DATES="$(TZ=Asia/Tokyo date +%F) $(TZ=Asia/Tokyo date -d '+1 day' +%F)"
-          fi
           ok=0
-          for d in $DATES; do
-            if python scripts/arvexq_static_api_build.py --fetch-date "$d" \
-                 --out-dir arvexq/ui/static/api-static --prune-days 14; then
-              ok=1
-            else
-              echo "::warning::Static API generation failed for $d (API unavailable?); keeping last packs"
-            fi
+          # Sorted order applies a date's prefetch- full payload before
+          # its live-/rewrite- deltas (prefetch- < rewrite- is not
+          # guaranteed across dates, but merges only touch their own
+          # date's packs, which the full build for that date precedes
+          # whenever both are in the same artifact set).
+          for f in $(ls payload-in/*.json 2>/dev/null | sort); do
+            case "$(basename "$f")" in
+              prefetch-payload-*)
+                if python scripts/arvexq_static_api_build.py --input "$f" \
+                     --out-dir arvexq/ui/static/api-static --prune-days 14; then
+                  ok=1
+                else
+                  echo "::warning::Static API generation failed for $f; keeping last packs"
+                fi
+                ;;
+              live-payload-*|rewrite-publish-payload-*)
+                if python scripts/arvexq_static_api_build.py --input "$f" \
+                     --out-dir arvexq/ui/static/api-static --prune-days 14 \
+                     --merge-existing; then
+                  ok=1
+                else
+                  echo "::warning::Static API merge failed for $f; keeping last packs"
+                fi
+                ;;
+              *)
+                echo "::warning::Ignoring unrecognized payload file $f"
+                ;;
+            esac
           done
+          if [ "$ok" -ne 1 ]; then
+            echo "::warning::No lane payload available; static packs unchanged (read-back generation was retired in migration block A)"
+          fi
           echo "generated_any=$ok" >> "$GITHUB_ENV"
       - name: Commit packs and dispatch web deploy
         if: env.generated_any == '1'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add arvexq/ui/static/api-static
           if git diff --cached --quiet; then
