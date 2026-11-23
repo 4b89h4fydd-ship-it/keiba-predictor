@@ -38,7 +38,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from arvexq.prediction.unified_product import (
-    MODEL_VERSION, VERSION, canonical_receipt, verified)
+    MODEL_VERSION, VERSION, canonical_receipt, verified, verified_sealed)
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.tickets import generate_tickets
 from rewrite.safety.probability import distribution, marginals
@@ -212,6 +212,76 @@ class SealedProductRestoreTest(TestCase):
         win = restored["prediction"]["stages"]["probability"]["value"]["win"]
         self.assertEqual(set(win), {str(n) for n in sorted(WIN)})
 
+    def test_restore_with_post_sealing_scratch_in_roster(self):
+        # Mizusawa 9R (2026-11-23): #3 was scratched AFTER the product
+        # was sealed, so the sealed roster (and diagnosis) still
+        # carries it while the card marks it inactive.  verified()
+        # binds the roster to the ACTIVE runners and rightly stops
+        # authorizing the forecast as current — but the seal itself
+        # is intact, and the restore rebuilds the pre-off record,
+        # so it must accept the product via verified_sealed.
+        detail = _tombstoned()
+        for horse in detail["horses"]:
+            if horse["horseNumber"] == 8:
+                horse["status"] = "出走取消"
+                horse["scratched"] = True
+        self.assertIsNone(verified(detail))
+        self.assertIsNotNone(verified_sealed(detail))
+        restored = sealed_product_restore(detail)
+        self.assertIsNotNone(restored)
+        win = restored["prediction"]["stages"]["probability"]["value"]["win"]
+        self.assertEqual(set(win), {str(n) for n in sorted(WIN)})
+
+    def test_restore_rejects_roster_horse_removed_from_card(self):
+        # The sealed binding still requires the card and the roster
+        # to name the same runners: a roster horse missing from the
+        # card entirely is not a scratch, it is a different card.
+        detail = _tombstoned()
+        detail["horses"] = [h for h in detail["horses"]
+                             if h["horseNumber"] != 8]
+        self.assertIsNone(verified_sealed(detail))
+        self.assertIsNone(sealed_product_restore(detail))
+
+    def test_restore_rejects_renamed_card_horse(self):
+        detail = _tombstoned()
+        for horse in detail["horses"]:
+            if horse["horseNumber"] == 8:
+                horse["name"] = "H8-renamed"
+        self.assertIsNone(verified_sealed(detail))
+        self.assertIsNone(sealed_product_restore(detail))
+
+    def test_restore_surgical_revision_marker(self):
+        # Mizusawa 8R (2026-11-23): the place-EV upgrade re-sealed
+        # the product in place (ticketPlan gained placeExpectedValues,
+        # receipt changed) while capturedAt stayed at the first
+        # publication; the marker's publishedAt advanced to the
+        # revision time and its firstPublishedAt points at the
+        # product's capturedAt.  The restore must accept that chain.
+        product = _product()
+        product["ticketPlan"]["placeExpectedValues"] = [
+            {"horseNumber": 1, "top3Probability": 0.9,
+             "placeOddsLow": 1.5, "placeOddsHigh": 2.0,
+             "expectedValueLow": 1.35, "expectedValueHigh": 1.8}]
+        product["receiptSha256"] = canonical_receipt(product)
+        marker = _marker(product)
+        marker["publishedAt"] = "2026-11-23T13:38:24+09:00"
+        marker["firstPublishedAt"] = CAPTURED
+        marker["revision"] = {
+            "kind": "place-ev-upgrade", "reason": "place-ev-upgrade",
+            "revisedAt": "2026-11-23T13:38:24+09:00", "revisionCount": 1,
+            "previousReceiptSha256": "a" * 64}
+        detail = _tombstoned(product, marker)
+        self.assertIsNotNone(sealed_product_restore(detail))
+
+    def test_restore_rejects_marker_with_unrelated_timestamps(self):
+        # Receipt matches but neither publication stamp names the
+        # product's capture: the marker belongs to another chain.
+        product = _product()
+        marker = _marker(product)
+        marker["publishedAt"] = "2026-11-23T13:38:24+09:00"
+        marker["firstPublishedAt"] = "2026-11-23T09:00:00+09:00"
+        self.assertIsNone(sealed_product_restore(_tombstoned(product, marker)))
+
     def test_restore_prior_lane_shape(self):
         # Fukushima 4R (2026-11-23, jumps): published by the v1-prior
         # lane. The restored prediction carries that lane's shape.
@@ -243,6 +313,22 @@ class ProtectDetailSeamTest(TestCase):
         self.assertEqual(out["predictionStatus"], "ready")
         self.assertEqual(len(out["predictionMarks"]), 5)
         self.assertTrue(out["recommendedBets"])
+        self.assertEqual(out["result"]["status"], "確定")
+
+    def test_result_write_over_post_sealing_scratch_tombstone_restores(self):
+        # The Mizusawa 9R seam exactly as the lanes hit it: the
+        # publish lane's protect_detail(old_raw, new) raised the
+        # tombstone error because the sealed restore inside it
+        # rejected the product over the post-sealing scratch.
+        old = _tombstoned()
+        for horse in old["horses"]:
+            if horse["horseNumber"] == 8:
+                horse["status"] = "出走取消"
+                horse["scratched"] = True
+        out = protect_detail(old, _result_write(old))
+        self.assertFalse(_projection_tombstone(out))
+        self.assertEqual(out["predictionStatus"], "ready")
+        self.assertEqual(len(out["predictionMarks"]), 5)
         self.assertEqual(out["result"]["status"], "確定")
 
     def test_never_published_prepared_detail_is_not_a_tombstone(self):
