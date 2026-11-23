@@ -162,64 +162,6 @@ jobs:
             exit 0
           fi
 
-      - name: Publish official day summaries before heavy prediction work
-        run: |
-          # Reorder the existing D1 cold-start sync; no new data acquisition lane.
-          RACES=$(jq '.races // [] | length' bundle.json 2>/dev/null || echo 0)
-          if [ "$RACES" -le 0 ]; then
-            echo "D1_EARLY_SUMMARIES_NO_OFFICIAL_RACES date=$TARGET_DATE"
-            exit 0
-          fi
-          # Early D1 failures must not block the independent static rescue step.
-          # The later D1 verification still fails the job if publishing is incomplete.
-          if [ -z "$SYNC_TOKEN" ]; then
-            echo "::warning::D1_EARLY_SUMMARIES_MISSING_SYNC_TOKEN; static rescue continues"
-            exit 0
-          fi
-          if ! curl -fsS --retry 3 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0" -o initial-d1-day.json; then
-            echo "::warning::D1_EARLY_SUMMARIES_READ_FAILED; static rescue continues"
-            exit 0
-          fi
-          if ! jq -e '.ok == true and (.races | type == "array")' initial-d1-day.json >/dev/null; then
-            echo "::warning::D1_EARLY_SUMMARIES_INVALID_DAY; static rescue continues"
-            exit 0
-          fi
-          EXISTING=$(jq '.races | length' initial-d1-day.json)
-          if [ "$EXISTING" -eq 0 ]; then
-            jq -n --slurpfile source bundle.json \
-              '{summaries: $source[0].races, details: [], meta: {source: "arvexq-cold-start-race-summaries-v1", sync_batch: true, sync_batch_kind: "summaries"}}' \
-              > initial-day-summaries.json
-            echo "D1_EARLY_SUMMARIES_WRITE date=$TARGET_DATE races=$RACES"
-            if ! python scripts/arvexq_d1_capacity_guard.py \
-              --file initial-day-summaries.json --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000; then
-              echo "::warning::D1_EARLY_SUMMARIES_WRITE_BLOCKED; static rescue continues"
-              exit 0
-            fi
-          else
-            echo "D1_EARLY_SUMMARIES_ALREADY_EXISTS date=$TARGET_DATE count=$EXISTING"
-          fi
-          if ! curl -fsS --retry 4 --retry-all-errors --retry-delay 2 --connect-timeout 10 --max-time 35 \
-            "$CLOUDFLARE_API_BASE/api/day?date=$TARGET_DATE&details=0&t=$(date +%s)" -o verified-early-day.json; then
-            echo "::warning::D1_EARLY_SUMMARIES_VERIFY_READ_FAILED; static rescue continues"
-            exit 0
-          fi
-          if ! python - <<'PY'
-          import json
-          from pathlib import Path
-          source=json.loads(Path("bundle.json").read_text(encoding="utf-8"))
-          remote=json.loads(Path("verified-early-day.json").read_text(encoding="utf-8"))
-          expected={str(r["id"]) for r in source["races"] if isinstance(r,dict) and r.get("id")}
-          actual={str(r["id"]) for r in remote.get("races",[]) if isinstance(r,dict) and r.get("id")}
-          missing=sorted(expected-actual)
-          print("D1_EARLY_SUMMARIES_VERIFY", "expected=",len(expected),"actual=",len(actual),"missing=",len(missing))
-          if not remote.get("ok") or missing:
-              raise SystemExit("D1_EARLY_SUMMARIES_INCOMPLETE: "+",".join(missing[:12]))
-          PY
-          then
-            echo "::warning::D1_EARLY_SUMMARIES_INCOMPLETE; static rescue continues"
-          fi
-
       - name: Stop bootstrap server to release SQLite writers
         run: |
           # Bootstrap HTTP discovery has finished; diagnosis uses app.py directly.
@@ -307,7 +249,13 @@ jobs:
           git checkout -B prefetch-continue HEAD
 
       - name: Persist collected facts using the existing D1 sync pipeline
+        continue-on-error: true
         run: |
+          # Cloudflare exit (2026-11-23): this step no longer feeds this
+          # lane's own analysis (persisted-facts.json is built locally
+          # below). It remains ONLY as the input store of the
+          # rewrite-publish lane, whose producer still reads the API.
+          # Fail-soft: a D1 failure here must not block issuance.
           RACES=$(jq '.meta.race_count // 0' prefetch-facts.json)
           if [ "$RACES" -le 0 ]; then
             echo "D1_FACTS_NO_RACES"
@@ -333,27 +281,41 @@ jobs:
           done
           echo "D1_FACTS_SYNC_DONE batches=$COUNT"
 
-      - name: Read D1 facts back and require identical horse/history evidence
+      - name: Build persisted facts from collected local facts
         run: |
+          # Cloudflare exit (2026-11-23): the analysis input is built
+          # directly from this run's collected facts file. The D1
+          # read-back round-trip is retired; the evidence gate itself
+          # is kept -- the same verifier now checks the locally built
+          # bundle against the collected source, and the analyze phase
+          # still re-verifies staging and fact immutability per race.
           RACES=$(jq '.meta.race_count // 0' prefetch-facts.json)
           if [ "$RACES" -le 0 ]; then
             echo '{"races":[],"details":[]}' > persisted-facts.json
             exit 0
           fi
-          python scripts/arvexq_fetch_d1_bundle.py \
-            --api-base "$CLOUDFLARE_API_BASE" --date "$TARGET_DATE" \
-            --out persisted-facts.json --report persisted-facts-report.json \
-            --workers 4 --retries 6 --allow-missing-details
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          facts = json.loads(Path("prefetch-facts.json").read_text(encoding="utf-8"))
+          out = {
+              "date": (facts.get("meta") or {}).get("sync_date") or os.environ.get("TARGET_DATE", ""),
+              "races": facts.get("summaries") or [],
+              "details": facts.get("details") or [],
+          }
+          Path("persisted-facts.json").write_text(
+              json.dumps(out, ensure_ascii=False), encoding="utf-8")
+          print("LOCAL_PERSISTED_FACTS", "races=", len(out["races"]), "details=", len(out["details"]))
+          PY
           python scripts/arvexq_verify_persisted_inputs.py \
             --source prefetch-facts.json --saved persisted-facts.json \
             --report persisted-evidence-check.json
-          echo "D1_STORED_EVIDENCE_VERIFIED"
-
+          echo "LOCAL_PERSISTED_FACTS_VERIFIED"
       - name: Publish rewrite forecasts for the persisted day (piggyback)
         continue-on-error: true
         run: |
           # Piggyback on the collection lane: this run has just persisted
-          # and verified the target day's facts in D1, so publish the
+          # the target day's facts in D1 (the rewrite lane's input store), so publish the
           # rewrite forecasts for exactly that date now instead of waiting
           # for the standalone publish workflow's schedule (whose GitHub
           # cron runs were observed hours late or dropped outright). The
@@ -369,7 +331,7 @@ jobs:
           ARVEXQ_API_BASE="$CLOUDFLARE_API_BASE" \
             python3 scripts/arvexq_rewrite_publish.py --date "$TARGET_DATE"
 
-      - name: Analyze only persisted D1 data and prepare original marks and bets
+      - name: Analyze only persisted local facts and prepare original marks and bets
         if: env.ARVEXQ_DAY_AHEAD != '1'
         run: |
           RACES=$(jq '.races // [] | length' persisted-facts.json)
@@ -460,7 +422,7 @@ jobs:
           gh workflow run arvexq-web-deploy.yml --ref main || echo "::warning::Static archive committed; Web Deploy dispatch not accepted"
           echo "STATIC_MORNING_PICKS_ARCHIVED $FILE"
 
-      - name: Preserve lossless prediction originals before D1 writes
+      - name: Preserve lossless prediction originals
         if: env.ARVEXQ_DAY_AHEAD != '1'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -481,261 +443,6 @@ jobs:
           git -c rebase.autoStash=true pull --rebase origin main
           git push origin HEAD:main
           gh workflow run arvexq-web-deploy.yml --ref main
-
-      - name: Select only missing or thin D1 details
-        if: env.ARVEXQ_DAY_AHEAD != '1'
-        run: |
-          RACES=$(jq '.meta.race_count // 0' prefetch-payload.json)
-          if [ "$RACES" -le 0 ]; then
-            cp prefetch-payload.json prefetch-sync-payload.json
-            exit 0
-          fi
-          python scripts/arvexq_fetch_d1_bundle.py \
-            --api-base "$CLOUDFLARE_API_BASE" \
-            --date "$TARGET_DATE" \
-            --out current-d1.json \
-            --report current-d1-report.json \
-            --workers 4 \
-            --retries 6 \
-            --allow-missing-details \
-            --allow-empty-day
-          # Day summaries are committed and verified immediately after official discovery.
-          python scripts/arvexq_select_prefetch_repairs.py \
-            --prepared prefetch-payload.json \
-            --current current-d1.json \
-            --out prefetch-sync-payload.json \
-            --report prefetch-repair-selection.json
-          jq '{prepared,existing,existing_rich,repair_count}' prefetch-repair-selection.json
-
-      - name: Push prepared day repairs to D1 in safe batches
-        if: env.ARVEXQ_DAY_AHEAD != '1'
-        run: |
-          RACES=$(jq '.meta.race_count // 0' prefetch-sync-payload.json)
-          if [ "$RACES" -le 0 ]; then
-            echo "Nothing to sync."
-            exit 0
-          fi
-          python scripts/arvexq_sync_batches.py \
-            --input prefetch-sync-payload.json \
-            --out-dir prefetch-sync-batches
-          COUNT=$(find prefetch-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
-          echo "D1 prefetch batches=$COUNT"
-          # Capacity failure is permanent until storage is redesigned or increased.
-          # Never hammer D1 with all remaining batches after a confirmed quota
-          # error or Cloudflare Worker resource limit (1102).
-          FAILED_BATCHES=0
-          for file in prefetch-sync-batches/batch-*.json; do
-            PYTHONPATH=. python scripts/arvexq_protect_sync.py --file "$file" --api-base "$CLOUDFLARE_API_BASE"
-            if python scripts/arvexq_d1_capacity_guard.py \
-              --file "$file" --api-base "$CLOUDFLARE_API_BASE" --max-bytes 4000000; then
-              PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"
-            else
-              status=$?
-              FAILED_BATCHES=$((FAILED_BATCHES + 1))
-              if [ "$status" -eq 20 ]; then
-                echo "::error::D1_STORAGE_OR_WORKER_CAPACITY_BLOCKED; preserving all prepared files and morning seals."
-                exit 20
-              fi
-              if [ "$FAILED_BATCHES" -ge 3 ]; then
-                echo "::error::D1_SYNC_THREE_FAILURES; circuit-breaker prevents more write load."
-                exit 21
-              fi
-            fi
-          done
-          if [ "$FAILED_BATCHES" -gt 0 ]; then
-            echo "::error::D1 prefetch incomplete failed_batches=$FAILED_BATCHES"
-            exit 21
-          fi
-          echo "D1 prefetch push verified all batches"
-
-      - name: Verify prepared day and analysis from D1
-        if: env.ARVEXQ_DAY_AHEAD != '1'
-        run: |
-          EXPECTED=$(jq '.meta.race_count // 0' prefetch-payload.json)
-          if [ "$EXPECTED" -le 0 ]; then
-            exit 0
-          fi
-          python scripts/arvexq_fetch_d1_bundle.py \
-            --api-base "$CLOUDFLARE_API_BASE" \
-            --date "$TARGET_DATE" \
-            --out verified-day.json \
-            --report verified-d1-report.json \
-            --workers 4 \
-            --retries 6 \
-            --allow-missing-details
-          ACTUAL=$(jq '.races // [] | length' verified-day.json)
-          DETAILS=$(jq '.details // [] | length' verified-day.json)
-          MISSING=$(jq '.missing_detail_count // 0' verified-d1-report.json)
-          echo "D1 PREFETCH summaries expected=$EXPECTED actual=$ACTUAL details=$DETAILS missing=$MISSING"
-          # The D1 day listing may retain archived/retired race summaries with
-          # no detail row. Judge completion by the exact prepared active race IDs
-          # below, never by totals for a legacy D1 calendar day.
-          echo "D1_PREFETCH_ACTIVE_ID_READBACK follows; legacy day-only rows are audited separately"
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          day=json.loads(Path('verified-day.json').read_text(encoding='utf-8'))
-          details=[d for d in (day.get('details') or []) if isinstance(d,dict)]
-          prepared=json.loads(Path('prefetch-payload.json').read_text(encoding='utf-8'))
-          expected={str(d.get('id')):d for d in (prepared.get('details') or []) if isinstance(d,dict) and d.get('id')}
-          returned={str(d.get('id')):d for d in details}
-          expected_ids={str(r.get('id')) for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
-          actual_ids={str(r.get('id')) for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
-          missing_summary_ids=sorted(expected_ids-actual_ids)
-          missing_prepared_ids=sorted(expected_ids-set(expected))
-          legacy_only_ids=sorted(actual_ids-expected_ids)
-          print('D1_PREFETCH_ACTIVE_SCOPE', 'prepared=',len(expected_ids),
-                'd1_day=',len(actual_ids),'legacy_only=',len(legacy_only_ids),
-                'legacy_without_detail=',sum(rid not in returned for rid in legacy_only_ids))
-          missing_cards=[(rid,'missing D1 summary') for rid in missing_summary_ids]
-          missing_cards.extend((rid,'no prepared source detail') for rid in missing_prepared_ids)
-          missing_analysis=[]
-          missing_new_forecast=[]
-          missing_horse_history=[]
-          for rid,old in expected.items():
-              d=returned.get(rid)
-              if not d:
-                  missing_cards.append((rid,'missing D1 record'))
-                  continue
-              # A successful D1 API response alone does not prove the
-              # replacement model/marks were published. Validate the
-              # actual D1 readback against the exact prepared race.
-              new_version=str(old.get('predictionModelVersion') or '')
-              # The approved active Stage64 product is NOT the separate
-              # learned-whole-career research overlay. Require exact D1
-              # readback of the already computed marks and recommended bets.
-              if new_version == 'arvexq-stage64-product-v1' and old.get('predictionStatus') == 'ready':
-                  if d.get('predictionStatus') != 'ready':
-                      missing_new_forecast.append((rid,'stage64-status-not-persisted'))
-                  if d.get('predictionModelVersion') != new_version:
-                      missing_new_forecast.append((rid,'stage64-model-not-persisted'))
-                  if d.get('predictionMarks') != old.get('predictionMarks'):
-                      missing_new_forecast.append((rid,'stage64-marks-not-persisted'))
-                  if d.get('recommendedBets') != old.get('recommendedBets'):
-                      missing_new_forecast.append((rid,'stage64-bets-not-persisted'))
-              if new_version.startswith('arvexq-learned-whole-career'):
-                  if str(d.get('predictionModelVersion') or '')!=new_version:
-                      missing_new_forecast.append((rid,'model-version-not-persisted'))
-                  expected_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                                  for h in old.get('horses') or [] if isinstance(h,dict)}
-                  saved_marks={int(h.get('horseNumber') or 0):str((h.get('integratedEvaluation') or {}).get('mark') or '')
-                               for h in d.get('horses') or [] if isinstance(h,dict)}
-                  if expected_marks!=saved_marks:
-                      missing_new_forecast.append((rid,'new-marks-not-persisted'))
-              elif old.get('legacyPresentationDisabled'):
-                  if d.get('predictionStatus')!='new-model-unavailable':
-                      missing_new_forecast.append((rid,'retired-forecast-still-active'))
-              horses=[h for h in (d.get('horses') or []) if isinstance(h,dict)]
-              good=[h for h in horses if str(h.get('name') or '').strip() and int(h.get('horseNumber') or 0)>0]
-              prepared_horses=[h for h in (old.get('horses') or []) if isinstance(h,dict) and int(h.get('horseNumber') or 0)>0]
-              numbers=[int(h.get('horseNumber') or 0) for h in good]
-              expected_numbers={int(h.get('horseNumber') or 0) for h in prepared_horses}
-              if len(good)<2 or not expected_numbers.issubset(set(numbers)) or len(numbers)!=len(set(numbers)):
-                  missing_cards.append((rid,f'expected_numbers={sorted(expected_numbers)} D1_numbers={sorted(set(numbers))}'))
-              # Completion means observed runner histories survived the existing
-              # D1 persistence path; HTTP success is not sufficient.
-              observed={int(h.get('horseNumber') or 0):h for h in horses if h.get('horseNumber')}
-              for original in prepared_horses:
-                  num=int(original.get('horseNumber') or 0)
-                  saved=observed.get(num, {})
-                  original_runs=original.get('recentRaces') or []
-                  saved_runs=saved.get('recentRaces') or []
-                  if original_runs and len(saved_runs)<len(original_runs):
-                      missing_horse_history.append((rid,num,len(original_runs),len(saved_runs)))
-              if old.get('predictionStatus') == 'ready':
-                  marks=old.get('predictionMarks') or []
-                  if marks and d.get('predictionMarks') != marks:
-                      missing_new_forecast.append((rid,'ready-marks-not-persisted'))
-                  bets=old.get('recommendedBets') or []
-                  if bets and d.get('recommendedBets') != bets:
-                      missing_new_forecast.append((rid,'ready-bets-not-persisted'))
-              pm=d.get('preparedMeta') if isinstance(d.get('preparedMeta'),dict) else {}
-              has_analysis=bool(pm.get('diagnosisReady')) or any(d.get(k) not in (None,'',[],{}) for k in ('preRacePrediction','aiEvaluation','pace','pacePrediction','volatility'))
-              if not has_analysis:
-                  missing_analysis.append(rid)
-          # Morning selections are historical commitments, not live predictions.
-          # A Worker that strips these fields must fail verification visibly.
-          proposed={str(r.get('id')):r for r in (prepared.get('summaries') or []) if isinstance(r,dict) and r.get('id')}
-          published={str(r.get('id')):r for r in (day.get('races') or []) if isinstance(r,dict) and r.get('id')}
-          def morning(row):
-              if not isinstance(row,dict):return None
-              for key in ('volatility','environmentMeta'):
-                  v=row.get(key) if isinstance(row.get(key),dict) else {}
-                  m=v.get('morningPicks')
-                  if isinstance(m,dict) and m.get('version')=='v1' and m.get('fixedAt'):
-                      return m
-              if row.get('morningPickVersion')=='v1' and row.get('morningPickFixedAt'):
-                  return dict(version='v1',fixedAt=row['morningPickFixedAt'],
-                              selected=row.get('morningSelected') is True,
-                              selectedScore=row.get('morningSelectedScore') or 0,
-                              special=row.get('morningSpecial') is True)
-              return None
-          frozen={rid:morning(r) for rid,r in proposed.items() if morning(r)}
-          keys=('version','fixedAt','selected','selectedScore','special')
-          omitted=[rid for rid in frozen if not morning(published.get(rid))]
-          contradictory=[rid for rid,expected_pick in frozen.items()
-                         if morning(published.get(rid)) and
-                         any(morning(published.get(rid)).get(key)!=expected_pick.get(key) for key in keys)]
-          print('D1_MORNING_PROJECTION expected=',len(frozen),
-                'schema_omitted=',len(omitted),'contradictory=',len(contradictory))
-          if omitted or contradictory:
-              # The Worker deliberately drops unknown keys from D1 summaries.
-              # The immutable static morning-picks/<date>.json is canonical.
-              from pathlib import Path
-              date=str(prepared.get('meta',{}).get('sync_date') or day.get('date') or '')
-              archive=Path('arvexq/ui/static/morning-picks')/(date+'.json')
-              if not archive.is_file():
-                  raise SystemExit('D1 stripped morning picks and static archive is missing')
-              manifest=json.loads(archive.read_text(encoding='utf-8'))
-              original={rid:(r.get('morningSelected'),r.get('morningSpecial'),r.get('morningSelectedScore') or 0)
-                        for rid,r in proposed.items() if rid in frozen}
-              static={str(r.get('id')):(r.get('selected'),r.get('special'),r.get('selectedScore') or 0)
-                      for r in (manifest.get('races') or []) if isinstance(r,dict)}
-              if (manifest.get('date')!=date or len(static)!=len(original) or
-                  static!=original):
-                  raise SystemExit('Static morning archive does not match first morning selection')
-              print('D1_MORNING_METADATA_STRIPPED_STATIC_ARCHIVE_CANONICAL',len(static))
-              # Do not fail the race card publication. Static archive is separately
-              # deployed and verified by the Cloudflare Web Deploy workflow.
-          print('D1_PREFETCH_DETAIL_VERIFY expected=',len(expected),'received=',len(returned),'missing_cards=',len(missing_cards),'missing_analysis=',len(missing_analysis))
-          unavailable_analysis=[]
-          unexpected_analysis=[]
-          for rid in missing_analysis:
-              row=returned.get(rid) or {}
-              if row.get('predictionStatus') in ('disabled','unified-reference-ready'):
-                  meta=row.get('preparedMeta') if isinstance(row.get('preparedMeta'),dict) else {}
-                  unavailable_analysis.append({
-                      'raceId':rid,
-                      'status':'disabled',
-                      'reason':(row.get('dataCoreHealth') or meta.get('reason')
-                                or meta.get('supplementalSearch')
-                                or 'verified analysis inputs were insufficient')})
-              else:
-                  unexpected_analysis.append(rid)
-          print('D1_ANALYSIS_UNAVAILABLE',json.dumps(unavailable_analysis,ensure_ascii=False))
-          print('D1_ANALYSIS_GENERATION_SUMMARY',json.dumps({
-              'prepared':len(expected),'generated':len(expected)-len(unavailable_analysis),
-              'unavailable':len(unavailable_analysis),'unexpected':len(unexpected_analysis)}))
-          if unexpected_analysis:
-              raise SystemExit('D1_ANALYSIS_INCOMPLETE: '+str(unexpected_analysis[:20]))
-          if missing_horse_history:
-              raise SystemExit('D1_HORSE_HISTORY_INCOMPLETE: '+str(missing_horse_history[:25]))
-          if missing_new_forecast:
-              print('D1_NEW_FORECAST_NOT_PERSISTED',missing_new_forecast[:25])
-              raise SystemExit('D1 replacement forecast not published: '+str(len(missing_new_forecast))+' mismatches')
-          if missing_cards:
-              print('D1_MISSING_CARDS',missing_cards[:25])
-              raise SystemExit('D1 racecard delivery incomplete: '+str(len(missing_cards))+' races')
-          PY
-          # A worker-side summary projection may legitimately omit morning
-          # fields. Prove static-vs-D1 race identity and record omissions vs
-          # contradictions, never rewrite a frozen selection to "fix" it.
-          MANIFEST="arvexq/ui/static/morning-picks/$TARGET_DATE.json"
-          if [ -f "$MANIFEST" ]; then
-            python scripts/arvexq_morning_d1_audit.py \
-              --manifest "$MANIFEST" --d1 verified-day.json \
-              --report morning-d1-audit.json
-          fi
 
       - name: Build static API packs from local payload (parallel, migration block A)
         if: always() && env.ARVEXQ_DAY_AHEAD != '1'
@@ -802,20 +509,9 @@ jobs:
         run: |
           echo "--- prefetch-run.log ---"
           tail -n 100 prefetch-run.log 2>/dev/null || true
-          echo "--- prefetch-repair-selection.json ---"
-          cat prefetch-repair-selection.json 2>/dev/null || true
           echo "--- runtime ---"
           tail -n 100 /tmp/arvexq-prefetch.log 2>/dev/null || true
           cp /tmp/arvexq-prefetch.log runtime-prefetch.log 2>/dev/null || true
-
-      - name: Preserve morning D1 consistency audit
-        if: always() && env.ARVEXQ_DAY_AHEAD != '1'
-        uses: actions/upload-artifact@v4
-        with:
-          name: arvexq-morning-d1-consistency-${{ github.run_id }}
-          path: morning-d1-audit.json
-          if-no-files-found: ignore
-          retention-days: 30
 
       - name: Upload full failure logs
         if: failure()
@@ -825,9 +521,6 @@ jobs:
           path: |
             prefetch-run.log
             prefetch-report.json
-            prefetch-repair-selection.json
-            current-d1-report.json
-            verified-d1-report.json
             runtime-prefetch.log
           if-no-files-found: ignore
           retention-days: 3
@@ -840,12 +533,7 @@ jobs:
           path: |
             prefetch-report.json
             prefetch-facts-report.json
-            prefetch-repair-selection.json
-            current-d1-report.json
-            verified-d1-report.json
-            facts-current-d1-report.json
             facts-sync-selection.json
-            persisted-facts-report.json
             persisted-evidence-check.json
           if-no-files-found: ignore
           retention-days: 30
