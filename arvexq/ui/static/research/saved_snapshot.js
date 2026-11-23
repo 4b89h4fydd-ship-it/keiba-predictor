@@ -1,19 +1,22 @@
 /* Read-only, hash-verified existing originals. No forecast reconstruction. */
 (function(root){
   'use strict';
+  // Deployment base: '/' at the origin root (Workers); the GitHub
+  // Pages build injects window.ARVEXQ_BASE_PATH='/keiba-predictor/'.
+  function basePath(){var b=String(root.ARVEXQ_BASE_PATH||'/');if(b.charAt(0)!=='/')b='/'+b;if(b.charAt(b.length-1)!=='/')b+='/';return b}
   var days=Object.create(null),jobs=Object.create(null);
   function available(date,id,fetchJson){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))||!id||
        typeof DecompressionStream==='undefined')return Promise.resolve(null);
     var key=date+'|'+id;
-    if(!days[date])days[date]=fetchJson('/saved-snapshots/'+date+'.json',6500).then(function(m){
+    if(!days[date])days[date]=fetchJson(basePath()+'saved-snapshots/'+date+'.json',6500).then(function(m){
       if(!m||m.version!=='arvexq-saved-snapshots-v1'||m.date!==date||!m.races)throw Error('invalid snapshot manifest');
       return m;
     }).catch(function(){delete days[date];return null});
     if(!jobs[key])jobs[key]=days[date].then(async function(m){
       var ref=m&&m.races[String(id)];if(!ref)return null;
       if(!/^[a-f0-9]{64}\.json$/.test(ref.file)||ref.file!==ref.sha256+'.json')throw Error('invalid snapshot reference');
-      var e=await fetchJson('/saved-snapshots/'+ref.file,9000);
+      var e=await fetchJson(basePath()+'saved-snapshots/'+ref.file,9000);
       if(!e||e.version!=='arvexq-saved-snapshot-v1'||e.sha256!==ref.sha256||e.bytes!==ref.bytes||e.bytes>100000000)
         throw Error('invalid snapshot envelope');
       var bytes=Uint8Array.from(atob(e.gzipBase64),function(c){return c.charCodeAt(0)});

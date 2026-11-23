@@ -4,13 +4,16 @@
  */
 (function(root){
   "use strict";
+  // Deployment base: '/' at the origin root (Workers); the GitHub
+  // Pages build injects window.ARVEXQ_BASE_PATH='/keiba-predictor/'.
+  function basePath(){var b=String(root.ARVEXQ_BASE_PATH||'/');if(b.charAt(0)!=='/')b='/'+b;if(b.charAt(b.length-1)!=='/')b+='/';return b}
   var jobs=Object.create(null);
   function validDay(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''))}
   function available(date,id,fetchJson){
     if(!validDay(date)||!String(id||'')||/-帯広(?:ば)?-/.test(String(id)))return Promise.resolve(null);
     var key=String(date);
     if(!jobs[key]){
-      var url='/racecards/'+encodeURIComponent(key)+'.json';
+      var url=basePath()+'racecards/'+encodeURIComponent(key)+'.json';
       jobs[key]=Promise.resolve().then(function(){return fetchJson(url)}).then(function(data){
         if(!data||data.version!=='arvexq-static-entry-v1'||data.date!==key||
            !Array.isArray(data.races))throw Error('static racecard archive unavailable');
