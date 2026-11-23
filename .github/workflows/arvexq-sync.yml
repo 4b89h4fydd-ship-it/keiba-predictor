@@ -182,6 +182,41 @@ jobs:
           fi
           echo "D1 live batched push OK"
 
+      - name: Build static API packs from live delta payload (parallel, migration block A)
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GitHub-only migration block A: overlay this lane's delta
+          # payload (live-payload.json) onto the committed packs for
+          # the same date, in parallel with the D1 push above (which
+          # stays untouched).  Fail-soft: the helper always exits 0.
+          # Fix program B (2026-11-23): if: always() — a rejected or
+          # failed D1 batch push must not skip pack generation; the
+          # local live-payload.json delta is overlaid on the committed
+          # packs as the fallback (the helper warns and skips when no
+          # payload exists; nothing is fabricated).
+          bash scripts/arvexq_static_api_lane_publish.sh live-payload.json merge
+          git checkout -B sync-continue HEAD || true
+
+      - name: Stage issued payload for the static API follow-up lane
+        if: always()
+        run: |
+          mkdir -p issued-payloads
+          if [ -s live-payload.json ]; then
+            cp live-payload.json "issued-payloads/live-payload-$SYNC_DATE.json"
+          fi
+
+      - name: Upload issued payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-live-${{ github.run_id }}
+          path: issued-payloads
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Verify D1 first-paint endpoint
         run: |
           curl -fsS --max-time 15 \
