@@ -1,0 +1,446 @@
+name: ARVEXQ Result Ingest
+
+# GitHub-native result lane (Cloudflare exit, 2026-11-23).
+#
+# Successor of "ARVEXQ Result Repair" with the D1 round-trip removed:
+#   bundle  <- committed static packs (scripts/arvexq_pack_bundle.py)
+#   repair  -> scripts/arvexq_result_repair.py (unchanged; it polls the
+#              official / netkeiba sources itself and never called the
+#              Worker API)
+#   publish -> the repair payload is a sync payload, so it is merged
+#              into the committed packs with the existing
+#              arvexq_static_api_build.py --merge-existing and pushed
+#   audit   -> the named checks in arvexq_result_audit.py, with the
+#              read-back view rebuilt from the *published* packs
+#              (--readback-bundle), so save_read_back verifies what
+#              actually landed in the repo, not an API echo.
+#
+# Trigger redundancy mirrors the D1 lane on purpose: GitHub's schedule
+# alone starved this lane for hours on degraded days (2026-11-16/17),
+# so the VM heartbeat push and the upstream lanes' completions also
+# serve as attempts.  The concurrency group serializes everything.
+#
+# Cutover: this lane is introduced alongside the D1 lane.  While both
+# run, both write the same results (this lane to the packs, the D1 lane
+# to D1, and the sync lane still carries D1 results into the packs);
+# the merge is per-race and result content is identical, so the two
+# writers cannot corrupt each other.  The D1 lane's triggers are
+# disabled only after this lane has been observed green end-to-end
+# (see the exit checklist in the migration MANIFEST).
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - scripts/arvexq_result_repair.py
+      - scripts/arvexq_result_audit.py
+      - scripts/arvexq_pack_bundle.py
+      - scripts/arvexq_restore_result_day.py
+      - arvexq/results/day_index.py
+      - arvexq/results/**
+      - tests/test_result_stalled_regressions.py
+      - .github/workflows/arvexq-result-ingest.yml
+      # Same external heartbeat that fires Realtime Sync (~every
+      # 10 minutes, 07:00-23:55 JST): while GitHub's scheduler is
+      # degraded the schedule below can go hours without firing.
+      - sync-heartbeat/heartbeat.txt
+      # The evening v8 extras placement is another committed push that
+      # demonstrably fires while scheduled slots are dropped.
+      - rewrite/data/v8_extras/**
+  workflow_run:
+    # Follow the two lanes that run all through racing hours; each
+    # completion queues one ingest attempt (the concurrency group
+    # keeps at most one pending run, so bursts collapse).
+    workflows: ["ARVEXQ Realtime Sync", "arvexq-rewrite-publish"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    # Offset from realtime sync so both jobs do not hit result sources together.
+    - cron: "2-59/5 22-23 * * *"
+    - cron: "2-59/5 0-14 * * *"
+
+concurrency:
+  group: arvexq-result-ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_RESULT_WORKERS: "6"
+      ARVEXQ_RESULT_RETRY_SLEEP_SEC: "3"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install runtime dependencies
+        run: python -m pip install -q -r requirements.txt
+
+      - name: Result parser and non-destructive merge regression
+        run: |
+          python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
+
+      - name: Set sync date
+        run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date +%F)" >> "$GITHUB_ENV"
+
+      - name: Restore warm cache read-only
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-result-readonly-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-prefetch-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-
+
+      - name: Build current day bundle from committed static packs
+        run: |
+          python scripts/arvexq_pack_bundle.py \
+            --packs arvexq/ui/static/api-static \
+            --date "$SYNC_DATE" \
+            --out bundle.json \
+            --report pack-bundle-report.json \
+            --allow-missing-details --allow-empty-day
+          # The packs are not the source of truth for the official race
+          # schedule either: restore race IDs from the canonical
+          # racecard archive if the pack day is empty (same fallback
+          # the D1 lane used).
+          python scripts/arvexq_restore_result_day.py \
+            --bundle bundle.json --date "$SYNC_DATE" --report result-day-index.json
+          RACES=$(jq '.races // [] | length' bundle.json)
+          DETAILS=$(jq '.details // [] | length' bundle.json)
+          MISSING=$(jq '.missing_detail_count // 0' pack-bundle-report.json)
+          echo "pack day races=$RACES details=$DETAILS missing_details=$MISSING"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::No verified official race IDs exist for $SYNC_DATE"
+            exit 1
+          fi
+
+      - name: Repair all started incomplete results
+        run: |
+          if ! PYTHONPATH=. python scripts/arvexq_result_repair.py \
+              --bundle bundle.json --payload result-repair-payload.json \
+              --report result-repair-report.json > result-repair.log 2>&1
+          then
+            echo "::error::Result repair failed"
+            tail -n 80 result-repair.log || true
+            exit 1
+          fi
+          jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
+          echo "--- unresolved result detail ---"
+          jq '.result_missing // []' result-repair-report.json
+          echo "--- payout-missing detail ---"
+          jq '.payout_missing // []' result-repair-report.json
+
+      - name: Stage result payload for the static API follow-up lane
+        if: always()
+        run: |
+          mkdir -p issued-payloads
+          if [ -s result-repair-payload.json ]; then
+            cp result-repair-payload.json "issued-payloads/result-payload-$SYNC_DATE.json"
+          fi
+
+      - name: Upload result payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-result-${{ github.run_id }}
+          path: issued-payloads
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publish repaired results into static packs
+        run: |
+          STARTED=$(jq '.meta.started_race_count // 0' result-repair-payload.json)
+          if [ "$STARTED" -le 0 ]; then
+            echo "No started races; skip pack publish."
+            exit 0
+          fi
+          cp result-repair-payload.json /tmp/result-payload.json
+          git config user.name "ARVEXQ Static API Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Rebuild on top of the latest origin/main on every attempt
+          # (the lane-publish pattern): the repair payload carries
+          # complete per-race details, so overlaying it on a fresher
+          # pack tree is safe and cannot shrink the day.
+          published=0
+          for attempt in 1 2 3 4; do
+            if ! git fetch origin main; then
+              echo "::warning::pack publish fetch failed (attempt $attempt)"
+              continue
+            fi
+            if ! git checkout -B publish-result-packs origin/main; then
+              echo "::warning::pack publish checkout failed (attempt $attempt)"
+              continue
+            fi
+            if ! python scripts/arvexq_static_api_build.py \
+                --input /tmp/result-payload.json \
+                --out-dir arvexq/ui/static/api-static \
+                --prune-days 14 --merge-existing; then
+              echo "::error::Static pack merge failed for the result payload"
+              exit 1
+            fi
+            git add arvexq/ui/static/api-static
+            if git diff --cached --quiet; then
+              echo "RESULT_PACK_UNCHANGED"
+              published=1
+              break
+            fi
+            git commit -m "data: static api packs (result ingest)"
+            if git push origin HEAD:main; then
+              published=1
+              break
+            fi
+            echo "::warning::pack publish push race (attempt $attempt); retrying on latest main"
+          done
+          if [ "$published" -ne 1 ]; then
+            echo "::error::Result packs could not be published; the payload artifact lets the static API follow-up lane rebuild them"
+            exit 1
+          fi
+          echo "RESULT_PACK_PUBLISHED"
+
+      - name: Verify repaired results from the published packs (named checks)
+        run: |
+          # Read-back view = the packs as published by the step above
+          # (the working tree holds exactly the merged pack tree).
+          # save_read_back therefore compares the repair payload
+          # against the committed pack content, with no API involved.
+          python scripts/arvexq_pack_bundle.py \
+            --packs arvexq/ui/static/api-static \
+            --date "$SYNC_DATE" \
+            --out bundle-after.json \
+            --allow-missing-details --allow-empty-day
+          PYTHONPATH=. python scripts/arvexq_result_audit.py \
+            --bundle bundle.json \
+            --report result-repair-report.json \
+            --payload result-repair-payload.json \
+            --readback-bundle bundle-after.json \
+            --out result-audit-report.json
+          cat result-audit-report.json
+
+      - name: Show concise failure log
+        if: failure()
+        run: |
+          tail -n 100 result-repair.log 2>/dev/null || true
+          cat pack-bundle-report.json 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-result-ingest-failure-${{ github.run_number }}
+          path: |
+            result-repair.log
+            result-repair-report.json
+            result-audit-report.json
+            pack-bundle-report.json
+          if-no-files-found: ignore
+          retention-days: 3
+
+
+  repair-yesterday:
+    needs: repair
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      KEIBA_DATA_DIR: ${{ github.workspace }}/.arvexq-data
+      ARVEXQ_BOOTSTRAP_WARM: "0"
+      ARVEXQ_DATA_CORE: "0"
+      RACEDB_AUTO_UPDATE: "0"
+      NAR_ON_DEMAND_HISTORY_MONTHS: "12"
+      ARVEXQ_RESULT_WORKERS: "6"
+      ARVEXQ_RESULT_RETRY_SLEEP_SEC: "3"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PIP_NO_INPUT: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install runtime dependencies
+        run: python -m pip install -q -r requirements.txt
+
+      - name: Result parser and non-destructive merge regression
+        run: |
+          python -m unittest discover -s tests -p 'test_result_stalled_regressions.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_retired_banei.py' -v
+          python -m unittest discover -s tests -p 'test_result_repair_env_fill.py' -v
+
+      - name: Set sync date
+        run: echo "SYNC_DATE=$(TZ=Asia/Tokyo date -d yesterday +%F)" >> "$GITHUB_ENV"
+
+      - name: Restore warm cache read-only
+        uses: actions/cache/restore@v4
+        with:
+          path: .arvexq-data
+          key: arvexq-result-readonly-${{ runner.os }}-${{ env.SYNC_DATE }}-${{ github.run_id }}
+          restore-keys: |
+            arvexq-prefetch-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-${{ env.SYNC_DATE }}-
+            arvexq-data-${{ runner.os }}-
+
+      - name: Build current day bundle from committed static packs
+        run: |
+          python scripts/arvexq_pack_bundle.py \
+            --packs arvexq/ui/static/api-static \
+            --date "$SYNC_DATE" \
+            --out bundle.json \
+            --report pack-bundle-report.json \
+            --allow-missing-details --allow-empty-day
+          python scripts/arvexq_restore_result_day.py \
+            --bundle bundle.json --date "$SYNC_DATE" --report result-day-index.json
+          RACES=$(jq '.races // [] | length' bundle.json)
+          DETAILS=$(jq '.details // [] | length' bundle.json)
+          MISSING=$(jq '.missing_detail_count // 0' pack-bundle-report.json)
+          echo "pack day races=$RACES details=$DETAILS missing_details=$MISSING"
+          if [ "$RACES" -le 0 ]; then
+            echo "::error::No verified official race IDs exist for $SYNC_DATE"
+            exit 1
+          fi
+
+      - name: Repair all started incomplete results
+        run: |
+          if ! PYTHONPATH=. python scripts/arvexq_result_repair.py \
+              --bundle bundle.json --payload result-repair-payload.json \
+              --report result-repair-report.json > result-repair.log 2>&1
+          then
+            echo "::error::Result repair failed"
+            tail -n 80 result-repair.log || true
+            exit 1
+          fi
+          jq '{date,started,pending_before,repairedCount:(.repaired|length),resultMissing:(.result_missing|length),payoutMissing:(.payout_missing|length)}' result-repair-report.json
+          echo "--- unresolved result detail ---"
+          jq '.result_missing // []' result-repair-report.json
+          echo "--- payout-missing detail ---"
+          jq '.payout_missing // []' result-repair-report.json
+
+      - name: Stage result payload for the static API follow-up lane
+        if: always()
+        run: |
+          mkdir -p issued-payloads
+          if [ -s result-repair-payload.json ]; then
+            cp result-repair-payload.json "issued-payloads/result-payload-$SYNC_DATE.json"
+          fi
+
+      - name: Upload result payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-issued-payload-result-yesterday-${{ github.run_id }}
+          path: issued-payloads
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publish repaired results into static packs
+        run: |
+          STARTED=$(jq '.meta.started_race_count // 0' result-repair-payload.json)
+          if [ "$STARTED" -le 0 ]; then
+            echo "No started races; skip pack publish."
+            exit 0
+          fi
+          cp result-repair-payload.json /tmp/result-payload.json
+          git config user.name "ARVEXQ Static API Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          published=0
+          for attempt in 1 2 3 4; do
+            if ! git fetch origin main; then
+              echo "::warning::pack publish fetch failed (attempt $attempt)"
+              continue
+            fi
+            if ! git checkout -B publish-result-packs origin/main; then
+              echo "::warning::pack publish checkout failed (attempt $attempt)"
+              continue
+            fi
+            if ! python scripts/arvexq_static_api_build.py \
+                --input /tmp/result-payload.json \
+                --out-dir arvexq/ui/static/api-static \
+                --prune-days 14 --merge-existing; then
+              echo "::error::Static pack merge failed for the result payload"
+              exit 1
+            fi
+            git add arvexq/ui/static/api-static
+            if git diff --cached --quiet; then
+              echo "RESULT_PACK_UNCHANGED"
+              published=1
+              break
+            fi
+            git commit -m "data: static api packs (result ingest)"
+            if git push origin HEAD:main; then
+              published=1
+              break
+            fi
+            echo "::warning::pack publish push race (attempt $attempt); retrying on latest main"
+          done
+          if [ "$published" -ne 1 ]; then
+            echo "::error::Result packs could not be published; the payload artifact lets the static API follow-up lane rebuild them"
+            exit 1
+          fi
+          echo "RESULT_PACK_PUBLISHED"
+
+      - name: Verify repaired results from the published packs (named checks)
+        run: |
+          python scripts/arvexq_pack_bundle.py \
+            --packs arvexq/ui/static/api-static \
+            --date "$SYNC_DATE" \
+            --out bundle-after.json \
+            --allow-missing-details --allow-empty-day
+          PYTHONPATH=. python scripts/arvexq_result_audit.py \
+            --bundle bundle.json \
+            --report result-repair-report.json \
+            --payload result-repair-payload.json \
+            --readback-bundle bundle-after.json \
+            --out result-audit-report.json
+          cat result-audit-report.json
+
+      - name: Show concise failure log
+        if: failure()
+        run: |
+          tail -n 100 result-repair.log 2>/dev/null || true
+          cat pack-bundle-report.json 2>/dev/null || true
+
+      - name: Upload full failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arvexq-result-ingest-yesterday-failure-${{ github.run_number }}
+          path: |
+            result-repair.log
+            result-repair-report.json
+            result-audit-report.json
+            pack-bundle-report.json
+          if-no-files-found: ignore
+          retention-days: 3

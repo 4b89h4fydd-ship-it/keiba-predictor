@@ -20,6 +20,9 @@ name: ARVEXQ Static API
 #   files:          prefetch-payload-<date>.json        (full day)
 #                   live-payload-<date>.json            (delta, merge)
 #                   rewrite-publish-payload-<date>.json (delta, merge)
+#                   result-payload-<date>.json          (delta, merge;
+#                     Cloudflare exit: uploaded by ARVEXQ Result Ingest
+#                     when its in-run pack publish was deferred)
 # Full payloads are applied first, then deltas are merged on top.
 
 on:
@@ -81,7 +84,7 @@ jobs:
                   echo "::warning::Static API generation failed for $f; keeping last packs"
                 fi
                 ;;
-              live-payload-*|rewrite-publish-payload-*)
+              live-payload-*|rewrite-publish-payload-*|result-payload-*)
                 if python scripts/arvexq_static_api_build.py --input "$f" \
                      --out-dir arvexq/ui/static/api-static --prune-days 14 \
                      --merge-existing; then
