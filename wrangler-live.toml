@@ -1,0 +1,12 @@
+# ARVEXQ live relay only (live odds). No D1, no other bindings.
+# Assets are the relay-only bundle built by
+# scripts/arvexq_build_live_relay_assets.py into ./dist-live-relay
+# (odds-sources/ + odds-backups/ only).
+name = "arvexq-live-relay"
+main = "workers/live_relay.mjs"
+compatibility_date = "2026-09-29"
+
+[assets]
+binding = "ASSETS"
+directory = "./dist-live-relay"
+run_worker_first = ["/api/live-odds/*"]
