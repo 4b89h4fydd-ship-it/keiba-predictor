@@ -126,6 +126,24 @@ normaliser between the collection side and that file; its inputs:
                       restate the course aggregates and the
                       horse's own past runs, which reach the
                       file through the other inputs already.
+  --race-entries      (optional, 2026-11-23) per-horse race
+                      entries in the shape {"races": {<netkeiba
+                      race_id>: {"horses": {<number>: {"name":
+                      ..., "jockey": ..., "trainer": ...}}}}}
+                      — the entered horses' jockey / trainer
+                      names as collected from the race's entry
+                      (shutuba) page. Together with the course-
+                      analysis persons FULL tables （得意な騎手 /
+                      得意な調教師 carried in --course-analysis)
+                      it supplies each horse's coursePersons
+                      record by a name join, for the days the
+                      per-horse course-persons rows were not
+                      collected. A name that does not appear in
+                      the course's table has no record there —
+                      the horse simply carries no row, never an
+                      estimated one. Race-details runners carry
+                      the same names and are used the same way
+                      when no entries file covers the race.
   --course-persons    (optional, 2026-11-19) the forward
                       collection's course-persons.json (the
                       course-analysis persons tables — 得意な
@@ -477,6 +495,59 @@ def _sire_course(course_entry, sire):
     return None
 
 
+def _person_table_index(course_entry, table_key) -> dict:
+    """{person name: {"name", "starts", "wins", "top3",
+    "winRate"}} from one course-analysis persons FULL table
+    （得意な騎手 / 得意な調教師） of today's course. The rows
+    carry the same column layout as the sire table (name,
+    1st, 2nd, 3rd, others, starts, ...) that _sire_course
+    reads. A row whose counts cannot be read is dropped,
+    never repaired."""
+    out: dict = {}
+    if not isinstance(course_entry, dict):
+        return out
+    table = course_entry.get(table_key)
+    if not isinstance(table, dict):
+        return out
+    for row in table.get("行") or []:
+        if not isinstance(row, (list, tuple)) or len(row) < 6:
+            continue
+        name = row[0]
+        if not isinstance(name, str) or not name:
+            continue
+        first = _int_cell(row[1])
+        second = _int_cell(row[2])
+        third = _int_cell(row[3])
+        starts = _int_cell(row[5])
+        if first is None or starts is None or starts <= 0:
+            continue
+        out[name] = {"name": name, "starts": starts,
+                     "wins": first,
+                     "top3": first + (second or 0) + (third or 0),
+                     "winRate": round(first / starts, 4)}
+    return out
+
+
+def _person_name(value, strip_affiliation: bool = False):
+    """A person's name from an entry / runner cell, or None.
+    Trainer cells on the race record carry the affiliation as
+    a leading token ("栗東 加藤公", "美浦 上原佑", NAR yards
+    the same way); the course tables key on the bare name, so
+    for trainers the LAST whitespace-separated token is the
+    name. Anything else passes through stripped — an unmatched
+    name simply finds no table row, never a guessed one."""
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if strip_affiliation:
+        parts = text.split()
+        if len(parts) > 1:
+            text = parts[-1]
+    return text or None
+
+
 def _pedigree(profile, course_entry):
     if not isinstance(profile, dict):
         return None
@@ -509,20 +580,39 @@ def _pace_positions(pace_entry) -> tuple:
     phase that is missing or malformed is simply absent; a
     horse absent from a phase carries no cell for it. Nothing
     is estimated — a group diagram that does not cover the
-    field is carried as-is."""
+    field is carried as-is.
+
+    Two collected shapes are accepted (2026-11-23): the build
+    shape (positions keyed start / corner3 / corner4, each a
+    list of groups, label under "pace") and the collection's
+    raw shape (positions keyed start / c3 / c4, each a FLAT
+    list of horse numbers in forecast order — every horse its
+    own group — label under "pace_ai"). The collection cron
+    names the raw file in its builder invocation, so accepting
+    only the build shape silently zeroed the pace coverage
+    whenever the conversion step was skipped; the conversion
+    is a reshape of the same diagram, never an estimate."""
     if not isinstance(pace_entry, dict):
         return {}, None
     positions = pace_entry.get("positions")
     if not isinstance(positions, dict):
         return {}, None
     label = pace_entry.get("pace")
+    if not isinstance(label, str):
+        label = pace_entry.get("pace_ai")
+    phase_keys = {"start": "start", "corner3": "corner3",
+                  "corner4": "corner4", "c3": "corner3",
+                  "c4": "corner4"}
     out: dict = {}
-    for phase in PACE_PHASES:
-        groups = positions.get(phase)
+    for raw_key, phase in phase_keys.items():
+        groups = positions.get(raw_key)
         if not isinstance(groups, list):
             continue
         flat: list = []
         for group in groups:
+            if isinstance(group, int) and not isinstance(group, bool):
+                flat.append(group)  # raw shape: flat order list
+                continue
             if not isinstance(group, list):
                 continue
             for number in group:
@@ -912,7 +1002,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           odds: dict | list | None = None,
           horse_analysis: dict | None = None,
           course_persons: dict | None = None,
-          stable_comments: dict | None = None) -> dict:
+          stable_comments: dict | None = None,
+          race_entries: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -935,6 +1026,9 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         course_persons, course_analysis, "jockeys")
     persons_trainers = _persons_kind_index(
         course_persons, course_analysis, "trainers")
+    entries_races = (race_entries.get("races")
+                     if isinstance(race_entries, dict)
+                     else None) or {}
     races: dict = {}
     for target in targets.get("targets") or []:
         nk_id = str(target.get("netkeiba_race_id") or "")
@@ -944,10 +1038,18 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         speed_entry = speed_races.get(nk_id) or {}
         raw_horses = speed_entry.get("horses") or {}
         horses: dict = {}
+        # The entered horses' names, by number — the roster the
+        # details-independent joins below stand on (the speed
+        # page and the newspaper both carry the name per number;
+        # the speed entry wins, the press entry fills).
+        names: dict = {}
         for key, values in raw_horses.items():
             if not isinstance(values, dict):
                 continue
             horse = {col: values.get(col) for col in SPEED_COLUMNS}
+            if isinstance(values.get("name"), str) \
+                    and values["name"].strip():
+                names[str(key)] = values["name"].strip()
             # nk-materials-v8 (2026-11-19, user instruction: put ALL
             # of the collected data into the forecast): when the
             # collection carries the 5-run sequence (nk_recent5,
@@ -994,6 +1096,31 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 profiles.get(runner.get("name") or ""), course)
             press = press_horses.get(str(number))
             horse["press"] = press if isinstance(press, dict) else None
+        # The entered horses' jockey / trainer names, by number
+        # — from the race-entries collection when it covers the
+        # race, else from the race-details runners. These names
+        # drive the course-persons full-table join below.
+        persons_by_number: dict = {}
+        entries_horses = (entries_races.get(nk_id)
+                          or {}).get("horses") or {}
+        if isinstance(entries_horses, dict):
+            for key, entry_e in entries_horses.items():
+                if not isinstance(entry_e, dict):
+                    continue
+                persons_by_number[str(key)] = {
+                    "jockey": _person_name(entry_e.get("jockey")),
+                    "trainer": _person_name(
+                        entry_e.get("trainer"),
+                        strip_affiliation=True),
+                }
+        for number, runner, _runs in runners:
+            cell = persons_by_number.setdefault(
+                str(number), {"jockey": None, "trainer": None})
+            if cell["jockey"] is None:
+                cell["jockey"] = _person_name(runner.get("jockey"))
+            if cell["trainer"] is None:
+                cell["trainer"] = _person_name(
+                    runner.get("trainer"), strip_affiliation=True)
         # --- v4 addition: AI pace-forecast positions --------
         pace_by_number, pace_label = _pace_positions(
             pace_races.get(nk_id))
@@ -1078,6 +1205,37 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                     col: None for col in SPEED_COLUMNS}
                     | {"nk_recent": None})
                 horse["horseAnalysis"] = block
+        # --- 2026-11-23: the details-independent pedigree join.
+        # Until now the pedigree block was assigned ONLY inside
+        # the race-details runners loop above, so a build with
+        # no details input (2026-11-23: the API was down, no
+        # details directory existed) produced pedigree = 0 and
+        # sireCourse = 0 even though the date's horse profiles
+        # (690 horses, sire / dam / siblings complete) and the
+        # course-analysis sire table were both on file. The
+        # roster does not need the details: the speed page and
+        # the newspaper carry every entered horse's name by
+        # number. Join profiles by that name, exactly as the
+        # details loop did by the runner's name. This pass runs
+        # after the pace loop has seeded every entered horse
+        # into the roster (the maiden races have no speed
+        # entries), and before the sire-row fallback below, so
+        # the full table's record still wins.
+        for key, horse in horses.items():
+            if horse.get("pedigree") is not None:
+                continue
+            name = names.get(key)
+            if name is None:
+                press = press_horses.get(key)
+                if isinstance(press, dict) \
+                        and isinstance(press.get("name"), str) \
+                        and press["name"].strip():
+                    name = press["name"].strip()
+            if name is None:
+                continue
+            pedigree = _pedigree(profiles.get(name), course)
+            if pedigree is not None:
+                horse["pedigree"] = pedigree
         # --- 2026-11-19: course-persons sire rows as the
         # sireCourse fallback. The full sire table's record
         # (already inside pedigree, from _pedigree) wins; a
@@ -1107,6 +1265,20 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         # verbatim for the adapter's course-persons trial terms.
         # A horse with no collected row for a kind simply lacks
         # that kind (not collected, never estimated).
+        # --- 2026-11-23: the course-persons full-table join.
+        # The collected per-horse rows (above) win; a kind they
+        # do not cover is filled from the course-analysis FULL
+        # table （得意な騎手 / 得意な調教師） by the entered
+        # horse's own jockey / trainer name. Until now the
+        # builder carried only the per-horse rows, so a day
+        # whose rows were not collected (2026-11-23: rows all
+        # empty) produced courseJockey / courseTrainer = 0
+        # even though the full tables were on file for every
+        # course. The join is a reshape of the table's real
+        # rows — a person absent from the table has no record
+        # at this course and the horse carries none.
+        jockey_table = _person_table_index(course, "得意な騎手")
+        trainer_table = _person_table_index(course, "得意な調教師")
         for key, horse in horses.items():
             block: dict = {}
             jockey = persons_jockeys.get((nk_id, key))
@@ -1115,6 +1287,17 @@ def build(date: str, speed_index: dict, course_analysis: dict,
             trainer = persons_trainers.get((nk_id, key))
             if trainer is not None:
                 block["trainer"] = trainer
+            entry_names = persons_by_number.get(key) or {}
+            if "jockey" not in block \
+                    and entry_names.get("jockey") is not None:
+                record = jockey_table.get(entry_names["jockey"])
+                if record is not None:
+                    block["jockey"] = record
+            if "trainer" not in block \
+                    and entry_names.get("trainer") is not None:
+                record = trainer_table.get(entry_names["trainer"])
+                if record is not None:
+                    block["trainer"] = record
             if block:
                 horse["coursePersons"] = block
         # Every horse carries every v2 field; a horse the detail
@@ -1144,6 +1327,14 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         1 for h in all_horses
         if isinstance(h.get("pedigree"), dict)
         and h["pedigree"].get("sireCourse") is not None)
+    # 2026-11-23: the siblings block joins the counted fields —
+    # it is carried inside pedigree and (from nk-materials-v14)
+    # read by the adapter's siblings term, so its coverage is
+    # on the record like every other expected field.
+    coverage["siblings"] = sum(
+        1 for h in all_horses
+        if isinstance(h.get("pedigree"), dict)
+        and isinstance(h["pedigree"].get("siblings"), dict))
     coverage["pace"] = sum(1 for h in all_horses
                            if h.get("pace") is not None)
     # v6: the judgements / odds fields (0 until a collection
@@ -1252,6 +1443,7 @@ def main() -> int:
     parser.add_argument("--odds", action="append")
     parser.add_argument("--horse-analysis")
     parser.add_argument("--course-persons")
+    parser.add_argument("--race-entries")
     parser.add_argument("--stable-comments")
     parser.add_argument("--out")
     args = parser.parse_args()
@@ -1289,6 +1481,8 @@ def main() -> int:
                                     args.horse_analysis)
     args.stable_comments = _discover("stable-comments.json",
                                      args.stable_comments)
+    args.race_entries = _discover("race-entries.json",
+                                  args.race_entries)
     # Odds snapshots: every odds*.json sibling joins the named
     # ones, each file once, in file-mtime order (collection
     # order) — the two-stage snapshot merge then has its evening
@@ -1323,7 +1517,8 @@ def main() -> int:
                     odds=odds_arg,
                     horse_analysis=_load(args.horse_analysis),
                     course_persons=_load(args.course_persons),
-                    stable_comments=_load(args.stable_comments))
+                    stable_comments=_load(args.stable_comments),
+                    race_entries=_load(args.race_entries))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
