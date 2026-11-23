@@ -162,7 +162,17 @@ jobs:
             --out-dir result-sync-batches
           COUNT=$(find result-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 result repair batches=$COUNT"
+          # A failed batch must not starve every later batch: on
+          # 2026-11-23 one batch's POST 500 (run #1332) aborted the
+          # loop at batch-0022 and every race sorted after it stayed
+          # unposted run after run.  Each batch still goes through
+          # the same guard -> POST -> verify sequence and is only
+          # posted when its own guard passes; failures are collected
+          # per batch (with the worker's response body, which names
+          # the error) and the step fails at the end listing them.
+          FAILED_BATCHES=""
           for file in result-sync-batches/batch-*.json; do
+            name=$(basename "$file")
             # Never bypass a missing/failed D1 read: retry the safety check
             # on transient Worker 503s and fail closed if all reads fail.
             safe=0
@@ -172,15 +182,24 @@ jobs:
               fi
               sleep $((attempt * 5))
             done
-            test "$safe" = 1
+            if [ "$safe" != 1 ]; then
+              echo "::error::D1 sync guard failed for $name; batch skipped, continuing with the remaining batches"
+              FAILED_BATCHES="$FAILED_BATCHES $name(guard)"
+              continue
+            fi
             BYTES=$(wc -c < "$file" | tr -d ' ')
-            echo "POST $(basename "$file") bytes=$BYTES"
-            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+            echo "POST $name bytes=$BYTES"
+            if ! curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
               --connect-timeout 10 --max-time 40 -X POST \
               "$CLOUDFLARE_API_BASE/api/sync" \
               -H "content-type: application/json" \
               -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" > /dev/null
+              --data-binary @"$file" > "post-response-$name.txt"; then
+              echo "::error::D1 sync POST failed for $name; worker response body:"
+              cat "post-response-$name.txt" || true
+              FAILED_BATCHES="$FAILED_BATCHES $name(post)"
+              continue
+            fi
             verified=0
             for attempt in 1 2 3; do
               if PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"; then
@@ -189,8 +208,16 @@ jobs:
               echo "D1 sync verification unavailable; attempt=$attempt retrying"
               sleep $((attempt * 5))
             done
-            test "$verified" = 1
+            if [ "$verified" != 1 ]; then
+              echo "::error::D1 sync post verification failed for $name"
+              FAILED_BATCHES="$FAILED_BATCHES $name(verify)"
+              continue
+            fi
           done
+          if [ -n "$FAILED_BATCHES" ]; then
+            echo "::error::D1 result repair batches failed:$FAILED_BATCHES"
+            exit 1
+          fi
           echo "D1 result repair batched push OK"
 
       - name: Verify repaired results race-by-race from D1 (named checks)
@@ -331,7 +358,17 @@ jobs:
             --out-dir result-sync-batches
           COUNT=$(find result-sync-batches -type f -name 'batch-*.json' | wc -l | tr -d ' ')
           echo "D1 result repair batches=$COUNT"
+          # A failed batch must not starve every later batch: on
+          # 2026-11-23 one batch's POST 500 (run #1332) aborted the
+          # loop at batch-0022 and every race sorted after it stayed
+          # unposted run after run.  Each batch still goes through
+          # the same guard -> POST -> verify sequence and is only
+          # posted when its own guard passes; failures are collected
+          # per batch (with the worker's response body, which names
+          # the error) and the step fails at the end listing them.
+          FAILED_BATCHES=""
           for file in result-sync-batches/batch-*.json; do
+            name=$(basename "$file")
             # Never bypass a missing/failed D1 read: retry the safety check
             # on transient Worker 503s and fail closed if all reads fail.
             safe=0
@@ -341,15 +378,24 @@ jobs:
               fi
               sleep $((attempt * 5))
             done
-            test "$safe" = 1
+            if [ "$safe" != 1 ]; then
+              echo "::error::D1 sync guard failed for $name; batch skipped, continuing with the remaining batches"
+              FAILED_BATCHES="$FAILED_BATCHES $name(guard)"
+              continue
+            fi
             BYTES=$(wc -c < "$file" | tr -d ' ')
-            echo "POST $(basename "$file") bytes=$BYTES"
-            curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
+            echo "POST $name bytes=$BYTES"
+            if ! curl --fail-with-body --retry 4 --retry-all-errors --retry-delay 2 --retry-max-time 90 \
               --connect-timeout 10 --max-time 40 -X POST \
               "$CLOUDFLARE_API_BASE/api/sync" \
               -H "content-type: application/json" \
               -H "x-sync-token: $SYNC_TOKEN" \
-              --data-binary @"$file" > /dev/null
+              --data-binary @"$file" > "post-response-$name.txt"; then
+              echo "::error::D1 sync POST failed for $name; worker response body:"
+              cat "post-response-$name.txt" || true
+              FAILED_BATCHES="$FAILED_BATCHES $name(post)"
+              continue
+            fi
             verified=0
             for attempt in 1 2 3; do
               if PYTHONPATH=. python scripts/arvexq_protect_sync.py --verify-post --file "$file" --api-base "$CLOUDFLARE_API_BASE"; then
@@ -358,8 +404,16 @@ jobs:
               echo "D1 sync verification unavailable; attempt=$attempt retrying"
               sleep $((attempt * 5))
             done
-            test "$verified" = 1
+            if [ "$verified" != 1 ]; then
+              echo "::error::D1 sync post verification failed for $name"
+              FAILED_BATCHES="$FAILED_BATCHES $name(verify)"
+              continue
+            fi
           done
+          if [ -n "$FAILED_BATCHES" ]; then
+            echo "::error::D1 result repair batches failed:$FAILED_BATCHES"
+            exit 1
+          fi
           echo "D1 result repair batched push OK"
 
       - name: Verify repaired results race-by-race from D1 (named checks)
