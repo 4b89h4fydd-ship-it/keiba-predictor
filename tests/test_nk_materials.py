@@ -987,11 +987,17 @@ class GrowthQualificationTests(TestCase):
         self.assertIsNotNone(self._info(detail, GROWN))
 
     def test_unchanged_materials_do_not_requalify(self):
+        # The stamp's coverage records what the adjustment stood
+        # on, in the current adapter's own coverage keys — since
+        # nk-materials-v14 that includes nk_best (the fixture's
+        # five horses all carry nk_best / nk_recent). A stamp
+        # recorded by the current adapter over unchanged
+        # materials therefore shows no growth.
         detail = stored_detail(
             nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
             nk_stamp_extra={"terms": ["speed"],
                             "coverage": {"speed": 5, "mochitime": 0,
-                                         "h2h": 0}})
+                                         "h2h": 0, "nk_best": 5}})
         self.assertIsNone(self._info(detail, MATERIALS))
 
     def test_fingerprint_stamp_requalifies_only_on_growth(self):
@@ -1598,7 +1604,10 @@ class PaceAdapterTests(TestCase):
         adjusted, info = apply_nk_materials(
             forecast, _pace_materials("H")[RACE_ID], {})
         self.assertTrue(info["applied"])
-        self.assertEqual(info["terms"], ["pace"])
+        # Since nk-materials-v14 the fixture's start / corner3
+        # phases also fire the pace_early full-coverage term,
+        # in the same direction as the corner4 pace term.
+        self.assertEqual(info["terms"], ["pace", "pace_early"])
         self.assertEqual(info["paceTrial"], "ai-pace-forecast")
         self.assertIn(NK_PACE_WEIGHTS_LABEL, info["weights"])
         self.assertEqual(info["coverage"]["pace"], 5)
