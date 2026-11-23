@@ -1056,7 +1056,15 @@
       "archive_sha256": "8729f63e7d0a6d852e18f67bf22afc24e14fc797d14553245bd53ffab8dab5e5",
       "manifest": "manifests/2026-10-23.json",
       "file": "details/2026-10-23.jsonl.gz"
+    },
+    "2026-10-24": {
+      "races": 60,
+      "payload_bytes": 673358,
+      "archive_bytes": 261967,
+      "archive_sha256": "8b738a1aa998a6ede4acdd97b898bceb52115c687016a6366ac11661f28bee68",
+      "manifest": "manifests/2026-10-24.json",
+      "file": "details/2026-10-24.jsonl.gz"
     }
   },
-  "updated_at": "2026-11-23T00:43:30Z"
+  "updated_at": "2026-11-23T21:36:29Z"
 }
