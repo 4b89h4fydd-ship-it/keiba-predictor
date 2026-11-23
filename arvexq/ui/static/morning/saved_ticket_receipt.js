@@ -1,10 +1,13 @@
 /* Recover only an existing, hash-verified pre-off bet. Never calculate tickets. */
 (function(root){
 'use strict';
+// Deployment base: '/' at the origin root (Workers); the GitHub
+// Pages build injects window.ARVEXQ_BASE_PATH='/keiba-predictor/'.
+function basePath(){var b=String(root.ARVEXQ_BASE_PATH||'/');if(b.charAt(0)!=='/')b='/'+b;if(b.charAt(b.length-1)!=='/')b+='/';return b}
 const originals=new Map(),days=new Map();
 async function load(date,fetchJson){
  if(!days.has(date))days.set(date,(async()=>{
-  const manifest=await fetchJson('/saved-snapshots/'+date+'.json',6500);
+  const manifest=await fetchJson(basePath()+'saved-snapshots/'+date+'.json',6500);
   if(!manifest||manifest.date!==date||!manifest.races)return;
   await Promise.all(Object.entries(manifest.races).filter(([,ref])=>ref.bet===true).map(async([id])=>{
    const r=await root.ARVEXQSavedSnapshot.available(date,id,fetchJson);
