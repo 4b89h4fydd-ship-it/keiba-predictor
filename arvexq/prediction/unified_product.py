@@ -45,7 +45,7 @@ def _timestamp(stamp):
         return None
 
 
-def _core_valid(race, source):
+def _core_valid(race, source, *, sealed_roster=False):
     if not isinstance(race, dict) or not isinstance(source, dict):
         return False
     if source.get("version") != VERSION or source.get("raceId") != race.get("id"):
@@ -59,12 +59,37 @@ def _core_valid(race, source):
     capture, off = _timestamp(source.get("capturedAt")), post_at(race)
     if not capture or not off or capture >= off or source.get("trainedThrough", "9999") >= race.get("date", ""):
         return False
-    actual = {h.get("horseNumber"): h.get("name") for h in race.get("horses") or []
-              if isinstance(h, dict) and not is_inactive_runner(h)}
+    # Default binding: the roster must equal the card's ACTIVE runners,
+    # so a forecast stops verifying as current the moment one of its
+    # runners is scratched.  The sealed_roster binding (restore paths
+    # only, see verified_sealed) binds the roster to the card AS
+    # SEALED, which the current card still determines exactly:
+    # every roster runner must be on the card under the same name
+    # (a runner scratched after sealing stays carded), and every
+    # ACTIVE runner must be in the roster (a runner scratched before
+    # sealing is carded but was never part of the forecast).  A card
+    # that gained, lost or renamed a runner fails under both bindings.
+    card, active = {}, {}
+    for h in race.get("horses") or []:
+        if not isinstance(h, dict):
+            continue
+        card[h.get("horseNumber")] = h.get("name")
+        if not is_inactive_runner(h):
+            active[h.get("horseNumber")] = h.get("name")
     expected = {row.get("horseNumber"): row.get("name") for row in source.get("roster") or []
                 if isinstance(row, dict)}
-    if len(actual) < 3 or actual != expected:
-        return False
+    if sealed_roster:
+        if len(expected) < 3:
+            return False
+        if any(card.get(n) != name for n, name in expected.items()):
+            return False
+        if any(expected.get(n) != name for n, name in active.items()):
+            return False
+        actual = expected
+    else:
+        actual = active
+        if len(actual) < 3 or actual != expected:
+            return False
     marks = source.get("marks")
     if not isinstance(marks, list) or not marks:
         return False
@@ -190,11 +215,7 @@ def _serving_form_digests(canonical):
     return digests
 
 
-def verified(race):
-    """Revalidate immutable receipt and its hash, not only claimed IDs."""
-    candidate = (race or {}).get("unifiedForecast")
-    if not _core_valid(race, candidate):
-        return None
+def _receipt_accepted(candidate):
     canonical = {k: v for k, v in candidate.items() if k != "receiptSha256"}
     accepted = {
         # Current form: value-canonical (what canonical_receipt seals).
@@ -207,7 +228,36 @@ def verified(race):
         # display projection (see _serving_form_digests).
         *_serving_form_digests(canonical),
     }
-    return candidate if candidate.get("receiptSha256") in accepted else None
+    return candidate.get("receiptSha256") in accepted
+
+
+def verified(race):
+    """Revalidate immutable receipt and its hash, not only claimed IDs."""
+    candidate = (race or {}).get("unifiedForecast")
+    if not _core_valid(race, candidate):
+        return None
+    return candidate if _receipt_accepted(candidate) else None
+
+
+def verified_sealed(race):
+    """Verify the product as a sealed pre-off record, not as current.
+
+    Identical to verified() except the roster is bound to the card
+    as sealed (see _core_valid's sealed_roster binding): a runner
+    scratched after the product was sealed stays on the card and in
+    the roster,
+    so the product still proves what was published before the off.
+    This exists ONLY for reconstructing that sealed record (the
+    tombstone restore in scripts/arvexq_sealed_restore.py).  It is
+    never an authorization gate: a product whose roster includes a
+    later-scratched runner must not be served or protected as the
+    race's current forecast on this basis — verified() remains the
+    binding for that.
+    """
+    candidate = (race or {}).get("unifiedForecast")
+    if not _core_valid(race, candidate, sealed_roster=True):
+        return None
+    return candidate if _receipt_accepted(candidate) else None
 
 
 # --- masterAnalysis sidecar seal ------------------------------------------------
