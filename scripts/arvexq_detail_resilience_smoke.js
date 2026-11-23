@@ -32,9 +32,9 @@ const instrumented = source.replace(boot, `
   const requests=[];
   await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
-   if(url.pathname.startsWith('/api/racecard/')&&extras.card){await extras.card(route);return}
+   if(url.pathname.startsWith('/racecards/')&&extras.card){await extras.card(route);return}
    if(url.pathname.startsWith('/api/odds/')&&extras.odds){await extras.odds(route);return}
-   if(url.pathname.startsWith('/api/race/')){requests.push({url:url.href,at:Date.now()});await response(route,requests.length);return}
+   if(url.pathname.startsWith('/api-static/race/')){requests.push({url:url.href,at:Date.now()});await response(route,requests.length);return}
    await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');
@@ -43,6 +43,7 @@ const instrumented = source.replace(boot, `
   for(const name of fs.readdirSync(path.join(root,'arvexq/ui/static/forecast')).filter(n=>n.endsWith('.js')))await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/forecast',name),'utf8')});
   await page.addStyleTag({content:['styles.css','styles/legacy_v118_v221.css','styles/race_v222_plus.css'].map(p=>fs.readFileSync(path.join(root,'arvexq/ui/static',p),'utf8')).join('\n')});
   await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/research/live_odds.js'),'utf8')});
+  await page.addScriptTag({content:fs.readFileSync(path.join(root,'arvexq/ui/static/research/static_racecard.js'),'utf8')});
   await page.addScriptTag({content:instrumented});
   await page.evaluate(row=>{testDetail.state.races=[row];testDetail.state.date=row.date;testDetail.state.track=row.track},base);
   return {page,requests}
@@ -70,7 +71,7 @@ const instrumented = source.replace(boot, `
  await t.page.waitForSelector('.arv-entry-table tbody tr');
  assert.equal(await t.page.locator('.arv-entry-table tbody tr').count(),detail.horses.length);
  assert.equal(await t.page.evaluate(()=>localStorage.getItem('unrelated-cache')),'keep');
- assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api/race/'+id));
+ assert.ok(t.requests.every(x=>decodeURIComponent(new URL(x.url).pathname)==='/api-static/race/'+id+'.json'));
  await t.page.waitForFunction(()=>testDetail.prediction()!=null);
  // Entry, pace and tickets are separate tabs; since 2026-11-21 the
  // tickets tab switches in place like the others (user request: the
@@ -110,7 +111,7 @@ const instrumented = source.replace(boot, `
  const card={...base,fieldSize:detail.horses.length,horses:detail.horses.map(h=>({horseNumber:h.horseNumber,name:h.name,frameNumber:h.frameNumber,jockey:h.jockey,sex:h.sex,age:h.age,carriedWeight:h.carriedWeight}))};
  let recoverFull=false;
  t=await setup(route=>recoverFull?route.fulfill({json:{ok:true,detail,summary:base,odds:[]}}):route.fulfill({status:503,body:'full detail outage'}),{
-  card:route=>route.fulfill({json:{ok:true,race_id:id,detail:card,entry_state:'loaded'}}),
+  card:route=>route.fulfill({json:{version:'arvexq-static-entry-v1',date:date,races:[card]}}),
   odds:route=>route.fulfill({json:{ok:true,race_id:id,odds:detail.horses.map(h=>({horse_no:h.horseNumber,win_odds:h.winOdds,popularity:h.popularity}))}})
  });
  await t.page.evaluate(id=>testDetail.openRace(id),id);await t.page.waitForSelector('.arv-entry-table tbody tr');

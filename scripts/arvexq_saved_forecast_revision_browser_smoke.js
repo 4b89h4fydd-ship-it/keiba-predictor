@@ -14,9 +14,9 @@ const code=source.replace(boot,`ensureAutoOdds=function(){};scheduleResultRefres
   const page=await browser.newPage({viewport:{width:390,height:844}});
   const errors=[];page.on('pageerror',error=>errors.push(String(error)));
   await page.route('**/*',route=>{
-   if(route.request().url().includes('/api/forecast-revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});
+   if(route.request().url().includes('/api-static/revisions/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,forecastRevisions:detail.forecastRevisions,currentForecastRevisionId:detail.currentForecastRevisionId})});
    if(route.request().url().includes('/api/live-odds/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,raceId:detail.id,horses:[]})});
-   if(route.request().url().includes('/api/race/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail:originalDetail})});
+   if(route.request().url().includes('/api-static/race/'))return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({ok:true,detail:originalDetail})});
    return route.fulfill({status:200,contentType:'text/html',body:'<html><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');

@@ -30,6 +30,14 @@ mode is transitional: it lets a standalone workflow regenerate the packs
 without lane changes, and it fails soft (exit 2, nothing written) while
 the API is unavailable so the last good packs stay deployed.
 
+With ``--merge-existing`` the input model is overlaid on the packs
+already in ``--out-dir`` for the same date instead of replacing them.
+Delta payloads (the realtime sync lane's ``live-payload.json`` carries
+only the races it updated; the rewrite publish lane emits only the
+races it published) can therefore refresh their races without shrinking
+the day pack to the delta.  Entries present in the input win; entries
+absent from it keep their existing pack content.
+
 Banei (Obihiro) races are excluded on every path, matching the API.
 Files whose canonical content is unchanged are not rewritten, so
 regeneration does not create commit churn.
@@ -190,6 +198,16 @@ def model_from_sync_payload(payload: dict) -> DayModel:
         updated = row.get("updated_at", row.get("updatedAt", row.get("updatedAtEpoch")))
         _add_detail(model, detail, odds=odds_by_id.get(rid),
                     analysis_ready=bool(ready), updated_at=updated)
+    # Odds rows for races whose detail is not in this payload (the live
+    # lane's odds-only updates): keep them on the model so a
+    # --merge-existing build can refresh that race's existing pack odds
+    # without touching its detail.  Without a detail (and no existing
+    # pack to merge into) they are simply never written.
+    for rid, rows in odds_by_id.items():
+        if rid and rid not in model.details and rid not in model.odds:
+            track = str((model.summaries.get(rid) or {}).get("track") or "")
+            if not _is_banei(rid, track):
+                model.odds[rid] = rows
     return model
 
 
@@ -248,6 +266,54 @@ def detect_model(payload: dict) -> DayModel:
         return model_from_sync_payload(payload)
     raise ValueError("unrecognized payload shape: expected sync payload, "
                      "official snapshot, or full /api/day response")
+
+
+def model_from_existing_packs(out_dir: Path, date: str) -> DayModel:
+    """Seeds a model from packs already written under out_dir (the base
+    for --merge-existing).  Missing/corrupt files simply yield an
+    emptier base; nothing is invented."""
+    model = DayModel(date)
+    day_path = out_dir / "day" / f"{date}.json"
+    try:
+        day = json.loads(day_path.read_text(encoding="utf-8"))
+    except Exception:
+        return model
+    race_ids = []
+    for s in day.get("races") or []:
+        if not isinstance(s, dict):
+            continue
+        row = _day_row_from_summary(s)
+        rid = str(row.get("id") or "")
+        if not rid:
+            continue
+        if _is_banei(rid, str(row.get("track") or "")):
+            continue
+        model.summaries[rid] = row
+        race_ids.append(rid)
+    for rid in race_ids:
+        try:
+            body = json.loads((out_dir / "race" / f"{rid}.json").read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        odds = body.get("odds")
+        _add_detail(model, body.get("detail"),
+                    odds=odds if isinstance(odds, list) else None,
+                    analysis_ready=body.get("analysis_ready"),
+                    updated_at=body.get("detail_updated_at"))
+    return model
+
+
+def merge_models(base: DayModel, overlay: DayModel) -> DayModel:
+    """Overlay wins per race; races only in base survive unchanged."""
+    merged = DayModel(overlay.date or base.date)
+    merged.summaries = {**base.summaries, **overlay.summaries}
+    merged.details = {**base.details, **overlay.details}
+    merged.odds = {**base.odds, **overlay.odds}
+    merged.analysis_ready = {**base.analysis_ready, **overlay.analysis_ready}
+    merged.detail_updated_at = {**base.detail_updated_at,
+                                **overlay.detail_updated_at}
+    merged.skipped_banei = base.skipped_banei + overlay.skipped_banei
+    return merged
 
 
 def _canonical(obj: Any) -> str:
@@ -418,6 +484,10 @@ def main() -> int:
                    help="also write day-full/<date>.json (local/audit use; too large to deploy)")
     p.add_argument("--prune-days", type=int, default=None,
                    help="drop packs older than N days (from the built date) out of the tree")
+    p.add_argument("--merge-existing", action="store_true",
+                   help="overlay the input on the packs already in --out-dir "
+                        "for the same date (for delta payloads that carry "
+                        "only updated races)")
     args = p.parse_args()
 
     generated_at = datetime.now(JST).isoformat(timespec="seconds")
@@ -429,6 +499,10 @@ def main() -> int:
             model = detect_model(payload)
         else:
             p.error("one of --input or --fetch-date is required")
+        if args.merge_existing and DATE_RE.match(model.date or ""):
+            base = model_from_existing_packs(Path(args.out_dir), model.date)
+            if base.summaries or base.details:
+                model = merge_models(base, model)
     except Exception as e:  # fail soft: keep the last good packs deployed
         print(f"STATIC_API_INPUT_FAILED {e!r}")
         return 2
