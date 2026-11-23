@@ -91,16 +91,15 @@ class PersistedInputTests(unittest.TestCase):
         steps = [
             "Collect racecards and full careers without running predictions",
             "Persist collected facts using the existing D1 sync pipeline",
-            "Read D1 facts back and require identical horse/history evidence",
-            "Analyze only persisted D1 data and prepare original marks and bets",
+            "Build persisted facts from collected local facts",
+            "Analyze only persisted local facts and prepare original marks and bets",
             "Freeze morning selected and special predictions for all races",
-            "Push prepared day repairs to D1 in safe batches",
         ]
         positions = [prefetch.index(x) for x in steps]
         self.assertEqual(positions, sorted(positions))
         self.assertIn("'--phase', 'collect'", prefetch)
         self.assertIn("'--phase', 'analyze'", prefetch)
-        self.assertIn("D1_STORED_EVIDENCE_VERIFIED", prefetch)
+        self.assertIn("LOCAL_PERSISTED_FACTS_VERIFIED", prefetch)
         result = (ROOT / ".github/workflows/arvexq-result-repair.yml").read_text(encoding="utf-8")
         self.assertIn("--allow-empty-day", result)
         self.assertIn("arvexq_restore_result_day.py", result)

@@ -1,7 +1,7 @@
 """Regression: pre-day official cards must not freeze next-day forecast products.
 
-The workflow keeps the same API and D1 acquisition paths.  A specific cron
-selects tomorrow's date and stops after verified factual card publication.
+A specific cron selects tomorrow's date and stops after verified
+factual card publication.
 """
 from __future__ import annotations
 
@@ -89,14 +89,10 @@ class PrefetchNextDayScheduleTest(unittest.TestCase):
 
     def test_day_ahead_does_not_generate_prediction_products(self) -> None:
         guarded = (
-            "Analyze only persisted D1 data and prepare original marks and bets",
+            "Analyze only persisted local facts and prepare original marks and bets",
             "Freeze morning selected and special predictions for all races",
             "Publish fixed morning race list as a Cloudflare static asset",
-            "Preserve lossless prediction originals before D1 writes",
-            "Select only missing or thin D1 details",
-            "Push prepared day repairs to D1 in safe batches",
-            "Verify prepared day and analysis from D1",
-            "Preserve morning D1 consistency audit",
+            "Preserve lossless prediction originals",
         )
         for name in guarded:
             with self.subTest(step=name):
@@ -108,11 +104,10 @@ class PrefetchNextDayScheduleTest(unittest.TestCase):
     def test_day_ahead_keeps_existing_fact_publication(self) -> None:
         for name in (
             "Discover all officially available races",
-            "Publish official day summaries before heavy prediction work",
             "Collect racecards and full careers without running predictions",
             "Publish lightweight racecards independent of D1 capacity",
             "Persist collected facts using the existing D1 sync pipeline",
-            "Read D1 facts back and require identical horse/history evidence",
+            "Build persisted facts from collected local facts",
         ):
             with self.subTest(step=name):
                 self.assertNotIn("ARVEXQ_DAY_AHEAD", step_block(self.workflow, name))

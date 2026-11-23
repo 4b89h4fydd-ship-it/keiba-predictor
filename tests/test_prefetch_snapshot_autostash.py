@@ -46,5 +46,5 @@ def test_prefetch_archive_rebase_preserves_unstaged_workfiles(tmp_path):
 def test_prefetch_workflow_enables_autostash_and_retains_audit_steps():
     data=Path(".github/workflows/arvexq-prefetch.yml").read_text()
     assert "git -c rebase.autoStash=true pull --rebase origin main" in data
-    assert "D1_STORED_EVIDENCE_VERIFIED" in data
+    assert "LOCAL_PERSISTED_FACTS_VERIFIED" in data
     assert "git push origin HEAD:main" in data

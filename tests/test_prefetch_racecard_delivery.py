@@ -54,14 +54,16 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertEqual(repair.repair_reason(prepared, existing, facts_only=True),
                          "roster_incomplete")
 
-    def test_workflow_facts_only_and_later_prediction_overlay_remain_separate(self) -> None:
+    def test_workflow_facts_only_stage_and_retired_d1_overlay(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         fact_stage = workflow.split("Persist collected facts using the existing D1 sync pipeline",1)[1].split(
-            "Read D1 facts back and require identical horse/history evidence",1)[0]
-        forecast_stage = workflow.split("Select only missing or thin D1 details",1)[1].split(
-            "Push prepared day repairs to D1 in safe batches",1)[0]
+            "Build persisted facts from collected local facts",1)[0]
         self.assertIn("--facts-only", fact_stage)
-        self.assertNotIn("--facts-only", forecast_stage)
+        # Cloudflare exit (2026-11-23): the analyzed payload is published
+        # only as static packs; the D1 overlay chain is retired.
+        self.assertNotIn("Select only missing or thin D1 details", workflow)
+        self.assertNotIn("Push prepared day repairs to D1 in safe batches", workflow)
+        self.assertNotIn("Verify prepared day and analysis from D1", workflow)
 
     def test_partial_roster_with_ai_is_still_a_repair(self) -> None:
         prepared = race(self.id, (1, 2, 3, 4))
@@ -214,49 +216,43 @@ class PrefetchRacecardDeliveryTests(unittest.TestCase):
         self.assertTrue(output["race-4"]["evidenceReady"])
         self.assertFalse(any(card.get("evidenceReady") for card in cards.values()))
 
-    def test_official_d1_day_exists_before_heavy_prefetch(self) -> None:
+    def test_static_racecards_and_local_facts_precede_analysis(self) -> None:
+        # Cloudflare exit (2026-11-23): the early D1 summaries publisher is
+        # retired. The public racecard rescue is the static publish step,
+        # and the analysis input is built locally from collected facts.
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
-        early = workflow.index("Publish official day summaries before heavy prediction work")
         collect = workflow.index("Collect racecards and full careers without running predictions")
-        heavy = workflow.index("Analyze only persisted D1 data")
-        cold = workflow.index("D1_EARLY_SUMMARIES_WRITE")
-        verify = workflow.index("D1_EARLY_SUMMARIES_VERIFY")
-        persist = workflow.index("D1_STORED_EVIDENCE_VERIFIED")
-        self.assertLess(early, cold)
-        self.assertLess(cold, verify)
-        self.assertLess(verify, collect)
-        self.assertLess(collect, persist)
-        self.assertLess(persist, heavy)
-        self.assertIn("--file initial-day-summaries.json", workflow)
-        self.assertIn("D1_EARLY_SUMMARIES_INCOMPLETE", workflow)
-        self.assertEqual(workflow.count("arvexq-cold-start-race-summaries-v1"), 1,
+        rescue = workflow.index("Publish lightweight racecards independent of D1 capacity")
+        build = workflow.index("Build persisted facts from collected local facts")
+        heavy = workflow.index("Analyze only persisted local facts")
+        verified = workflow.index("LOCAL_PERSISTED_FACTS_VERIFIED")
+        self.assertLess(collect, rescue)
+        self.assertLess(rescue, build)
+        self.assertLess(build, verified)
+        self.assertLess(verified, heavy)
+        self.assertNotIn("Publish official day summaries before heavy prediction work", workflow)
+        self.assertNotIn("D1_EARLY_SUMMARIES_WRITE", workflow)
+        self.assertEqual(workflow.count("arvexq-cold-start-race-summaries-v1"), 0,
                          "retire the old post-analysis cold-start publisher")
 
-    def test_d1_readback_checks_prepared_active_ids_not_legacy_day_totals(self) -> None:
-        # A D1 calendar manifest can retain retired races with 404 details.
-        # The regression contract is exact identity/completeness of every
-        # prepared active race, without silently discarding missing active IDs.
+    def test_d1_payload_readback_verification_retired(self) -> None:
+        # Cloudflare exit (2026-11-23): the D1 read-back verification of the
+        # analyzed payload is retired. Completeness of every prepared race
+        # is now enforced inside the analyze phase itself (per-race staging
+        # and fact-immutability checks) and by the static pack checks.
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
-        self.assertIn("D1_PREFETCH_ACTIVE_ID_READBACK", workflow)
-        self.assertIn("D1_PREFETCH_ACTIVE_SCOPE", workflow)
-        self.assertIn("missing_prepared_ids=sorted(expected_ids-set(expected))", workflow)
-        self.assertIn("missing_summary_ids=sorted(expected_ids-actual_ids)", workflow)
-        self.assertIn("missing_cards.extend((rid,'no prepared source detail')", workflow)
-        self.assertIn("d=returned.get(rid)", workflow)
-        self.assertIn("raise SystemExit('D1 racecard delivery incomplete:", workflow)
-        self.assertNotIn('if [ "$ACTUAL" -lt "$EXPECTED" ]', workflow)
-        self.assertNotIn('if [ "$DETAILS" -lt "$EXPECTED" ]', workflow)
+        self.assertNotIn("Verify prepared day and analysis from D1", workflow)
+        self.assertNotIn("D1_PREFETCH_ACTIVE_ID_READBACK", workflow)
+        self.assertNotIn("D1_PREFETCH_ACTIVE_SCOPE", workflow)
 
     def test_pipeline_still_publishes_when_analysis_fails(self) -> None:
         workflow = Path(".github/workflows/arvexq-prefetch.yml").read_text(encoding="utf-8")
         self.assertIn("Publish lightweight racecards independent of D1 capacity", workflow)
-        self.assertIn("D1_STORED_EVIDENCE_VERIFIED", workflow)
-        self.assertIn("D1_MISSING_CARDS", workflow)
-        self.assertIn("FAILED_BATCHES=$((FAILED_BATCHES + 1))", workflow)
+        self.assertIn("LOCAL_PERSISTED_FACTS_VERIFIED", workflow)
         self.assertLess(workflow.index("Publish lightweight racecards independent of D1 capacity"),
-                        workflow.index("Analyze only persisted D1 data"))
-        self.assertLess(workflow.index("Read D1 facts back and require identical horse/history evidence"),
-                        workflow.index("Analyze only persisted D1 data"))
+                        workflow.index("Analyze only persisted local facts"))
+        self.assertLess(workflow.index("Build persisted facts from collected local facts"),
+                        workflow.index("Analyze only persisted local facts"))
 
 
 if __name__ == "__main__":
