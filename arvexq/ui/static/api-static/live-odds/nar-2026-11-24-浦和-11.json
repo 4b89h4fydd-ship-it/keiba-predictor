@@ -1,8 +1,123 @@
 {
- "ok": false,
+ "ok": true,
  "race_id": "nar-2026-11-24-浦和-11",
- "odds": [],
- "oddsStatus": "unavailable",
- "refreshFailed": true,
- "error": "official odds unavailable"
+ "odds": [
+  {
+   "horse_no": 1,
+   "win_odds": 11.3,
+   "popularity": 5,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 2,
+   "win_odds": 13.2,
+   "popularity": 6,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 3,
+   "win_odds": 6.9,
+   "popularity": 4,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 4,
+   "win_odds": 47.4,
+   "popularity": 10,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 5.3,
+   "popularity": 3,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 35.4,
+   "popularity": 9,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 7,
+   "win_odds": 16.8,
+   "popularity": 8,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 8,
+   "win_odds": 67.9,
+   "popularity": 11,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 3,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 10,
+   "win_odds": 139.6,
+   "popularity": 14,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 11,
+   "win_odds": 15.7,
+   "popularity": 7,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 12,
+   "win_odds": 4.7,
+   "popularity": 2,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 13,
+   "win_odds": 73.9,
+   "popularity": 12,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 14,
+   "win_odds": 100.5,
+   "popularity": 13,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  }
+ ],
+ "oddsSource": "NAR公式",
+ "oddsUpdatedAt": "2026-11-24T05:52:45.573Z",
+ "sourcePublishedAt": "2026-11-24T14:52:00+09:00",
+ "popularitySource": "NAR公式単勝オッズ順位",
+ "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=18&k_raceDate=2026%2F11%2F24&k_raceNo=11"
 }
