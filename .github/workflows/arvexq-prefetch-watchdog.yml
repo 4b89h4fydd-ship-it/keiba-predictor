@@ -12,6 +12,16 @@ name: ARVEXQ Same-Day Prefetch Watchdog
 # A 45-minute throttle plus an in-flight check keep at most one
 # watchdog-dispatched prefetch going at a time. Nothing about
 # collection, protect or freeze semantics changes.
+#
+# Day-ahead coverage (added 2026-11-24, user-approved): the same
+# scheduler starvation also dropped the 17:05 JST day-ahead slot on
+# 2026-11-24, and the dedicated Day-Ahead Dispatcher's own schedule
+# was starved all afternoon while its workflow_run triggers landed on
+# non-success conclusions and skipped. So this watchdog also checks,
+# from noon JST onward, whether tomorrow's static day pack exists yet
+# and dispatches a collection-only prefetch (date = tomorrow) when it
+# does not, throttled the same way. The Day-Ahead Dispatcher workflow
+# stays in place as an additional layer; nothing about it changes.
 
 "on":
   push:
@@ -40,9 +50,10 @@ name: ARVEXQ Same-Day Prefetch Watchdog
     types: [completed]
   schedule:
     # Every 20 minutes, offset from the prefetch workflow's own :30
-    # slots. The script gates itself to JST 05:00-21:59, when same-day
-    # issuance matters; GitHub may drop individual slots, but at this
-    # density several checks land per hour.
+    # slots. The steps gate themselves to JST daytime/evening hours,
+    # when issuance and day-ahead collection matter; GitHub may drop
+    # individual slots, but at this density several checks land
+    # per hour.
     - cron: "7,27,47 * * * *"
 
 permissions:
@@ -120,3 +131,52 @@ jobs:
           fi
           gh workflow run arvexq-prefetch.yml --ref main
           echo "WATCHDOG_DISPATCHED date=$TODAY"
+
+      - name: Dispatch tomorrow's collection if its day pack is missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Day-ahead window: JST 12:00-21:59. Tomorrow's entries stand
+          # up progressively through the afternoon, so before noon
+          # there is nothing to collect yet.
+          HOUR=$(TZ=Asia/Tokyo date +%H)
+          if [ "$HOUR" -lt 12 ] || [ "$HOUR" -gt 21 ]; then
+            echo "WATCHDOG_AHEAD_SKIP outside-window hour=$HOUR"
+            exit 0
+          fi
+          TOMORROW=$(TZ=Asia/Tokyo date -d tomorrow +%F)
+          # Tomorrow's day pack already published -> collection done.
+          COUNT=0
+          if curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+              --connect-timeout 10 --max-time 35 \
+              "$PACK_BASE/day/$TOMORROW.json" -o watchdog-ahead.json; then
+            COUNT=$(jq '.races // [] | length' watchdog-ahead.json 2>/dev/null || echo 0)
+          fi
+          echo "WATCHDOG_AHEAD_CHECK date=$TOMORROW races=$COUNT"
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "Tomorrow's listing is already collected; nothing to dispatch."
+            exit 0
+          fi
+          # A prefetch run in flight may be the one collecting it.
+          RUNS=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?per_page=5" 2>/dev/null || echo "")
+          if [ -n "$RUNS" ]; then
+            INFLIGHT=$(echo "$RUNS" | jq '[.workflow_runs[] | select(.status != "completed")] | length')
+            if [ "${INFLIGHT:-0}" -gt 0 ]; then
+              echo "WATCHDOG_AHEAD_SKIP prefetch in flight"
+              exit 0
+            fi
+          fi
+          # Throttle: at most one dispatched prefetch (any target) per
+          # 45 minutes, shared with the same-day step above.
+          LASTDISP=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?event=workflow_dispatch&per_page=1" \
+            --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || echo "")
+          if [ -n "$LASTDISP" ]; then
+            DAGE=$(( $(date +%s) - $(date -d "$LASTDISP" +%s) ))
+            echo "WATCHDOG_AHEAD_LAST_DISPATCH age_sec=$DAGE"
+            if [ "$DAGE" -lt 2700 ]; then
+              echo "A dispatched prefetch ran recently; throttled."
+              exit 0
+            fi
+          fi
+          gh workflow run arvexq-prefetch.yml --ref main -f date="$TOMORROW"
+          echo "WATCHDOG_AHEAD_DISPATCHED date=$TOMORROW"
