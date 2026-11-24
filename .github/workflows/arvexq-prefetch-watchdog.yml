@@ -1,0 +1,122 @@
+name: ARVEXQ Same-Day Prefetch Watchdog
+
+# Same-day issuance used to depend solely on arvexq-prefetch.yml's own
+# scheduled slots. On 2026-11-04 and again on 2026-11-24 the GitHub
+# scheduler dropped every morning slot (last run 00:52 JST), so no
+# forecasts were issued until a human dispatched the workflow by hand
+# hours later. This watchdog mirrors the Day-Ahead Dispatch pattern:
+# three independent cadences (relevant pushes to main, completions of
+# the Realtime Sync workflow, and its own 20-minute schedule) check
+# whether the Full Prefetch workflow has run recently, and dispatch
+# one (today, JST) when it has gone quiet during racing hours.
+# A 45-minute throttle plus an in-flight check keep at most one
+# watchdog-dispatched prefetch going at a time. Nothing about
+# collection, protect or freeze semantics changes.
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - app.py
+      - scripts/arvexq_prefetch.py
+      - scripts/arvexq_morning_picks.js
+      - scripts/arvexq_merge_morning_output.py
+      - scripts/arvexq_sync_batches.py
+      - scripts/arvexq_fetch_d1_bundle.py
+      - scripts/arvexq_protect_sync.py
+      - scripts/arvexq_select_prefetch_repairs.py
+      - scripts/arvexq_verify_persisted_inputs.py
+      - scripts/arvexq_sqlite_health.py
+      - arvexq/pipeline/fingerprints.py
+      - arvexq/pipeline/persisted_inputs.py
+      - arvexq/prediction/**
+      - arvexq/forecast/**
+      - arvexq/ingest/**
+      - arvexq/databanks/**
+      - .github/workflows/arvexq-prefetch.yml
+      - .github/workflows/arvexq-prefetch-watchdog.yml
+  workflow_run:
+    workflows: ["ARVEXQ Realtime Sync"]
+    types: [completed]
+  schedule:
+    # Every 20 minutes, offset from the prefetch workflow's own :30
+    # slots. The script gates itself to JST 05:00-21:59, when same-day
+    # issuance matters; GitHub may drop individual slots, but at this
+    # density several checks land per hour.
+    - cron: "7,27,47 * * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: arvexq-prefetch-watchdog
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+
+    env:
+      GH_REPO: ${{ github.repository }}
+      PACK_BASE: https://raw.githubusercontent.com/4b89h4fydd-ship-it/keiba-predictor/main/arvexq/ui/static/api-static
+
+    steps:
+      - name: Dispatch today's prefetch if it has gone quiet
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Same-day issuance window: JST 05:00-21:59.
+          HOUR=$(TZ=Asia/Tokyo date +%H)
+          if [ "$HOUR" -lt 5 ] || [ "$HOUR" -gt 21 ]; then
+            echo "WATCHDOG_SKIP outside-window hour=$HOUR"
+            exit 0
+          fi
+          TODAY=$(TZ=Asia/Tokyo date +%F)
+          # No racing today -> nothing to issue.
+          COUNT=0
+          if curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
+              --connect-timeout 10 --max-time 35 \
+              "$PACK_BASE/day/$TODAY.json" -o watchdog-day.json; then
+            COUNT=$(jq '.races // [] | length' watchdog-day.json 2>/dev/null || echo 0)
+          fi
+          echo "WATCHDOG_CHECK date=$TODAY races=$COUNT"
+          if [ "${COUNT:-0}" -eq 0 ]; then
+            echo "No races listed for today; nothing to dispatch."
+            exit 0
+          fi
+          # Recent prefetch activity: any event counts. If a run is in
+          # flight, or one started within the last 100 minutes, the
+          # normal lanes are alive.
+          RUNS=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?per_page=5" 2>/dev/null || echo "")
+          if [ -n "$RUNS" ]; then
+            INFLIGHT=$(echo "$RUNS" | jq '[.workflow_runs[] | select(.status != "completed")] | length')
+            if [ "${INFLIGHT:-0}" -gt 0 ]; then
+              echo "WATCHDOG_SKIP prefetch in flight"
+              exit 0
+            fi
+            LAST=$(echo "$RUNS" | jq -r '.workflow_runs[0].created_at // empty')
+            if [ -n "$LAST" ]; then
+              AGE=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
+              echo "WATCHDOG_LAST_RUN age_sec=$AGE"
+              if [ "$AGE" -lt 6000 ]; then
+                echo "Prefetch ran recently; lanes are alive."
+                exit 0
+              fi
+            fi
+          fi
+          # Throttle watchdog dispatches to one per 45 minutes.
+          LASTDISP=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?event=workflow_dispatch&per_page=1" \
+            --jq '.workflow_runs[0].created_at // empty' 2>/dev/null || echo "")
+          if [ -n "$LASTDISP" ]; then
+            DAGE=$(( $(date +%s) - $(date -d "$LASTDISP" +%s) ))
+            echo "WATCHDOG_LAST_DISPATCH age_sec=$DAGE"
+            if [ "$DAGE" -lt 2700 ]; then
+              echo "A dispatched prefetch ran recently; throttled."
+              exit 0
+            fi
+          fi
+          gh workflow run arvexq-prefetch.yml --ref main
+          echo "WATCHDOG_DISPATCHED date=$TODAY"
