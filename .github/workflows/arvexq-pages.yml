@@ -11,6 +11,13 @@
 name: ARVEXQ Pages Deploy
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'arvexq/ui/static/**'
+      - 'build_static.py'
+      - 'scripts/arvexq_build_odds_sources.py'
+      - '.github/workflows/arvexq-pages.yml'      
   workflow_dispatch:
 
 permissions:
