@@ -1,0 +1,51 @@
+{
+ "ok": true,
+ "race_id": "nar-2026-11-24-名古屋-04",
+ "odds": [
+  {
+   "horse_no": 1,
+   "win_odds": 4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 2,
+   "win_odds": 4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 4,
+   "win_odds": 4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 11,
+   "win_odds": 4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  }
+ ],
+ "oddsSource": "NAR公式",
+ "oddsUpdatedAt": "2026-11-24T01:12:58.504Z",
+ "sourcePublishedAt": "2026-11-24T10:12:00+09:00",
+ "popularitySource": "NAR公式単勝オッズ順位",
+ "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=24&k_raceDate=2026%2F11%2F24&k_raceNo=4"
+}

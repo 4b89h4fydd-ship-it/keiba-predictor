@@ -1,0 +1,35 @@
+{
+ "ok": true,
+ "race_id": "nar-2026-11-24-水沢-12",
+ "odds": [
+  {
+   "horse_no": 2,
+   "win_odds": 2.4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 2.4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 2.4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  }
+ ],
+ "oddsSource": "NAR公式",
+ "oddsUpdatedAt": "2026-11-24T01:12:59.283Z",
+ "sourcePublishedAt": "2026-11-24T10:12:00+09:00",
+ "popularitySource": "NAR公式単勝オッズ順位",
+ "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=11&k_raceDate=2026%2F11%2F24&k_raceNo=12"
+}
