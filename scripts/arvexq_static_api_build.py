@@ -30,6 +30,19 @@ mode is transitional: it lets a standalone workflow regenerate the packs
 without lane changes, and it fails soft (exit 2, nothing written) while
 the API is unavailable so the last good packs stay deployed.
 
+Forecast carry-over guard: a full build regenerates details from the
+analyzed prefetch payload, whose sealed originals record prediction /
+bet absent for every race, so the build alone would strip the sealed
+forecast blocks of every race an earlier run published — and the
+post-build merge only re-overlays the races the CURRENT run
+(re)published, leaving earlier-published (frozen) races stripped
+(2026-11-24 pack incident: 24 frozen races + 1 resulted race lost
+their blocks while the lane counted them published).  Before writing,
+``carry_over_forecast_blocks`` grafts the sealed forecast blocks from
+the existing pack onto any incoming forecast-less detail for the same
+race.  Nothing is invented: a race with no published pack keeps its
+incoming detail untouched.
+
 With ``--merge-existing`` the input model is overlaid on the packs
 already in ``--out-dir`` for the same date instead of replacing them.
 Delta payloads (the realtime sync lane's ``live-payload.json`` carries
@@ -316,6 +329,61 @@ def merge_models(base: DayModel, overlay: DayModel) -> DayModel:
     return merged
 
 
+# Sealed forecast blocks a published detail carries (mirrors the
+# publish lane's detail shape; cf. scripts/arvexq_sealed_restore.py).
+FORECAST_CARRYOVER_KEYS = (
+    "unifiedForecast", "prediction", "predictionMarks", "recommendedBets",
+    "forecastText", "predictionModelVersion", "preRaceBet",
+    "masterAnalysis", "massFeatureArchive", "massFeatureHash",
+    "massFeatureSchemaVersion", "massFeatureSnapshotVersion", "biasPace",
+)
+
+
+def _has_forecast(detail: Any) -> bool:
+    return isinstance(detail, dict) and isinstance(
+        detail.get("unifiedForecast"), dict)
+
+
+def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
+    """Graft sealed forecast blocks from the existing packs onto
+    incoming forecast-less details for the same race.
+
+    The full-build input (the analyzed prefetch payload) carries no
+    forecast blocks for any race, and the publish lane's merge step
+    only re-overlays the races the current run (re)published, so
+    without this guard every full build strips the blocks of races
+    published by earlier runs and frozen since.  Only a published
+    existing detail (``predictionStatus == "ready"`` with a sealed
+    ``unifiedForecast``) is a carry-over source; races never published
+    keep the incoming detail untouched.  Returns the healed race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, detail in model.details.items():
+        if _has_forecast(detail):
+            continue
+        prior = existing.details.get(rid)
+        if not _has_forecast(prior):
+            continue
+        if prior.get("predictionStatus") != "ready":
+            continue
+        for key in FORECAST_CARRYOVER_KEYS:
+            if key in prior:
+                detail[key] = copy.deepcopy(prior[key])
+        detail["predictionStatus"] = "ready"
+        marker = (prior.get("preparedMeta") or {}).get("rewritePublish")
+        if marker is not None:
+            detail.setdefault("preparedMeta", {})[
+                "rewritePublish"] = copy.deepcopy(marker)
+        healed.append(rid)
+    if healed:
+        print("STATIC_API_FORECAST_CARRYOVER", model.date,
+              len(healed), sorted(healed))
+    return healed
+
+
 def _canonical(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -503,6 +571,10 @@ def main() -> int:
             base = model_from_existing_packs(Path(args.out_dir), model.date)
             if base.summaries or base.details:
                 model = merge_models(base, model)
+        # A full (or tombstone-carrying delta) build must not strip
+        # the sealed forecast blocks of races published by earlier
+        # runs: carry them over from the existing packs first.
+        carry_over_forecast_blocks(model, Path(args.out_dir))
     except Exception as e:  # fail soft: keep the last good packs deployed
         print(f"STATIC_API_INPUT_FAILED {e!r}")
         return 2
