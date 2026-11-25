@@ -305,7 +305,19 @@ def fetch_verified_career(get: Callable[[str], str], horse: dict[str, Any],
     born = _birth_year(horse, cutoff)
     candidates = paginated_search(get, name, born)
     if born:
-        candidates = [c for c in candidates if c["birthYear"] == born]
+        same_year = [c for c in candidates if c["birthYear"] == born]
+        if same_year:
+            candidates = same_year
+        elif len(candidates) != 1:
+            candidates = []
+        # Otherwise exactly one exact-name horse exists in the whole
+        # database, so the identity is unambiguous even though its
+        # registered birth year disagrees with the age printed on the
+        # entry sheet (observed 2026-11-25: シュテフィ, 名古屋10R —
+        # materials showed five past runs while every career provider
+        # resolved nothing). Keep that single candidate and let the
+        # listing/total verification below bind the career as usual;
+        # two or more namesakes still resolve nothing.
     known = {r["date"] for r in merge_career(
         horse.get("allPastRuns"), horse.get("recentRaces"), cutoff)}
     matches = []
