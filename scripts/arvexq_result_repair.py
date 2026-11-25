@@ -62,6 +62,17 @@ def _write_json(path: str, value: Any) -> None:
 
 _MARK_ORDER = ("◎", "○", "▲", "△", "☆")
 
+# Forecast-publication statuses whose stored marks the heal may
+# align: the publish lane's own "ready" and the delivery
+# projection's "unified-reference-ready" — the same source
+# vocabulary FORECAST_CARRYOVER_SOURCE_STATUSES accepts in
+# scripts/arvexq_static_api_build.py.  A detail that passed through
+# the projection (arvexq/forecast/publication.py) keeps its sealed
+# blocks under the renamed status; keying the heal on "ready" only
+# left exactly those details unhealed (collection-circuit audit
+# S7, 2026-11-25).
+_HEAL_SOURCE_STATUSES = ("ready", "unified-reference-ready")
+
 
 def _marks_map(entries: Any, *keys: str) -> dict[str, Any]:
     out: dict[str, Any] = {}
@@ -93,7 +104,7 @@ def _heal_marks_consistency(detail: dict[str, Any] | None) -> bool:
     """
     if not isinstance(detail, dict):
         return False
-    if detail.get("predictionStatus") != "ready":
+    if detail.get("predictionStatus") not in _HEAL_SOURCE_STATUSES:
         return False
     uf_entries = (detail.get("unifiedForecast") or {}).get("marks")
     uf_map = _marks_map(uf_entries, "markSymbol", "mark")

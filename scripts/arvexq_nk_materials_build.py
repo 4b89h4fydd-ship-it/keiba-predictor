@@ -175,6 +175,12 @@ Output format (version "nk-materials-v12"):
                     is 0 — the uncollected list, on the record
                     in the file itself and in the build log, so
                     a zero can never pass silently>],
+   "zeroCoverageExplained": {<field: reason for the zeros whose
+                    absence is positively established from the
+                    build inputs — see _classify_zero_coverage>},
+   "zeroCoverageUnexplained": [<zero fields with no established
+                    reason: missing material. main() exits
+                    non-zero when this is non-empty>],
    "races": {<arvexq_race_id>: {
        "netkeibaRaceId": <netkeiba race_id>,
        "paceLabel": <"H"|"M"|"S"|null>,
@@ -993,6 +999,50 @@ def _derived_coverage(race_horses: list) -> dict:
 # Build
 # ------------------------------------------------------------------
 
+# ------------------------------------------------------------------
+# Zero-coverage classification (2026-11-25, collection-circuit
+# audit S4).  A zero is "explained" only when the reason is
+# positively established from the build's own inputs — never
+# assumed.  Everything else stays unexplained, and main() exits
+# non-zero on any unexplained zero, so a whole missing material
+# (2026-11-24: bestTime / headToHead / horseAnalysis / grade all 0
+# and placed anyway) stops the placing procedure on a
+# machine-readable signal instead of an agent reading stdout.
+# ------------------------------------------------------------------
+
+def _classify_zero_coverage(zero_fields, *, jra_present,
+                            odds_snapshots, stable_unpublished_only):
+    explained: dict = {}
+    unexplained: list = []
+    for field in zero_fields:
+        reason = None
+        if field == "nkAiScore":
+            # The AI総合スコア page is gated behind netkeiba's
+            # Master course, outside the current plan; the field
+            # is never produced (see the --nk-judgements note).
+            reason = ("master-course-only source, outside the "
+                      "current plan; never produced")
+        elif field == "pressRating" and not jra_present:
+            # The newspaper rating column exists only in JRA
+            # papers; an all-NAR day has no rating to collect.
+            reason = ("no JRA races in this build: NAR newspapers "
+                      "carry no rating column")
+        elif field in ("oddsDrift", "oddsWpGap", "oddsForecast") \
+                and odds_snapshots == 0:
+            reason = "no odds snapshot supplied to this build"
+        elif field == "oddsDrift" and odds_snapshots == 1:
+            reason = ("single odds snapshot: drift needs a first "
+                      "and a last point")
+        elif field == "stableComment" and stable_unpublished_only:
+            reason = ("the source published no stable comments "
+                      "for these races (published=false)")
+        if reason:
+            explained[field] = reason
+        else:
+            unexplained.append(field)
+    return explained, unexplained
+
+
 def build(date: str, speed_index: dict, course_analysis: dict,
           targets: dict, race_details: dict | None = None,
           horse_profiles: dict | None = None,
@@ -1394,6 +1444,16 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     # on-the-record "uncollected", never a silent zero.
     zero_coverage = [field for field, count in coverage.items()
                      if field != "horses" and count == 0]
+    explained, unexplained = _classify_zero_coverage(
+        zero_coverage,
+        jra_present=any(str(rid).startswith("jra-") for rid in races)
+        or any((d or {}).get("circuit") == "中央"
+               for d in (race_details or {}).values()),
+        odds_snapshots=(len(odds) if isinstance(odds, list)
+                        else 1 if odds else 0),
+        stable_unpublished_only=bool(stable_races) and all(
+            isinstance(e, dict) and e.get("published") is False
+            for e in stable_races.values()))
     return {
         "version": "nk-materials-v12",
         "date": date,
@@ -1401,6 +1461,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
         "fieldCoverage": coverage,
         "zeroCoverage": zero_coverage,
+        "zeroCoverageExplained": explained,
+        "zeroCoverageUnexplained": unexplained,
         "races": races,
     }
 
@@ -1531,6 +1593,22 @@ def main() -> int:
         print("ZERO COVERAGE (expected fields with no data — "
               "uncollected, never silently zero): "
               + ", ".join(payload["zeroCoverage"]))
+    explained = payload.get("zeroCoverageExplained") or {}
+    if explained:
+        print("ZERO COVERAGE EXPLAINED (known absences, on the "
+              "record): " + "; ".join(
+                  f"{field}: {reason}"
+                  for field, reason in explained.items()))
+    unexplained = payload.get("zeroCoverageUnexplained") or []
+    if unexplained:
+        # The file above stays on disk as the record, but the
+        # build is NOT a success: the placing procedure must stop
+        # here instead of shipping a material with whole fields
+        # missing (collection-circuit audit S4).
+        print("ZERO COVERAGE UNEXPLAINED (missing material with "
+              "no registered reason — do not place this build): "
+              + ", ".join(unexplained))
+        return 2
     return 0
 
 
