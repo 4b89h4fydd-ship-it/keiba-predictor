@@ -17,6 +17,18 @@ OFFICIAL_HOSTS = frozenset({
     "www.keiba.or.jp", "www.tokyocitykeiba.com", "www.sonoda-himeji.jp",
     "www.kawasaki-keiba.jp", "www.nagoyakeiba.com", "www.sagakeiba.net"
 })
+NETKEIBA_HOSTS = frozenset({
+    "netkeiba.com", "nar.netkeiba.com", "nar.sp.netkeiba.com",
+    "race.sp.netkeiba.com"
+})
+# Each source kind is bound to the hosts allowed to attest it: a record is
+# accepted only when the sourceUrl host matches its declared sourceKind.
+# The official kind keeps exactly the official host set; the netkeiba kind
+# is a separate, honestly labelled source and never inherits official hosts.
+SOURCE_KIND_HOSTS = {
+    "official_course_geometry": OFFICIAL_HOSTS,
+    "netkeiba_course_analysis": NETKEIBA_HOSTS,
+}
 
 
 def _finite(value):
@@ -33,9 +45,10 @@ def _verified_first_corner(race):
     distance = _finite(record.get("firstCornerDistanceMeters"))
     race_distance = _finite(race.get("distance"))
     geometry_distance = _finite(record.get("distance"))
-    if (record.get("sourceKind") != "official_course_geometry"
+    allowed_hosts = SOURCE_KIND_HOSTS.get(record.get("sourceKind"))
+    if (allowed_hosts is None
             or record.get("sourcePublishedBeforeOff") is not True
-            or url.scheme != "https" or url.hostname not in OFFICIAL_HOSTS
+            or url.scheme != "https" or url.hostname not in allowed_hosts
             or str(record.get("track") or "") != str(race.get("track") or "")
             or record.get("surface") != race.get("surface")
             or distance is None or not 0 < distance < 5000
