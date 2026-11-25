@@ -235,15 +235,26 @@ def _pace_stages(race: RaceRecord, pace: PaceForecast) -> list[dict]:
 def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
     names = {r.number: _value(r.name, "") for r in race.runners}
     front = list(pace.front_runners)
+    observed = pace.field_size - len(pace.unknown_runners)
     if front:
         listed = "、".join(f"{n}番{names.get(n, '')}" for n in front)
         text = f"{pace.pace_label}。過去走の初角位置から前に行く候補は{listed}。"
-    else:
+    elif pace.unknown_runners:
+        # Some runners have no observed first-corner evidence, so a
+        # front candidate could be hiding among them: the honest claim
+        # is only that the candidates are unconfirmed.
         text = "過去走の初角位置の観測不足につき先行候補は未確認。"
+    else:
+        # Every active runner was observed and none profiled as a
+        # front type. Claiming "観測不足" here would be false (this
+        # exact text fired on the 2026-11-25 Nagoya 12R with coverage
+        # 12/12 and unknown=[]), so state the observed fact instead.
+        text = (f"{pace.pace_label}。過去走の初角位置で先行型と判定された"
+                f"馬はなし（観測済み{observed}頭）。")
     return {
         "status": "past-corner-evidence-uncalibrated",
         "likelyForwardNumbers": front,
-        "observedPositionCoverage": pace.field_size - len(pace.unknown_runners),
+        "observedPositionCoverage": observed,
         "activeRunners": pace.field_size,
         "unknownNumbers": list(pace.unknown_runners),
         "pacePressure": pace.pace_pressure,
