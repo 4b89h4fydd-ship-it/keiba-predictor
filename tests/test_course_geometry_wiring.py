@@ -1,15 +1,22 @@
 """Course-geometry wiring tests (2026-11-25).
 
-The verified first-corner value (arvexq.prediction.
-mineta_public_pace.verified_first_corner_meters) reads
-``courseGeometry`` off the race detail, but no lane ever
-attached one, so every published pack carried
-firstCornerMetersOfficial null. The publish lane now attaches
-the standing official record for the race's (track, surface,
-distance) from rewrite/data/course_geometry.json at the one
-consumer (build_publish_detail, just before the value is read),
-and the verifier re-checks the record against the race before
-anything is published.
+The verified first-corner value (the pace evidence module's
+verifier, arvexq.prediction.mineta_public_pace's
+``_verified_first_corner`` — the same check public_pace_factors
+applies; main exposes no public wrapper under the name
+``verified_first_corner_meters``, so both the lane and these
+tests call the module's own verifier) reads ``courseGeometry``
+off the race detail, but no lane ever attached one, so every
+published pack carried firstCornerMetersOfficial null. The
+publish lane now attaches the standing official record for the
+race's (track, surface, distance) from
+rewrite/data/course_geometry.json at the one consumer
+(build_publish_detail, just before the value is read), and the
+verifier re-checks the record against the race before anything
+is published. api_shape's race_payload takes no first-corner
+argument (its pace block hardcodes null), so the lane writes
+the verified value into the built pace block — the composition
+pinned below mirrors exactly that.
 
 These tests pin:
   - the loader indexing all standing records, and degrading to
@@ -32,7 +39,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from arvexq.prediction.mineta_public_pace import (
-    verified_first_corner_meters)
+    _verified_first_corner as verified_first_corner_meters)
 from rewrite.analysis.forecast import forecast_race
 from rewrite.analysis.pace import forecast_pace
 from rewrite.analysis.tickets import generate_tickets
@@ -63,9 +70,16 @@ def _payload_for(summary, horses, first_corner):
             for r in race.runners if r.win_odds.present}
     tickets = generate_tickets(forecast, odds,
                                calibration_validated=False)
-    return race_payload(race, forecast, pace, tickets,
-                        provenance=PROVENANCE,
-                        first_corner_meters_official=first_corner)
+    payload = race_payload(race, forecast, pace, tickets,
+                           provenance=PROVENANCE)
+    # The lane's adjusted composition: race_payload has no
+    # first-corner parameter on main, so the verified value is
+    # written into the built pace block after the payload is
+    # built (build_publish_detail does exactly this).
+    if first_corner is not None:
+        payload["detail"]["unifiedForecast"]["pace"][
+            "firstCornerMetersOfficial"] = first_corner
+    return payload
 
 
 URAWA_SUMMARY = {
@@ -159,8 +173,9 @@ class AttachTests(TestCase):
 
 class PackCompositionTests(TestCase):
     """The exact composition build_publish_detail performs:
-    attach to the input detail, verify, hand the value to
-    race_payload, read it back from the pack's pace block."""
+    attach to the input detail, verify, build the payload with
+    race_payload, write the verified value into the built pace
+    block, read it back from the pack's pace block."""
 
     def test_covered_course_lands_official_value(self):
         old = _old("浦和", "ダート", 2000, date="2026-11-26",
