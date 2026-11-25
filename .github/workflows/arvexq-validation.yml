@@ -360,6 +360,11 @@ jobs:
             'predictionStatus':'ready', 'observedModelCoverage':{'allObserved':True},
             'researchEvidenceVersion':prefetch.RESEARCH_EVIDENCE_VERSION,'researchEvidenceHorses':3,
           }
+          # A detail that counts as current must actually carry the
+          # per-horse evidence blocks its stamps claim (6731e4c): attach
+          # blocks in the shape race_intelligence.attach_evidence writes.
+          for _horse in base['horses']:
+              _horse['researchEvidence']={'factors':{'version':prefetch.model_version({'circuit':'地方'}),'items':[{'key':'mineta','weight':.60,'value':88.0,'available':True},{'key':'margin','weight':.40,'value':80.0,'available':True}],'calibrated':False,'note':'Observed 60/40 relative model scores are not verified hit probabilities.'},'sectionals':{},'status':'nar-observed-only'}
           base['preparedMeta']['analysisInputHash']=analysis_input_hash(base)
           fresh={'id':base['id'],'weather':'曇','condition':'稍重','horses':[{'horseNumber':1,'bodyWeight':486,'bodyWeightChange':6,'winOdds':2.8}]}
           market={'horses':[{'horseNumber':1,'winOdds':2.6,'popularity':1,'bodyWeight':486,'bodyWeightChange':6}]}
@@ -409,6 +414,13 @@ jobs:
 
           # The current NAR 60/40 and JRA 60/40 both use their own version IDs.
           assert prefetch._analysis_current(base)
+          # Negative control for the 6731e4c strengthening: the same
+          # detail with the per-horse blocks stripped (stamps intact)
+          # is the production defect and must NOT read as current.
+          stripped=copy.deepcopy(base)
+          for _horse in stripped['horses']:
+              _horse.pop('researchEvidence',None)
+          assert not prefetch._analysis_current(stripped)
           jra_base=copy.deepcopy(base)
           jra_base['circuit']='中央'
           jra_base['id']='jra-2026-10-04-東京-01'
