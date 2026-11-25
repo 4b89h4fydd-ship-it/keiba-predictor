@@ -208,7 +208,8 @@ from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
-from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
+from rewrite.output.api_shape import (  # noqa: E402
+    MODEL_VERSION, PROBABILITIES_CALIBRATED, race_payload)
 
 JST = ZoneInfo("Asia/Tokyo")
 API_BASE = os.environ.get("ARVEXQ_API_BASE",
@@ -3010,10 +3011,17 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     # from the repository file and the verifier re-checks it
     # against the race. No record -> the value stays null.
     _attach_course_geometry(old)
+    # Honest labelling has ONE source of truth: api_shape's
+    # PROBABILITIES_CALIBRATED. Passing used_v9b here made every v9b
+    # race's mark/ticket text claim （校正済み） while the same payload's
+    # probabilitiesCalibrated flag said false (measured on the
+    # 2026-11-25 Nagoya 12R pack). Temperature scaling of the v9b lane
+    # is not validated probability calibration, so the texts follow the
+    # flag until a calibration validation actually passes.
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
-        calibrated_probabilities=used_v9b)
+        calibrated_probabilities=PROBABILITIES_CALIBRATED)
     built = payload["detail"]
     # api_shape's pace block has no injection point for the
     # first-corner value (race_payload takes no such argument and
