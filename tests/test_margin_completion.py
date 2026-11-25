@@ -229,7 +229,7 @@ class EvidenceVersionGateTests(TestCase):
         attach_evidence(detail)
         self.assertEqual(detail["researchEvidenceVersion"],
                          RESEARCH_EVIDENCE_VERSION)
-        self.assertEqual(RESEARCH_EVIDENCE_VERSION, "arvexq-race-intelligence-v2")
+        self.assertEqual(RESEARCH_EVIDENCE_VERSION, "arvexq-race-intelligence-v3")
 
     def test_v1_stamped_detail_is_not_analysis_current(self):
         # Fully analyzed and hash-current, but decorated by the previous
