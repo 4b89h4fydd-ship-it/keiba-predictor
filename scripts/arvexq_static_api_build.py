@@ -43,6 +43,14 @@ the existing pack onto any incoming forecast-less detail for the same
 race.  Nothing is invented: a race with no published pack keeps its
 incoming detail untouched.
 
+Day-status carry-over guard: lane payload summaries are built
+before the races run and carry no ``raceStatus``, so a full build
+rewrote every day row's status to "" — erasing the 確定/速報 the
+result lane had already published until the next result merge
+restored it.  ``carry_over_day_statuses`` heals an empty incoming
+status from the race's own existing day pack; a non-empty incoming
+status always wins.
+
 Research evidence carry-over guard: the observed mineta/margin
 evidence (``horses[].researchEvidence``, attached by the prefetch
 analyze stage) reaches a lane payload only when that stage decorated
@@ -352,6 +360,25 @@ FORECAST_CARRYOVER_KEYS = (
 )
 
 
+# predictionStatus values that mark an existing detail as carrying
+# the sealed forecast.  Two spellings name the same publication: the
+# publish lane's own "ready" and the delivery projection's
+# "unified-reference-ready" (arvexq/forecast/publication.py renames
+# the status when it serves a verified unified product; app.py and
+# scripts/arvexq_protect_sync.py both treat the two as equivalent).
+# The result-ingest lane's payload details pass through that
+# projection, so its merges rewrite the pack status to
+# "unified-reference-ready" while keeping the blocks.  Accepting
+# only "ready" here made the NEXT forecast-less build reject those
+# packs as a carry-over source and strip their blocks — and once
+# stripped, the pack's own "disabled" status disqualified it as a
+# source forever (2026-11-24: restore "ready" 12:27 -> projection
+# status 14:44 -> stripped 15:23, never healed again; 2026-11-25
+# Sonoda 1R: ready 12:44 -> "unified-reference-ready" 12:45 ->
+# disabled 14:41).
+FORECAST_CARRYOVER_SOURCE_STATUSES = ("ready", "unified-reference-ready")
+
+
 def _has_forecast(detail: Any) -> bool:
     return isinstance(detail, dict) and isinstance(
         detail.get("unifiedForecast"), dict)
@@ -366,7 +393,8 @@ def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
     only re-overlays the races the current run (re)published, so
     without this guard every full build strips the blocks of races
     published by earlier runs and frozen since.  Only a published
-    existing detail (``predictionStatus == "ready"`` with a sealed
+    existing detail (``predictionStatus`` in
+    ``FORECAST_CARRYOVER_SOURCE_STATUSES`` with a sealed
     ``unifiedForecast``) is a carry-over source; races never published
     keep the incoming detail untouched.  Returns the healed race ids.
     """
@@ -380,7 +408,7 @@ def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
         prior = existing.details.get(rid)
         if not _has_forecast(prior):
             continue
-        if prior.get("predictionStatus") != "ready":
+        if prior.get("predictionStatus") not in FORECAST_CARRYOVER_SOURCE_STATUSES:
             continue
         for key in FORECAST_CARRYOVER_KEYS:
             if key in prior:
@@ -471,6 +499,42 @@ def carry_over_research_evidence(model: DayModel, out_dir: Path) -> list[str]:
         healed.append(rid)
     if healed:
         print("STATIC_API_EVIDENCE_CARRYOVER", model.date,
+              len(healed), sorted(healed))
+    return healed
+
+
+def carry_over_day_statuses(model: DayModel, out_dir: Path) -> list[str]:
+    """Preserve a published raceStatus when the incoming summary
+    row carries none.
+
+    Lane payload summaries are built before the races run (the
+    prefetch payload's summaries carry no raceStatus at all), so a
+    full build rewrites every day row's status to "" — erasing the
+    確定/速報 the result lane had already published until the next
+    result-ingest merge happens to restore it (2026-11-25 Sonoda 1R:
+    day row "" at the 12:44 and 14:41 builds while the race detail
+    already held the final result since 12:19).  Only an empty
+    incoming status is healed, from the race's own existing day
+    pack; a non-empty incoming status always wins, and a race with
+    no published status keeps the incoming row untouched.  Returns
+    the healed race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, row in model.summaries.items():
+        if str(row.get("raceStatus") or ""):
+            continue
+        prior = existing.summaries.get(rid)
+        if not prior:
+            continue
+        status = str(prior.get("raceStatus") or "")
+        if status:
+            row["raceStatus"] = status
+            healed.append(rid)
+    if healed:
+        print("STATIC_API_DAY_STATUS_CARRYOVER", model.date,
               len(healed), sorted(healed))
     return healed
 
@@ -672,6 +736,10 @@ def main() -> int:
         # of the day erases the evidence for every race and the app
         # renders all horses as unevaluated.
         carry_over_research_evidence(model, Path(args.out_dir))
+        # Same rule for the day rows' raceStatus: a build whose
+        # payload summaries predate the races must not blank the
+        # status the result lane already published for them.
+        carry_over_day_statuses(model, Path(args.out_dir))
     except Exception as e:  # fail soft: keep the last good packs deployed
         print(f"STATIC_API_INPUT_FAILED {e!r}")
         return 2
