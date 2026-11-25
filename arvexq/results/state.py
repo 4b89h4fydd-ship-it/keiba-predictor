@@ -91,6 +91,83 @@ def _card_scratched_numbers(detail: dict[str, Any]) -> set[int]:
     return numbers
 
 
+# Markers that account for a horse that started but did not finish,
+# as recorded on official result rows and card statuses.  Mirrors
+# NON_FINISHER_MARKERS in arvexq.results.audit (the definition lives
+# here because audit imports from this module): the repair lane's
+# completeness judgement and the audit's finisher accounting must
+# agree on what counts as an accounted non-finisher.  Pre-start
+# scratches （出走取消・競走除外・欠場） are NOT in this list: those
+# horses never started, and _card_runner_count already removes them
+# from the active roster.
+NON_FINISHER_MARKERS = ("中止", "競走中止", "失格", "落馬", "転倒")
+
+
+def _finisher_numbers(finishers: Any) -> set[int]:
+    """Horse numbers present as rows in a finishers list."""
+    numbers: set[int] = set()
+    if isinstance(finishers, list):
+        for row in finishers:
+            if not isinstance(row, dict):
+                continue
+            try:
+                no = int(row.get("horseNumber") or 0)
+            except Exception:
+                no = 0
+            if no:
+                numbers.add(no)
+    return numbers
+
+
+def _result_non_finisher_numbers(detail: dict[str, Any]) -> set[int]:
+    """Horse numbers the stored detail accounts for as
+    started-but-did-not-finish: a finish<=0 row in ``finishers`` /
+    ``nonFinishers`` (or its aliases) whose label/status carries a
+    non-finisher marker, or a card status carrying the marker."""
+    d = detail if isinstance(detail, dict) else {}
+    result = d.get("result") if isinstance(d.get("result"), dict) else {}
+    numbers: set[int] = set()
+    candidates: list[Any] = []
+    raw_finishers = result.get("finishers")
+    if isinstance(raw_finishers, list):
+        candidates.extend(raw_finishers)
+    for key in ("nonFinishers", "non_finishers", "didNotFinish"):
+        value = result.get(key)
+        if isinstance(value, list):
+            candidates.extend(value)
+    for row in candidates:
+        if not isinstance(row, dict):
+            continue
+        try:
+            finish = int(row.get("finish") or 0)
+        except Exception:
+            finish = 0
+        if finish > 0:
+            continue
+        text = " ".join(str(row.get(k) or "") for k in
+                        ("finishLabel", "status", "marginText", "note"))
+        if not any(m in text for m in NON_FINISHER_MARKERS):
+            continue
+        try:
+            no = int(row.get("horseNumber") or 0)
+        except Exception:
+            no = 0
+        if no:
+            numbers.add(no)
+    for horse in d.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        status = str(horse.get("status") or "")
+        if any(m in status for m in NON_FINISHER_MARKERS):
+            try:
+                no = int(horse.get("horseNumber") or 0)
+            except Exception:
+                no = 0
+            if no:
+                numbers.add(no)
+    return numbers
+
+
 def _result_cname_conflicts(detail: dict[str, Any]) -> bool:
     """Whether the stored JRA result token names a different race.
 
@@ -231,7 +308,22 @@ def result_state(detail: dict[str, Any] | None) -> tuple[bool, bool, str]:
         runners = _card_runner_count(d)
         finishers = result.get("finishers")
         if runners and isinstance(finishers, list) and len(finishers) < runners:
-            final = False
+            # A starter the result accounts for as a non-finisher
+            # （中止・失格・落馬・転倒 — see
+            # _result_non_finisher_numbers) is not a missing
+            # finisher: the official table itself lists fewer
+            # finishers than starters for such a race, so the
+            # shortfall alone froze the race as interim forever and
+            # the repair lane re-fetched it on every run while the
+            # day summary stayed 速報 (2026-11-23 Kanazawa 8R and
+            # 2026-11-24 Urawa 2R: complete official blocks, one
+            # 中止 horse each).  A horse silently dropped with no
+            # accounting still fails here, exactly as before.
+            accounted = len(finishers) + len(
+                _result_non_finisher_numbers(d)
+                - _finisher_numbers(finishers))
+            if accounted < runners:
+                final = False
         # A result block whose source token names another race is
         # foreign data, not a final result for this race.
         if _result_cname_conflicts(d):
