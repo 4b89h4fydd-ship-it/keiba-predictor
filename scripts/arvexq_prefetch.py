@@ -208,6 +208,24 @@ def _analysis_current(detail: dict[str, Any] | None) -> bool:
     # means "not current" even when the evidence block itself is present.
     if _card_usable(detail) and str(detail.get("researchEvidenceVersion") or "") != RESEARCH_EVIDENCE_VERSION:
         return False
+    # The stamps alone do not prove the decoration survived: a stored
+    # detail can keep the top-level stamps while its horses lost the
+    # per-horse blocks (any projection that rebuilds the roster), and
+    # such a detail would be skipped forever while the app renders
+    # every horse as unevaluated. Count the blocks actually present;
+    # fewer than the stamp claims means the evidence is gone and the
+    # race must be re-decorated.
+    if _card_usable(detail):
+        try:
+            stamped = int(detail.get("researchEvidenceHorses") or 0)
+        except (TypeError, ValueError):
+            stamped = 0
+        if stamped:
+            have = sum(1 for h in (detail.get("horses") or [])
+                       if isinstance(h, dict)
+                       and isinstance(h.get("researchEvidence"), dict))
+            if have < stamped:
+                return False
     return True
 
 

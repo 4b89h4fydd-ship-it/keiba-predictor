@@ -43,6 +43,19 @@ the existing pack onto any incoming forecast-less detail for the same
 race.  Nothing is invented: a race with no published pack keeps its
 incoming detail untouched.
 
+Research evidence carry-over guard: the observed mineta/margin
+evidence (``horses[].researchEvidence``, attached by the prefetch
+analyze stage) reaches a lane payload only when that stage decorated
+the race in that run.  On the retired D1 path the stored detail was
+protected by ``arvexq_protect_sync``; the pack lanes have no such
+guard, so an undecorated full build erased the evidence day after
+day (2026-11-22..25) and the app showed every horse as unevaluated.
+``carry_over_research_evidence`` applies the same rule as
+protect_sync at pack build time: an incoming horse that lacks the
+evidence block regains the block from the race's own existing pack;
+an incoming value is never replaced, and a race whose pack never
+carried evidence is left untouched.
+
 With ``--merge-existing`` the input model is overlaid on the packs
 already in ``--out-dir`` for the same date instead of replacing them.
 Delta payloads (the realtime sync lane's ``live-payload.json`` carries
@@ -384,6 +397,84 @@ def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
     return healed
 
 
+# Top-level evidence stamps restored alongside the per-horse blocks
+# (mirrors the protect_sync restore list for the same decoration).
+EVIDENCE_CARRYOVER_KEYS = (
+    "researchEvidenceVersion", "biasProvenance",
+)
+
+
+def _horse_number(horse: Any) -> int:
+    if not isinstance(horse, dict):
+        return 0
+    try:
+        return int(horse.get("horseNumber") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def carry_over_research_evidence(model: DayModel, out_dir: Path) -> list[str]:
+    """Graft the observed research evidence from the existing packs
+    onto incoming details whose horses lack it.
+
+    The evidence (``horses[].researchEvidence`` plus the top-level
+    ``researchEvidenceVersion`` / ``researchEvidenceHorses`` /
+    ``biasProvenance`` stamps) is decoration attached by the prefetch
+    analyze stage (``attach_evidence``).  Lane payloads only carry it
+    when that stage actually decorated the race in that run, so a full
+    build from an undecorated payload — or a delta overlay whose
+    detail never carried it — strips the evidence an earlier build
+    published, and the app then renders every horse of the race as
+    unevaluated (2026-11-22..25: the GitHub-only pack lanes have no
+    equivalent of the protect_sync guard that kept the evidence alive
+    on the retired D1 sync path).  The rule mirrors protect_sync: an
+    incoming value is never replaced, only a missing one is restored
+    from the race's own existing pack.  Nothing is invented: a race
+    with no published evidence keeps its incoming detail untouched.
+    Returns the healed race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, detail in model.details.items():
+        if not isinstance(detail, dict):
+            continue
+        prior = existing.details.get(rid)
+        if not isinstance(prior, dict):
+            continue
+        prior_horses = {_horse_number(h): h for h in (prior.get("horses") or [])
+                        if _horse_number(h) > 0
+                        and isinstance(h.get("researchEvidence"), dict)}
+        if not prior_horses:
+            continue
+        grafted = False
+        for horse in detail.get("horses") or []:
+            no = _horse_number(horse)
+            if no <= 0 or isinstance(horse.get("researchEvidence"), dict):
+                continue
+            source = prior_horses.get(no)
+            if source is not None:
+                horse["researchEvidence"] = copy.deepcopy(
+                    source["researchEvidence"])
+                grafted = True
+        if not grafted:
+            continue
+        for key in EVIDENCE_CARRYOVER_KEYS:
+            if key not in detail and key in prior:
+                detail[key] = copy.deepcopy(prior[key])
+        count = sum(1 for h in (detail.get("horses") or [])
+                    if _horse_number(h) > 0
+                    and isinstance(h.get("researchEvidence"), dict))
+        if count:
+            detail["researchEvidenceHorses"] = count
+        healed.append(rid)
+    if healed:
+        print("STATIC_API_EVIDENCE_CARRYOVER", model.date,
+              len(healed), sorted(healed))
+    return healed
+
+
 def _canonical(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -575,6 +666,12 @@ def main() -> int:
         # the sealed forecast blocks of races published by earlier
         # runs: carry them over from the existing packs first.
         carry_over_forecast_blocks(model, Path(args.out_dir))
+        # Same rule for the observed research evidence: lane payloads
+        # carry it only when the analyze stage decorated the race in
+        # that run, so without this graft the first undecorated build
+        # of the day erases the evidence for every race and the app
+        # renders all horses as unevaluated.
+        carry_over_research_evidence(model, Path(args.out_dir))
     except Exception as e:  # fail soft: keep the last good packs deployed
         print(f"STATIC_API_INPUT_FAILED {e!r}")
         return 2
