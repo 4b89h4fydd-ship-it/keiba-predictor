@@ -15,32 +15,6 @@ detail (saved-snapshots envelope; its sha256 is re-verified against
 the restored bytes) instead of an API read-back, so the publish gate
 no longer depends on the D1-backed API serving the race back.
 
-Local input mode (GitHub-only migration, Cloudflare exit,
-2026-11-23): with --local-input the lane reads its stored state
-from files instead of the production API and posts nothing back.
-The listing and the fresh facts come from the collection lane's
-local day file (persisted-facts.json: {date, races, details});
-the previously published state comes from the committed static
-packs (arvexq/ui/static/api-static/race/<id>.json), and the
-stored detail the build consumes is reconstructed with the very
-merge the D1 facts sync applied server-side — protect_detail
-(prior pack detail, fresh facts detail) — so the forecast-owned
-blocks, the lane marker and the revision chains survive exactly
-as they did through the API round-trip.  Pack details pass
-through the display projection, which renames predictionStatus
-to the projection's vocabulary; when a pack detail carries this
-lane's own marker and its receipt chain verifies against the
-stored unified forecast, the stored status spelling is restored
-before the merge (see _deproject_pack_detail), because the
-freeze decision keys on it.  Publication in this mode is the
-local sealed snapshot plus the emitted payload file
-(rewrite-publish-payload-<date>.json), which the calling
-workflow merges into the packs; the snapshot-export fallback
-for surgical re-issues is unavailable here (no token), so a
-surgical re-issue whose pristine sidecar is not in the local
-snapshot store fails closed and stays pending for a lane that
-can read it, exactly as a tokenless API run would.
-
 Facts (entries, careers, results, odds) are never authored here; the
 engine configuration is the frozen lane configuration shared with the
 pre-off sealing lane (rewrite/analysis/lane_config.py), so what the app
@@ -163,9 +137,6 @@ Usage:
 
 Without --date, publishes today and tomorrow (JST). --dry-run builds
 and self-verifies every product locally without posting.
---local-input reads the day file (--local-day-file) and the
-committed packs (--local-packs-dir) instead of the API and needs
-no SYNC_TOKEN; see the local input mode paragraph above.
 """
 from __future__ import annotations
 
@@ -208,7 +179,8 @@ from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
-from rewrite.output.api_shape import MODEL_VERSION, race_payload  # noqa: E402
+from rewrite.output.api_shape import (  # noqa: E402
+    MODEL_VERSION, PROBABILITIES_CALIBRATED, race_payload)
 
 JST = ZoneInfo("Asia/Tokyo")
 API_BASE = os.environ.get("ARVEXQ_API_BASE",
@@ -416,6 +388,19 @@ NAR_DECAY_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # preparedMeta.rewritePublish.nkMaterials.
 NK_MATERIALS_DIR = ROOT / "rewrite" / "data" / "nk_materials"
 NK_MATERIALS_CUTOVER_DATE = "2026-11-17"
+
+# Standing official course geometry (first-corner distance), one
+# record per (track, surface, distance), transcribed from official
+# pages (see _load_course_geometry). Unlike the extras / materials
+# files this is not date-keyed: a course's geometry is a standing
+# fact, and the verifier in arvexq.prediction.mineta_public_pace
+# re-checks every record against the race (track / surface /
+# distance match, allowlisted official host, publishedAt before
+# the off) at publish time, so a stale or mismatched record can
+# never light up. Courses with no official numeric publication
+# have no record and keep firstCornerMetersOfficial null — the
+# value is never estimated.
+COURSE_GEOMETRY_PATH = ROOT / "rewrite" / "data" / "course_geometry.json"
 # The speed z-scores need at least three horses carrying the
 # representative index before any term can exist; an entry
 # below that can never adjust, so it never qualifies a frozen
@@ -890,136 +875,6 @@ def verify_local_snapshot(date: str, race_id: str, receipt: str,
     return True, "local-snapshot-verified", detail
 
 
-# --- Local input mode (GitHub-only migration, Cloudflare exit) --------
-# The stored state this lane publishes from, without the D1-backed
-# API.  Two local sources, both already in the calling workflow's
-# workspace:
-#
-# * the collection lane's day file (persisted-facts.json) carries
-#   this run's fresh facts: the listing summaries and one facts
-#   detail per race, exactly as the retired D1 facts sync consumed
-#   them;
-# * the committed static packs (arvexq/ui/static/api-static) carry
-#   the previously published state: race/<race_id>.json holds the
-#   /api/race body whose "detail" member is the stored detail as
-#   the pack lanes last wrote it.
-#
-# The stored detail the build consumes is then the same merge the
-# D1 facts sync produced server-side: protect_detail(prior, facts)
-# — the fresh facts form the base, and the forecast-owned blocks,
-# the lane marker, the master sidecar, the morning snapshot and
-# the career archives are preserved from the prior state by the
-# protection layer itself, not by a re-implementation here.  A race
-# the facts file does not carry keeps its prior pack detail as-is
-# (the API read behaved the same way when the facts sync selected
-# no repair for it); a race neither source carries fails the race
-# closed, like a failed API fetch.
-
-
-def _load_local_day(day_file: Path) -> dict:
-    """Load and minimally validate a local day file for
-    --local-input.  Raises ValueError on a malformed file: a lane
-    that cannot read its own collection output must not publish."""
-    payload = json.loads(Path(day_file).read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"local day file is not a JSON object: {day_file}")
-    if not (isinstance(payload.get("races"), list)
-            or isinstance(payload.get("summaries"), list)):
-        raise ValueError(
-            f"local day file carries no race listing: {day_file}")
-    return payload
-
-
-def _local_input_for_date(day_payload: dict, date: str,
-                          packs_dir: Path) -> dict | None:
-    """Assemble the local-input context for one date from a loaded
-    day file.  Returns None when the file belongs to another date:
-    publishing a date the collection lane did not prepare would
-    read the wrong facts, so the caller refuses the run."""
-    file_date = str(day_payload.get("date") or "")
-    if file_date and file_date != date:
-        return None
-    facts_by_id: dict[str, dict] = {}
-    for detail in day_payload.get("details") or []:
-        if isinstance(detail, dict) and detail.get("id"):
-            facts_by_id[str(detail["id"])] = detail
-    return {
-        "summaries": (day_payload.get("races")
-                      or day_payload.get("summaries") or []),
-        "facts_by_id": facts_by_id,
-        "packs_dir": Path(packs_dir),
-    }
-
-
-def _local_pack_detail(packs_dir: Path, race_id: str) -> dict | None:
-    """The race's detail from the committed static packs, or None
-    when the pack tree carries no readable detail for it.  A
-    malformed pack is treated as absent (the facts merge below can
-    still fail the race closed on its own), never as a partial
-    read."""
-    path = Path(packs_dir) / "race" / f"{race_id}.json"
-    try:
-        body = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    detail = body.get("detail") if isinstance(body, dict) else None
-    return detail if isinstance(detail, dict) else None
-
-
-def _deproject_pack_detail(detail: dict) -> dict:
-    """Restore the stored predictionStatus spelling on a pack
-    detail that carries this lane's verified publication state.
-
-    Pack details pass through the delivery projection
-    (arvexq.forecast.publication.public_race), which renames a
-    published race's predictionStatus from "ready" to the
-    projection's "unified-reference-ready".  The freeze decision
-    keys on the stored spelling, so a projected read would make a
-    frozen race look never-published and invite a recompute the
-    freeze exists to prevent.  The rename is undone only when the
-    detail proves it is this lane's publication: the lane marker
-    is present, its model version is current or previous, its
-    receipt equals the stored unified forecast's receipt, and
-    the stored model-version field agrees.  Anything else —
-    including a projection tombstone, whose model version field
-    the projection replaced — is returned untouched and keeps
-    failing or classifying exactly as the API read would."""
-    marker = (detail.get("preparedMeta") or {}).get("rewritePublish")
-    unified = detail.get("unifiedForecast")
-    if (isinstance(marker, dict)
-            and marker.get("modelVersion") in (MODEL_VERSION,
-                                               PREVIOUS_MODEL_VERSION)
-            and isinstance(unified, dict)
-            and marker.get("receiptSha256")
-            and marker.get("receiptSha256") == unified.get("receiptSha256")
-            and detail.get("predictionModelVersion") in (
-                MODEL_VERSION, PREVIOUS_MODEL_VERSION)
-            and detail.get("predictionStatus") != "ready"):
-        restored = dict(detail)
-        restored["predictionStatus"] = "ready"
-        return restored
-    return detail
-
-
-def load_local_input_detail(local_input: dict, race_id: str,
-                            protect_detail) -> dict:
-    """The local-mode equivalent of the stored detail for one
-    race: the fresh facts detail merged over the prior pack state
-    by protect_detail — the same merge the retired D1 facts sync
-    applied before posting (see the section header above)."""
-    prior = _local_pack_detail(local_input["packs_dir"], race_id)
-    facts = local_input["facts_by_id"].get(str(race_id))
-    if facts is None:
-        if prior is None:
-            raise FileNotFoundError(
-                f"local input: neither the day file nor the packs "
-                f"carry a detail for {race_id}")
-        return prior
-    return protect_detail(
-        _deproject_pack_detail(prior) if isinstance(prior, dict) else None,
-        facts)
-
-
 def _load_protect():
     spec = importlib.util.spec_from_file_location(
         "arvexq_protect_sync", ROOT / "scripts" / "arvexq_protect_sync.py")
@@ -1068,6 +923,72 @@ def _load_nk_materials(date: str) -> dict:
     except (OSError, ValueError):
         return {}
     return parse_materials_payload(payload)
+
+
+def _load_course_geometry() -> dict:
+    """Standing official course-geometry records, indexed by
+    (track, surface, distance).
+
+    File format (rewrite/data/course_geometry.json): {"version":
+    ..., "records": [{sourceKind: "official_course_geometry",
+    sourceUrl, sourcePublishedBeforeOff, publishedAt, track,
+    surface, distance, firstCornerDistanceMeters, ...}]}. The
+    records are official-page transcriptions kept verbatim,
+    provenance fields included; nothing is derived or estimated
+    here. A missing or unreadable file simply means no geometry
+    records; the caller publishes with firstCornerMetersOfficial
+    null, exactly as before this wiring existed. Like the
+    materials, the file is re-read for every race (no per-run
+    cache), so a file landing mid-run is picked up by the races
+    that follow it.
+    """
+    try:
+        payload = json.loads(
+            COURSE_GEOMETRY_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    records = payload.get("records") if isinstance(payload, dict) else payload
+    index: dict = {}
+    if isinstance(records, list):
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            try:
+                key = (str(record.get("track") or ""),
+                       str(record.get("surface") or ""),
+                       int(record.get("distance")))
+            except (TypeError, ValueError):
+                continue
+            index.setdefault(key, record)
+    return index
+
+
+def _attach_course_geometry(old: dict) -> bool:
+    """Attach the standing official course-geometry record for
+    this race's (track, surface, distance) to the input detail,
+    so verified_first_corner_meters(old) below can surface it in
+    the published pace block.
+
+    An attachment already present on the detail (e.g. supplied
+    by the acquisition stage) is never overridden. Returns True
+    when the detail carries a record afterwards. Attaching is
+    not trusting: the verifier re-checks the record against
+    this race (identity, allowlisted host, pre-off chronology)
+    before any value is published.
+    """
+    if isinstance(old.get("courseGeometry"), dict):
+        return True
+    try:
+        key = (str(old.get("track") or ""),
+               str(old.get("surface") or ""),
+               int(old.get("distance")))
+    except (TypeError, ValueError):
+        return False
+    record = _load_course_geometry().get(key)
+    if record is None:
+        return False
+    old["courseGeometry"] = dict(record)
+    return True
 
 
 # Result statuses that read as final for the same-day bias
@@ -2922,10 +2843,29 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     # detail, so the sealed v9b product and its feature evidence can
     # later be graded on the SAME race. Research evidence only.
     mass_archive, mass_archive_status = _build_mass_feature_archive(old)
+    # Honest labelling has ONE source of truth: api_shape's
+    # PROBABILITIES_CALIBRATED. Passing used_v9b here made every v9b
+    # race's mark/ticket text claim （校正済み） while the same payload's
+    # probabilitiesCalibrated flag said false (measured on the
+    # 2026-11-25 Nagoya 12R pack). Temperature scaling of the v9b lane
+    # is not validated probability calibration, so the texts follow the
+    # flag until a calibration validation actually passes.
+    # Official course geometry: attach the standing record for
+    # this race's course (if one exists) so the verified
+    # first-corner value can reach the pace block. Done here, at
+    # the one consumer, rather than at storage time: the stored
+    # details pass through projections that have dropped unknown
+    # fields before, while this lane reads the record straight
+    # from the repository file and the verifier re-checks it
+    # against the race. No record -> the value stays null.
+    _attach_course_geometry(old)
+    from arvexq.prediction.mineta_public_pace import (
+        verified_first_corner_meters)
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
-        calibrated_probabilities=used_v9b)
+        calibrated_probabilities=PROBABILITIES_CALIBRATED,
+        first_corner_meters_official=verified_first_corner_meters(old))
     built = payload["detail"]
     unified = built["unifiedForecast"]
     # Production receipt semantics: roster is the detail's ACTIVE roster
@@ -3614,21 +3554,14 @@ def _supply_report(date: str, standing: dict, extras: dict,
     return report
 
 
-def publish_date(date: str, token: str | None, dry_run: bool,
-                 local_input: dict | None = None) -> dict:
+def publish_date(date: str, token: str | None, dry_run: bool) -> dict:
     from arvexq.ingest.banei import is_banei
     from arvexq.ingest.full_snapshot_codec import pack_detail, unpack_detail
     from arvexq.prediction.unified_product import verified as verified_unified
 
     protect_detail = _load_protect()
-    if local_input is not None:
-        # Local input mode: the listing is the collection lane's
-        # own day file (see the local-input section above); no API
-        # request is made anywhere in this run.
-        summaries = list(local_input["summaries"])
-    else:
-        listing = _get(f"/api/races?date={date}")
-        summaries = listing.get("races") or listing.get("summaries") or []
+    listing = _get(f"/api/races?date={date}")
+    summaries = listing.get("races") or listing.get("summaries") or []
 
     def _summary_post_key(summary: dict):
         # Process in post-time order (2026-11-15): the workflow's
@@ -3684,13 +3617,8 @@ def publish_date(date: str, token: str | None, dry_run: bool,
             continue
         targets += 1
         try:
-            if local_input is not None:
-                old_raw = load_local_input_detail(
-                    local_input, str(race_id), protect_detail)
-            else:
-                resp = _get("/api/race/" + urllib.parse.quote(
-                    str(race_id), safe=""))
-                old_raw = resp.get("detail") or {}
+            resp = _get("/api/race/" + urllib.parse.quote(str(race_id), safe=""))
+            old_raw = resp.get("detail") or {}
             snapshot = _day_race_snapshot(summary, old_raw)
             if snapshot is not None:
                 day_snapshots.append(snapshot)
@@ -3829,16 +3757,7 @@ def publish_date(date: str, token: str | None, dry_run: bool,
                 continue
             if isinstance(old_raw, dict) and "arvexqFullPayload" in old_raw:
                 final = pack_detail(final)
-            if local_input is not None:
-                # GitHub-only local mode: nothing is posted to the
-                # D1-backed API.  The seal above and the local
-                # verification below are the publication gate (fix
-                # program B), and the protected detail reaches the
-                # packs through the emitted payload at the end of
-                # this function, merged by the calling workflow.
-                result = {"ok": True, "local": True}
-            else:
-                result = _post_sync(final, token)
+            result = _post_sync(final, token)
             if not result.get("ok"):
                 counts["failed"] += 1
                 print(f"FAIL {race_id}: sync rejected: {result}")
@@ -3921,51 +3840,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--date", action="append", default=[])
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument(
-        "--local-input", action="store_true",
-        help="GitHub-only mode: read the stored state from the "
-             "local day file and the committed packs instead of "
-             "the production API, and publish without posting "
-             "(the emitted payload is the publication record)")
-    parser.add_argument(
-        "--local-day-file", default="persisted-facts.json",
-        help="day file carrying the collection lane's listing "
-             "and fresh facts for --local-input")
-    parser.add_argument(
-        "--local-packs-dir", default="arvexq/ui/static/api-static",
-        help="committed static pack tree read as the prior "
-             "published state for --local-input")
     args = parser.parse_args()
     dates = args.date
     if not dates:
         today = datetime.now(JST).date()
         dates = [today.isoformat(), (today + timedelta(days=1)).isoformat()]
     token = os.environ.get("SYNC_TOKEN")
-    if not args.dry_run and not token and not args.local_input:
+    if not args.dry_run and not token:
         print("SYNC_TOKEN is required for publishing", file=sys.stderr)
         return 2
-    local_day = None
-    if args.local_input:
-        try:
-            local_day = _load_local_day(Path(args.local_day_file))
-        except (OSError, ValueError) as exc:
-            print(f"local input day file unreadable: {exc}",
-                  file=sys.stderr)
-            return 2
     total_failed = 0
     for date in dates:
-        local_input = None
-        if args.local_input:
-            local_input = _local_input_for_date(
-                local_day, date, Path(args.local_packs_dir))
-            if local_input is None:
-                print(f"local input day file is for "
-                      f"{local_day.get('date')}, not {date}; "
-                      f"refusing to publish from the wrong facts",
-                      file=sys.stderr)
-                return 2
-        counts = publish_date(date, token, args.dry_run,
-                              local_input=local_input)
+        counts = publish_date(date, token, args.dry_run)
         total_failed += counts["failed"]
         print(f"{date}: {counts}")
     return 1 if total_failed else 0
