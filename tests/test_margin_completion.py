@@ -206,6 +206,18 @@ def _analyzed_detail(version: str) -> dict:
         "researchEvidenceVersion": version,
         "researchEvidenceHorses": 3,
     }
+    # attach_evidence always writes the per-horse blocks together with
+    # the stamps; a genuinely analyzed detail carries both (the
+    # _analysis_current gate counts the blocks, not just the stamps).
+    for h in horses:
+        h["researchEvidence"] = {
+            "factors": {"version": "arvexq-empirical-fusion-v1",
+                        "items": [{"key": "mineta", "weight": .60,
+                                   "value": 0.5, "available": True},
+                                  {"key": "margin", "weight": .40,
+                                   "value": 0.5, "available": True}],
+                        "calibrated": False},
+            "sectionals": {}, "status": "nar-observed-only"}
     detail["preparedMeta"]["analysisInputHash"] = analysis_input_hash(detail)
     return detail
 

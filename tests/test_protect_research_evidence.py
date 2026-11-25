@@ -113,6 +113,8 @@ def _analyzed_detail(with_evidence: bool) -> dict:
     if with_evidence:
         detail["researchEvidenceVersion"] = RESEARCH_EVIDENCE_VERSION
         detail["researchEvidenceHorses"] = 3
+        for h in horses:
+            h["researchEvidence"] = _evidence(0.5)
     detail["preparedMeta"]["analysisInputHash"] = analysis_input_hash(detail)
     return detail
 
@@ -125,6 +127,17 @@ class AnalysisCurrentEvidenceTests(TestCase):
         # The 2026-11-19 regression: hash and diagnosis flags are
         # untouched by the wipe, so only the evidence check reopens it.
         self.assertFalse(prefetch._analysis_current(_analyzed_detail(False)))
+
+    def test_not_current_when_stamps_survive_but_horse_blocks_gone(self):
+        # 2026-11-25: a detail can keep the top-level stamps while a
+        # roster-rebuilding projection drops the per-horse blocks.
+        # The stamp count (3) then disagrees with the blocks actually
+        # present (0), and the race must be re-decorated, not skipped.
+        detail = _analyzed_detail(True)
+        for h in detail["horses"]:
+            h.pop("researchEvidence", None)
+        detail["preparedMeta"]["analysisInputHash"] = analysis_input_hash(detail)
+        self.assertFalse(prefetch._analysis_current(detail))
 
     def test_unusable_card_without_evidence_stays_current(self):
         # The evidence gate is scoped to usable cards: a fragment must
