@@ -12,7 +12,7 @@
   },
   {
    "horse_no": 2,
-   "win_odds": 60.6,
+   "win_odds": 61.3,
    "popularity": 7,
    "scratched": false,
    "horse_status": "",
@@ -20,7 +20,7 @@
   },
   {
    "horse_no": 3,
-   "win_odds": 22.6,
+   "win_odds": 23.3,
    "popularity": 5,
    "scratched": false,
    "horse_status": "",
@@ -28,7 +28,7 @@
   },
   {
    "horse_no": 4,
-   "win_odds": 40.5,
+   "win_odds": 42.8,
    "popularity": 6,
    "scratched": false,
    "horse_status": "",
@@ -36,7 +36,7 @@
   },
   {
    "horse_no": 5,
-   "win_odds": 108,
+   "win_odds": 133.2,
    "popularity": 9,
    "scratched": false,
    "horse_status": "",
@@ -44,15 +44,15 @@
   },
   {
    "horse_no": 6,
-   "win_odds": 3.3,
-   "popularity": 2,
+   "win_odds": 3,
+   "popularity": 1,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 7,
-   "win_odds": 105.8,
+   "win_odds": 86.8,
    "popularity": 8,
    "scratched": false,
    "horse_status": "",
@@ -60,7 +60,7 @@
   },
   {
    "horse_no": 8,
-   "win_odds": 4.3,
+   "win_odds": 4.2,
    "popularity": 4,
    "scratched": false,
    "horse_status": "",
@@ -68,16 +68,16 @@
   },
   {
    "horse_no": 9,
-   "win_odds": 2.8,
-   "popularity": 1,
+   "win_odds": 3.1,
+   "popularity": 2,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   }
  ],
  "oddsSource": "NAR公式",
- "oddsUpdatedAt": "2026-11-25T04:51:43.456Z",
- "sourcePublishedAt": "2026-11-25T13:51:00+09:00",
+ "oddsUpdatedAt": "2026-11-25T06:34:22.765Z",
+ "sourcePublishedAt": "2026-11-25T15:33:00+09:00",
  "popularitySource": "NAR公式単勝オッズ順位",
  "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=18&k_raceDate=2026%2F11%2F25&k_raceNo=11"
 }
