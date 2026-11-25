@@ -2,7 +2,7 @@
  "version": "nk-materials-v12",
  "date": "2026-11-25",
  "source": "netkeiba-forward-collection",
- "generatedAt": "2026-11-25T00:46:36+09:00",
+ "generatedAt": "2026-11-25T09:21:11+09:00",
  "fieldCoverage": {
   "horses": 415,
   "speed": 413,
@@ -16,7 +16,7 @@
   "nkFormDev": 0,
   "nkAiScore": 0,
   "oddsDrift": 0,
-  "oddsWpGap": 0,
+  "oddsWpGap": 9,
   "oddsForecast": 415,
   "horseAnalysis": 0,
   "grade": 0,
@@ -37,7 +37,6 @@
   "nkFormDev",
   "nkAiScore",
   "oddsDrift",
-  "oddsWpGap",
   "horseAnalysis",
   "grade",
   "commentText",
@@ -68013,9 +68012,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 4.4,
+      "placeLow": 1.0,
+      "placeHigh": 1.2,
       "forecastWin": 4.4
      },
      "horseAnalysis": null,
@@ -68098,9 +68097,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 10.6,
+      "placeLow": 4.0,
+      "placeHigh": 18.8,
       "forecastWin": 10.6
      },
      "coursePersons": {
@@ -68195,9 +68194,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 7.0,
+      "placeLow": 1.8,
+      "placeHigh": 7.3,
       "forecastWin": 7.0
      },
      "coursePersons": {
@@ -68273,9 +68272,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 25.7,
+      "placeLow": 3.3,
+      "placeHigh": 15.4,
       "forecastWin": 25.7
      },
      "coursePersons": {
@@ -68362,9 +68361,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 62.4,
+      "placeLow": 2.4,
+      "placeHigh": 10.8,
       "forecastWin": 62.4
      },
      "coursePersons": {
@@ -68452,9 +68451,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 4.6,
+      "placeLow": 1.0,
+      "placeHigh": 1.0,
       "forecastWin": 4.6
      },
      "horseAnalysis": null,
@@ -68537,9 +68536,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 21.1,
+      "placeLow": 6.4,
+      "placeHigh": 31.3,
       "forecastWin": 21.1
      },
      "coursePersons": {
@@ -68636,9 +68635,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 4.0,
+      "placeLow": 1.7,
+      "placeHigh": 6.7,
       "forecastWin": 4.0
      },
      "horseAnalysis": null,
@@ -68705,9 +68704,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 4.4,
+      "placeLow": 1.7,
+      "placeHigh": 7.1,
       "forecastWin": 4.4
      },
      "horseAnalysis": null,
