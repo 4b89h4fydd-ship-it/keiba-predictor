@@ -1185,6 +1185,28 @@ def _frame_number(label: str):
     return int(digits) if digits else None
 
 
+# The local (NAR) course-analysis pages aggregate the frame
+# table into three zones instead of one row per frame number:
+# the rows are labelled 内 / 中 / 外 (the JRA pages carry one
+# "N枠" row per frame). The zones are the page's own grouping
+# and map onto the validation's frame groups by name — the
+# per-horse side keeps assigning groups by frame number
+# (_frame_group), unchanged.
+_FRAME_ZONE_LABELS = {"内": "inner", "中": "mid", "外": "outer"}
+
+
+def _frame_group_for_label(label: str):
+    """The frame group a frame-table row belongs to: a zone
+    label (内/中/外) maps by name; any other label is read as a
+    frame number ("1枠", "1", ...) and grouped by number.
+    None when the label carries neither — the row is skipped,
+    never guessed."""
+    zone = _FRAME_ZONE_LABELS.get(label)
+    if zone is not None:
+        return zone
+    return _frame_group(_frame_number(label))
+
+
 def course_biases(course_analysis):
     """(front_bias, {frame_group: frame_bias}) for ONE race's
     course, read from the collected netkeiba course-analysis
@@ -1215,7 +1237,7 @@ def course_biases(course_analysis):
             overall = tot_top3 / tot_runs
             groups: dict = {}
             for label, (top3, runs) in frames.items():
-                group = _frame_group(_frame_number(label))
+                group = _frame_group_for_label(label)
                 if group is None:
                     continue
                 cell = groups.setdefault(group, [0.0, 0.0])
