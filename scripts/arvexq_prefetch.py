@@ -622,6 +622,52 @@ def prepare(
 
 
 
+def _graft_evidence(fact: dict[str, Any], decorated: dict[str, Any] | None) -> dict[str, Any]:
+    """Copy observed research evidence from a decorated detail onto the
+    fact detail that will actually be published.
+
+    The evidence (horses[].researchEvidence, computed from each horse's
+    own stored past runs) is an observation record, not a prediction: it
+    does not depend on the diagnosis being ready. analyze_persisted used
+    to publish the bare fact whenever the diagnosis was not ready,
+    discarding a decoration that had already been computed — so on
+    2026-11-26 only 1 of 48 races ever carried evidence and the app
+    rendered every other horse as unevaluated. Grafting follows the
+    carry-over rule: a horse that already has evidence is never
+    overwritten, and a race the decorated detail does not cover keeps
+    its fact untouched (nothing is invented).
+    """
+    if not isinstance(decorated, dict):
+        return fact
+    src = {h.get("horseNumber"): h for h in (decorated.get("horses") or [])
+           if isinstance(h, dict) and h.get("horseNumber") is not None
+           and isinstance(h.get("researchEvidence"), dict)}
+    if not src:
+        return fact
+    out = copy.deepcopy(fact)
+    moved = 0
+    for horse in out.get("horses") or []:
+        if not isinstance(horse, dict) or isinstance(horse.get("researchEvidence"), dict):
+            continue
+        donor = src.get(horse.get("horseNumber"))
+        if donor is None:
+            continue
+        horse["researchEvidence"] = copy.deepcopy(donor["researchEvidence"])
+        if isinstance(donor.get("careerCoverage"), dict) and not isinstance(horse.get("careerCoverage"), dict):
+            horse["careerCoverage"] = copy.deepcopy(donor["careerCoverage"])
+        moved += 1
+    if not moved:
+        return fact
+    if decorated.get("biasProvenance") is not None and out.get("biasProvenance") is None:
+        out["biasProvenance"] = copy.deepcopy(decorated["biasProvenance"])
+    out["researchEvidenceVersion"] = str(
+        decorated.get("researchEvidenceVersion") or RESEARCH_EVIDENCE_VERSION)
+    out["researchEvidenceHorses"] = sum(
+        1 for h in (out.get("horses") or [])
+        if isinstance(h, dict) and isinstance(h.get("researchEvidence"), dict))
+    return out
+
+
 def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> int:
     """Analyze D1 readback only, via the SAME diagnosis engine as before.
 
@@ -696,7 +742,23 @@ def analyze_persisted(bundle_path: str, payload_path: str, report_path: str) -> 
                     if err:
                         print("PERSISTED_DIAGNOSIS_WARN", rid, err)
             else:
-                analyzed[rid] = fact
+                # The diagnosis is not ready, so the decorated detail as
+                # a whole stays unpublished — but its observed evidence
+                # is a past-run record, not a prediction, and discarding
+                # it here is what left whole days of packs evidence-less
+                # (2026-11-26: 47 of 48 races). Graft the evidence onto
+                # the fact being published; if the grafted result fails
+                # the same fact-integrity check the ready path uses,
+                # fall back to the bare fact.
+                grafted = _graft_evidence(fact, final)
+                if grafted is not fact:
+                    after_graft = verify_persisted_facts(
+                        {"summaries": [row], "details": [fact]},
+                        {"races": [row], "details": [grafted]},
+                    )
+                    if after_graft:
+                        grafted = fact
+                analyzed[rid] = grafted
                 errors[rid] = err or "stored evidence not adequate for diagnosis"
         except Exception as exc:
             analyzed[rid] = fact
