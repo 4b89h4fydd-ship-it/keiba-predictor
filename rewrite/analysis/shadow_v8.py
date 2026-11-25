@@ -527,6 +527,24 @@ def forecast_race_v8(
             if value is not None:
                 feats[number].raw[key] = value
                 feats[number].evidence_counts[key] = 1
+    # Extras-speed-backed runners: a runner with no past runs in the
+    # payload can still carry observed speed evidence in extras —
+    # the ability-trial supplement writes spd2_recent/spd2_best for
+    # NAR first starters whose official trial was converted onto the
+    # production spd2 scale, and the extras chain writes the same
+    # pair for horses its own history pool observed even when the
+    # payload history missed them. The supplement is fill-only (it
+    # refuses to overwrite race-based values), so the presence of
+    # both keys always means real observed speed evidence exists.
+    # Such a runner is scored from that evidence (one observation)
+    # instead of being floored as evidence-free.
+    extras_speed_backed = {
+        number
+        for number, feat in feats.items()
+        if feat.evidence_runs == 0
+        and feat.raw.get("spd2_recent") is not None
+        and feat.raw.get("spd2_best") is not None
+    }
     normalized: dict[str, dict[int, float]] = {}
     for feature in weights:
         present = {
@@ -538,13 +556,20 @@ def forecast_race_v8(
     adjustments = _pace_adjustments(race, pace)
     scores: dict[int, float] = {}
     for number, feat in feats.items():
-        if race.segment is Segment.DEBUT or feat.evidence_runs == 0:
+        if race.segment is Segment.DEBUT:
+            continue
+        if feat.evidence_runs == 0 and number not in extras_speed_backed:
             continue
         available = {
             k: normalized[k][number]
             for k in weights if number in normalized.get(k, {})
         }
-        if len(available) < 3:
+        # A trial-backed runner's evidence is exactly the spd2 pair
+        # (0.4 + 0.4 of the NAR weights); the usual three-feature
+        # minimum would discard it even though the pair is the
+        # production speed yardstick itself.
+        min_features = 2 if number in extras_speed_backed else 3
+        if len(available) < min_features:
             continue
         total_w = sum(weights[k] for k in available)
         scores[number] = round(
@@ -572,9 +597,19 @@ def forecast_race_v8(
         # (arvexq/research/f1_evidence_decay.py with k=2,
         # coverage_power=0, where the coverage factor is exactly 1).
         raw_mean = sum(scores.values()) / len(scores)
+
+        def _eff_evidence_runs(n: int) -> int:
+            # A trial-backed runner's single converted trial counts
+            # as one observation, so the shrinkage treats it as the
+            # weakest real evidence instead of zero evidence (which
+            # would erase its score entirely onto the field mean).
+            if feats[n].evidence_runs:
+                return feats[n].evidence_runs
+            return 1 if n in extras_speed_backed else 0
+
         scores = {
-            n: round(raw_mean + (feats[n].evidence_runs
-                                 / (feats[n].evidence_runs
+            n: round(raw_mean + (_eff_evidence_runs(n)
+                                 / (_eff_evidence_runs(n)
                                     + evidence_decay_k))
                      * (s - raw_mean), 4)
             for n, s in scores.items()
