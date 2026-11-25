@@ -64,6 +64,28 @@ evidence block regains the block from the race's own existing pack;
 an incoming value is never replaced, and a race whose pack never
 carried evidence is left untouched.
 
+Research evidence self-heal guard: carry-over can only restore what
+a race's pack carried before, so a race whose payload arrives
+undecorated on every lane (the analyze stage never decorated it, or
+never ran for it) still published with every horse unevaluated —
+the 2026-11-26 recurrence, where 47 of 48 races had never carried
+evidence in any committed pack version.  ``heal_missing_research_
+evidence`` therefore runs the analyze stage's own decoration
+procedure (margin completion from the stored packs, then
+``attach_evidence``) on any detail that still has horses without an
+evidence block, right before the packs are written, whichever lane
+produced the payload.  The procedure's transitive import closure is
+stdlib-only (verified 2026-11-26), so the lanes — which run this
+script with setup-python only — can import it from the checkout.
+The heal is idempotent, never rewrites a block a horse already
+carries, and never touches forecast or result content.  Horses that
+remain evidence-empty afterwards are reported machine-readably to
+``evidence-residual/<date>.json`` next to the packs (plus stdout
+and the Actions job summary) instead of passing silently; the file
+is written on every build, with an explicit zero count on clean
+days.  The build itself never fails on a residual: issuance
+continues, but the abnormality is immediately visible.
+
 With ``--merge-existing`` the input model is overlaid on the packs
 already in ``--out-dir`` for the same date instead of replacing them.
 Delta payloads (the realtime sync lane's ``live-payload.json`` carries
@@ -81,6 +103,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -539,6 +562,256 @@ def carry_over_day_statuses(model: DayModel, out_dir: Path) -> list[str]:
     return healed
 
 
+EVIDENCE_RESIDUAL_VERSION = "arvexq-evidence-residual-v1"
+_PAST_RUN_KEYS = ("recentRaces", "allPastRuns", "pastRaces", "history", "runs")
+
+
+def _evidence_available_count(horse: Any) -> int:
+    """Available-item count of a horse's evidence block; -1 when the
+    horse carries no block at all."""
+    if not isinstance(horse, dict):
+        return -1
+    ev = horse.get("researchEvidence")
+    if not isinstance(ev, dict):
+        return -1
+    items = (ev.get("factors") or {}).get("items") or []
+    return sum(1 for it in items
+               if isinstance(it, dict) and it.get("available"))
+
+
+def _horse_has_past_runs(horse: Any) -> bool:
+    if not isinstance(horse, dict):
+        return False
+    return any(isinstance(horse.get(k), list) and len(horse[k]) > 0
+               for k in _PAST_RUN_KEYS)
+
+
+class _PackStore:
+    """Result-store substitute for margin completion: the model being
+    built plus the packs already in ``out_dir`` — the same substitute
+    the 2026-11-26 manual recovery used (the repository's own stored
+    packs), resolved lazily per race so a clean day costs nothing."""
+
+    def __init__(self, model: DayModel, out_dir: Path):
+        self._model = model
+        self._out_dir = out_dir
+        self._cache: dict[str, Any] = {}
+
+    def race(self, rid: Any) -> Any:
+        rid = str(rid)
+        if rid in self._cache:
+            return self._cache[rid]
+        detail = None
+        own = self._model.details.get(rid)
+        if isinstance(own, dict):
+            detail = own
+        else:
+            path = self._out_dir / "race" / f"{rid}.json"
+            if path.is_file():
+                try:
+                    body = json.loads(path.read_text(encoding="utf-8"))
+                    if isinstance(body.get("detail"), dict):
+                        detail = body["detail"]
+                except Exception:
+                    detail = None
+        self._cache[rid] = detail
+        return detail
+
+    def day_ids(self, date: Any) -> list[str]:
+        date = str(date)
+        if date == self._model.date:
+            return sorted(self._model.details.keys())
+        path = self._out_dir / "day" / f"{date}.json"
+        if path.is_file():
+            try:
+                body = json.loads(path.read_text(encoding="utf-8"))
+                return [str(r.get("id")) for r in (body.get("races") or [])
+                        if isinstance(r, dict) and r.get("id")]
+            except Exception:
+                pass
+        return []
+
+
+def _decoration_impl():
+    """Import the analyze stage's decoration procedure, or None.
+
+    The transitive closure of ``race_intelligence.attach_evidence``
+    and ``margin_completion.complete_detail_margins`` is stdlib-only
+    (verified 2026-11-26: 20 modules, no third-party imports), so the
+    pack lanes — which run this script with setup-python only, no pip
+    install — can import it from the checkout by putting the repo root
+    on sys.path.  Returns None when the package is not importable in
+    this environment; the caller records that in the residual report
+    instead of failing the build.
+    """
+    root = Path(__file__).resolve().parent.parent
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    try:
+        from arvexq.prediction.margin_completion import (
+            complete_detail_margins,
+        )
+        from arvexq.prediction.race_intelligence import attach_evidence
+    except Exception:
+        return None
+    return complete_detail_margins, attach_evidence
+
+
+def heal_missing_research_evidence(model: DayModel, out_dir: Path) -> dict:
+    """Final-stage self-heal for the observed research evidence.
+
+    Runs the analyze stage's own decoration procedure (margin
+    completion from the stored packs, then ``attach_evidence``) on
+    every detail that still has horses without an evidence block,
+    whichever lane produced the payload.  A block a horse already
+    carries is never rewritten (the procedure recomputes every block,
+    so pre-existing ones are snapshotted and restored verbatim), and
+    forecast / result content is never touched.  Idempotent: a detail
+    whose horses all carry blocks is left completely alone.
+
+    Afterwards, every horse whose evidence still has zero available
+    items is written to ``<out_dir>/evidence-residual/<date>.json``
+    (committed with the packs by both publish paths), echoed to
+    stdout, and — when any residual exists or the heal could not
+    run — surfaced as a workflow warning and a job-summary section.
+    The report file is written on every build, with an explicit
+    ``residualCount: 0`` on clean days.  Never raises: the build
+    continues, but the abnormality cannot pass silently.
+    """
+    report: dict[str, Any] = {
+        "version": EVIDENCE_RESIDUAL_VERSION,
+        "date": model.date,
+        "healStatus": "not-needed",
+        "healedRaces": [],
+        "healErrors": [],
+        "residualCount": 0,
+        "residual": [],
+    }
+    if not DATE_RE.match(model.date or ""):
+        return report
+    targets = []
+    for rid, detail in model.details.items():
+        if not isinstance(detail, dict):
+            continue
+        if any(isinstance(h, dict) and _horse_number(h) > 0
+               and not isinstance(h.get("researchEvidence"), dict)
+               for h in detail.get("horses") or []):
+            targets.append(rid)
+    if targets:
+        impl = _decoration_impl()
+        if impl is None:
+            report["healStatus"] = "unavailable-import"
+            print("STATIC_API_EVIDENCE_HEAL_UNAVAILABLE", model.date,
+                  len(targets), sorted(targets))
+        else:
+            complete_detail_margins, attach_evidence = impl
+            store = _PackStore(model, out_dir)
+            report["healStatus"] = "ok"
+            for rid in sorted(targets):
+                detail = model.details[rid]
+                saved: dict[int, tuple[Any, Any]] = {}
+                for h in detail.get("horses") or []:
+                    no = _horse_number(h)
+                    if no > 0 and isinstance(h.get("researchEvidence"), dict):
+                        saved[no] = (copy.deepcopy(h["researchEvidence"]),
+                                     copy.deepcopy(h.get("careerCoverage")))
+                saved_version = detail.get("researchEvidenceVersion")
+                saved_provenance = copy.deepcopy(detail.get("biasProvenance"))
+                try:
+                    try:
+                        complete_detail_margins(detail, store.race,
+                                                store.day_ids)
+                    except Exception as exc:  # margins never block evidence
+                        print("STATIC_API_EVIDENCE_HEAL_MARGIN_WARN",
+                              rid, repr(exc))
+                    attach_evidence(detail)
+                except Exception as exc:
+                    report["healErrors"].append(
+                        {"raceId": rid, "error": repr(exc)})
+                    print("STATIC_API_EVIDENCE_HEAL_ERROR", rid, repr(exc))
+                    continue
+                for h in detail.get("horses") or []:
+                    no = _horse_number(h)
+                    if no in saved:
+                        h["researchEvidence"] = saved[no][0]
+                        if saved[no][1] is not None:
+                            h["careerCoverage"] = saved[no][1]
+                if saved_version is not None:
+                    detail["researchEvidenceVersion"] = saved_version
+                if saved_provenance is not None:
+                    detail["biasProvenance"] = saved_provenance
+                count = sum(1 for h in detail.get("horses") or []
+                            if _horse_number(h) > 0
+                            and isinstance(h.get("researchEvidence"), dict))
+                if count:
+                    detail["researchEvidenceHorses"] = count
+                report["healedRaces"].append(rid)
+    errored = {e["raceId"] for e in report["healErrors"]}
+    for rid in sorted(model.details.keys()):
+        detail = model.details[rid]
+        if not isinstance(detail, dict):
+            continue
+        for h in detail.get("horses") or []:
+            no = _horse_number(h)
+            if no <= 0:
+                continue
+            avail = _evidence_available_count(h)
+            if avail > 0:
+                continue
+            if report["healStatus"] == "unavailable-import":
+                reason = "heal-unavailable"
+            elif rid in errored:
+                reason = "heal-error"
+            elif avail < 0:
+                reason = "missing-block"
+            elif _horse_has_past_runs(h):
+                reason = "zero-available-despite-past-runs"
+            else:
+                reason = "no-past-runs-or-trial-record"
+            report["residual"].append({
+                "raceId": rid, "horseNumber": no,
+                "name": h.get("name"), "reason": reason})
+    report["residualCount"] = len(report["residual"])
+    body = dict(report)
+    body["generatedAt"] = datetime.now(JST).isoformat(timespec="seconds")
+    try:
+        out_path = out_dir / "evidence-residual" / f"{model.date}.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        _write_if_changed(out_path, body)
+    except Exception as exc:
+        print("STATIC_API_EVIDENCE_RESIDUAL_WRITE_FAILED", repr(exc))
+    if report["healedRaces"]:
+        print("STATIC_API_EVIDENCE_HEAL", model.date,
+              len(report["healedRaces"]), sorted(report["healedRaces"]))
+    print("STATIC_API_EVIDENCE_RESIDUAL", model.date,
+          "residual", report["residualCount"],
+          "heal_status", report["healStatus"])
+    if report["residualCount"] or report["healStatus"] not in ("ok", "not-needed"):
+        names = ", ".join(
+            f"{r['raceId']}#{r['horseNumber']} {r.get('name') or ''} ({r['reason']})"
+            for r in report["residual"][:20])
+        print(f"::warning::researchEvidence residual "
+              f"{report['residualCount']} horse(s) on {model.date} "
+              f"(heal={report['healStatus']}): {names}")
+        summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary_file:
+            try:
+                with open(summary_file, "a", encoding="utf-8") as fh:
+                    fh.write(f"\n### ⚠ researchEvidence residual: "
+                             f"{report['residualCount']} horse(s) "
+                             f"({model.date})\n\n")
+                    fh.write(f"healStatus: {report['healStatus']}; "
+                             f"healedRaces: {len(report['healedRaces'])}; "
+                             f"detail: `evidence-residual/{model.date}.json` "
+                             f"in the pack tree\n\n")
+                    for r in report["residual"][:50]:
+                        fh.write(f"- {r['raceId']} #{r['horseNumber']} "
+                                 f"{r.get('name') or ''} — {r['reason']}\n")
+            except Exception:
+                pass
+    return report
+
+
 def _canonical(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -740,6 +1013,12 @@ def main() -> int:
         # payload summaries predate the races must not blank the
         # status the result lane already published for them.
         carry_over_day_statuses(model, Path(args.out_dir))
+        # Final stage: a race no lane ever decorated has nothing for
+        # carry-over to restore, so run the decoration procedure here,
+        # at the one point every lane's packs pass through, and report
+        # any horse that still ends up evidence-empty instead of
+        # letting the day publish silently unevaluated.
+        heal_missing_research_evidence(model, Path(args.out_dir))
     except Exception as e:  # fail soft: keep the last good packs deployed
         print(f"STATIC_API_INPUT_FAILED {e!r}")
         return 2
