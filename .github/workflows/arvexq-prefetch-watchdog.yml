@@ -22,6 +22,15 @@ name: ARVEXQ Same-Day Prefetch Watchdog
 # and dispatches a collection-only prefetch (date = tomorrow) when it
 # does not, throttled the same way. The Day-Ahead Dispatcher workflow
 # stays in place as an additional layer; nothing about it changes.
+#
+# Same-day pack-missing handling (2026-11-25, collection-circuit
+# audit S1): the same-day step used to read a missing/empty day pack
+# as "no racing today" and exit. The day pack is the prefetch lane's
+# own output, so when pack generation itself is what stopped, that
+# reading silenced the watchdog forever. The same-day step now
+# mirrors the day-ahead design: a missing or empty pack is a
+# possible lane outage and falls through to the same staleness,
+# in-flight and throttle checks instead of exiting.
 
 "on":
   push:
@@ -86,17 +95,26 @@ jobs:
             exit 0
           fi
           TODAY=$(TZ=Asia/Tokyo date +%F)
-          # No racing today -> nothing to issue.
+          # The day pack is the prefetch lane's OWN output, so its
+          # absence cannot be read as "no racing today": when pack
+          # generation itself is what stopped, that reading makes
+          # the watchdog exit quietly forever (collection-circuit
+          # audit S1, 2026-11-25). Mirror the day-ahead step below:
+          # a missing or empty pack is treated as a possible lane
+          # outage and falls through to the staleness / in-flight /
+          # throttle checks; on a genuinely dark day the dispatched
+          # prefetch simply collects nothing.
           COUNT=0
+          FETCH=failed
           if curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
               --connect-timeout 10 --max-time 35 \
               "$PACK_BASE/day/$TODAY.json" -o watchdog-day.json; then
+            FETCH=ok
             COUNT=$(jq '.races // [] | length' watchdog-day.json 2>/dev/null || echo 0)
           fi
-          echo "WATCHDOG_CHECK date=$TODAY races=$COUNT"
+          echo "WATCHDOG_CHECK date=$TODAY fetch=$FETCH races=$COUNT"
           if [ "${COUNT:-0}" -eq 0 ]; then
-            echo "No races listed for today; nothing to dispatch."
-            exit 0
+            echo "WATCHDOG_WARN today's day pack is missing or empty (fetch=$FETCH); treating it as a possible lane outage, not as a dark day."
           fi
           # Recent prefetch activity: any event counts. If a run is in
           # flight, or one started within the last 100 minutes, the
