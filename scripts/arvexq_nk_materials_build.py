@@ -46,7 +46,18 @@ normaliser between the collection side and that file; its inputs:
                       forecast front) and percentile (rank /
                       field size) per phase, carried as the
                       horse's "pace" field; the race's label is
-                      carried as the entry's "paceLabel".
+                      carried as the entry's "paceLabel". From
+                      2026-11-26 (builder v13) the entry's
+                      "horses_extra" block (the collection's
+                      A-2 addition) is read too: each horse's
+                      running-style classification and
+                      straight-stretch rating are carried as
+                      the horse's "styleClass" / "stretch"
+                      fields for the adapter's v15 style terms.
+                      One race's diagram saved under
+                      "positions_groups" (grouped instead of
+                      flattened) is accepted as the same
+                      positions input.
   --nk-judgements     (optional, v6) per-horse netkeiba
                       judgements in the shape {"races":
                       {<netkeiba race_id>: {"horses":
@@ -166,9 +177,9 @@ normaliser between the collection side and that file; its inputs:
                       read as a second source, with this file
                       winning on a duplicate.
 
-Output format (version "nk-materials-v12"):
+Output format (version "nk-materials-v13"):
 
-  {"version": "nk-materials-v12", "date": ..., "source": ...,
+  {"version": "nk-materials-v13", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "zeroCoverage": [<names of the expected fields whose count
@@ -201,6 +212,8 @@ Output format (version "nk-materials-v12"):
                     "sections": {<section>: <mark str>}} | null,
            "pace": {"start": {"rank": int, "pct": float},
                     "corner3": {...}, "corner4": {...}} | null,
+           "styleClass": <"逃げ"|"先行"|"差し"|"追込"> | null,
+           "stretch": <3|2|1> | null,
            "bestTime": {<the data-analysis tab's best-time pick:
                seconds, tier (1-4 in the tab's fallback order),
                track, surface, distance, date, finish,
@@ -254,7 +267,10 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   adapter's v6 speed-derived terms can stand on, computed
   with integrated_eval's own feature functions from the raw
   columns; the derivation itself stays inside integrate(), so
-  no derived values are duplicated into this file). The
+  no derived values are duplicated into this file). The v13
+  label adds the styleClass / stretch fields above (from the
+  pace-forecast entry's horses_extra block) and accepts a
+  pace diagram saved under "positions_groups". The
   publish lane's parser does not gate on the version string,
   so v1/v2/v3 files load the same (their horses simply carry
   no pace field).
@@ -602,6 +618,13 @@ def _pace_positions(pace_entry) -> tuple:
         return {}, None
     positions = pace_entry.get("positions")
     if not isinstance(positions, dict):
+        # The 2026-11-26 collection saved one race's diagram
+        # under "positions_groups" — the same group diagram,
+        # grouped instead of flattened. Read it as the same
+        # input (a reshape, never an estimate); "positions"
+        # wins when both are present.
+        positions = pace_entry.get("positions_groups")
+    if not isinstance(positions, dict):
         return {}, None
     label = pace_entry.get("pace")
     if not isinstance(label, str):
@@ -631,6 +654,43 @@ def _pace_positions(pace_entry) -> tuple:
             out.setdefault(str(number), {})[phase] = {
                 "rank": rank, "pct": round(rank / size, 4)}
     return out, (label if isinstance(label, str) else None)
+
+
+# The pace page's old-style running-style classifications —
+# the only labels the collection saves (2026-11-26).
+_STYLE_CLASS_LABELS = ("逃げ", "先行", "差し", "追込")
+
+
+def _pace_extra(pace_entry) -> dict:
+    """{horse number as str: {"styleClass": str, "stretch": num}}
+    from one race's pace-forecast "horses_extra" block (the
+    collection's 2026-11-26 A-2 addition): the pace page's
+    per-horse running-style classification （逃げ / 先行 /
+    差し / 追込） and its straight-stretch rating (3 = 大きく
+    伸びる, 2 = 伸びる, 1 = 少し伸びる). Each value is carried
+    only when it reads cleanly — an unknown style label or an
+    out-of-range stretch is dropped, never guessed; a horse
+    with neither readable value carries no entry."""
+    if not isinstance(pace_entry, dict):
+        return {}
+    extra = pace_entry.get("horses_extra")
+    if not isinstance(extra, dict):
+        return {}
+    out: dict = {}
+    for key, values in extra.items():
+        if not isinstance(values, dict):
+            continue
+        cell: dict = {}
+        style = values.get("style_class")
+        if isinstance(style, str) \
+                and style.strip() in _STYLE_CLASS_LABELS:
+            cell["styleClass"] = style.strip()
+        stretch = _num(values.get("stretch"))
+        if stretch is not None and 1 <= stretch <= 3:
+            cell["stretch"] = stretch
+        if cell:
+            out[str(key)] = cell
+    return out
 
 
 # ------------------------------------------------------------------
@@ -1011,12 +1071,20 @@ def _derived_coverage(race_horses: list) -> dict:
 # ------------------------------------------------------------------
 
 def _classify_zero_coverage(zero_fields, *, jra_present,
-                            odds_snapshots, stable_unpublished_only):
+                            odds_snapshots, stable_unpublished_only,
+                            pace_supplied=True):
     explained: dict = {}
     unexplained: list = []
     for field in zero_fields:
         reason = None
-        if field == "nkAiScore":
+        if field in ("styleClass", "stretch") and not pace_supplied:
+            # The style / stretch values ride the pace-forecast
+            # file's horses_extra block; a build given no pace
+            # forecast has no source for them.
+            reason = ("no pace forecast supplied to this build "
+                      "(the style / stretch values ride the "
+                      "pace-forecast file)")
+        elif field == "nkAiScore":
             # The AI総合スコア page is gated behind netkeiba's
             # Master course, outside the current plan; the field
             # is never produced (see the --nk-judgements note).
@@ -1178,6 +1246,20 @@ def build(date: str, speed_index: dict, course_analysis: dict,
             horse = horses.setdefault(key, {
                 col: None for col in SPEED_COLUMNS} | {"nk_recent": None})
             horse["pace"] = pace
+        # --- 2026-11-26 addition (builder v13): the pace
+        # page's per-horse style classification and stretch
+        # rating, carried from the same pace-forecast entry's
+        # horses_extra block for the adapter's v15 style
+        # terms. A horse the extra block does not cover simply
+        # lacks the fields (uniform nulls below) — not
+        # collected, never estimated.
+        for key, cell in _pace_extra(pace_races.get(nk_id)).items():
+            horse = horses.setdefault(key, {
+                col: None for col in SPEED_COLUMNS} | {"nk_recent": None})
+            if "styleClass" in cell:
+                horse["styleClass"] = cell["styleClass"]
+            if "stretch" in cell:
+                horse["stretch"] = cell["stretch"]
         # --- v6 additions: netkeiba judgements / odds -------
         # Carried verbatim (numbers only) when a collection
         # supplies them; no current collection does, so on
@@ -1358,7 +1440,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                     + ("pace", "horseAnalysis", "coursePersons") \
                     + V6_HORSE_FIELDS \
                     + ("grade", "comment_text", "stableComment",
-                       "pressRating"):
+                       "pressRating", "styleClass", "stretch"):
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
@@ -1387,6 +1469,13 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         and isinstance(h["pedigree"].get("siblings"), dict))
     coverage["pace"] = sum(1 for h in all_horses
                            if h.get("pace") is not None)
+    # 2026-11-26 (builder v13): the pace page's style /
+    # stretch values, counted like every other expected field
+    # so a missing extra block is an on-the-record zero.
+    coverage["styleClass"] = sum(1 for h in all_horses
+                                 if h.get("styleClass") is not None)
+    coverage["stretch"] = sum(1 for h in all_horses
+                              if h.get("stretch") is not None)
     # v6: the judgements / odds fields (0 until a collection
     # supplies them) and the derived-speed coverage, summed
     # race by race (the overlap feature is a race-level
@@ -1453,9 +1542,10 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                         else 1 if odds else 0),
         stable_unpublished_only=bool(stable_races) and all(
             isinstance(e, dict) and e.get("published") is False
-            for e in stable_races.values()))
+            for e in stable_races.values()),
+        pace_supplied=bool(pace_races))
     return {
-        "version": "nk-materials-v12",
+        "version": "nk-materials-v13",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
