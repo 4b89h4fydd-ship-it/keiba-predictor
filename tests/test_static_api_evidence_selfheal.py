@@ -70,6 +70,19 @@ def sentinel_evidence(value=0.99):
             "sectionals": {}, "status": "sentinel"}
 
 
+def empty_block():
+    """A block that exists but has no available item — the shape the
+    2026-11-26 Urawa 3R residual horse actually carried (mineta and
+    margin both unavailable), which a missing-block heal never sees."""
+    return {"factors": {"version": "arvexq-empirical-fusion-v1",
+                        "items": [{"key": "mineta", "weight": .60,
+                                   "value": None, "available": False},
+                                  {"key": "margin", "weight": .40,
+                                   "value": None, "available": False}],
+                        "calibrated": False},
+            "sectionals": {}, "status": "nar-observed-only"}
+
+
 def available_items(horse):
     items = (horse.get("researchEvidence") or {}).get("factors", {}).get("items") or []
     return [it for it in items if it.get("available")]
@@ -186,6 +199,74 @@ class EvidenceSelfHealTest(unittest.TestCase):
         self.assertEqual(once, twice)
         self.assertEqual(report2["healStatus"], "not-needed")
         self.assertEqual(report2["residualCount"], 0)
+
+    def test_heal_replaces_empty_block_when_recompute_yields_items(self):
+        detail = trial_detail(RID1)
+        detail["horses"][0]["researchEvidence"] = empty_block()
+        model = b.model_from_sync_payload(sync_payload([detail]))
+        report = b.heal_missing_research_evidence(model, self.out)
+        self.assertEqual(report["healStatus"], "ok")
+        self.assertEqual(report["healedRaces"], [RID1])
+        healed = model.details[RID1]["horses"][0]
+        self.assertNotEqual(healed["researchEvidence"], empty_block())
+        self.assertEqual([it["key"] for it in available_items(healed)],
+                         ["trial"])
+        self.assertEqual(report["residualCount"], 0)
+
+    def test_empty_block_kept_verbatim_when_recompute_yields_nothing(self):
+        detail = {"id": RID2, "date": DATE, "track": "浦和", "circuit": "地方",
+                  "raceNumber": 2, "distance": 1400, "condition": "良",
+                  "horses": [dict(debutant(5, "無材料"),
+                                  researchEvidence=empty_block())],
+                  "preparedMeta": {"diagnosisReady": False}}
+        model = b.model_from_sync_payload(sync_payload([detail]))
+        report = b.heal_missing_research_evidence(model, self.out)
+        self.assertEqual(report["healStatus"], "ok")
+        # Nothing could be computed, so the original block must
+        # survive byte-for-byte and the horse must surface in the
+        # residual report instead of passing silently.
+        self.assertEqual(model.details[RID2]["horses"][0]["researchEvidence"],
+                         empty_block())
+        self.assertEqual(report["residualCount"], 1)
+        entry = report["residual"][0]
+        self.assertEqual(entry["raceId"], RID2)
+        self.assertEqual(entry["horseNumber"], 5)
+        self.assertEqual(entry["reason"], "no-past-runs-or-trial-record")
+
+    def test_healthy_block_untouched_beside_empty_block(self):
+        detail = trial_detail(RID1)
+        detail["horses"][0]["researchEvidence"] = sentinel_evidence()
+        detail["horses"][1]["researchEvidence"] = empty_block()
+        model = b.model_from_sync_payload(sync_payload([detail]))
+        b.heal_missing_research_evidence(model, self.out)
+        healed = model.details[RID1]
+        self.assertEqual(healed["horses"][0]["researchEvidence"],
+                         sentinel_evidence())
+        self.assertEqual([it["key"] for it in available_items(healed["horses"][1])],
+                         ["trial"])
+
+    def test_empty_block_heal_is_idempotent(self):
+        detail = trial_detail(RID1)
+        detail["horses"][0]["researchEvidence"] = empty_block()
+        model = b.model_from_sync_payload(sync_payload([detail]))
+        b.heal_missing_research_evidence(model, self.out)
+        once = b._canonical(model.details[RID1])
+        report2 = b.heal_missing_research_evidence(model, self.out)
+        self.assertEqual(b._canonical(model.details[RID1]), once)
+        self.assertEqual(report2["healStatus"], "not-needed")
+        self.assertEqual(report2["residualCount"], 0)
+
+    def test_unfillable_empty_block_heal_is_idempotent(self):
+        detail = {"id": RID2, "date": DATE, "track": "浦和", "circuit": "地方",
+                  "raceNumber": 2, "distance": 1400, "condition": "良",
+                  "horses": [dict(debutant(5, "無材料"),
+                                  researchEvidence=empty_block())],
+                  "preparedMeta": {"diagnosisReady": False}}
+        model = b.model_from_sync_payload(sync_payload([detail]))
+        b.heal_missing_research_evidence(model, self.out)
+        once = b._canonical(model.details[RID2])
+        b.heal_missing_research_evidence(model, self.out)
+        self.assertEqual(b._canonical(model.details[RID2]), once)
 
     def test_build_writes_healed_pack_and_residual_file(self):
         model = b.model_from_sync_payload(sync_payload([trial_detail(RID1)]))
