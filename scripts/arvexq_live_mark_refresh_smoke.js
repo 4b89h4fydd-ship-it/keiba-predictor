@@ -23,6 +23,11 @@ const ctx={window,document,localStorage,sessionStorage:localStorage,console,
 vm.createContext(ctx);
 for(const file of fs.readdirSync('arvexq/ui/static/forecast').filter(x=>x.endsWith('.js')).map(x=>'arvexq/ui/static/forecast/'+x).concat(['arvexq/ui/static/morning/ticket_lane_classifier.js','arvexq/ui/static/betting/bet_view.js']))
   vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file,timeout:20000});
+// app.js predict() reads window.ARVEXQPastRunView (history/view.js)
+// via historicalWindow/finishingEvidence; the page bundle always
+// carries the history modules, so the smoke must load them too.
+for(const file of ['arvexq/ui/static/history/deduplicate.js','arvexq/ui/static/history/temporal.js','arvexq/ui/static/history/view.js'])
+  vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file,timeout:20000});
 vm.runInContext(source,ctx,{filename:'app.js',timeout:20000});
 const {predict}=window.__arvexqMarkTest;
 const horses=Array.from({length:7},(_,i)=>({
