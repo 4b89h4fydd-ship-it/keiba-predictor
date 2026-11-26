@@ -786,6 +786,21 @@ function predict(r){
   // No assistant-created historical/reference forecast is allowed to be shown.
   var p=window.ARVEXQProductionPrediction.build(r);
   if(!p||!Array.isArray(p.rows))return p;
+  // Observed finish evidence for the detail modal's 前残り力 / 差し込み力.
+  // finishingEvidence() only aggregates what the horse actually did in its
+  // own pre-race past runs (front runs that held, late runs that converted);
+  // it is a measured fact about the horse, not a forecast. Each rate is
+  // shrunk toward neutral by its sample count, exactly like the evidence
+  // term of the retired pace model, and the modal footnote prints the raw
+  // counts next to the scores. Production rows never carried these fields,
+  // so every horse showed 未評価 even when its past runs were in the pack.
+  p.rows.forEach(function(x){
+    var h=x&&x.horse;if(!h||x.frontStay!=null)return;
+    var fe=finishingEvidence(h,r);
+    x.finishEvidence=fe;
+    x.frontStay=clamp(.5+(fe.hold-.5)*Math.min(1,fe.holdSamples/3),0,1);
+    x.comeFromBehind=clamp(.5+(fe.closing-.5)*Math.min(1,fe.closingSamples/3),0,1);
+  });
   // Preserve the approved horse detail layout while recovering missing AI rows.
   // A row without model evidence carries facts only, never a fabricated score.
   (r.horses||[]).forEach(function(h){
