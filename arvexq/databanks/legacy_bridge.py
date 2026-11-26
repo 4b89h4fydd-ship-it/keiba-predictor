@@ -452,7 +452,12 @@ def _netkeiba_verified_career_adapter(namespace: dict[str, Any]):
     getter = _pick(namespace, "_netkeiba_get")
     if getter is None:
         return None
-    timeout = float(os.getenv("NETKEIBA_CAREER_TOTALS_TIMEOUT_SEC", "6.0"))
+    # The horse-search GET alone measured 5.46s live (2026-11-26), so
+    # the old 6.0s default sat one slow response away from timing out
+    # and emptying a horse's whole career.  10s keeps the bound finite
+    # with headroom; the timeout is per attempt (the search GET also
+    # retries inside paginated_search), not per resolution.
+    timeout = float(os.getenv("NETKEIBA_CAREER_TOTALS_TIMEOUT_SEC", "10.0"))
 
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
         if int(limit or 5) <= 5:
