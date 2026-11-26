@@ -375,6 +375,8 @@ def stored_detail(*, lane=V9B_LANE, place=PLACE, revision=None,
                            "temperature": 0.6692, "blendWeight": 0.5,
                            "blendApplied": True},
     }
+    marker["overrideGuard"] = {"version": "override-guard-v1",
+                                "applied": True}
     if revision is not None:
         marker["revision"] = revision
     prediction_marks = [
