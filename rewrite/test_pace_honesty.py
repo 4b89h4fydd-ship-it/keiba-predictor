@@ -15,9 +15,10 @@ Upload-ready adaptation (2026-11-26): this file ships with the two
 wording fixes only. The first-corner passthrough tests from the
 original draft are omitted because main wires the verified value
 post-build in the publisher (covered by
-tests/test_course_geometry_wiring.py), and the scenario-frequency
-tests are omitted because rewrite/analysis/pace_scenario_freq.py is
-a forward-validation candidate that is not shipped here.
+tests/test_course_geometry_wiring.py). The scenario-frequency
+wiring that was a forward-validation candidate at the time is now
+shipped (rewrite/analysis/pace_scenario_freq.py) and is covered by
+rewrite/test_scenario_probabilities.py.
 """
 import unittest
 
