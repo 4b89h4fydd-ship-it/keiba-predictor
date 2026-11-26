@@ -444,6 +444,13 @@ def _nar_official_past_result_adapter(namespace: dict[str, Any]):
     return fetch
 
 
+# Floor for the verified-career parse limit. The listing page is downloaded
+# in full either way, so this bounds only the returned rows: large enough to
+# cover any real career (issuance audits observed at most 78 starts), small
+# enough to keep a light-lane payload bounded.
+_VERIFIED_CAREER_MIN_LIMIT = 200
+
+
 def _netkeiba_verified_career_adapter(namespace: dict[str, Any]):
     """One identity-verified heavy provider for complete past runs and starts."""
     import os
@@ -460,10 +467,20 @@ def _netkeiba_verified_career_adapter(namespace: dict[str, Any]):
     timeout = float(os.getenv("NETKEIBA_CAREER_TOTALS_TIMEOUT_SEC", "10.0"))
 
     def fetch(horse: dict[str, Any], race: dict[str, Any], limit: int = 5):
-        if int(limit or 5) <= 5:
-            return {}
+        # Never refuse a small-limit call. fetch_verified_career downloads
+        # the horse's complete listing page regardless of limit; the limit
+        # only truncates the parsed rows newest-first, so returning {} for
+        # limit <= 5 hid the whole career from every light-lane caller, and
+        # honouring a small limit would silently drop the OLDEST runs (the
+        # exact gap seen in issuance audits). The network cost of a call is
+        # fixed (search + listing + profile GETs) and does not grow with the
+        # limit, so floor the parse limit at _VERIFIED_CAREER_MIN_LIMIT:
+        # 200 covers every career observed in issuance audits (largest: 78
+        # starts) with headroom, while still bounding the returned payload.
+        # Larger caller limits pass through unchanged.
+        effective_limit = max(int(limit or 5), _VERIFIED_CAREER_MIN_LIMIT)
         return fetch_verified_career(
-            lambda url: getter(url, timeout, 86400), horse, race, int(limit)
+            lambda url: getter(url, timeout, 86400), horse, race, effective_limit
         )
 
     return fetch
