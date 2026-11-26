@@ -1,0 +1,88 @@
+{
+ "version": "pace-label-v2",
+ "designPeriodEnd": "2026-11-17",
+ "designRaces": 2104,
+ "thresholdZ": 0.45,
+ "minParRaces": 20,
+ "conditionShiftMinRaces": 30,
+ "provenance": "Estimated from finished races dated <= designPeriodEnd in the official snapshot packs (result races plus past-run reconstructions). Frozen: rebuilding requires a new label version and re-registration.",
+ "par": {
+  "ダート|800": {
+   "median": 2.6,
+   "spread": 1.4826,
+   "n": 37
+  },
+  "ダート|820": {
+   "median": 1.975,
+   "spread": 0.8404,
+   "n": 54
+  },
+  "ダート|1000": {
+   "median": -0.95,
+   "spread": 1.3714,
+   "n": 23
+  },
+  "ダート|1200": {
+   "median": -3.1125,
+   "spread": 1.6679,
+   "n": 102
+  },
+  "ダート|1230": {
+   "median": -0.9914,
+   "spread": 1.4191,
+   "n": 71
+  },
+  "ダート|1300": {
+   "median": -1.9429,
+   "spread": 1.2814,
+   "n": 92
+  },
+  "ダート|1400": {
+   "median": -1.9625,
+   "spread": 1.7421,
+   "n": 1042
+  },
+  "ダート|1500": {
+   "median": -1.675,
+   "spread": 1.6679,
+   "n": 230
+  },
+  "ダート|1580": {
+   "median": -1.4131,
+   "spread": 1.7781,
+   "n": 56
+  },
+  "ダート|1600": {
+   "median": -1.31,
+   "spread": 1.6753,
+   "n": 171
+  },
+  "ダート|1700": {
+   "median": -0.7245,
+   "spread": 2.0595,
+   "n": 55
+  },
+  "ダート|1800": {
+   "median": -0.97,
+   "spread": 2.5204,
+   "n": 29
+  },
+  "ダート|2000": {
+   "median": -1.6,
+   "spread": 2.0841,
+   "n": 37
+  }
+ },
+ "conditionShifts": {
+  "keys": {
+   "ダート|1200": -0.325,
+   "ダート|1300": 0.1357,
+   "ダート|1400": 0.0625,
+   "ダート|1500": -0.7667,
+   "ダート|1600": -0.28
+  },
+  "surfaces": {
+   "ダート": -0.28
+  }
+ }
+}
