@@ -81,7 +81,31 @@ def _market_probs(race: RaceRecord) -> Optional[dict[int, float]]:
     return {n: (1.0 / odds[n]) / total for n in odds} if total else None
 
 
-def master_candidate(race: RaceRecord, incumbent: RaceForecast) -> tuple[RaceForecast, dict]:
+def _scenario_block(scenario_frequency: Optional[dict]) -> dict:
+    """Pace-scenario frequency fields for the audit sidecar.
+
+    ``scenario_frequency`` is the empirical distribution measured by
+    ``pace_scenario_freq.scenario_frequencies`` from realized
+    historical labels (never a subjective estimate). When the caller
+    has no measured frequency for this race's profile, the
+    probabilities stay None — unmeasured is published as unmeasured.
+    """
+    if not scenario_frequency:
+        return {"scenarioProbabilities": None}
+    return {
+        "scenarioProbabilities": {
+            name: scenario_frequency[name]
+            for name in ("slow", "normal", "fast")
+        },
+        "scenarioFrequencySample": scenario_frequency.get("sample"),
+        "scenarioFrequencyScope": scenario_frequency.get("scope"),
+        "scenarioLabelVersion": scenario_frequency.get("labelVersion"),
+    }
+
+
+def master_candidate(race: RaceRecord, incumbent: RaceForecast,
+                     scenario_frequency: Optional[dict] = None
+                     ) -> tuple[RaceForecast, dict]:
     """Evaluate all active horses, then compute a **shadow** PL distribution.
 
     The incumbent strengths anchor the experimental scores. No published
@@ -129,7 +153,9 @@ def master_candidate(race: RaceRecord, incumbent: RaceForecast) -> tuple[RaceFor
         return incumbent, {
             "version": MODEL_VERSION, "status": "insufficient-incumbent",
             "probabilityStatus": PROBABILITY_STATUS, "runners": rows,
-            "pace": {"label": pace.pace_label, "unknown": list(pace.unknown_runners)},
+            "pace": {"label": pace.pace_label,
+                     "unknown": list(pace.unknown_runners),
+                     **_scenario_block(scenario_frequency)},
             "marketStatus": "complete" if market is not None else "unavailable",
         }
     active = {r.number for r in incumbent.runners if r.strength is not None
@@ -141,7 +167,9 @@ def master_candidate(race: RaceRecord, incumbent: RaceForecast) -> tuple[RaceFor
         return incumbent, {
             "version": MODEL_VERSION, "status": "insufficient-master-evidence",
             "probabilityStatus": PROBABILITY_STATUS, "runners": rows,
-            "pace": {"label": pace.pace_label, "unknown": list(pace.unknown_runners)},
+            "pace": {"label": pace.pace_label,
+                     "unknown": list(pace.unknown_runners),
+                     **_scenario_block(scenario_frequency)},
             "marketStatus": "complete" if market is not None else "unavailable",
         }
     center = sum(usable) / len(usable)
@@ -207,7 +235,7 @@ def master_candidate(race: RaceRecord, incumbent: RaceForecast) -> tuple[RaceFor
             "label": pace.pace_label, "frontRunners": list(pace.front_runners),
             "unknown": list(pace.unknown_runners),
             "scenarioOrder": scenario_order,
-            "scenarioProbabilities": None,
+            **_scenario_block(scenario_frequency),
         },
         "marketStatus": "complete" if market is not None else "unavailable",
         "mostLikelyWinner": leader,
