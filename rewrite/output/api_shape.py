@@ -232,7 +232,87 @@ def _pace_stages(race: RaceRecord, pace: PaceForecast) -> list[dict]:
     return stages
 
 
-def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
+_SCENARIO_JP = {"fast": "ハイ", "normal": "ミドル", "slow": "スロー"}
+_SCENARIO_CONSEQUENCE = {
+    "fast": "ハイが一番濃く、そうなれば先行勢は競り合って苦しくなり、"
+            "差し・追込に流れが向く",
+    "normal": "ミドルが一番濃く、そうなれば隊列は落ち着いて"
+              "極端な有利不利は出にくい",
+    "slow": "スローが一番濃く、そうなれば前が残りやすく、"
+            "先行馬が有利になる",
+}
+
+
+def _scenario_percentages(frequency: dict) -> dict:
+    """Whole-percent display values that sum to exactly 100.
+
+    Largest-remainder rounding over the measured fractions; the
+    stored probabilities themselves keep their full precision.
+    """
+    raw = {name: float(frequency[name]) * 100.0
+           for name in ("fast", "normal", "slow")}
+    whole = {name: int(value) for name, value in raw.items()}
+    short = 100 - sum(whole.values())
+    by_remainder = sorted(raw, key=lambda n: (-(raw[n] - whole[n]), n))
+    for name in by_remainder[:short]:
+        whole[name] += 1
+    return whole
+
+
+def _scenario_scope_jp(race: RaceRecord, frequency: dict) -> str:
+    scope = frequency.get("scope")
+    track = race.track
+    surface = _value(race.surface, "")
+    distance = _value(race.distance)
+    if scope == "track-surface-distance":
+        return f"{track}{surface}{distance}m"
+    if scope == "track-surface":
+        return f"{track}{surface}"
+    return f"{surface}全体"
+
+
+def _scenario_text(race: RaceRecord, pace: PaceForecast,
+                   frequency: dict,
+                   honmei_number: Optional[int]) -> str:
+    """Probability -> consequence sentences for the pace text.
+
+    Every number is the measured historical frequency (with its
+    sample size and scope named); the consequence follows the most
+    frequent scenario, and the honmei remark only restates which
+    side of that scenario the marked horse's own profile puts it
+    on. Nothing is claimed beyond those two grounded facts.
+    """
+    pct = _scenario_percentages(frequency)
+    top = max(("fast", "normal", "slow"),
+              key=lambda n: (frequency[n], n))
+    text = (
+        f"同条件（{_scenario_scope_jp(race, frequency)}）の"
+        f"過去{frequency.get('sample')}レースの実績では、ペースは"
+        f"ハイ{pct['fast']}%・ミドル{pct['normal']}%・"
+        f"スロー{pct['slow']}%。"
+        f"{_SCENARIO_CONSEQUENCE[top]}。"
+    )
+    if honmei_number is not None:
+        if honmei_number in pace.front_runners:
+            side = {
+                "fast": "競り合いに巻き込まれる側",
+                "normal": "隊列の前の方で運ぶ側",
+                "slow": "楽に前へ行ける側",
+            }[top]
+            text += f"◎{honmei_number}番は先行型で、その場合は{side}。"
+        elif honmei_number not in pace.unknown_runners:
+            side = {
+                "fast": "流れが向く側",
+                "normal": "中団から運ぶ側",
+                "slow": "前が残って届きにくい側",
+            }[top]
+            text += f"◎{honmei_number}番は差し・追込型で、その場合は{side}。"
+    return text
+
+
+def _pace_block(race: RaceRecord, pace: PaceForecast,
+                scenario_frequency: Optional[dict] = None,
+                honmei_number: Optional[int] = None) -> dict:
     names = {r.number: _value(r.name, "") for r in race.runners}
     front = list(pace.front_runners)
     observed = pace.field_size - len(pace.unknown_runners)
@@ -251,6 +331,9 @@ def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
         # 12/12 and unknown=[]), so state the observed fact instead.
         text = (f"{pace.pace_label}。過去走の初角位置で先行型と判定された"
                 f"馬はなし（観測済み{observed}頭）。")
+    if scenario_frequency:
+        text += _scenario_text(race, pace, scenario_frequency,
+                               honmei_number)
     return {
         "status": "past-corner-evidence-uncalibrated",
         "likelyForwardNumbers": front,
@@ -260,7 +343,20 @@ def _pace_block(race: RaceRecord, pace: PaceForecast) -> dict:
         "pacePressure": pace.pace_pressure,
         "paceLabel": pace.pace_label,
         "testedScenarios": ["normal", "fast", "slow"],
-        "scenarioFrequencyMeasured": False,
+        "scenarioProbabilities": (
+            {name: scenario_frequency[name]
+             for name in ("slow", "normal", "fast")}
+            if scenario_frequency else None),
+        "scenarioFrequencyMeasured": bool(scenario_frequency),
+        "scenarioFrequencySample": (
+            scenario_frequency.get("sample") if scenario_frequency
+            else None),
+        "scenarioFrequencyScope": (
+            scenario_frequency.get("scope") if scenario_frequency
+            else None),
+        "scenarioLabelVersion": (
+            scenario_frequency.get("labelVersion") if scenario_frequency
+            else None),
         "firstCornerMetersOfficial": None,
         "text": text,
     }
@@ -592,6 +688,7 @@ def race_payload(
     *,
     provenance: Optional[dict] = None,
     calibrated_probabilities: bool = False,
+    scenario_frequency: Optional[dict] = None,
 ) -> dict:
     """Production /api/race/<id> envelope for one rewrite forecast.
 
@@ -605,6 +702,10 @@ def race_payload(
     prediction_marks, unified_marks, honmei = _marks(
         forecast, calibrated_probabilities,
         attention=set(combined_gate_picks(tickets)))
+    # Built once so the pace block and the forecast text can never
+    # disagree about the measured scenario frequency.
+    pace_block = _pace_block(race, pace, scenario_frequency,
+                             honmei_number=honmei)
     circuit = _value(race.circuit, "")
     start_time = _value(race.start_time, "")
     unified = {
@@ -634,7 +735,7 @@ def race_payload(
         "marks": unified_marks,
         "diagnosis": _diagnosis(forecast, calibrated_probabilities),
         "honmeiHorseNumber": honmei,
-        "pace": _pace_block(race, pace),
+        "pace": pace_block,
         "paceStages": _pace_stages(race, pace),
         "ticketPlan": _ticket_plan_block(tickets, calibrated_probabilities),
         "analysisStages": {
@@ -683,7 +784,7 @@ def race_payload(
         "predictionMarks": prediction_marks,
         "recommendedBets": _recommended_bets(
             tickets, calibrated_probabilities),
-        "forecastText": _pace_block(race, pace)["text"],
+        "forecastText": pace_block["text"],
         "unifiedForecast": unified,
     }
     return {
