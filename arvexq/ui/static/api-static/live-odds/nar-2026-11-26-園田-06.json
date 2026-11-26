@@ -4,7 +4,7 @@
  "odds": [
   {
    "horse_no": 1,
-   "win_odds": 3.4,
+   "win_odds": 4.5,
    "popularity": 2,
    "scratched": false,
    "horse_status": "",
@@ -12,15 +12,15 @@
   },
   {
    "horse_no": 2,
-   "win_odds": 12.6,
-   "popularity": 3,
+   "win_odds": 16.5,
+   "popularity": 4,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 3,
-   "win_odds": 46.6,
+   "win_odds": 77.5,
    "popularity": 8,
    "scratched": false,
    "horse_status": "",
@@ -28,7 +28,7 @@
   },
   {
    "horse_no": 4,
-   "win_odds": 72.3,
+   "win_odds": 105.8,
    "popularity": 9,
    "scratched": false,
    "horse_status": "",
@@ -36,7 +36,7 @@
   },
   {
    "horse_no": 5,
-   "win_odds": 17.1,
+   "win_odds": 31.7,
    "popularity": 5,
    "scratched": false,
    "horse_status": "",
@@ -44,7 +44,7 @@
   },
   {
    "horse_no": 6,
-   "win_odds": 189,
+   "win_odds": 540.7,
    "popularity": 11,
    "scratched": false,
    "horse_status": "",
@@ -52,7 +52,7 @@
   },
   {
    "horse_no": 7,
-   "win_odds": 35.2,
+   "win_odds": 54.7,
    "popularity": 7,
    "scratched": false,
    "horse_status": "",
@@ -60,7 +60,7 @@
   },
   {
    "horse_no": 8,
-   "win_odds": 240.6,
+   "win_odds": 613.4,
    "popularity": 12,
    "scratched": false,
    "horse_status": "",
@@ -68,15 +68,15 @@
   },
   {
    "horse_no": 9,
-   "win_odds": 14.5,
-   "popularity": 4,
+   "win_odds": 11,
+   "popularity": 3,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 10,
-   "win_odds": 1.5,
+   "win_odds": 1.2,
    "popularity": 1,
    "scratched": false,
    "horse_status": "",
@@ -84,7 +84,7 @@
   },
   {
    "horse_no": 11,
-   "win_odds": 27.5,
+   "win_odds": 49.1,
    "popularity": 6,
    "scratched": false,
    "horse_status": "",
@@ -92,7 +92,7 @@
   },
   {
    "horse_no": 12,
-   "win_odds": 133.7,
+   "win_odds": 244.9,
    "popularity": 10,
    "scratched": false,
    "horse_status": "",
@@ -100,8 +100,8 @@
   }
  ],
  "oddsSource": "NAR公式",
- "oddsUpdatedAt": "2026-11-26T04:04:56.486Z",
- "sourcePublishedAt": "2026-11-26T13:04:00+09:00",
+ "oddsUpdatedAt": "2026-11-26T06:25:42.551Z",
+ "sourcePublishedAt": "",
  "popularitySource": "NAR公式単勝オッズ順位",
  "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=27&k_raceDate=2026%2F11%2F26&k_raceNo=6"
 }
