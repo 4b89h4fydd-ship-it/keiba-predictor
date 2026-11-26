@@ -1429,7 +1429,7 @@ class BuilderV2Tests(TestCase):
                                   race_details=details,
                                   horse_profiles=profiles,
                                   newspaper=newspaper)
-        self.assertEqual(payload["version"], "nk-materials-v12")
+        self.assertEqual(payload["version"], "nk-materials-v13")
         entry = payload["races"][RACE_ID]
         self.assertEqual(entry["netkeibaRaceId"], NK_ID)
         self.assertEqual(entry["courseAnalysis"]["コース"], "金沢1500m")
