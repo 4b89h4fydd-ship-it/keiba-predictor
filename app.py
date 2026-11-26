@@ -3778,6 +3778,46 @@ def data_core_refresh_day(date:str=Query(""),circuit:str=Query("")):
 _full_history_lock=threading.Lock()
 _full_history_running:set[str]=set()
 
+def _harvest_nar_local_history(horses: list, cutoff: str, ttl: int | None = None) -> tuple[int, int]:
+    """Drain the local NAR official store into RaceDB past_runs.
+
+    Pure local SQLite work (NarStore reads nar.sqlite3; no network), so it is
+    safe to run synchronously before a diagnosis build as well as from the
+    background harvest worker. The per-horse TTL marks keep repeat calls
+    cheap: a horse harvested inside the TTL window is skipped. Returns
+    (horses_harvested, runs_upserted); one bad horse never fails the rest.
+    """
+    if not bool(int(os.getenv("RACEDB_FULL_HISTORY", "1"))):
+        return 0, 0
+    if ttl is None:
+        ttl = max(1800, int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC", "21600")))
+    done = 0
+    upserted = 0
+    store = NarStore()
+    try:
+        for h in horses:
+            if not isinstance(h, dict) or not h.get("name"):
+                continue
+            key = "fullhist:nar:" + RACEDB._horse_key(h)
+            last = RACEDB.source_updated(key)
+            if last and int(time.time()) - last < ttl:
+                continue
+            try:
+                runs = store.recent_races(str(h.get("name") or ""), cutoff, 100000)
+                n = RACEDB.upsert_past_runs(h, runs)
+                RACEDB.mark_source(key, "done", f"{n} runs")
+                done += 1
+                upserted += int(n or 0)
+            except Exception as exc:
+                RACEDB.mark_source(key, "error", str(exc))
+    finally:
+        try:
+            store.conn.close()
+        except Exception:
+            pass
+    return done, upserted
+
+
 def _schedule_full_history_harvest(detail: dict) -> None:
     """Persist every career run exposed by the currently available official source without blocking the race screen."""
     if not bool(int(os.getenv("RACEDB_FULL_HISTORY","1"))) or not isinstance(detail,dict):return
@@ -3793,18 +3833,7 @@ def _schedule_full_history_harvest(detail: dict) -> None:
         ttl=max(1800,int(os.getenv("RACEDB_FULL_HISTORY_TTL_SEC","21600")));cutoff=str(detail.get("date") or _today_iso());circuit=str(detail.get("circuit") or "")
         try:
             if circuit=="地方":
-                store=NarStore()
-                try:
-                    for h in horses:
-                        key="fullhist:nar:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
-                        if last and int(time.time())-last<ttl:continue
-                        try:
-                            runs=store.recent_races(str(h.get("name") or ""),cutoff,100000)
-                            n=RACEDB.upsert_past_runs(h,runs);RACEDB.mark_source(key,"done",f"{n} runs")
-                        except Exception as exc:RACEDB.mark_source(key,"error",str(exc))
-                finally:
-                    try:store.conn.close()
-                    except Exception:pass
+                _harvest_nar_local_history(horses,cutoff,ttl)
             else:
                 def one(h):
                     key="fullhist:jra:"+RACEDB._horse_key(h);last=RACEDB.source_updated(key)
@@ -4509,8 +4538,26 @@ def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_c
     if detail:
         detail=json.loads(json.dumps(detail,ensure_ascii=False,default=str))
     if not detail:return None
+    _local_career_sync={"horses":0,"runsUpserted":0}
     if race_id.startswith("nar-"):
         detail=_nar_attach_recent_batch(detail,5)
+        # The full-history harvest used to be scheduled only after this
+        # diagnosis was computed and saved, so a first build diagnosed
+        # against whatever RaceDB happened to hold and the harvest landed
+        # afterwards (invalidating that diagnosis). The NAR harvest is pure
+        # local SQLite work with per-horse TTL marks, so drain it
+        # synchronously here, before the stored-career merge below. Network
+        # career sources stay out of this path on purpose: one verified
+        # search GET alone measured 5.46s, which cannot fit this builder's
+        # local-only contract; they complete via the prefetch/heavy lane
+        # and the post-diagnosis harvest remains as their backstop.
+        if DB_PATH.exists():
+            try:
+                _sync_done,_sync_runs=_harvest_nar_local_history(
+                    [h for h in (detail.get("horses") or []) if isinstance(h,dict)],
+                    str(detail.get("date") or _today_iso()))
+                _local_career_sync={"horses":_sync_done,"runsUpserted":_sync_runs}
+            except Exception as exc:print("fast diagnosis local career sync failed",race_id,exc)
     else:
         for h in detail.get("horses",[]) or []:
             h["recentRaces"]=list(h.get("recentRaces") or [])[:5]
@@ -4538,6 +4585,7 @@ def _build_fast_diagnosis_snapshot(race_id:str, allow_network:bool=False, deep_c
     pm["diagnosisReady"]=bool(quality.get("ready"))
     pm["diagnosisPreparedAtEpoch"]=time.time()
     pm["diagnosisCoverage"]=quality
+    pm["localCareerSync"]=_local_career_sync
     detail["historySearch"]={
         "status":"local-ready" if quality.get("ready") else "history-loading",
         "monthsDone":0,"maxMonths":0,
