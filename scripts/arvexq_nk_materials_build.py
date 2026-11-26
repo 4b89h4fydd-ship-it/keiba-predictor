@@ -177,9 +177,9 @@ normaliser between the collection side and that file; its inputs:
                       read as a second source, with this file
                       winning on a duplicate.
 
-Output format (version "nk-materials-v13"):
+Output format (version "nk-materials-v14"):
 
-  {"version": "nk-materials-v13", "date": ..., "source": ...,
+  {"version": "nk-materials-v14", "date": ..., "source": ...,
    "generatedAt": ...,
    "fieldCoverage": {<per-field horse counts over the file>},
    "zeroCoverage": [<names of the expected fields whose count
@@ -195,6 +195,7 @@ Output format (version "nk-materials-v13"):
    "races": {<arvexq_race_id>: {
        "netkeibaRaceId": <netkeiba race_id>,
        "paceLabel": <"H"|"M"|"S"|null>,
+       "firstCornerMeters": <number|null>,
        "horses": {<horse number as str>: {
            "nk_best": int|null, "nk_avg5": int|null,
            "nk_dist": int|null, "nk_course": int|null,
@@ -270,7 +271,13 @@ Definitions (identical to the app's data-analysis tab, PR #564):
   no derived values are duplicated into this file). The v13
   label adds the styleClass / stretch fields above (from the
   pace-forecast entry's horses_extra block) and accepts a
-  pace diagram saved under "positions_groups". The
+  pace diagram saved under "positions_groups". The v14
+  label adds the entry's firstCornerMeters: the standing
+  course-geometry record's run to the first corner for the
+  race's own (track, surface, distance), joined from
+  rewrite/data/course_geometry.json (or the file named by
+  --course-geometry); a course with no record carries null
+  — never estimated. The
   publish lane's parser does not gate on the version string,
   so v1/v2/v3 files load the same (their horses simply carry
   no pace field).
@@ -289,7 +296,7 @@ Usage:
       --speed-index <path> --course-analysis <path> \
       --targets <path> [--race-details-dir <dir>] \
       [--horse-profiles <path>] [--newspaper <path>] \
-      [--pace-forecast <path>] \
+      [--pace-forecast <path>] [--course-geometry <path>] \
       [--out rewrite/data/nk_materials/2026-11-17.json]
 """
 from __future__ import annotations
@@ -1072,7 +1079,8 @@ def _derived_coverage(race_horses: list) -> dict:
 
 def _classify_zero_coverage(zero_fields, *, jra_present,
                             odds_snapshots, stable_unpublished_only,
-                            pace_supplied=True):
+                            pace_supplied=True,
+                            geometry_supplied=True):
     explained: dict = {}
     unexplained: list = []
     for field in zero_fields:
@@ -1084,6 +1092,14 @@ def _classify_zero_coverage(zero_fields, *, jra_present,
             reason = ("no pace forecast supplied to this build "
                       "(the style / stretch values ride the "
                       "pace-forecast file)")
+        elif field == "firstCorner" and not geometry_supplied:
+            # The first-corner distances ride the standing
+            # course-geometry records; a build given no
+            # geometry file has no source for them.
+            reason = ("no course-geometry file supplied to "
+                      "this build (the first-corner distances "
+                      "ride the standing course-geometry "
+                      "records)")
         elif field == "nkAiScore":
             # The AI総合スコア page is gated behind netkeiba's
             # Master course, outside the current plan; the field
@@ -1111,6 +1127,36 @@ def _classify_zero_coverage(zero_fields, *, jra_present,
     return explained, unexplained
 
 
+def _course_geometry_index(payload) -> dict:
+    """{(track, surface, distance): firstCornerDistanceMeters}
+    from the standing course-geometry records
+    (rewrite/data/course_geometry.json) — the publish lane's
+    own indexing rule (the first record per key wins; see
+    scripts/arvexq_rewrite_publish.py,
+    _load_course_geometry). An absent or unreadable payload
+    indexes nothing: every race then carries null, and the
+    build records the absence (see
+    _classify_zero_coverage)."""
+    records = payload.get("records") \
+        if isinstance(payload, dict) else payload
+    index: dict = {}
+    if isinstance(records, list):
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            try:
+                key = (str(record.get("track") or ""),
+                       str(record.get("surface") or ""),
+                       int(record.get("distance")))
+            except (TypeError, ValueError):
+                continue
+            value = _num(record.get("firstCornerDistanceMeters"))
+            if value is None or value <= 0:
+                continue
+            index.setdefault(key, value)
+    return index
+
+
 def build(date: str, speed_index: dict, course_analysis: dict,
           targets: dict, race_details: dict | None = None,
           horse_profiles: dict | None = None,
@@ -1121,7 +1167,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           horse_analysis: dict | None = None,
           course_persons: dict | None = None,
           stable_comments: dict | None = None,
-          race_entries: dict | None = None) -> dict:
+          race_entries: dict | None = None,
+          course_geometry: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -1147,6 +1194,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     entries_races = (race_entries.get("races")
                      if isinstance(race_entries, dict)
                      else None) or {}
+    geometry_index = _course_geometry_index(course_geometry)
     races: dict = {}
     for target in targets.get("targets") or []:
         nk_id = str(target.get("netkeiba_race_id") or "")
@@ -1444,9 +1492,18 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
+        try:
+            geometry_key = (str(target.get("track") or ""),
+                            str(target.get("surface") or ""),
+                            int(target.get("distance")))
+        except (TypeError, ValueError):
+            geometry_key = None
+        first_corner = (geometry_index.get(geometry_key)
+                        if geometry_key is not None else None)
         races[aq_id] = {"netkeibaRaceId": nk_id, "horses": horses,
                         "courseAnalysis": course,
-                        "paceLabel": pace_label}
+                        "paceLabel": pace_label,
+                        "firstCornerMeters": first_corner}
     coverage: dict = {}
     all_horses = [h for r in races.values() for h in r["horses"].values()]
     coverage["horses"] = len(all_horses)
@@ -1476,6 +1533,13 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                                  if h.get("styleClass") is not None)
     coverage["stretch"] = sum(1 for h in all_horses
                               if h.get("stretch") is not None)
+    # 2026-11-26 (builder v14): the first-corner distance is
+    # a race-level value; the count is the horses of the
+    # races that carry one — the horses the adapter's
+    # first_corner term can stand on.
+    coverage["firstCorner"] = sum(
+        len(r["horses"]) for r in races.values()
+        if r.get("firstCornerMeters") is not None)
     # v6: the judgements / odds fields (0 until a collection
     # supplies them) and the derived-speed coverage, summed
     # race by race (the overlap feature is a race-level
@@ -1543,9 +1607,10 @@ def build(date: str, speed_index: dict, course_analysis: dict,
         stable_unpublished_only=bool(stable_races) and all(
             isinstance(e, dict) and e.get("published") is False
             for e in stable_races.values()),
-        pace_supplied=bool(pace_races))
+        pace_supplied=bool(pace_races),
+        geometry_supplied=course_geometry is not None)
     return {
-        "version": "nk-materials-v13",
+        "version": "nk-materials-v14",
         "date": date,
         "source": "netkeiba-forward-collection",
         "generatedAt": datetime.now(JST).isoformat(timespec="seconds"),
@@ -1597,6 +1662,7 @@ def main() -> int:
     parser.add_argument("--course-persons")
     parser.add_argument("--race-entries")
     parser.add_argument("--stable-comments")
+    parser.add_argument("--course-geometry")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -1659,6 +1725,25 @@ def main() -> int:
     odds_arg = (odds_payloads if len(odds_payloads) != 1
                 else odds_payloads[0] if odds_payloads else None)
 
+    # The standing course-geometry records: named
+    # explicitly, else the repository's own file. A build
+    # with neither carries firstCornerMeters null on every
+    # race and records the absence as explained (see
+    # _classify_zero_coverage) — the distances are a
+    # standing file, not a per-date collection, so their
+    # absence is a build-input fact, not an uncollected
+    # material.
+    geometry_path = args.course_geometry
+    if not geometry_path:
+        default_geometry = (ROOT / "rewrite" / "data"
+                            / "course_geometry.json")
+        if default_geometry.exists():
+            geometry_path = str(default_geometry)
+    geometry_payload = (_load(geometry_path)
+                        if geometry_path else None)
+    if isinstance(geometry_payload, dict) \
+            and not geometry_payload:
+        geometry_payload = None
     payload = build(args.date, _load(args.speed_index),
                     _load(args.course_analysis), _load(args.targets),
                     race_details=load_race_details(args.race_details_dir),
@@ -1670,7 +1755,8 @@ def main() -> int:
                     horse_analysis=_load(args.horse_analysis),
                     course_persons=_load(args.course_persons),
                     stable_comments=_load(args.stable_comments),
-                    race_entries=_load(args.race_entries))
+                    race_entries=_load(args.race_entries),
+                    course_geometry=geometry_payload)
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
