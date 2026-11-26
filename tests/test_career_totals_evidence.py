@@ -199,7 +199,11 @@ class EndToEndTests(unittest.IsolatedAsyncioTestCase):
 
 
 class WiringTests(unittest.TestCase):
-    def test_adapter_only_runs_in_career_lane(self):
+    def test_adapter_runs_for_light_and_career_lanes(self):
+        # 2026-11-27 data-lane fix: the adapter used to return {} for
+        # limit <= 5, which hid the whole verified career from light-lane
+        # callers. It now fetches at any limit (the parse limit is floored
+        # internally, so the oldest runs are not truncated either).
         from arvexq.databanks.legacy_bridge import _netkeiba_verified_career_adapter
         calls = []
         def getter(url, timeout, cache):
@@ -207,8 +211,8 @@ class WiringTests(unittest.TestCase):
             return horse_page("2022100001") if "pid=horse_list" in url else (
                 listing_html(ROWS) if "/result/" in url else top_html(4))
         fetch = _netkeiba_verified_career_adapter({"_netkeiba_get": getter})
-        self.assertEqual(fetch({"name": "テスト"}, RACE, 5), {})
-        self.assertEqual(calls, [])
+        self.assertEqual(fetch({"name": "テスト"}, RACE, 5)["careerStartEvidence"]["starts"], 3)
+        self.assertTrue(calls)
         self.assertEqual(fetch({"name": "テスト"}, RACE, 1000)["careerStartEvidence"]["starts"], 3)
 
     def test_adapter_can_be_disabled(self):
