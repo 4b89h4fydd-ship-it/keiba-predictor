@@ -73,13 +73,19 @@ evidence in any committed pack version.  ``heal_missing_research_
 evidence`` therefore runs the analyze stage's own decoration
 procedure (margin completion from the stored packs, then
 ``attach_evidence``) on any detail that still has horses without an
-evidence block, right before the packs are written, whichever lane
-produced the payload.  The procedure's transitive import closure is
-stdlib-only (verified 2026-11-26), so the lanes — which run this
-script with setup-python only — can import it from the checkout.
-The heal is idempotent, never rewrites a block a horse already
-carries, and never touches forecast or result content.  Horses that
-remain evidence-empty afterwards are reported machine-readably to
+evidence block — or with a block whose items are all unavailable,
+which is the same unevaluated state on screen (2026-11-26, Urawa
+3R: the one residual horse carried an empty block, so a heal keyed
+on missing blocks alone never picked her up) — right before the
+packs are written, whichever lane produced the payload.  The
+procedure's transitive import closure is stdlib-only (verified
+2026-11-26), so the lanes — which run this script with setup-python
+only — can import it from the checkout.
+The heal is idempotent, never rewrites a block that has available
+items, replaces an empty block only when the recompute yields at
+least one available item (otherwise the original block is kept
+verbatim), and never touches forecast or result content.  Horses
+that remain evidence-empty afterwards are reported machine-readably to
 ``evidence-residual/<date>.json`` next to the packs (plus stdout
 and the Actions job summary) instead of passing silently; the file
 is written on every build, with an explicit zero count on clean
@@ -566,17 +572,22 @@ EVIDENCE_RESIDUAL_VERSION = "arvexq-evidence-residual-v1"
 _PAST_RUN_KEYS = ("recentRaces", "allPastRuns", "pastRaces", "history", "runs")
 
 
+def _block_available_count(block: Any) -> int:
+    """Available-item count of one evidence block; -1 when it is not
+    a block at all."""
+    if not isinstance(block, dict):
+        return -1
+    items = (block.get("factors") or {}).get("items") or []
+    return sum(1 for it in items
+               if isinstance(it, dict) and it.get("available"))
+
+
 def _evidence_available_count(horse: Any) -> int:
     """Available-item count of a horse's evidence block; -1 when the
     horse carries no block at all."""
     if not isinstance(horse, dict):
         return -1
-    ev = horse.get("researchEvidence")
-    if not isinstance(ev, dict):
-        return -1
-    items = (ev.get("factors") or {}).get("items") or []
-    return sum(1 for it in items
-               if isinstance(it, dict) and it.get("available"))
+    return _block_available_count(horse.get("researchEvidence"))
 
 
 def _horse_has_past_runs(horse: Any) -> bool:
@@ -662,12 +673,18 @@ def heal_missing_research_evidence(model: DayModel, out_dir: Path) -> dict:
 
     Runs the analyze stage's own decoration procedure (margin
     completion from the stored packs, then ``attach_evidence``) on
-    every detail that still has horses without an evidence block,
-    whichever lane produced the payload.  A block a horse already
-    carries is never rewritten (the procedure recomputes every block,
-    so pre-existing ones are snapshotted and restored verbatim), and
-    forecast / result content is never touched.  Idempotent: a detail
-    whose horses all carry blocks is left completely alone.
+    every detail that still has horses without an evidence block, or
+    with a block whose items are all unavailable, whichever lane
+    produced the payload.  A block with available items is never
+    rewritten (the procedure recomputes every block, so pre-existing
+    ones are snapshotted and restored verbatim); an empty block is
+    replaced only when the recompute yields at least one available
+    item for it, and is otherwise kept verbatim so the horse surfaces
+    in the residual report below with its original block intact.
+    Forecast / result content is never touched.  Idempotent: a detail
+    whose horses all carry blocks with available items is left
+    completely alone, and re-running on a detail whose empty blocks
+    could not be filled reproduces the identical detail.
 
     Afterwards, every horse whose evidence still has zero available
     items is written to ``<out_dir>/evidence-residual/<date>.json``
@@ -694,7 +711,7 @@ def heal_missing_research_evidence(model: DayModel, out_dir: Path) -> dict:
         if not isinstance(detail, dict):
             continue
         if any(isinstance(h, dict) and _horse_number(h) > 0
-               and not isinstance(h.get("researchEvidence"), dict)
+               and _evidence_available_count(h) <= 0
                for h in detail.get("horses") or []):
             targets.append(rid)
     if targets:
@@ -732,10 +749,28 @@ def heal_missing_research_evidence(model: DayModel, out_dir: Path) -> dict:
                     continue
                 for h in detail.get("horses") or []:
                     no = _horse_number(h)
-                    if no in saved:
-                        h["researchEvidence"] = saved[no][0]
-                        if saved[no][1] is not None:
-                            h["careerCoverage"] = saved[no][1]
+                    if no not in saved:
+                        continue
+                    saved_block, saved_coverage = saved[no]
+                    if _block_available_count(saved_block) > 0:
+                        # A block with available items is never
+                        # rewritten by the recompute.
+                        h["researchEvidence"] = saved_block
+                        if saved_coverage is not None:
+                            h["careerCoverage"] = saved_coverage
+                    elif _evidence_available_count(h) <= 0:
+                        # The block was empty and the recompute could
+                        # not fill it either: keep the original block
+                        # (and its careerCoverage) verbatim instead of
+                        # the equally empty recomputation, so nothing
+                        # about the horse changes and the residual
+                        # report below speaks for it.
+                        h["researchEvidence"] = saved_block
+                        if saved_coverage is not None:
+                            h["careerCoverage"] = saved_coverage
+                    # Otherwise the recompute filled a previously
+                    # empty block: keep the recomputed block and its
+                    # careerCoverage as the heal.
                 if saved_version is not None:
                     detail["researchEvidenceVersion"] = saved_version
                 if saved_provenance is not None:
