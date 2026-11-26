@@ -1,1 +1,1 @@
-{"version":"arvexq-evidence-residual-v1","date":"2026-11-25","healStatus":"not-needed","healedRaces":[],"healErrors":[],"residualCount":1,"residual":[{"raceId":"nar-2026-11-25-名古屋-04","horseNumber":2,"name":"ポルタデリオーキ","reason":"no-past-runs-or-trial-record"}],"generatedAt":"2026-11-26T08:36:06+09:00"}
+{"version":"arvexq-evidence-residual-v1","date":"2026-11-25","healStatus":"ok","healedRaces":["nar-2026-11-25-名古屋-04"],"healErrors":[],"residualCount":0,"residual":[],"generatedAt":"2026-11-26T11:21:06+09:00"}
