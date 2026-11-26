@@ -14,6 +14,7 @@ total is bound to the target race date rather than to the fetch date.
 from __future__ import annotations
 
 import re
+import time
 import urllib.parse
 from collections.abc import Callable
 from typing import Any
@@ -64,6 +65,35 @@ def parse_search(html: str, name: str) -> list[dict[str, Any]]:
     return out
 
 
+_SEARCH_GET_ATTEMPTS = 3      # 1 initial try + up to 2 retries
+_SEARCH_GET_PAUSE_SEC = 0.5   # pause before retry n is PAUSE * n
+
+
+def _get_search_page(get: Callable[[str], str], url: str) -> str:
+    """The first horse-search GET, with bounded retries.
+
+    This one GET used to have no failure handling at all: a single
+    transient error (the search GET itself measured 5.46s live against
+    a 6s adapter timeout, 2026-11-26) propagated out of the provider
+    and emptied the horse's whole career.  The GET is idempotent, so
+    retry it up to two more times with short pauses.  If every attempt
+    fails, the last error propagates exactly as a single failure did
+    before, so the failure still surfaces in the provider audit
+    instead of becoming a silent empty result.  Only this GET is
+    retried; the pagination and listing GETs keep their existing
+    behaviour.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(_SEARCH_GET_ATTEMPTS):
+        try:
+            return get(url)
+        except Exception as exc:  # transient fetch failure: retry
+            last_exc = exc
+            if attempt + 1 < _SEARCH_GET_ATTEMPTS:
+                time.sleep(_SEARCH_GET_PAUSE_SEC * (attempt + 1))
+    raise last_exc  # type: ignore[misc]
+
+
 def paginated_search(get: Callable[[str], str], name: str, birth_year: int | None = None) -> list[dict[str, Any]]:
     """Follow only advertised pages of the same registered horse search.
 
@@ -71,7 +101,7 @@ def paginated_search(get: Callable[[str], str], name: str, birth_year: int | Non
     from page one. Never infer an identity from substring matches or construct
     an independent provider. Stop on malformed pagination or a network error.
     """
-    first = get(search_url(name))
+    first = _get_search_page(get, search_url(name))
     candidates = parse_search(first, name)
     seen = {c["id"] for c in candidates}
     if len(candidates) == 1 and (birth_year is None or candidates[0]["birthYear"] == birth_year):
