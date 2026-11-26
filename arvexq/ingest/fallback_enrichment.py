@@ -411,11 +411,18 @@ async def enrich_race_missing(
                 domains.append(("horse_history", {"jra_official_prior_results"} | measured_feeds))
             elif circuit == "NAR" and _needs_nar_margins(horse, cutoff) and bank_registry.get("nar_official_past_results"):
                 # The original five runs can have positions yet no winner-time gap.
-                # Use the ALREADY REGISTERED official NAR sources only: the result
+                # Use the ALREADY REGISTERED official NAR sources first: the result
                 # adapter plus the bulk official archive / NarStore merges, which
                 # also fill latest runs that carry no raceNumber. Never add a
                 # parallel scraper or fall back to legacy scores.
-                domains.append(("horse_history", {"nar_official_past_results", "nar_official_csv", "nar_official"}))
+                # The official trio can only ever supply NAR races, so a horse
+                # whose career runs are all JRA (or older than the official
+                # archive reaches) could never be completed by this branch and
+                # was finalised without the one source that can supply it.
+                # Include the identity-verified career source (circuit="both")
+                # in the same pass, so such a horse is only finalised after
+                # that source has actually been attempted.
+                domains.append(("horse_history", {"nar_official_past_results", "nar_official_csv", "nar_official"} | START_COUNT_SOURCES))
             elif measured_feeds and (
                 _measured_horse_first3f_count(horse, cutoff, history_limit) < 2
                 or _horse_early_timing_count(horse, cutoff, history_limit) < 2
