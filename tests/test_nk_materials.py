@@ -1344,7 +1344,13 @@ class BuildTests(TestCase):
         self.assertIsNotNone(verified_unified(with_course))
 
     def test_frozen_race_without_materials_stays_frozen(self):
-        new, reason = _build(stored_detail(), materials={})
+        detail = stored_detail()
+        # The override-guard one-time adoption is a separate re-issue
+        # path that does not depend on materials; stamp it as already
+        # applied so this test isolates the nk-materials path.
+        detail["preparedMeta"]["rewritePublish"]["overrideGuard"] = {
+            "version": "override-guard-v1", "applied": True}
+        new, reason = _build(detail, materials={})
         self.assertIsNone(new)
         self.assertTrue(reason.startswith("frozen:"), reason)
 
