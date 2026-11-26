@@ -57,7 +57,24 @@ class MasterCandidateTests(unittest.TestCase):
                               if t.kind == "trifecta"]), 24)
         self.assertEqual(ticket_plan.ev_tickets, ())
         self.assertEqual(set(audit["pace"]["scenarioOrder"]), {"slow", "normal", "fast"})
+        # Spec change (2026-11-26): scenarioProbabilities used to be
+        # null by specification because no computation existed. Now
+        # a caller-measured empirical frequency is published when
+        # one is supplied; with none supplied (this call) the value
+        # is still None — unmeasured stays unmeasured, never filled.
         self.assertIsNone(audit["pace"]["scenarioProbabilities"])
+
+    def test_measured_scenario_frequency_is_carried_through(self):
+        race = sample_race()
+        frequency = {"slow": 0.10, "normal": 0.25, "fast": 0.65,
+                     "sample": 40, "scope": "track-surface"}
+        _, audit = master_candidate(race, forecast_race(race),
+                                    scenario_frequency=frequency)
+        pace = audit["pace"]
+        self.assertEqual(pace["scenarioProbabilities"],
+                         {"slow": 0.10, "normal": 0.25, "fast": 0.65})
+        self.assertEqual(pace["scenarioFrequencySample"], 40)
+        self.assertEqual(pace["scenarioFrequencyScope"], "track-surface")
 
     def test_three_ticket_styles_use_joint_probabilities_without_ev(self):
         race = sample_race()
