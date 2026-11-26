@@ -387,6 +387,54 @@ magnitude 0.10, none of them validated:
         removed in turn over real packs; a family that does not
         move the numbers is reported as such, not as wired).
 
+    style terms (2026-11-26, nk-materials-v15) — wired by the
+        user's instruction after the morning collection began
+        saving two more per-horse values from the pace-forecast
+        page (the A-2 additions to pace-forecast.json's
+        horses_extra) that reached the file with no term
+        reading them:
+
+        style_fit   the pace page's old-style running-style
+            classification （脚質： 逃げ / 先行 / 差し / 追込） —
+            the horse's own trait, read off its past races —
+            scored as its agreement with the position THIS
+            race's pace forecast assigns it. Trait and forecast
+            are both read as a closingness in [-1, 1] (the
+            trait on the four-class scale 逃げ -1, 先行 -1/3,
+            差し +1/3, 追込 +1; the forecast as the mean of
+            (pct - 0.5) * 2 over the phases the horse carries)
+            and the score is 1 - |trait - forecast| / 2 in
+            [0, 1]: 1 when the forecast lets the horse run
+            exactly its own race. The existing pace terms price
+            the forecast position against the pace LABEL (pace
+            reads corner4, pace_early the early phases); this
+            term never reads the label, so the label-driven
+            pace total does not grow — what it adds is the
+            trait itself, and the mismatch the position-only
+            terms cannot see (a front trait forecast to be
+            buried mid-field, a closer forecast to be dragged
+            toward the front).
+        stretch     the pace page's straight-stretch rating
+            （直線の伸び： 3 = 大きく伸びる, 2 = 伸びる, 1 = 少し
+            伸びる) as the horse's closing strength: the raw
+            rating, z-scored at application like every
+            post-integrate term. A horse with no rating is
+            never shifted; the rating is the forecast's, not
+            an observed last-3F (the closing term reads those),
+            so the two stay separate sources.
+
+        Both are UNVALIDATED trial terms at +0.10 — the same
+        order as pace / pace_early / closing — applied as
+        post-integrate logit shifts under the same liveness
+        rule as horse-analysis, stamped
+        style-terms-trial-20261126 on every publication either
+        of them touches. Their movement over the 2026-11-26
+        card is measured in the style-wiring REPORT (the v15
+        terms composed onto the issued v14 packs; the
+        composition is exact because the post-integrate shifts
+        are renormalised exponential factors over raw scores
+        that do not depend on the probabilities).
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -444,7 +492,17 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # courseJockey / courseTrainer on days with no race-details
 # input. The bump re-issues v13-stamped pre-race races once so
 # the new terms and the restored blocks reach them.
-NK_MATERIALS_VERSION = "nk-materials-v14"
+# nk-materials-v15 (2026-11-26): the style terms (see the
+# module docstring): the pace forecast page's per-horse
+# running-style classification and straight-stretch rating —
+# saved by the collection from 2026-11-26 and carried by the
+# builder as styleClass / stretch — gain trial terms
+# (style_fit / stretch) as post-integrate logit shifts. The
+# bump re-issues v14-stamped pre-race races once so the new
+# terms reach them; both families also join the materials
+# fingerprint, so a race whose style material arrives after
+# first publication re-qualifies like any other growth.
+NK_MATERIALS_VERSION = "nk-materials-v15"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -621,6 +679,29 @@ FULL_COVERAGE_TERMS = ("nk_best", "siblings", "press_rating",
 SIBLING_PRIOR_COUNT = 2.0
 SIBLING_PRIOR_WINS_PER = 1.0
 
+# Style terms (2026-11-26, nk-materials-v15): TRIAL weight,
+# UNVALIDATED — see the module docstring. The pace forecast
+# page's per-horse style classification and stretch rating,
+# applied as post-integrate logit shifts at the same +0.10
+# order as the other pace-family trials (pace / pace_early /
+# closing). style_fit deliberately never reads the pace
+# label — pace and pace_early already price position x label
+# — so the family's label-driven total does not grow; its
+# per-horse inputs are the trait and the rating.
+STYLE_WEIGHT = 0.10
+NK_STYLE_LABEL = (
+    "style-terms-trial-20261126(style-fit+0.10/stretch+0.10;"
+    "unvalidated)")
+NK_STYLE_TRIAL = "style-terms-trial-20261126"
+STYLE_TERMS = ("style_fit", "stretch")
+# The style classification as a closingness in [-1, 1]: the
+# four classes evenly spaced, the front trait (逃げ) at -1
+# and the deepest closer (追込) at +1 — the same scale
+# pace_score puts a forecast position on ((pct - 0.5) * 2),
+# so trait and forecast compare directly in style_fit_score.
+_STYLE_CLOSINGNESS = {"逃げ": -1.0, "先行": -1.0 / 3.0,
+                      "差し": 1.0 / 3.0, "追込": 1.0}
+
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
 
@@ -746,6 +827,51 @@ def odds_forecast_score(odds):
     return -math.log(fw)
 
 
+def style_fit_score(style_class, pace):
+    """The style term's raw score in [0, 1] (see the module
+    docstring): the agreement between the horse's running-
+    style trait and its pace-forecast positions, both read as
+    a closingness in [-1, 1] — 1 when the forecast puts the
+    horse exactly where its trait runs, 0 when it puts it at
+    the opposite end. The pace label is never read (pace /
+    pace_early price position x label; this term prices the
+    trait against the position). None when the horse carries
+    no readable style class or no forecast position — no
+    evidence, no term."""
+    if not isinstance(style_class, str) \
+            or not isinstance(pace, dict):
+        return None
+    trait = _STYLE_CLOSINGNESS.get(style_class)
+    if trait is None:
+        return None
+    vals = []
+    for phase in _PACE_PHASES:
+        cell = pace.get(phase)
+        if not isinstance(cell, dict):
+            continue
+        pct = _num(cell.get("pct"))
+        if pct is not None:
+            vals.append((pct - 0.5) * 2.0)
+    if not vals:
+        return None
+    forecast = sum(vals) / len(vals)
+    return 1.0 - abs(trait - forecast) / 2.0
+
+
+def stretch_score(stretch):
+    """The stretch term's raw score: the pace forecast's
+    straight-stretch rating (3 = 大きく伸びる, 2 = 伸びる,
+    1 = 少し伸びる) as a number. None when the horse carries
+    no rating in [1, 3] — no evidence, no term. The rating is
+    z-scored at application, so the raw scale only needs its
+    order; it is the forecast's rating, never an observed
+    last-3F (the closing term reads those)."""
+    value = _num(stretch)
+    if value is None or value < 1 or value > 3:
+        return None
+    return float(value)
+
+
 def parse_materials_payload(payload) -> dict:
     """Normalise one date's nk-materials payload to
     {arvexq_race_id: {"netkeibaRaceId": str|None,
@@ -766,6 +892,11 @@ def parse_materials_payload(payload) -> dict:
     horse_analysis_score. The coursePersons block (this
     race's jockey / trainer records at today's course) rides
     as a dict the same way and is read by person_course_score.
+    The v15 style fields ride the same way: styleClass (the
+    pace page's running-style classification) is carried only
+    when it is one of the four labels, and stretch (the pace
+    page's straight-stretch rating) only as a number in
+    [1, 3]; they are read by style_fit_score / stretch_score.
     Anything unreadable normalises to {} (no materials
     for the date) or drops the offending race/horse — a
     malformed entry must never take the lane down, and a dropped
@@ -826,6 +957,19 @@ def parse_materials_payload(payload) -> dict:
                     else None)
                 horse["pressRating"] = _num(values.get("pressRating"))
                 horse["pace"] = _parse_pace(values.get("pace"))
+                # v15 style fields (2026-11-26): the pace
+                # page's style classification and stretch
+                # rating, carried defensively — an unknown
+                # label or an out-of-range rating is no
+                # material, never a guessed one.
+                style = values.get("styleClass")
+                horse["styleClass"] = (
+                    style if isinstance(style, str)
+                    and style in _STYLE_CLOSINGNESS else None)
+                stretch = _num(values.get("stretch"))
+                horse["stretch"] = (
+                    stretch if stretch is not None
+                    and 1 <= stretch <= 3 else None)
                 horse["nkFormDev"] = _num(values.get("nkFormDev"))
                 horse["nkAiScore"] = _num(values.get("nkAiScore"))
                 odds_block = values.get("odds")
@@ -895,6 +1039,9 @@ def materials_fingerprint(entry) -> dict:
         # of them re-qualifies a frozen race.
         "nk_best": 0, "siblings": 0, "press_rating": 0,
         "pace_early": 0, "odds_forecast": 0,
+        # 2026-11-26 (v15): the style families join the
+        # fingerprint on the same rule.
+        "style_fit": 0, "stretch": 0,
     }
     if not isinstance(entry, dict):
         return counts
@@ -949,6 +1096,11 @@ def materials_fingerprint(entry) -> dict:
             counts["pace_early"] += 1
         if odds_forecast_score(horse.get("odds")) is not None:
             counts["odds_forecast"] += 1
+        if style_fit_score(horse.get("styleClass"),
+                           horse.get("pace")) is not None:
+            counts["style_fit"] += 1
+        if horse.get("stretch") is not None:
+            counts["stretch"] += 1
     return counts
 
 
@@ -1448,6 +1600,19 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     "course_trainer" join info["terms"] for the kinds that
     contributed.
 
+    The style terms (2026-11-26, nk-materials-v15) follow the
+    same pattern once per term: style_fit reads the entry's
+    per-horse styleClass (the pace page's running-style
+    classification) against the horse's parsed pace positions
+    (style_fit_score — the trait/forecast agreement, never
+    the pace label), and stretch reads the entry's per-horse
+    stretch rating (stretch_score); each applies as a
+    post-integrate logit shift at STYLE_WEIGHT under the same
+    liveness rule. When either contributes, info["styleTrial"]
+    is NK_STYLE_TRIAL, the weights label carries
+    NK_STYLE_LABEL, and "style_fit" / "stretch" join
+    info["terms"] for the terms that contributed.
+
     The bias-pace term (2026-11-19, nk-materials-v12) reads
     bias_overlay — the publish lane's same-day bias overlay
     (rewrite/analysis/bias_pace.py's overlay_bias_on_pace
@@ -1555,6 +1720,13 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             "press_rating": mat.get("pressRating"),
             "pace_block": mat.get("pace"),
             "odds_block": mat.get("odds"),
+            # Style families (v15, 2026-11-26 — see the module
+            # docstring): the pace page's style classification
+            # and stretch rating, scored below as post-
+            # integrate logit shifts. style_fit reads the
+            # parsed pace block already carried as pace_block.
+            "style_class": mat.get("styleClass"),
+            "stretch": mat.get("stretch"),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -1691,6 +1863,37 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         total = sum(shifted.values())
         probs = {n: p / total for n, p in shifted.items()}
         fc_applied.append(term_name)
+    # Style terms (2026-11-26 trial, nk-materials-v15 — see
+    # the module docstring): the same post-integrate logit
+    # shift, once per term, under the same liveness rule (at
+    # least three scored runners and differing scores). A
+    # horse with no style class or no stretch rating is never
+    # shifted by that term; a race whose pace entry carries
+    # neither simply never shifts.
+    st_scores = {
+        "style_fit": [style_fit_score(
+            h.get("style_class"), h.get("pace_block"))
+            for h in horses],
+        "stretch": [stretch_score(h.get("stretch"))
+                    for h in horses],
+    }
+    st_applied: list = []
+    for term_name in STYLE_TERMS:
+        scores = st_scores[term_name]
+        coverage[term_name] = sum(
+            1 for s in scores if s is not None)
+        st_z = _zscores(scores)
+        if not any(z is not None and z != 0.0 for z in st_z):
+            continue
+        shifted = {}
+        for h, z in zip(horses, st_z):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(STYLE_WEIGHT * z)
+                if z is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
+        st_applied.append(term_name)
     # Same-day bias pace term (2026-11-19 trial — see the
     # module docstring): the publish lane's overlay of the
     # day's bias read on this race's pace forecast, applied
@@ -1798,13 +2001,17 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         label_parts.append(NK_FULL_COVERAGE_LABEL)
         info["fullCoverageTrial"] = NK_FULL_COVERAGE_TRIAL
         info["fullCoverageTerms"] = fc_applied
+    if st_applied:
+        label_parts.append(NK_STYLE_LABEL)
+        info["styleTrial"] = NK_STYLE_TRIAL
+        info["styleTerms"] = st_applied
     if bp_applied:
         label_parts.append(NK_BIAS_PACE_LABEL)
         info["biasPaceTrial"] = NK_BIAS_PACE_TRIAL
     if len(label_parts) > 1:
         info["weights"] = "+".join(label_parts)
     if not ha_applied and not cp_applied and not bp_applied \
-            and not fc_applied \
+            and not fc_applied and not st_applied \
             and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
@@ -1843,6 +2050,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     for kind in cp_applied:
         post_terms.add(f"course_{kind}")
     post_terms.update(fc_applied)
+    post_terms.update(st_applied)
     if bp_applied:
         post_terms.add("bias_pace")
     if post_terms:
