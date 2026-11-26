@@ -1,11 +1,19 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const helpers=src.slice(src.indexOf('function latestSavedForecastRevision('),src.indexOf('function predict('));
+const helpers=src.slice(src.indexOf('function n(v,d)'),src.indexOf('function predict('));
 const predict=src.slice(src.indexOf('function predict('),src.indexOf('function nextRace('));
 const build=src.slice(src.indexOf('function buildAiBetPlan('),src.indexOf('function betItemHit('));
 const factory=new Function('window','n','isScratchHorse','esc',helpers+predict+build+';return {predict,buildAiBetPlan,latestSavedForecastRevision};');
-const api=factory(require('./test_support/production_ui.cjs').window,(v,d=0)=>Number(v)||d,h=>!!h.scratched,String);
+const ui=require('./test_support/production_ui.cjs');
+// predict() reaches window.ARVEXQPastRunView via historicalWindow /
+// finishingEvidence; load the real history modules onto the shared
+// test window, as the page bundle does.
+const vm=require('node:vm');
+const historyContext={window:ui.window};vm.createContext(historyContext);
+for(const f of ['deduplicate','temporal','view'])
+  vm.runInContext(fs.readFileSync('arvexq/ui/static/history/'+f+'.js','utf8'),historyContext,{filename:f});
+const api=factory(ui.window,(v,d=0)=>Number(v)||d,h=>!!h.scratched,String);
 const r=JSON.parse(fs.readFileSync('tests/fixtures/forecast_revision_transport.json')).detail;
 const before=JSON.stringify(r),revision=api.latestSavedForecastRevision(r);
 const p=api.predict(r),bet=api.buildAiBetPlan(r,p);
