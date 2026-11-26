@@ -119,6 +119,78 @@ def test_netkeiba_geometry_rejects_mismatch_and_post_off():
     assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
 
 
+def jra_race():
+    source = race()
+    source.update({
+        "id": "jra-2026-10-24-東京-11", "circuit": "中央",
+        "track": "東京", "surface": "芝", "distance": 2400,
+    })
+    return source
+
+
+def _jravan_geometry(**overrides):
+    record = {
+        "sourceKind": "jravan_course_guide", "sourcePublishedBeforeOff": True,
+        "sourceUrl": "https://sugo.jra-van.jp/sugotoku/crs/crs05t2400.html",
+        "track": "東京", "surface": "芝", "distance": 2400,
+        "firstCornerDistanceMeters": 350,
+        "publishedAt": "2026-10-23T11:00:00+09:00",
+    }
+    record.update(overrides)
+    return record
+
+
+def test_jravan_course_guide_geometry_is_accepted():
+    source = jra_race()
+    source["courseGeometry"] = _jravan_geometry()
+    result = public_pace_factors(source)
+    assert result["firstCornerMetersOfficial"] == 350
+    assert result["firstCornerShortPublicRule"] is False
+    source["courseGeometry"] = _jravan_geometry(firstCornerDistanceMeters=250)
+    result = public_pace_factors(source)
+    assert result["firstCornerMetersOfficial"] == 250
+    assert result["firstCornerShortPublicRule"] is True
+
+
+def test_jravan_geometry_rejects_wrong_host_and_kind_host_mismatch():
+    source = jra_race()
+    # A host outside the JRA-VAN set cannot attest the JRA-VAN kind.
+    source["courseGeometry"] = _jravan_geometry(
+        sourceUrl="https://unsafe.example/geometry")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    # An official host cannot attest the JRA-VAN kind.
+    source["courseGeometry"] = _jravan_geometry(
+        sourceUrl="https://www.jra.go.jp/keiba/race/102.html")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    # A netkeiba host cannot attest the JRA-VAN kind.
+    source["courseGeometry"] = _jravan_geometry(
+        sourceUrl="https://nar.sp.netkeiba.com/racecourse/course_analytics.html")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    # The JRA-VAN host cannot attest the official kind (official stays strict).
+    source["courseGeometry"] = _jravan_geometry(
+        sourceKind="official_course_geometry")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    # The JRA-VAN host cannot attest the netkeiba kind either.
+    source["courseGeometry"] = _jravan_geometry(
+        sourceKind="netkeiba_course_analysis")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+
+
+def test_jravan_geometry_rejects_mismatch_and_post_off():
+    source = jra_race()
+    source["courseGeometry"] = _jravan_geometry(distance=1234)
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    source["courseGeometry"] = _jravan_geometry(track="中山")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    source["courseGeometry"] = _jravan_geometry(surface="ダート")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    source["courseGeometry"] = _jravan_geometry(
+        publishedAt="2026-10-24T12:01:00+09:00")
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+    source["courseGeometry"] = _jravan_geometry(sourcePublishedBeforeOff=False)
+    assert public_pace_factors(source)["firstCornerMetersOfficial"] is None
+
+
 def test_retired_banei_and_jumps_are_not_cast_as_flat():
     import pytest
     for track, surface in (("帯広ば", "ダート"), ("園田", "障害"), ("帯広", "ばんえい")):
