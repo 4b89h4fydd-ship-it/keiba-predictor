@@ -27,6 +27,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
+from rewrite.analysis.override_guard import apply_override_guard
 from rewrite.analysis.shadow_v9 import postprocess_forecast
 from rewrite.data.normalize import Obs, RaceRecord, RunnerRecord, obs
 from rewrite.output.api_shape import MODEL_VERSION
@@ -69,6 +70,8 @@ def stored_detail(*, blend_applied=False, odds=ODDS, lane=V9B_LANE,
         marker["postProcessing"] = {
             "type": "temperature+market-blend", "temperature": 0.6692,
             "blendWeight": 0.5, "blendApplied": blend_applied}
+    marker["overrideGuard"] = {"version": "override-guard-v1",
+                                "applied": True}
     if revision is not None:
         marker["revision"] = revision
     roster = [{"horseNumber": h["horseNumber"], "name": h["name"]}
@@ -260,6 +263,12 @@ class BlendUpgradeBuildTests(TestCase):
         expected, info = postprocess_forecast(base, arm="v9b",
                                               win_odds=ODDS)
         self.assertTrue(info["blendApplied"])
+        # The production lane applies the override guard on top of
+        # the v9b transform (build_publish_detail), so the shadow
+        # expectation must carry it too.
+        expected, guard_info = apply_override_guard(expected,
+                                                    win_odds=ODDS)
+        self.assertTrue(guard_info["applied"])
         with patch("scripts.arvexq_rewrite_publish.normalize_race",
                    return_value=fabricated_race()), \
                 patch("scripts.arvexq_rewrite_publish.forecast_race_v8",
@@ -279,7 +288,8 @@ class BlendUpgradeBuildTests(TestCase):
         self.assertEqual(revision["revisionCount"], 1)
         self.assertEqual(revision["previousReceiptSha256"], RECEIPT)
         # Probabilities and marks equal the shadow lane's v9b
-        # transform of the same v8 forecast and the same odds.
+        # transform plus the override guard, applied to the same
+        # v8 forecast and the same odds.
         expected_win = {r.number: round(r.p_win, 6)
                         for r in expected.runners}
         actual_win = new["prediction"]["stages"]["probability"]["value"]["win"]
