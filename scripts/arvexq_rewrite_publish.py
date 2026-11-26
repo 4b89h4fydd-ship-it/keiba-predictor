@@ -96,7 +96,19 @@ publication still reaches a pre-post race; exactly-once per
 materials state), and jumps races — which stand on the v1
 lane, no fitted v8 candidate existing for the segment —
 qualify on the same rules and receive the adjustment on their
-v1 vector. A fifth exception of the same kind is the ticket-R24 upgrade
+v1 vector. An eighth exception of the same kind is the
+override-guard upgrade (2026-11-27): the final probability stage
+of the v9b lane — the override guard of
+rewrite/analysis/override_guard.py, which replaces a
+weakly-backed override of the favourite with the market vector
+and regresses every vector halfway toward the market — is
+applied inside the build, after the nk-materials adjustment and
+before marks and tickets derive. A v9b forecast frozen WITHOUT
+the guard is re-issued once — stamped kind
+"override-guard-upgrade" — when the current payload carries
+complete win odds; the re-issue stamps the overrideGuard marker
+into the lane marker, so the qualification can never hold again.
+A fifth exception of the same kind is the ticket-R24 upgrade
 (2026-11-08): the production trifecta recommendation switched
 from formation B (36 points) to R24 (24 points) by user order, so
 a forecast frozen with the B-form trifecta is re-issued once —
@@ -206,6 +218,8 @@ from rewrite.analysis.bias_pace import (  # noqa: E402
     BIAS_PACE_VERSION, compute_same_day_bias, overlay_bias_on_pace)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
+from rewrite.analysis.override_guard import (  # noqa: E402
+    GUARD_VERSION, apply_override_guard)
 from rewrite.analysis.pace_scenario_freq import (  # noqa: E402
     load_scenario_history, scenario_frequency_for)
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
@@ -467,6 +481,33 @@ NK_MATERIALS_MIN_SPEED_HORSES = 3
 # JRA as a trial; v5, the all-materials terms), and the rebuilt product carries the new
 # stamp, so it can never qualify twice for the same definition.
 NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
+
+# Override guard (2026-11-27, user instruction 「なおせ」 after the
+# 2026-11-26 full audit found the issued probabilities losing to
+# the market alone and the model's overrides of the favourite
+# winning 19.2% against the displaced favourites' 30.1%): the
+# final probability stage of the v9b lane — see
+# rewrite/analysis/override_guard.py for the rule (A: a weakly
+# backed override is replaced by the market vector; B: every
+# vector regresses halfway toward the market) and its validation
+# record. The guard runs inside every v9b build, after the v9b
+# post-processing and the nk-materials adjustment, on the same
+# payload win odds the blend consumed. The lane and the ability
+# model version do NOT move: the guard is recorded where the lane
+# records its post-processing facts —
+# preparedMeta.rewritePublish.overrideGuard.
+#
+# A race frozen on the v9b lane WITHOUT the current overrideGuard
+# marker is re-issued ONCE from the current payload (see
+# _override_guard_upgrade_info) when the current payload carries
+# complete win odds — the same one-time upgrade pattern as the
+# nk-materials branch, with the same removed lead guard:
+# eligibility holds until the post itself. "Current" is
+# versioned: a race stamped at an older guard version qualifies
+# once more when the definition moves, and the rebuilt product
+# carries the new stamp, so it can never qualify twice for the
+# same definition.
+OVERRIDE_GUARD_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
@@ -1861,6 +1902,74 @@ def _career_recovery_upgrade_info(old: dict, now: datetime) -> dict | None:
             "recoveredHorseNumbers": sorted(recovered)}
 
 
+def _override_guard_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the one-time override-guard re-issue.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it was published on the v9b lane (abilityLane
+      v9b-cal-market) — the guard is defined on the v9b
+      probability vector (the audit corpus and both validations
+      stand on it; the unblended v1 vector was never measured
+      under the rule);
+
+    - its lane marker does NOT already carry the overrideGuard
+      stamp at the current GUARD_VERSION with applied true: a
+      race first-published after the guard reached this lane
+      carries the stamp and never qualifies; a stamp at an older
+      version qualifies exactly once more when the definition
+      moves, and the rebuilt product is re-stamped, so the
+      qualification can never hold twice for one definition;
+
+    - the CURRENT payload carries a win odd (> 1.0) for every
+      horse on the active roster — the guard cannot fire
+      without a complete market (see
+      rewrite/analysis/override_guard.py), so an incomplete card
+      never starts a rebuild (the blend upgrade's coverage rule,
+      checked on the roster);
+
+    - the post is still at least
+      OVERRIDE_GUARD_UPGRADE_MIN_LEAD away (the guard was
+      removed, like the nk-materials upgrade's: eligibility
+      holds until the post itself).
+
+    Anything unreadable does not qualify; the caller keeps the
+    frozen forecast (fail-closed). The caller still re-verifies
+    after the rebuild that the guard actually landed (the
+    overrideGuard stamp is present) before stamping anything.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    stamp = marker.get("overrideGuard")
+    if isinstance(stamp, dict) and stamp.get("applied") \
+            and stamp.get("version") == GUARD_VERSION:
+        return None
+    post = _post_at(old)
+    if post is None or post - now <= OVERRIDE_GUARD_UPGRADE_MIN_LEAD:
+        return None
+    by_number: dict[int, dict] = {}
+    for horse in old.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        try:
+            by_number[int(horse["horseNumber"])] = horse
+        except (KeyError, TypeError, ValueError):
+            continue
+    for number, _name in _active_roster(old):
+        horse = by_number.get(number)
+        value = horse.get("winOdds") if isinstance(horse, dict) else None
+        if not (isinstance(value, (int, float))
+                and not isinstance(value, bool) and value > 1.0):
+            return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "override-guard-upgrade"}
+
+
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
     """Facts for the one-time place-EV upgrade of a frozen v9b race.
 
@@ -2727,6 +2836,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     decay_upgrade = None
     nk_upgrade = None
     career_upgrade = None
+    guard_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -2762,8 +2872,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 # re-issued once when they complete (see
                 # _place_ev_upgrade_info — surgical, it applies on
                 # top of the freshest stored forecast and never
-                # undoes a blend upgrade). Anything else stays
-                # frozen.
+                # undoes a blend upgrade); a v9b forecast frozen
+                # WITHOUT the override guard only because it was
+                # first published before the guard reached this
+                # lane is re-issued once from the current payload
+                # when the current win odds are complete (see
+                # _override_guard_upgrade_info — also a full
+                # rebuild, so it too precedes the surgical
+                # upgrades). Anything else stays frozen.
                 blend_upgrade = _blend_upgrade_info(old, now)
                 if blend_upgrade is None:
                     env_repair_upgrade = _env_repair_upgrade_info(
@@ -2786,6 +2902,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                         and decay_upgrade is None
                         and nk_upgrade is None
                         and career_upgrade is None):
+                    guard_upgrade = _override_guard_upgrade_info(
+                        old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None
+                        and decay_upgrade is None
+                        and nk_upgrade is None
+                        and career_upgrade is None
+                        and guard_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exceptions, both surgical
@@ -2881,6 +3005,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                     nk_upgrade["receipt"] = freeze[1]
                 elif career_upgrade is not None:
                     career_upgrade["receipt"] = freeze[1]
+                elif guard_upgrade is not None:
+                    guard_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -2920,7 +3046,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 and env_repair_upgrade is None \
                 and decay_upgrade is None \
                 and nk_upgrade is None \
-                and career_upgrade is None:
+                and career_upgrade is None \
+                and guard_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -3018,6 +3145,20 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 combo_inputs=combo_inputs_from_race(race),
                 closing_inputs=closing_inputs_from_race(race),
                 bias_overlay=bias_overlay)
+    # Override guard (2026-11-27, user instruction — see
+    # rewrite/analysis/override_guard.py): the final stage of
+    # the probability pipeline on the v9b lane. Applied HERE,
+    # after the v9b post-processing and the nk-materials
+    # adjustment, so marks, tickets, the win/top-3 prediction
+    # and the master shadow below all derive from the guarded
+    # probabilities. The market is built from the same payload
+    # win odds the blend consumed at compute time — never
+    # final odds. A race whose odds do not cover the vector
+    # keeps the unguarded vector byte-identical.
+    guard_info: dict = {"applied": False}
+    if used_v9b:
+        forecast, guard_info = apply_override_guard(
+            forecast, win_odds)
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -3095,6 +3236,18 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                           f"career-recovery rebuild did not score "
                           f"runner(s) {missing or 'on the v9b lane'}; "
                           f"keeping the frozen forecast")
+    if guard_upgrade is not None and not guard_info.get("applied"):
+        # The upgrade was attempted but the guard did not land
+        # on the rebuilt forecast (the v9b transform passed
+        # through, or the rebuilt payload's odds still do not
+        # cover the vector): re-issuing now would rewrite a
+        # forecast on sale WITHOUT the one change that justifies
+        # it. Keep the frozen forecast byte-stable; a later
+        # cycle can retry while the qualification holds.
+        return None, (f"frozen: already published ready "
+                      f"(receipt {str(guard_upgrade['receipt'])[:12]}…); "
+                      f"override-guard rebuild did not land the "
+                      f"guard; keeping the frozen forecast")
     # Trifecta R24 (adopted 2026-11-08 by user order after the
     # screen on the graded 194 production races: B ROI 0.7230 ->
     # R24 0.9055): formation B's mark-order skeleton with the win
@@ -3560,6 +3713,30 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             # auditable from the stamp alone.
             meta["rewritePublish"]["nkMaterials"]["biasPace"] = (
                 nk_info["biasPace"])
+    if guard_info.get("applied"):
+        # Override guard (2026-11-27, user instruction): this
+        # publication's v9b probabilities passed through the
+        # override guard as the final probability stage (see
+        # rewrite/analysis/override_guard.py). The stamp is
+        # the lane-side record of that fact AND the
+        # exactly-once marker for the one-time override-guard
+        # upgrade: a stored product carrying it at the current
+        # version never qualifies again. aFired records
+        # whether step A replaced an override with the market
+        # vector on this race; margin is the model's top-pick
+        # probability minus the favourite's market-implied
+        # probability that the decision stood on.
+        meta["rewritePublish"]["overrideGuard"] = {
+            "version": GUARD_VERSION,
+            "applied": True,
+            "marginThreshold": guard_info.get("marginThreshold"),
+            "regressionLambda": guard_info.get("regressionLambda"),
+            "aFired": bool(guard_info.get("aFired")),
+            "modelPick": guard_info.get("modelPick"),
+            "favourite": guard_info.get("favourite"),
+            "margin": (round(guard_info["margin"], 6)
+                       if guard_info.get("margin") is not None
+                       else None)}
     if segment == "nar":
         # Ticket pool4-axis2 (NAR only, 2026-11-12): this
         # publication's trifecta was built with the P4A2 formation
@@ -3821,6 +3998,42 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                      "now on the detail, so the forecast is "
                      "recomputed with them scored while the race "
                      "is still pre-post"),
+        }
+    if guard_upgrade is not None:
+        # Override-guard re-issue of a frozen forecast: the
+        # roster and the lane are unchanged — the only change
+        # is that the final probability stage now includes the
+        # override guard (this race was first published before
+        # it reached the lane). Same audit chain as the other
+        # re-issues: the first publication time is preserved
+        # and the previous receipt is recorded. The
+        # exactly-once property is structural: the rebuilt
+        # product carries the overrideGuard stamp in its lane
+        # marker, so _override_guard_upgrade_info can never
+        # qualify this race again.
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            guard_upgrade.get("firstPublishedAt")
+            or guard_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "override-guard-upgrade",
+            "reason": "override-guard-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": guard_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "note": ("one-time override-guard adoption (user "
+                     "instruction 2026-11-27): this race was "
+                     "first published before the override guard "
+                     "reached the production lane, so its "
+                     "probabilities were computed without it; "
+                     "the forecast is recomputed with the guard "
+                     "while the race is still pre-post"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
