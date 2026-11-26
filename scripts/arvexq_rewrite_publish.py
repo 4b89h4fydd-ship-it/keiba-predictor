@@ -1703,6 +1703,118 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
             "reason": "nk-materials-upgrade"}
 
 
+def _career_recovery_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the career-recovery re-issue of a frozen v9b race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it was published on the v9b lane (abilityLane v9b-cal-market);
+    - its sealed unified diagnosis carries at least one ACTIVE
+      (not scratched) runner whose abilityScore key is present
+      and null — the runner never reached the v8 ability layer
+      at publication time (the 2026-11-26 Urawa 3R case: the
+      runner's career resolution failed transiently during the
+      morning build, so she was published with no ability score
+      at all). Entries lacking the key entirely are a different
+      product shape and never qualify;
+    - the CURRENT detail now carries real scoring evidence for
+      that runner: past runs on the detail itself
+      (careerStartEvidence.starts >= 1, or a non-empty
+      allPastRuns / recentRaces list), or the v8 extras entry for
+      the runner now carries the spd2 pair (spd2_recent and
+      spd2_best) the ability layer can score a no-past-runs runner
+      from. Evidence is read, never estimated: a runner with no
+      evidence anywhere does not qualify, so a genuinely
+      evidence-less field is never re-issued on this branch;
+    - the race is still before its post (races at or past post
+      never qualify — the build's own post/result checks run
+      first anyway).
+
+    Exactly-once is structural: the re-issue rebuilds through the
+    same v8 layer with the evidence now present, so the runner is
+    scored and the sealed diagnosis no longer carries a null
+    abilityScore for her — the qualification cannot hold again.
+    The build additionally verifies the recovered runners landed
+    scored and keeps the frozen forecast otherwise.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    unified = old.get("unifiedForecast")
+    if not isinstance(unified, dict):
+        return None
+    diagnosis = unified.get("diagnosis")
+    if not isinstance(diagnosis, list):
+        return None
+    unscored: list[int] = []
+    for entry in diagnosis:
+        if not isinstance(entry, dict):
+            continue
+        number = entry.get("horseNumber")
+        # The key must be PRESENT and null: the production
+        # diagnosis builder always writes abilityScore, and a
+        # product whose entries lack the key entirely is a
+        # different (older / partial) shape this branch must not
+        # guess at.
+        if isinstance(number, int) and "abilityScore" in entry \
+                and entry["abilityScore"] is None:
+            unscored.append(number)
+    if not unscored:
+        return None
+    horses: dict[int, dict] = {}
+    for horse in old.get("horses") or []:
+        if isinstance(horse, dict) \
+                and isinstance(horse.get("horseNumber"), int):
+            horses[horse["horseNumber"]] = horse
+    extras_entry = _load_v8_extras(old.get("date") or "").get(
+        old.get("id") or "")
+    extras_by_number = {}
+    if isinstance(extras_entry, dict):
+        raw_extras = extras_entry.get("extras")
+        if isinstance(raw_extras, dict):
+            extras_by_number = raw_extras
+    recovered: list[int] = []
+    for number in unscored:
+        horse = horses.get(number)
+        if horse is None:
+            continue
+        if horse.get("scratched") is True \
+                or horse.get("status") in SCRATCH_STATUSES:
+            continue
+        evidence = False
+        career = horse.get("careerStartEvidence")
+        starts = career.get("starts") if isinstance(career, dict) \
+            else None
+        if isinstance(starts, int) and starts >= 1:
+            evidence = True
+        if not evidence:
+            for key in ("allPastRuns", "recentRaces"):
+                runs = horse.get(key)
+                if isinstance(runs, list) and runs:
+                    evidence = True
+                    break
+        if not evidence:
+            entry = extras_by_number.get(str(number))
+            if isinstance(entry, dict) \
+                    and entry.get("spd2_recent") is not None \
+                    and entry.get("spd2_best") is not None:
+                evidence = True
+        if evidence:
+            recovered.append(number)
+    if not recovered:
+        return None
+    post = _post_at(old)
+    if post is None or now >= post:
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": marker.get("abilityLane"),
+            "reason": "career-recovery-upgrade",
+            "recoveredHorseNumbers": sorted(recovered)}
+
+
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
     """Facts for the one-time place-EV upgrade of a frozen v9b race.
 
@@ -2568,6 +2680,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     env_repair_upgrade = None
     decay_upgrade = None
     nk_upgrade = None
+    career_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -2620,6 +2733,13 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                         and env_repair_upgrade is None
                         and decay_upgrade is None
                         and nk_upgrade is None):
+                    career_upgrade = _career_recovery_upgrade_info(
+                        old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None
+                        and decay_upgrade is None
+                        and nk_upgrade is None
+                        and career_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exceptions, both surgical
@@ -2713,6 +2833,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                     decay_upgrade["receipt"] = freeze[1]
                 elif nk_upgrade is not None:
                     nk_upgrade["receipt"] = freeze[1]
+                elif career_upgrade is not None:
+                    career_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
     race = normalize_race(summary, old, source="production-api-readback")
@@ -2751,7 +2873,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 and blend_upgrade is None \
                 and env_repair_upgrade is None \
                 and decay_upgrade is None \
-                and nk_upgrade is None:
+                and nk_upgrade is None \
+                and career_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -2909,6 +3032,23 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                       f"(receipt {str(nk_upgrade['receipt'])[:12]}…); "
                       f"nk-materials rebuild did not land the "
                       f"adjustment; keeping the frozen forecast")
+    if career_upgrade is not None:
+        # The upgrade was attempted but the rebuild did not land
+        # on the v9b lane, or a recovered runner is STILL unscored
+        # in the rebuilt forecast: re-issuing now would rewrite a
+        # forecast on sale WITHOUT the one change that justifies
+        # it. Keep the frozen forecast byte-stable; a later cycle
+        # can retry while the qualification holds.
+        scored = {r.number: r.ability_score for r in forecast.runners}
+        missing = [n for n in career_upgrade["recoveredHorseNumbers"]
+                   if scored.get(n) is None]
+        if not used_v9b or missing:
+            return None, (f"frozen: already published ready "
+                          f"(receipt "
+                          f"{str(career_upgrade['receipt'])[:12]}…); "
+                          f"career-recovery rebuild did not score "
+                          f"runner(s) {missing or 'on the v9b lane'}; "
+                          f"keeping the frozen forecast")
     # Trifecta R24 (adopted 2026-11-08 by user order after the
     # screen on the graded 194 production races: B ROI 0.7230 ->
     # R24 0.9055): formation B's mark-order skeleton with the win
@@ -3598,6 +3738,36 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                      "computed without it; the forecast is "
                      "recomputed with the materials adjustment "
                      "while the race is still pre-post"),
+        }
+    if career_upgrade is not None:
+        prev_revision = (old.get("preparedMeta") or {}).get(
+            "rewritePublish", {}).get("revision")
+        prev_count = prev_revision.get("revisionCount") \
+            if isinstance(prev_revision, dict) else None
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            career_upgrade.get("firstPublishedAt")
+            or career_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "career-recovery-upgrade",
+            "reason": "career-recovery-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": career_upgrade["receipt"],
+            "previousAbilityLane": (
+                career_upgrade.get("previousAbilityLane") or V9B_LANE),
+            "abilityLane": (
+                meta["rewritePublish"].get("abilityLane") or V9B_LANE),
+            "recoveredHorseNumbers": list(
+                career_upgrade["recoveredHorseNumbers"]),
+            "note": ("career-recovery re-issue (user instruction "
+                     "2026-11-26): at first publication this race "
+                     "carried runner(s) whose career resolution had "
+                     "failed transiently, so they were published "
+                     "with no ability score; their past runs are "
+                     "now on the detail, so the forecast is "
+                     "recomputed with them scored while the race "
+                     "is still pre-post"),
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
