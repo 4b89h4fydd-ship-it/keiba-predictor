@@ -435,6 +435,67 @@ magnitude 0.10, none of them validated:
         are renormalised exponential factors over raw scores
         that do not depend on the probabilities).
 
+    first-corner term (2026-11-26, nk-materials-v16) — the
+        standing course-geometry records' first-corner
+        distance (スタートから最初のコーナーまでの距離),
+        collected for 154 courses and published on the pace
+        block since 2026-11-25, gains the term that reads
+        it. The builder joins the record for the race's own
+        (track, surface, distance) onto the materials entry
+        as firstCornerMeters — the paceLabel route, a
+        race-level scalar riding the entry — and the term
+        prices the COURSE SHAPE against each horse's
+        forecast early frontness:
+
+        score = course_factor(D) x early_frontness(horse)
+
+        course_factor maps the ABSOLUTE distance D onto
+        [-1, 1] around the standing records' median (301.5m
+        over the 154 records of 2026-11-26): 0 at 300m,
+        saturating at 0m (a turn at the start — the hardest
+        possible scramble for position) and at 600m (the
+        field long settled — no further gain). The absolute
+        distance is the scale, never the share of the race
+        distance: the scramble is over the dash itself, and
+        the same 300m dash costs the same whether the race
+        is 1400m or 2000m. early_frontness is the negated
+        closingness of the horse's early (start / corner3)
+        pace-forecast positions — the same early phases
+        pace_early reads, on the same [-1, 1] scale style_fit
+        uses (+1 = forecast to run at the very front early).
+
+        The direction is the mineta reading the records were
+        collected for: a short run to the first corner makes
+        the front runners spend for their position (a front
+        horse scores down, a closer up — the field settles
+        early behind them); a long run lets the front take
+        position cheaply (the signs reverse). This is an
+        interaction only — the distance's main effect is not
+        priced, and the style trait is never read (style_fit
+        prices the trait against the forecast; this term
+        prices the course against the forecast).
+
+        The term is an UNVALIDATED trial at +0.10, applied
+        as a post-integrate logit shift — but deliberately
+        NOT z-scored, on the bias_pace precedent: the raw
+        score already carries its own strength, because the
+        course factor is 0 at the median course. A z-scored
+        form would reduce the term to flipping the frontness
+        ranking at full trial strength on every non-median
+        course, however ordinary; here the shift is weak
+        exactly when the course is. Liveness follows
+        bias_pace (at least three scored runners, differing
+        scores). Stamped first-corner-trial-20261126 on
+        every publication it touches. A course with no
+        record (the geometry file carries none for it) and a
+        horse with no early forecast position are never
+        shifted — a distance is never estimated. The records
+        carry no inner/outer-course distinction
+        （内回り/外回り), so a course whose variants differ
+        in the run to the first corner is read at its
+        recorded single value; that is a known limit of the
+        source, recorded here.
+
 A race with no materials entry, or whose entry cannot produce a
 single nonzero term (fewer than three horses with an index — the
 z-scores need three), is returned byte-identical: the adjustment
@@ -502,7 +563,17 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # terms reach them; both families also join the materials
 # fingerprint, so a race whose style material arrives after
 # first publication re-qualifies like any other growth.
-NK_MATERIALS_VERSION = "nk-materials-v15"
+# nk-materials-v16 (2026-11-26): the first-corner term (see
+# the module docstring): the standing course-geometry
+# records' first-corner distance — carried by the builder
+# (v14) on the materials entry as firstCornerMeters — gains
+# a trial term (first_corner) as a post-integrate logit
+# shift at the raw score (no z-scoring; the bias-pace
+# precedent). The bump re-issues v15-stamped pre-race races
+# once so the term reaches them; the family also joins the
+# materials fingerprint, so a race whose course gains a
+# geometry record after first publication re-qualifies.
+NK_MATERIALS_VERSION = "nk-materials-v16"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -702,6 +773,32 @@ STYLE_TERMS = ("style_fit", "stretch")
 _STYLE_CLOSINGNESS = {"逃げ": -1.0, "先行": -1.0 / 3.0,
                       "差し": 1.0 / 3.0, "追込": 1.0}
 
+# First-corner term (2026-11-26, nk-materials-v16): TRIAL
+# weight, UNVALIDATED — see the module docstring. The
+# standing course-geometry record's first-corner distance,
+# carried by the builder on the materials entry as
+# firstCornerMeters, priced as an interaction with the
+# horse's forecast early frontness. Deliberately NOT
+# z-scored: like bias_pace, the raw score already carries
+# its own strength — the course factor is 0 at the standing
+# records' median distance, so an ordinary course shifts
+# almost nothing however the field's frontness spreads, and
+# only a genuinely short or long run to the first corner
+# moves the numbers.
+FIRST_CORNER_WEIGHT = 0.10
+NK_FIRST_CORNER_LABEL = (
+    "first-corner-trial-20261126(w=+0.10;unvalidated)")
+NK_FIRST_CORNER_TRIAL = "first-corner-trial-20261126"
+FIRST_CORNER_TERMS = ("first_corner",)
+# The course factor's centre and scale in metres: the
+# centre is the median first-corner distance of the
+# standing geometry records (301.5m over the 154 records
+# of 2026-11-26), and the scale makes the factor saturate
+# at a 0m run (a turn at the start) and a 600m run (the
+# field long settled).
+FIRST_CORNER_CENTER_M = 300.0
+FIRST_CORNER_SCALE_M = 300.0
+
 _SPEED_COLUMNS = ("nk_best", "nk_avg5", "nk_dist", "nk_course")
 
 
@@ -872,6 +969,56 @@ def stretch_score(stretch):
     return float(value)
 
 
+def first_corner_factor(first_corner_meters):
+    """The course factor in [-1, 1] for one first-corner
+    distance (see the module docstring): +1 when the run to
+    the first corner is long (the front takes position
+    without spending), -1 when it is short (the scramble
+    costs the front), 0 at the standing records' median
+    distance. The ABSOLUTE distance is the scale, never the
+    share of the race distance — the scramble is over the
+    dash itself. None when the course carries no recorded
+    distance — no record, no term; a distance is never
+    estimated."""
+    d = _num(first_corner_meters)
+    if d is None or d <= 0:
+        return None
+    return max(-1.0, min(1.0, (
+        d - FIRST_CORNER_CENTER_M) / FIRST_CORNER_SCALE_M))
+
+
+def first_corner_score(first_corner_meters, pace):
+    """The first-corner term's raw score in [-1, 1] (see the
+    module docstring): the course factor times the horse's
+    forecast early frontness — the negated closingness of
+    its early (start / corner3) pace-forecast positions, the
+    same early phases pace_early_score reads, on the same
+    [-1, 1] scale style_fit uses (+1 = forecast to run at
+    the very front early). A front horse on a short-run
+    course scores down (it pays for its position); the same
+    horse on a long-run course scores up; a closer's signs
+    reverse. The style trait is never read — style_fit
+    prices the trait; this term prices the course shape
+    against the forecast itself. None when the course
+    carries no recorded distance or the horse carries no
+    early forecast position — no evidence, no term."""
+    factor = first_corner_factor(first_corner_meters)
+    if factor is None or not isinstance(pace, dict):
+        return None
+    pcts = []
+    for phase in ("start", "corner3"):
+        cell = pace.get(phase)
+        if not isinstance(cell, dict):
+            continue
+        pct = _num(cell.get("pct"))
+        if pct is not None:
+            pcts.append(pct)
+    if not pcts:
+        return None
+    frontness = -((sum(pcts) / len(pcts) - 0.5) * 2.0)
+    return factor * frontness
+
+
 def parse_materials_payload(payload) -> dict:
     """Normalise one date's nk-materials payload to
     {arvexq_race_id: {"netkeibaRaceId": str|None,
@@ -897,6 +1044,11 @@ def parse_materials_payload(payload) -> dict:
     when it is one of the four labels, and stretch (the pace
     page's straight-stretch rating) only as a number in
     [1, 3]; they are read by style_fit_score / stretch_score.
+    The entry-level firstCornerMeters (the standing
+    course-geometry record's run to the first corner for
+    this race's course, joined by the builder) is carried
+    as a positive number or None and read by
+    first_corner_score.
     Anything unreadable normalises to {} (no materials
     for the date) or drops the offending race/horse — a
     malformed entry must never take the lane down, and a dropped
@@ -985,11 +1137,15 @@ def parse_materials_payload(payload) -> dict:
                 horses[number] = horse
         course = entry.get("courseAnalysis")
         label = entry.get("paceLabel")
+        fc_meters = _num(entry.get("firstCornerMeters"))
         out[str(race_id)] = {
             "netkeibaRaceId": entry.get("netkeibaRaceId"),
             "horses": horses,
             "courseAnalysis": course if isinstance(course, dict) else None,
             "paceLabel": label if isinstance(label, str) else None,
+            "firstCornerMeters": (
+                fc_meters if fc_meters is not None and fc_meters > 0
+                else None),
         }
     return out
 
@@ -1042,6 +1198,7 @@ def materials_fingerprint(entry) -> dict:
         # 2026-11-26 (v15): the style families join the
         # fingerprint on the same rule.
         "style_fit": 0, "stretch": 0,
+        "first_corner": 0,
     }
     if not isinstance(entry, dict):
         return counts
@@ -1049,6 +1206,7 @@ def materials_fingerprint(entry) -> dict:
             and entry.get("courseAnalysis"):
         counts["course_analysis"] = 1
     pace_label = entry.get("paceLabel")
+    first_corner_meters = entry.get("firstCornerMeters")
     for horse in (entry.get("horses") or {}).values():
         if not isinstance(horse, dict):
             continue
@@ -1101,6 +1259,9 @@ def materials_fingerprint(entry) -> dict:
             counts["style_fit"] += 1
         if horse.get("stretch") is not None:
             counts["stretch"] += 1
+        if first_corner_score(first_corner_meters,
+                              horse.get("pace")) is not None:
+            counts["first_corner"] += 1
     return counts
 
 
@@ -1613,6 +1774,21 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     NK_STYLE_LABEL, and "style_fit" / "stretch" join
     info["terms"] for the terms that contributed.
 
+    The first-corner term (2026-11-26, nk-materials-v16)
+    follows the bias-pace pattern instead: it reads the
+    entry's firstCornerMeters (the standing course-geometry
+    record for this race's course, joined by the builder)
+    against each horse's parsed pace positions
+    (first_corner_score — the course factor times the
+    forecast early frontness) and applies as a post-integrate
+    logit shift at FIRST_CORNER_WEIGHT times the RAW score —
+    no z-scoring, because the course factor already carries
+    the course's extremity (0 at the median course). When it
+    contributes, info["firstCornerTrial"] is
+    NK_FIRST_CORNER_TRIAL, the weights label carries
+    NK_FIRST_CORNER_LABEL, and "first_corner" joins
+    info["terms"].
+
     The bias-pace term (2026-11-19, nk-materials-v12) reads
     bias_overlay — the publish lane's same-day bias overlay
     (rewrite/analysis/bias_pace.py's overlay_bias_on_pace
@@ -1894,6 +2070,37 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         total = sum(shifted.values())
         probs = {n: p / total for n, p in shifted.items()}
         st_applied.append(term_name)
+    # First-corner term (2026-11-26 trial, nk-materials-v16
+    # — see the module docstring): the course shape (the
+    # recorded run to the first corner) against each horse's
+    # forecast early frontness, applied as a post-integrate
+    # logit shift at FIRST_CORNER_WEIGHT times the RAW score
+    # — deliberately no z-scoring, the bias-pace precedent:
+    # the course factor is 0 at the standing records' median
+    # distance, so the term is weak exactly when the course
+    # is ordinary. Live only when at least three runners
+    # carry a score and the scores differ. A race whose
+    # course has no geometry record, or a horse with no
+    # early forecast position, is never shifted.
+    first_corner_values = [first_corner_score(
+        entry.get("firstCornerMeters"), h.get("pace_block"))
+        for h in horses]
+    coverage["first_corner"] = sum(
+        1 for s in first_corner_values if s is not None)
+    first_corner_present = [v for v in first_corner_values
+                            if v is not None]
+    first_corner_applied = (
+        len(first_corner_present) >= 3
+        and max(first_corner_present) != min(first_corner_present))
+    if first_corner_applied:
+        shifted = {}
+        for h, v in zip(horses, first_corner_values):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(FIRST_CORNER_WEIGHT * v)
+                if v is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
     # Same-day bias pace term (2026-11-19 trial — see the
     # module docstring): the publish lane's overlay of the
     # day's bias read on this race's pace forecast, applied
@@ -2005,6 +2212,9 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         label_parts.append(NK_STYLE_LABEL)
         info["styleTrial"] = NK_STYLE_TRIAL
         info["styleTerms"] = st_applied
+    if first_corner_applied:
+        label_parts.append(NK_FIRST_CORNER_LABEL)
+        info["firstCornerTrial"] = NK_FIRST_CORNER_TRIAL
     if bp_applied:
         label_parts.append(NK_BIAS_PACE_LABEL)
         info["biasPaceTrial"] = NK_BIAS_PACE_TRIAL
@@ -2012,6 +2222,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         info["weights"] = "+".join(label_parts)
     if not ha_applied and not cp_applied and not bp_applied \
             and not fc_applied and not st_applied \
+            and not first_corner_applied \
             and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
@@ -2051,6 +2262,8 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         post_terms.add(f"course_{kind}")
     post_terms.update(fc_applied)
     post_terms.update(st_applied)
+    if first_corner_applied:
+        post_terms.add("first_corner")
     if bp_applied:
         post_terms.add("bias_pace")
     if post_terms:
