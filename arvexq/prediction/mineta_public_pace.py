@@ -21,13 +21,18 @@ NETKEIBA_HOSTS = frozenset({
     "netkeiba.com", "nar.netkeiba.com", "nar.sp.netkeiba.com",
     "race.sp.netkeiba.com"
 })
+JRAVAN_HOSTS = frozenset({
+    "sugo.jra-van.jp"
+})
 # Each source kind is bound to the hosts allowed to attest it: a record is
 # accepted only when the sourceUrl host matches its declared sourceKind.
-# The official kind keeps exactly the official host set; the netkeiba kind
-# is a separate, honestly labelled source and never inherits official hosts.
+# The official kind keeps exactly the official host set; the netkeiba and
+# JRA-VAN kinds are separate, honestly labelled sources and never inherit
+# official hosts (nor each other's).
 SOURCE_KIND_HOSTS = {
     "official_course_geometry": OFFICIAL_HOSTS,
     "netkeiba_course_analysis": NETKEIBA_HOSTS,
+    "jravan_course_guide": JRAVAN_HOSTS,
 }
 
 
