@@ -105,7 +105,7 @@ HORSES = [horse(1, FRONT_RUNS), horse(2, CLOSER_RUNS),
 class LoaderTests(TestCase):
     def test_repo_file_loads_all_records(self):
         index = _load_course_geometry()
-        self.assertEqual(len(index), 11)
+        self.assertEqual(len(index), 154)
         self.assertEqual(
             index[("浦和", "ダート", 2000)]["firstCornerDistanceMeters"],
             300)
@@ -146,9 +146,9 @@ class AttachTests(TestCase):
                 (track, surface, distance))
 
     def test_uncovered_courses_stay_unattached(self):
-        for args in [("園田", "ダート", 1400), ("浦和", "ダート", 1400),
-                     ("名古屋", "ダート", 2000), ("福島", "芝", 2000),
-                     ("大井", "ダート", 1200)]:
+        for args in [("大井", "ダート", 1400), ("名古屋", "ダート", 2000),
+                     ("名古屋", "ダート", 920), ("中山", "芝", 2500),
+                     ("新潟", "芝", 1000)]:
             old = _old(*args)
             self.assertFalse(_attach_course_geometry(old), args)
             self.assertNotIn("courseGeometry", old)
