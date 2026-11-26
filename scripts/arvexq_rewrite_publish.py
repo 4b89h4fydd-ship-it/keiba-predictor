@@ -206,6 +206,8 @@ from rewrite.analysis.bias_pace import (  # noqa: E402
     BIAS_PACE_VERSION, compute_same_day_bias, overlay_bias_on_pace)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
 from rewrite.analysis.master_v1 import master_candidate  # noqa: E402
+from rewrite.analysis.pace_scenario_freq import (  # noqa: E402
+    load_scenario_history, scenario_frequency_for)
 from rewrite.analysis.master_bets import ticket_styles  # noqa: E402
 from rewrite.data.normalize import normalize_race  # noqa: E402
 from rewrite.output.api_shape import (  # noqa: E402
@@ -430,6 +432,19 @@ NK_MATERIALS_CUTOVER_DATE = "2026-11-17"
 # have no record and keep firstCornerMetersOfficial null — the
 # value is never estimated.
 COURSE_GEOMETRY_PATH = ROOT / "rewrite" / "data" / "course_geometry.json"
+# Standing realized pace-scenario labels (one finished race per
+# line, labelled under pace-label-v2 by
+# rewrite.analysis.pace_scenario_freq from finished races only).
+# The publisher measures each race's scenario
+# frequency from the rows dated before it, so the published
+# scenarioProbabilities are empirical frequencies with their
+# sample size and scope attached — never an estimate. A missing
+# file or a thin profile (< 20 measured races at every scope)
+# leaves the race unmeasured, exactly as before this wiring
+# existed (2026-11-26, user directive to publish the probability
+# and its consequence in the pace text).
+SCENARIO_HISTORY_PATH = (ROOT / "rewrite" / "data"
+                         / "pace_scenario_history.jsonl")
 # The speed z-scores need at least three horses carrying the
 # representative index before any term can exist; an entry
 # below that can never adjust, so it never qualifies a frozen
@@ -1148,6 +1163,37 @@ def _attach_course_geometry(old: dict) -> bool:
         return False
     old["courseGeometry"] = dict(record)
     return True
+
+
+def _scenario_frequency_for_race(old: dict) -> dict | None:
+    """Measured pace-scenario frequency for this race's profile.
+
+    Reads the standing history file fresh (like the course
+    geometry above, so a file landing mid-run is picked up by the
+    races that follow) and keeps only rows dated strictly before
+    this race, so the frequency is walk-forward by construction.
+    Returns None when the profile has too little measured history
+    at every scope; the caller then publishes the race unmeasured.
+    """
+    try:
+        distance = int(old.get("distance"))
+    except (TypeError, ValueError):
+        return None
+    history = load_scenario_history(SCENARIO_HISTORY_PATH)
+    if not history:
+        return None
+    before_date = str(old.get("date") or "")
+    if not before_date:
+        # Without the race's own date the walk-forward cut cannot
+        # be established; publish unmeasured rather than risk
+        # leaking a same-day-or-later label into the frequency.
+        return None
+    return scenario_frequency_for(
+        history,
+        track=str(old.get("track") or ""),
+        surface=str(old.get("surface") or ""),
+        distance=distance,
+        before_date=before_date)
 
 
 # Result statuses that read as final for the same-day bias
@@ -3083,6 +3129,11 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         trifecta_formation=(NAR_TRIFECTA_FORMATION
                             if segment == "nar" else "R24"),
         place_odds=place_odds)
+    # Measured pace-scenario frequency for this race's course
+    # profile (empirical, from realized labels dated before this
+    # race). Shared by the master sidecar and the published pace
+    # block so both always carry the same measured distribution.
+    scenario_frequency = _scenario_frequency_for_race(old)
     # Evaluate the user's 18-factor master specification on the EXACT same
     # pre-off race and incumbent forecast. Shadow output is advisory only:
     # production v9b marks, R24 tickets, receipts, and frozen history remain
@@ -3090,7 +3141,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     master_analysis = {"version": "master-18-factor-shadow-v1",
                        "status": "unavailable"}
     try:
-        master_forecast, master_audit = master_candidate(race, forecast)
+        master_forecast, master_audit = master_candidate(
+            race, forecast, scenario_frequency)
         master_plans = ticket_styles(master_forecast, master_audit)
         master_analysis = {
             "version": master_audit["version"],
@@ -3161,7 +3213,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     payload = race_payload(
         race, forecast, pace, tickets,
         provenance={"captured_at": captured, "snapshot_sha256": None},
-        calibrated_probabilities=PROBABILITIES_CALIBRATED)
+        calibrated_probabilities=PROBABILITIES_CALIBRATED,
+        scenario_frequency=scenario_frequency)
     built = payload["detail"]
     # api_shape's pace block has no injection point for the
     # first-corner value (race_payload takes no such argument and
