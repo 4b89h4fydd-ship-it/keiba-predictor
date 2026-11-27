@@ -573,7 +573,22 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # once so the term reaches them; the family also joins the
 # materials fingerprint, so a race whose course gains a
 # geometry record after first publication re-qualifies.
-NK_MATERIALS_VERSION = "nk-materials-v16"
+# nk-materials-v17 (2026-11-27): the course tables'
+# headerless saves (see _table_cells): the raw course
+# collection from 2026-11-26 onward stores rows only, and
+# _table_cells required the header row, so the course
+# biases read zero races on those days (2026-11-27: 0 of
+# 36, every runner missing course_frame). _table_cells
+# now falls back to the course tables' one fixed layout
+# for headerless saves, trusted only when every row
+# proves the layout itself — the four finish counts sum
+# to the runner count; a table that fails the identity is
+# dropped whole, never read on assumed positions. The
+# 内/中/外 zone labels needed no change (mapped by
+# _frame_group_for_label since before v16). The bump
+# re-issues v16-stamped pre-race races once so the
+# restored course_frame term reaches them.
+NK_MATERIALS_VERSION = "nk-materials-v17"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -1446,23 +1461,41 @@ def _table_cells(table) -> dict:
     """{label: (top3_count, runs)} from one collected netkeiba
     aggregate table ({"見出し": [...], "行": [[...], ...]}).
     Column positions are found by header name, never assumed;
-    a row whose counts cannot be read is dropped, never imputed."""
+    a row whose counts cannot be read is dropped, never imputed.
+
+    Headerless saves (the raw course collection from 2026-11-26
+    onward stores rows only) fall back to the one fixed layout
+    netkeiba course tables have — [label, 1着, 2着, 3着, 4着以下,
+    出走回数, …] — but a headerless table is trusted only when
+    EVERY row proves that layout itself: the four finish counts
+    must sum to the runner count. A table whose rows fail the
+    identity is dropped whole, never read on assumed positions."""
     if not isinstance(table, dict):
         return {}
     headers = table.get("見出し")
     rows = table.get("行")
-    if not isinstance(headers, list) or not isinstance(rows, list):
+    if not isinstance(rows, list):
         return {}
+    if isinstance(headers, list):
+        def col(name):
+            try:
+                return headers.index(name)
+            except ValueError:
+                return None
 
-    def col(name):
-        try:
-            return headers.index(name)
-        except ValueError:
-            return None
-
-    idx = (col("1着"), col("2着"), col("3着"), col("出走回数"))
-    if any(i is None for i in idx):
-        return {}
+        idx = (col("1着"), col("2着"), col("3着"), col("出走回数"))
+        if any(i is None for i in idx):
+            return {}
+    else:
+        idx = (1, 2, 3, 5)
+        for row in rows:
+            if not isinstance(row, list) or len(row) <= idx[3]:
+                return {}
+            vals = [_count(row[i]) for i in (1, 2, 3, 4, 5)]
+            if any(v is None for v in vals):
+                return {}
+            if vals[0] + vals[1] + vals[2] + vals[3] != vals[4]:
+                return {}
     out: dict = {}
     for row in rows:
         if not isinstance(row, list) or not row:
