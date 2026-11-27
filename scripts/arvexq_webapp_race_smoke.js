@@ -62,11 +62,19 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     let initialText = await page.locator('body').innerText();
     if (hasFatalUiError(initialText)) throw new Error('startup display error: ' + initialText.slice(0, 1000));
 
-    // Both circuits' venue race buttons are shown directly on the shared home.
-    let racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
+    // Home is venue tags only (v346, user decision 2026-11-16): open
+    // the first venue tag, then count that venue page's race buttons.
+    async function openFirstVenue(){
+      const tag=page.locator('button[data-track]').first();
+      if(!(await tag.count()))return 0;
+      await tag.click();
+      try{await page.locator('button[data-race]').first().waitFor({state:'visible',timeout:7000});}catch(_){}
+      return page.locator('button[data-race]').count();
+    }
+    let racesAvailable=await openFirstVenue();
     if(!racesAvailable){
       await page.waitForTimeout(2000);
-      racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
+      racesAvailable=await page.locator('button[data-race]').count();
     }
     if(!racesAvailable){
       const jstDay=new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10);
@@ -78,8 +86,7 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
                         {waitUntil:'domcontentloaded',timeout});
         await page.waitForFunction(() => !document.querySelector('.boot'),null,{timeout});
         try{
-          await page.locator('.arv-all-panel button[data-race]').first().waitFor({state:'visible',timeout:7000});
-          racesAvailable=await page.locator('.arv-all-panel button[data-race]').count();
+          racesAvailable=await openFirstVenue();
           console.log('SMOKE_ARCHIVE_FALLBACK',archiveDate,'races=',racesAvailable);
           break;
         }catch(_){}
@@ -93,7 +100,7 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     if (!raceId) throw new Error('first race button has no data-race');
     await race.click();
 
-    await page.waitForFunction(() => location.pathname === '/race' && !!document.querySelector('.smart-race-page'), null, { timeout });
+    await page.waitForFunction(() => location.pathname.endsWith('/race') && !!document.querySelector('.smart-race-page'), null, { timeout });
     await page.waitForFunction(() => {
       const body = document.body.innerText || '';
       if (/表示エラー|起動エラー|undefined is not an object|Cannot read properties of undefined/i.test(body)) return true;
@@ -146,7 +153,7 @@ const isLocal = /^http:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?(?:\/|$)/i.test(ba
     if (await close.count()) {
       await close.click();
       try {
-        await page.waitForFunction(() => location.pathname !== '/race', null, { timeout: 8000 });
+        await page.waitForFunction(() => !location.pathname.endsWith('/race'), null, { timeout: 8000 });
       } catch (err) {
         const snap=await page.evaluate(()=>({url:location.href,
           title:(document.querySelector('.smart-race-head-copy,.smart-race-title')||{}).textContent||'',
