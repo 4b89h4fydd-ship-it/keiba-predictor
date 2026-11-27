@@ -1,4 +1,4 @@
-# Version-independent iPhone-class race-open verification against Cloudflare Worker
+# Version-independent iPhone-class race-open verification against the GitHub Pages production deployment
 name: ARVEXQ Webapp Race Smoke
 
 on:
@@ -98,8 +98,8 @@ jobs:
           import json, urllib.request, urllib.parse
           from datetime import datetime, timedelta
           from zoneinfo import ZoneInfo
-          base='https://kraiz-api.4b89h4fydd.workers.dev'
-          frontend='https://kraizweb1.4b89h4fydd.workers.dev'
+          base='https://4b89h4fydd-ship-it.github.io/keiba-predictor'
+          frontend='https://4b89h4fydd-ship-it.github.io/keiba-predictor'
           headers={
               'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
               'Accept':'application/json,text/plain,*/*',
@@ -114,19 +114,19 @@ jobs:
           race=None
           for back in range(0,4):
               day=(datetime.now(ZoneInfo('Asia/Tokyo')).date()-timedelta(days=back)).isoformat()
-              body=read_json(f'{base}/api/day?date={day}&details=0')
+              body=read_json(f'{base}/api-static/day/{day}.json')
               rows=body if isinstance(body,list) else body.get('races',[])
               if rows:
                   race=rows[0]
                   break
-          assert race and race.get('id'), 'edge day API returned no selectable race'
+          assert race and race.get('id'), 'static day pack returned no selectable race'
           rid=race['id']
-          detail=read_json(f'{base}/api/race/{urllib.parse.quote(str(rid),safe="")}')
+          detail=read_json(f'{base}/api-static/race/{urllib.parse.quote(str(rid),safe="")}.json')
           d=detail.get('detail') if isinstance(detail,dict) else None
-          assert d, f'edge race API missing detail for {rid}'
+          assert d, f'static race pack missing detail for {rid}'
           horses=d.get('horses') or []
           finishers=((d.get('result') or {}).get('finishers') or [])
-          assert horses or finishers, f'edge race API has neither horses nor result for {rid}'
+          assert horses or finishers, f'static race pack has neither horses nor result for {rid}'
           print('EDGE_RACE_OK',rid,'horses',len(horses),'finishers',len(finishers))
           PY
       - name: Install browsers
@@ -175,11 +175,11 @@ jobs:
           NODE
       - name: Offline race detail resilience
         run: node scripts/arvexq_detail_resilience_smoke.js
-      - name: Verify Cloudflare Worker production current build
+      - name: Verify GitHub Pages production current build
         if: always()
         shell: bash
         run: |
-          PROD='https://kraizweb1.4b89h4fydd.workers.dev'
+          PROD='https://4b89h4fydd-ship-it.github.io/keiba-predictor'
           ok=0
           for i in $(seq 1 48); do
             headers="$(mktemp)"
