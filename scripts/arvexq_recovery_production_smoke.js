@@ -287,7 +287,16 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
-    await Promise.all([worker(),worker(),worker()]);
+    // WebKit checks its per-track subset serially. Three parallel iPhone
+    // pages in one WebKit browser on the CI runner starve each other's
+    // rendering: the odds panel's settle sampling (two identical
+    // consecutive terminal samples) then intermittently never stabilises
+    // for one of the races — a different one per run — even though the
+    // parallel Chromium run verifies every race against the same live
+    // sources. Serial pages mirror real single-page usage; the checks
+    // and assertions are unchanged.
+    if(process.env.ARVEXQ_BROWSER==='webkit')await worker();
+    else await Promise.all([worker(),worker(),worker()]);
     // Archived opinions cannot reappear on a fresh device, including API outage.
     for(const archived of records.filter(r=>r.preRaceBet).slice(0,2)){
       const ticketPage=await context.newPage();
