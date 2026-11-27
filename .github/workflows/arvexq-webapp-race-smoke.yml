@@ -27,7 +27,11 @@ permissions:
 
 jobs:
   smoke:
-    runs-on: ubuntu-latest
+    # Pinned to 24.04: playwright 1.48.2's --with-deps installs
+    # 24.04-era system packages (libicu74, libvpx9, libx264-164)
+    # that no longer exist on the ubuntu-latest (26.04) image,
+    # which broke browser installation on 2026-11-27.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
