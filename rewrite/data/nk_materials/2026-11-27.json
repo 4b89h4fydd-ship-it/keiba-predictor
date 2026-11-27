@@ -34,7 +34,9 @@
   "speedSd": 403,
   "speedOverlap": 403,
   "speedFit": 391,
-  "speedBias": 351
+  "speedBias": 351,
+  "mariaIndex": 60,
+  "babaIndex": 60
  },
  "zeroCoverage": [
   "nkFormDev",
@@ -37930,7 +37932,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 64.25,
+     "babaIndex": 67.57
     },
     "2": {
      "nk_best": 62,
@@ -38020,7 +38024,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 44.09,
+     "babaIndex": 58.1
     },
     "3": {
      "nk_best": 53,
@@ -38104,7 +38110,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 32.72,
+     "babaIndex": 32.9
     },
     "4": {
      "nk_best": 75,
@@ -38189,7 +38197,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 41.12,
+     "babaIndex": 50.85
     },
     "5": {
      "nk_best": 71,
@@ -38271,7 +38281,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 66.04,
+     "babaIndex": 56.94
     },
     "6": {
      "nk_best": 56,
@@ -38356,7 +38368,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 42.7,
+     "babaIndex": 41.4
     },
     "7": {
      "nk_best": 44,
@@ -38438,7 +38452,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 41.15,
+     "babaIndex": 49.88
     },
     "8": {
      "nk_best": 75,
@@ -38525,7 +38541,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 58.32,
+     "babaIndex": 37.64
     },
     "9": {
      "nk_best": 52,
@@ -38609,7 +38627,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 53.52,
+     "babaIndex": 62.32
     },
     "10": {
      "nk_best": 54,
@@ -38698,7 +38718,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 47.93,
+     "babaIndex": 41.65
     },
     "11": {
      "nk_best": 53,
@@ -38788,7 +38810,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 47.91,
+     "babaIndex": 46.16
     },
     "12": {
      "nk_best": 63,
@@ -38872,7 +38896,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 60.27,
+     "babaIndex": 54.59
     }
    },
    "courseAnalysis": {
@@ -39217,7 +39243,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 44.62,
+     "babaIndex": 63.68
     },
     "2": {
      "nk_best": 46,
@@ -39301,7 +39329,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 39.22,
+     "babaIndex": 42.55
     },
     "3": {
      "nk_best": 53,
@@ -39380,7 +39410,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 60.0,
+     "babaIndex": 55.52
     },
     "4": {
      "nk_best": 47,
@@ -39474,7 +39506,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 49.77,
+     "babaIndex": 64.48
     },
     "5": {
      "nk_best": 61,
@@ -39541,7 +39575,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 45.4,
+     "babaIndex": 50.67
     },
     "6": {
      "nk_best": 56,
@@ -39628,7 +39664,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 54.82,
+     "babaIndex": 51.3
     },
     "7": {
      "nk_best": 47,
@@ -39712,7 +39750,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 43.02,
+     "babaIndex": 54.53
     },
     "8": {
      "nk_best": 52,
@@ -39794,7 +39834,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 48.63,
+     "babaIndex": 39.72
     },
     "9": {
      "nk_best": 75,
@@ -39881,7 +39923,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 69.05,
+     "babaIndex": 57.51
     },
     "10": {
      "nk_best": 38,
@@ -39948,7 +39992,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 37.74,
+     "babaIndex": 31.55
     },
     "11": {
      "nk_best": 46,
@@ -40032,7 +40078,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 41.29,
+     "babaIndex": 52.17
     },
     "12": {
      "nk_best": 65,
@@ -40119,7 +40167,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 66.45,
+     "babaIndex": 36.32
     }
    },
    "courseAnalysis": {
@@ -40458,7 +40508,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 51.28,
+     "babaIndex": 52.54
     },
     "2": {
      "nk_best": 51,
@@ -40548,7 +40600,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 37.3,
+     "babaIndex": 39.19
     },
     "3": {
      "nk_best": 42,
@@ -40637,7 +40691,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 47.48,
+     "babaIndex": 58.65
     },
     "4": {
      "nk_best": 62,
@@ -40727,7 +40783,9 @@
      "comment_text": null,
      "stableComment": null,
      "pressRating": null,
-     "stretch": null
+     "stretch": null,
+     "mariaIndex": 36.29,
+     "babaIndex": 49.16
     },
     "5": {
      "nk_best": 58,
@@ -40809,7 +40867,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 56.41,
+     "babaIndex": 46.17
     },
     "6": {
      "nk_best": 48,
@@ -40899,7 +40959,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 46.82,
+     "babaIndex": 35.44
     },
     "7": {
      "nk_best": 70,
@@ -40987,7 +41049,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 66.16,
+     "babaIndex": 60.24
     },
     "8": {
      "nk_best": 51,
@@ -41069,7 +41133,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 47.3,
+     "babaIndex": 41.74
     },
     "9": {
      "nk_best": 54,
@@ -41163,7 +41229,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 56.22,
+     "babaIndex": 57.55
     },
     "10": {
      "nk_best": 56,
@@ -41248,7 +41316,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 55.01,
+     "babaIndex": 42.67
     },
     "11": {
      "nk_best": 46,
@@ -41336,7 +41406,9 @@
      "comment_text": null,
      "stableComment": null,
      "pressRating": null,
-     "stretch": null
+     "stretch": null,
+     "mariaIndex": 65.02,
+     "babaIndex": 71.59
     },
     "12": {
      "nk_best": 70,
@@ -41418,7 +41490,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 34.71,
+     "babaIndex": 45.07
     }
    },
    "courseAnalysis": {
@@ -41760,7 +41834,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 57.35,
+     "babaIndex": 47.58
     },
     "2": {
      "nk_best": 66,
@@ -41835,7 +41911,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 36.75,
+     "babaIndex": 41.31
     },
     "3": {
      "nk_best": 68,
@@ -41904,7 +41982,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 49.95,
+     "babaIndex": 60.35
     },
     "4": {
      "nk_best": 96,
@@ -41982,7 +42062,9 @@
      "comment_text": null,
      "stableComment": null,
      "pressRating": null,
-     "stretch": null
+     "stretch": null,
+     "mariaIndex": 52.91,
+     "babaIndex": 37.65
     },
     "5": {
      "nk_best": 65,
@@ -42066,7 +42148,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 37.07,
+     "babaIndex": 65.36
     },
     "6": {
      "nk_best": 84,
@@ -42151,7 +42235,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 61.16,
+     "babaIndex": 45.76
     },
     "7": {
      "nk_best": 68,
@@ -42238,7 +42324,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 36.09,
+     "babaIndex": 33.35
     },
     "8": {
      "nk_best": 76,
@@ -42330,7 +42418,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 42.64,
+     "babaIndex": 43.83
     },
     "9": {
      "nk_best": 90,
@@ -42431,7 +42521,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 62.78,
+     "babaIndex": 63.13
     },
     "10": {
      "nk_best": 77,
@@ -42537,7 +42629,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 65.93,
+     "babaIndex": 56.01
     },
     "11": {
      "nk_best": 68,
@@ -42621,7 +42715,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 47.72,
+     "babaIndex": 47.13
     },
     "12": {
      "nk_best": 69,
@@ -42705,7 +42801,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 49.63,
+     "babaIndex": 58.55
     }
    },
    "courseAnalysis": {
@@ -43052,7 +43150,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 42.72,
+     "babaIndex": 42.76
     },
     "2": {
      "nk_best": 40,
@@ -43134,7 +43234,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 42.81,
+     "babaIndex": 43.28
     },
     "3": {
      "nk_best": 40,
@@ -43218,7 +43320,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 51.46,
+     "babaIndex": 49.85
     },
     "4": {
      "nk_best": 50,
@@ -43310,7 +43414,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 62.5,
+     "babaIndex": 60.31
     },
     "5": {
      "nk_best": 33,
@@ -43392,7 +43498,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 54.71,
+     "babaIndex": 69.55
     },
     "6": {
      "nk_best": 52,
@@ -43477,7 +43585,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 62.32,
+     "babaIndex": 47.42
     },
     "7": {
      "nk_best": 45,
@@ -43561,7 +43671,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 58.49,
+     "babaIndex": 47.9
     },
     "8": {
      "nk_best": 51,
@@ -43643,7 +43755,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 43.68,
+     "babaIndex": 38.1
     },
     "9": {
      "nk_best": 53,
@@ -43728,7 +43842,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 45.34,
+     "babaIndex": 45.16
     },
     "10": {
      "nk_best": 53,
@@ -43812,7 +43928,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 43.49,
+     "babaIndex": 66.8
     },
     "11": {
      "nk_best": 49,
@@ -43894,7 +44012,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 29.53,
+     "babaIndex": 37.6
     },
     "12": {
      "nk_best": 45,
@@ -43979,7 +44099,9 @@
      "grade": null,
      "comment_text": null,
      "stableComment": null,
-     "pressRating": null
+     "pressRating": null,
+     "mariaIndex": 62.95,
+     "babaIndex": 51.28
     }
    },
    "courseAnalysis": {
