@@ -128,6 +128,7 @@ from zoneinfo import ZoneInfo
 
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
+from rewrite.analysis.override_guard import GUARD_VERSION
 from rewrite.analysis.nk_materials import (
     CLOSING_WEIGHT, COMBO_WEIGHT, NK_ALL_TERMS_LABEL,
     NK_ALL_TERMS_TRIAL, NK_CLOSING_TRIAL, NK_CLOSING_WEIGHTS_LABEL,
@@ -1349,7 +1350,7 @@ class BuildTests(TestCase):
         # path that does not depend on materials; stamp it as already
         # applied so this test isolates the nk-materials path.
         detail["preparedMeta"]["rewritePublish"]["overrideGuard"] = {
-            "version": "override-guard-v1", "applied": True}
+            "version": GUARD_VERSION, "applied": True}
         new, reason = _build(detail, materials={})
         self.assertIsNone(new)
         self.assertTrue(reason.startswith("frozen:"), reason)

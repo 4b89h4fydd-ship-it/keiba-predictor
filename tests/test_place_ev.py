@@ -22,6 +22,7 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
+from rewrite.analysis.override_guard import GUARD_VERSION
 from rewrite.analysis.tickets import generate_tickets
 from rewrite.data.normalize import normalize_runner
 from rewrite.output.api_shape import (
@@ -375,7 +376,7 @@ def stored_detail(*, lane=V9B_LANE, place=PLACE, revision=None,
                            "temperature": 0.6692, "blendWeight": 0.5,
                            "blendApplied": True},
     }
-    marker["overrideGuard"] = {"version": "override-guard-v1",
+    marker["overrideGuard"] = {"version": GUARD_VERSION,
                                 "applied": True}
     if revision is not None:
         marker["revision"] = revision

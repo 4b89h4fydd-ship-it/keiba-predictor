@@ -37,6 +37,7 @@ from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.override_guard import (
     GUARD_VERSION,
     MARGIN_THRESHOLD,
+    MARKET_LEAN_WEIGHT,
     REGRESSION_LAMBDA,
     apply_override_guard,
     guard_probabilities,
@@ -99,7 +100,16 @@ class GuardProbabilitiesTests(TestCase):
         self.assertEqual(info["favourite"], 1)
         self.assertGreaterEqual(info["margin"], MARGIN_THRESHOLD)
         market2 = (1 / 3.0) / (1 / 2.2 + 1 / 3.0 + 1 / 6.0 + 1 / 12.0)
-        self.assertAlmostEqual(guarded[2], 0.5 * 0.60 + 0.5 * market2,
+        # B output for horse 2, then step C leans the whole
+        # B vector geometrically toward the market (v2).
+        b2 = 0.5 * 0.60 + 0.5 * market2
+        market = {n: (1 / odds[n]) / sum(1 / odds[k] for k in odds)
+                  for n in odds}
+        b = {n: 0.5 * probs[n] + 0.5 * market[n] for n in probs}
+        leaned = {n: (b[n] ** (1 - MARKET_LEAN_WEIGHT))
+                  * (market[n] ** MARKET_LEAN_WEIGHT) for n in probs}
+        total = sum(leaned.values())
+        self.assertAlmostEqual(guarded[2], leaned[2] / total,
                                places=9)
         self.assertEqual(max(guarded, key=guarded.get), 2)
 
@@ -110,12 +120,16 @@ class GuardProbabilitiesTests(TestCase):
         self.assertFalse(info["aFired"])
         self.assertEqual(info["modelPick"], 1)
         self.assertEqual(info["favourite"], 1)
+        # B regresses arithmetically; C then leans the result
+        # geometrically toward the market (v2 composition).
+        b = {n: (1 - REGRESSION_LAMBDA) * probs[n]
+             + REGRESSION_LAMBDA * MARKET_A[n] for n in probs}
+        leaned = {n: (b[n] ** (1 - MARKET_LEAN_WEIGHT))
+                  * (MARKET_A[n] ** MARKET_LEAN_WEIGHT) for n in probs}
+        total = sum(leaned.values())
         for n in probs:
-            self.assertAlmostEqual(
-                guarded[n],
-                (1 - REGRESSION_LAMBDA) * probs[n]
-                + REGRESSION_LAMBDA * MARKET_A[n],
-                places=9)
+            self.assertAlmostEqual(guarded[n], leaned[n] / total,
+                                   places=9)
 
     def test_margin_just_below_and_above_threshold(self):
         # Market favourite implied exactly 0.40 (inverses sum to 1).
