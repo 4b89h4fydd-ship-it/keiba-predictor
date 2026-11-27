@@ -4,15 +4,15 @@
  "odds": [
   {
    "horse_no": 1,
-   "win_odds": 35.7,
-   "popularity": 4,
+   "win_odds": 41.7,
+   "popularity": 5,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 2,
-   "win_odds": 1,
+   "win_odds": 1.1,
    "popularity": 1,
    "scratched": false,
    "horse_status": "",
@@ -20,79 +20,79 @@
   },
   {
    "horse_no": 3,
-   "win_odds": 214.4,
-   "popularity": 12,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 4,
-   "win_odds": 57.1,
-   "popularity": 9,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 5,
-   "win_odds": 37.2,
-   "popularity": 6,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 6,
-   "win_odds": 27.6,
-   "popularity": 3,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 7,
-   "win_odds": 38.9,
-   "popularity": 7,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 8,
-   "win_odds": 47.6,
-   "popularity": 8,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 9,
-   "win_odds": 35.7,
-   "popularity": 4,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 10,
-   "win_odds": 142.9,
-   "popularity": 11,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 11,
-   "win_odds": 85.7,
+   "win_odds": 393.5,
    "popularity": 10,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
+   "horse_no": 4,
+   "win_odds": 409.6,
+   "popularity": 11,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 38.7,
+   "popularity": 4,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 123.1,
+   "popularity": 8,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 7,
+   "win_odds": 41.9,
+   "popularity": 6,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 8,
+   "win_odds": 19.9,
+   "popularity": 3,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 67.3,
+   "popularity": 7,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 10,
+   "win_odds": 477.8,
+   "popularity": 12,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 11,
+   "win_odds": 308.7,
+   "popularity": 9,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
    "horse_no": 12,
-   "win_odds": 7.8,
+   "win_odds": 4.6,
    "popularity": 2,
    "scratched": false,
    "horse_status": "",
@@ -100,8 +100,8 @@
   }
  ],
  "oddsSource": "NAR公式",
- "oddsUpdatedAt": "2026-11-27T06:15:31.327Z",
- "sourcePublishedAt": "2026-11-27T15:14:00+09:00",
+ "oddsUpdatedAt": "2026-11-27T07:49:38.025Z",
+ "sourcePublishedAt": "",
  "popularitySource": "NAR公式単勝オッズ順位",
  "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=24&k_raceDate=2026%2F11%2F27&k_raceNo=3"
 }

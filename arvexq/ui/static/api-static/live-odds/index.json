@@ -1,223 +1,223 @@
 {
  "version": "arvexq-live-odds-static-v1",
  "date": "2026-11-27",
- "generatedAt": "2026-11-27T06:15:32.823Z",
+ "generatedAt": "2026-11-27T07:49:39.222Z",
  "races": {
-  "nar-2026-11-27-名古屋-03": {
+  "nar-2026-11-27-名古屋-02": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.327Z",
-   "sourcePublishedAt": "2026-11-27T15:14:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:37.608Z",
+   "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-名古屋-08": {
+  "nar-2026-11-27-名古屋-04": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.459Z",
-   "sourcePublishedAt": "2026-11-27T15:14:00+09:00"
-  },
-  "nar-2026-11-27-名古屋-06": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.559Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-名古屋-07": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.572Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-名古屋-01": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.625Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:37.663Z",
    "sourcePublishedAt": ""
   },
   "nar-2026-11-27-名古屋-05": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.725Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:37.676Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   },
-  "nar-2026-11-27-名古屋-02": {
+  "nar-2026-11-27-名古屋-06": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.752Z",
-   "sourcePublishedAt": ""
+   "oddsUpdatedAt": "2026-11-27T07:49:37.802Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   },
-  "nar-2026-11-27-園田-01": {
+  "nar-2026-11-27-名古屋-07": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.785Z",
-   "sourcePublishedAt": ""
+   "oddsUpdatedAt": "2026-11-27T07:49:37.867Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   },
-  "nar-2026-11-27-名古屋-10": {
+  "nar-2026-11-27-名古屋-01": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.786Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-名古屋-04": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.848Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-名古屋-09": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.853Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-園田-04": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.958Z",
-   "sourcePublishedAt": ""
-  },
-  "nar-2026-11-27-園田-05": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.968Z",
-   "sourcePublishedAt": ""
-  },
-  "nar-2026-11-27-名古屋-12": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.978Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-園田-02": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:31.998Z",
-   "sourcePublishedAt": ""
-  },
-  "nar-2026-11-27-園田-10": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.003Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-園田-03": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.021Z",
-   "sourcePublishedAt": ""
-  },
-  "nar-2026-11-27-園田-06": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.039Z",
-   "sourcePublishedAt": ""
-  },
-  "nar-2026-11-27-園田-07": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.042Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:37.872Z",
    "sourcePublishedAt": ""
   },
   "nar-2026-11-27-名古屋-11": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.101Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:37.963Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   },
-  "nar-2026-11-27-浦和-02": {
+  "nar-2026-11-27-名古屋-08": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.201Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.013Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
+  },
+  "nar-2026-11-27-名古屋-03": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.025Z",
    "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-園田-09": {
+  "nar-2026-11-27-名古屋-09": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.228Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.049Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
+  },
+  "nar-2026-11-27-園田-02": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.100Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-園田-01": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.151Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-名古屋-10": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.206Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
+  },
+  "nar-2026-11-27-園田-03": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.231Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-名古屋-12": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.262Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
+  },
+  "nar-2026-11-27-園田-06": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.384Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-園田-04": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.385Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-園田-10": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.463Z",
    "sourcePublishedAt": ""
   },
   "nar-2026-11-27-園田-08": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.235Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.499Z",
    "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-園田-12": {
+  "nar-2026-11-27-園田-05": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.237Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-浦和-01": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.252Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.506Z",
    "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-浦和-04": {
+  "nar-2026-11-27-園田-09": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.278Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.530Z",
    "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-浦和-03": {
+  "nar-2026-11-27-園田-07": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.319Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.588Z",
    "sourcePublishedAt": ""
   },
   "nar-2026-11-27-園田-11": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.339Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-浦和-07": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.384Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
-  },
-  "nar-2026-11-27-浦和-05": {
-   "ok": true,
-   "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.398Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.591Z",
    "sourcePublishedAt": ""
   },
-  "nar-2026-11-27-浦和-06": {
+  "nar-2026-11-27-浦和-01": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.494Z",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.621Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-浦和-03": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.726Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-園田-12": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.757Z",
    "sourcePublishedAt": ""
   },
   "nar-2026-11-27-浦和-10": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.504Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:38.800Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
+  },
+  "nar-2026-11-27-浦和-06": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.912Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-浦和-02": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.949Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-浦和-07": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:38.951Z",
+   "sourcePublishedAt": ""
   },
   "nar-2026-11-27-浦和-08": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.568Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:38.956Z",
+   "sourcePublishedAt": ""
   },
   "nar-2026-11-27-浦和-09": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.576Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:39.054Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-浦和-04": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:39.147Z",
+   "sourcePublishedAt": ""
+  },
+  "nar-2026-11-27-浦和-05": {
+   "ok": true,
+   "oddsStatus": "live",
+   "oddsUpdatedAt": "2026-11-27T07:49:39.150Z",
+   "sourcePublishedAt": ""
   },
   "nar-2026-11-27-浦和-11": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.656Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:39.181Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   },
   "nar-2026-11-27-浦和-12": {
    "ok": true,
    "oddsStatus": "live",
-   "oddsUpdatedAt": "2026-11-27T06:15:32.821Z",
-   "sourcePublishedAt": "2026-11-27T15:15:00+09:00"
+   "oddsUpdatedAt": "2026-11-27T07:49:39.221Z",
+   "sourcePublishedAt": "2026-11-27T16:49:00+09:00"
   }
  }
 }
