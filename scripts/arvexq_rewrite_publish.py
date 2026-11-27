@@ -108,6 +108,13 @@ the guard is re-issued once — stamped kind
 "override-guard-upgrade" — when the current payload carries
 complete win odds; the re-issue stamps the overrideGuard marker
 into the lane marker, so the qualification can never hold again.
+A ninth exception of the same kind is the fresh-blend upgrade
+(2026-11-27): a frozen v9b forecast whose blend DID apply is
+re-issued — stamped kind "fresh-blend-upgrade", a full rebuild —
+whenever the committed live-odds feed carries a complete market
+that is fresher than the odds the standing forecast consumed
+and at least one active runner's odds moved, while the post is
+still at least 30 minutes away; see the FRESH_BLEND constants.
 A fifth exception of the same kind is the ticket-R24 upgrade
 (2026-11-08): the production trifecta recommendation switched
 from formation B (36 points) to R24 (24 points) by user order, so
@@ -508,6 +515,37 @@ NK_MATERIALS_UPGRADE_MIN_LEAD = timedelta(minutes=0)
 # carries the new stamp, so it can never qualify twice for the
 # same definition.
 OVERRIDE_GUARD_UPGRADE_MIN_LEAD = timedelta(minutes=0)
+
+# Fresh-blend upgrade (2026-11-27, user instruction: the issued
+# forecast must not stand on stale odds — 「今からやれや」): the
+# validation on the saved 2026-11-19..26 corpus showed that a
+# large part of the gap between the issued probabilities and the
+# final market is not model weakness but staleness — every race
+# dated 2026-11-27 was blended with win odds observed around
+# 00:22 JST, a median of ~14.9 hours before post, because first
+# publication happens overnight and the freeze then never
+# re-blends. The static live-odds feed the sync lane commits to
+# this tree every few minutes (arvexq/ui/static/api-static/
+# live-odds/<race_id>.json, official odds) now carries a fresh
+# market for every race, so a frozen v9b forecast whose blend DID
+# apply is re-issued — stamped kind "fresh-blend-upgrade", a
+# full rebuild, so the materials adjustment and the override
+# guard recompute on the fresh vector — whenever the feed
+# carries a complete, fresher market and the post is still at
+# least FRESH_BLEND_MIN_LEAD away (the window closes at the
+# official record's T-30 freeze). Unlike the one-time upgrades
+# this one may fire again on a later cycle, but only when the
+# feed's odds are at least FRESH_BLEND_MIN_ADVANCE newer than
+# the odds the standing forecast consumed (recorded in the
+# marker's freshBlend stamp) AND at least one active runner's
+# odds actually moved; a feed that is missing, stale, incomplete
+# or roster-divergent never qualifies, and the frozen forecast
+# is kept byte-identical (fail-closed, nothing is imputed).
+LIVE_ODDS_DIR = (ROOT / "arvexq" / "ui" / "static" / "api-static"
+                 / "live-odds")
+FRESH_BLEND_MIN_LEAD = timedelta(minutes=30)
+FRESH_BLEND_MAX_FEED_AGE = timedelta(minutes=20)
+FRESH_BLEND_MIN_ADVANCE = timedelta(minutes=5)
 
 # Blend upgrade (2026-11-04, user instruction after the adoption
 # night left 24 of 59 races calibration-only): some venues post
@@ -1970,6 +2008,190 @@ def _override_guard_upgrade_info(old: dict, now: datetime) -> dict | None:
             "reason": "override-guard-upgrade"}
 
 
+def _load_live_odds_feed(race_id: str) -> dict | None:
+    """The committed static live-odds feed entry for one race.
+
+    File format (written by the sync lane into this tree):
+    {"ok": true, "race_id": ..., "oddsSource": ...,
+    "oddsUpdatedAt": "<ISO>", "sourcePublishedAt": ...,
+    "odds": [{"horse_no": ..., "win_odds": ..., "scratched":
+    ...}]}. A missing or unreadable file simply means no feed
+    for the race; the caller keeps the frozen forecast.
+    """
+    if not race_id:
+        return None
+    try:
+        payload = json.loads(
+            (LIVE_ODDS_DIR / f"{race_id}.json").read_text(
+                encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(payload, dict) or payload.get("ok") is not True:
+        return None
+    return payload
+
+
+def _parse_feed_time(value) -> datetime | None:
+    """Parse an ISO timestamp (the feed's oddsUpdatedAt) into an
+    aware datetime; anything else is None."""
+    if not isinstance(value, str) or not value:
+        return None
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
+def _detail_odds_time(old: dict) -> datetime | None:
+    """When the standing detail's win odds were observed.
+
+    The payload stamps oddsUpdatedAt either as a full ISO
+    timestamp or as a JST time-of-day ("HH:MM:SS") on the race
+    date; both are read here. Anything unreadable is None (the
+    caller then anchors on value divergence alone).
+    """
+    raw = old.get("oddsUpdatedAt")
+    parsed = _parse_feed_time(raw)
+    if parsed is not None:
+        return parsed
+    if not isinstance(raw, str):
+        return None
+    date = str(old.get("date") or "")
+    try:
+        return datetime.strptime(f"{date} {raw.strip()}",
+                                 "%Y-%m-%d %H:%M:%S").replace(
+                                     tzinfo=JST)
+    except ValueError:
+        return None
+
+
+def _fresh_blend_upgrade_info(old: dict, now: datetime) -> dict | None:
+    """Facts for the fresh-blend re-issue of a frozen v9b race.
+
+    A stored forecast qualifies only when ALL of these hold:
+
+    - it was published on the v9b lane WITH its market blend
+      applied (blendApplied true) — an unblended forecast is the
+      blend upgrade's case, and the fresh re-blend is defined on
+      the blended series the validations stand on;
+
+    - the post is still at least FRESH_BLEND_MIN_LEAD away (the
+      window closes at the official record's T-30 freeze);
+
+    - the committed live-odds feed carries an entry for the race
+      whose oddsUpdatedAt is at most FRESH_BLEND_MAX_FEED_AGE old
+      and at least FRESH_BLEND_MIN_ADVANCE newer than the odds
+      the standing forecast consumed (the marker's freshBlend
+      stamp once one exists, else the detail's oddsUpdatedAt);
+
+    - the feed carries a win odd (> 1.0) for every horse on the
+      active roster, no active runner is flagged scratched in
+      the feed (a roster divergence belongs to the roster-change
+      path, not to a re-blend), and at least one active runner's
+      feed odd differs from the standing detail's — a feed that
+      merely restates the consumed market never starts a rebuild.
+
+    Anything unreadable does not qualify; the caller keeps the
+    frozen forecast (fail-closed). The rebuild is a full rebuild
+    from the detail with the feed odds swapped in, so the
+    materials adjustment and the override guard recompute on the
+    fresh vector, and the freshBlend stamp records the feed time
+    consumed so the next cycle can measure its advance.
+    """
+    marker = (old.get("preparedMeta") or {}).get("rewritePublish")
+    if not isinstance(marker, dict):
+        return None
+    if marker.get("abilityLane") != V9B_LANE:
+        return None
+    blend_applied = marker.get("blendApplied")
+    if not isinstance(blend_applied, bool):
+        post_processing = marker.get("postProcessing")
+        blend_applied = (post_processing.get("blendApplied")
+                         if isinstance(post_processing, dict) else None)
+    if blend_applied is not True:
+        return None
+    post = _post_at(old)
+    if post is None or post - now <= FRESH_BLEND_MIN_LEAD:
+        return None
+    feed = _load_live_odds_feed(str(old.get("id") or ""))
+    if feed is None:
+        return None
+    feed_dt = _parse_feed_time(feed.get("oddsUpdatedAt"))
+    if feed_dt is None:
+        return None
+    if now - feed_dt > FRESH_BLEND_MAX_FEED_AGE:
+        return None
+    if feed_dt - now > timedelta(minutes=2):
+        return None
+    stamp = marker.get("freshBlend")
+    consumed_dt = None
+    previous_stamp = None
+    if isinstance(stamp, dict):
+        previous_stamp = stamp.get("oddsUpdatedAt")
+        consumed_dt = _parse_feed_time(previous_stamp)
+    if consumed_dt is None:
+        consumed_dt = _detail_odds_time(old)
+    if consumed_dt is not None \
+            and feed_dt < consumed_dt + FRESH_BLEND_MIN_ADVANCE:
+        return None
+    feed_odds: dict[int, float] = {}
+    feed_scratched: set[int] = set()
+    for row in feed.get("odds") or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            number = int(row["horse_no"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if row.get("scratched"):
+            feed_scratched.add(number)
+            continue
+        value = row.get("win_odds")
+        if isinstance(value, (int, float)) \
+                and not isinstance(value, bool):
+            feed_odds[number] = float(value)
+    by_number: dict[int, dict] = {}
+    for horse in old.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        try:
+            by_number[int(horse["horseNumber"])] = horse
+        except (KeyError, TypeError, ValueError):
+            continue
+    differs = False
+    for number, _name in _active_roster(old):
+        if number in feed_scratched:
+            return None
+        value = feed_odds.get(number)
+        if value is None or value <= 1.0:
+            return None
+        horse = by_number.get(number)
+        current = horse.get("winOdds") if isinstance(horse, dict) else None
+        if not (isinstance(current, (int, float))
+                and not isinstance(current, bool)) \
+                or float(current) != value:
+            differs = True
+    if not differs:
+        return None
+    return {"publishedAt": marker.get("publishedAt"),
+            "firstPublishedAt": marker.get("firstPublishedAt"),
+            "previousAbilityLane": V9B_LANE,
+            "reason": "fresh-blend-upgrade",
+            "feedOdds": feed_odds,
+            "feedOddsUpdatedAt": feed.get("oddsUpdatedAt"),
+            "feedSourcePublishedAt": feed.get("sourcePublishedAt"),
+            "feedOddsSource": feed.get("oddsSource"),
+            "previousOddsUpdatedAt": (
+                previous_stamp if previous_stamp is not None
+                else old.get("oddsUpdatedAt"))}
+
+
 def _place_ev_upgrade_info(old: dict, now: datetime) -> dict | None:
     """Facts for the one-time place-EV upgrade of a frozen v9b race.
 
@@ -2837,6 +3059,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     nk_upgrade = None
     career_upgrade = None
     guard_upgrade = None
+    fresh_blend_upgrade = None
     if freeze is not None:
         if freeze[0] == "frozen":
             lane_upgrade = _lane_upgrade_info(old)
@@ -2910,6 +3133,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                         and nk_upgrade is None
                         and career_upgrade is None
                         and guard_upgrade is None):
+                    fresh_blend_upgrade = _fresh_blend_upgrade_info(
+                        old, now)
+                if (blend_upgrade is None
+                        and env_repair_upgrade is None
+                        and decay_upgrade is None
+                        and nk_upgrade is None
+                        and career_upgrade is None
+                        and guard_upgrade is None
+                        and fresh_blend_upgrade is None):
                     place_ev_upgrade = _place_ev_upgrade_info(old, now)
                     if place_ev_upgrade is None:
                         # The last freeze exceptions, both surgical
@@ -3007,8 +3239,37 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                     career_upgrade["receipt"] = freeze[1]
                 elif guard_upgrade is not None:
                     guard_upgrade["receipt"] = freeze[1]
+                elif fresh_blend_upgrade is not None:
+                    fresh_blend_upgrade["receipt"] = freeze[1]
         else:
             reissue = freeze[1]
+    if fresh_blend_upgrade is not None:
+        # Fresh-blend re-issue: swap the standing detail's win
+        # odds for the live-odds feed's before the rebuild, so
+        # the blend, the materials adjustment and the override
+        # guard all consume the fresh market. Only the odds
+        # fields move; roster, careers and every other fact stay
+        # exactly as the payload carries them.
+        feed_odds = fresh_blend_upgrade["feedOdds"]
+        swapped_horses = []
+        for horse in old.get("horses") or []:
+            if isinstance(horse, dict):
+                horse = dict(horse)
+                try:
+                    number = int(horse["horseNumber"])
+                except (KeyError, TypeError, ValueError):
+                    number = None
+                if number in feed_odds:
+                    horse["winOdds"] = feed_odds[number]
+            swapped_horses.append(horse)
+        old = {**old, "horses": swapped_horses}
+        feed_dt = _parse_feed_time(
+            fresh_blend_upgrade["feedOddsUpdatedAt"])
+        if feed_dt is not None:
+            old["oddsUpdatedAt"] = feed_dt.astimezone(JST).strftime(
+                "%H:%M:%S")
+        if fresh_blend_upgrade.get("feedOddsSource"):
+            old["oddsSource"] = fresh_blend_upgrade["feedOddsSource"]
     race = normalize_race(summary, old, source="production-api-readback")
     race_date = str(old.get("date") or race.date or "")
     segment = race.segment.value
@@ -3047,7 +3308,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 and decay_upgrade is None \
                 and nk_upgrade is None \
                 and career_upgrade is None \
-                and guard_upgrade is None:
+                and guard_upgrade is None \
+                and fresh_blend_upgrade is None:
             # Deferral: a v8-eligible race whose extras have not
             # landed yet is not first-published on the v1 lane (the
             # freeze would lock that fallback in for the whole day —
@@ -4034,6 +4296,51 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                      "probabilities were computed without it; "
                      "the forecast is recomputed with the guard "
                      "while the race is still pre-post"),
+        }
+    if fresh_blend_upgrade is not None:
+        # Fresh-blend re-issue of a frozen forecast: the ability
+        # layer, roster and lane are unchanged — the only change
+        # is that the market blend now consumes the live-odds
+        # feed's fresh win odds instead of the odds observed
+        # around first publication. Same audit chain as the
+        # other re-issues: the first publication time is
+        # preserved and the previous receipt is recorded. The
+        # freshBlend stamp records the feed time this rebuild
+        # consumed, so a later cycle re-qualifies only when the
+        # feed has advanced past it (see
+        # _fresh_blend_upgrade_info).
+        previous = (old.get("preparedMeta") or {}).get("rewritePublish") or {}
+        prev_revision = previous.get("revision")
+        prev_count = (prev_revision.get("revisionCount")
+                      if isinstance(prev_revision, dict) else None)
+        meta["rewritePublish"]["firstPublishedAt"] = (
+            fresh_blend_upgrade.get("firstPublishedAt")
+            or fresh_blend_upgrade.get("publishedAt") or captured)
+        meta["rewritePublish"]["revision"] = {
+            "kind": "fresh-blend-upgrade",
+            "reason": "fresh-blend-upgrade",
+            "revisedAt": captured,
+            "revisionCount": (prev_count if isinstance(prev_count, int)
+                              else 0) + 1,
+            "previousReceiptSha256": fresh_blend_upgrade["receipt"],
+            "previousAbilityLane": V9B_LANE,
+            "abilityLane": V9B_LANE,
+            "note": ("fresh-blend re-issue (user instruction "
+                     "2026-11-27): this race was blended at first "
+                     "publication with win odds observed hours "
+                     "before post; the forecast is recomputed "
+                     "with the live-odds feed's current market "
+                     "while the race is still at least 30 minutes "
+                     "from post"),
+        }
+        meta["rewritePublish"]["freshBlend"] = {
+            "oddsUpdatedAt": fresh_blend_upgrade["feedOddsUpdatedAt"],
+            "sourcePublishedAt": fresh_blend_upgrade.get(
+                "feedSourcePublishedAt"),
+            "oddsSource": fresh_blend_upgrade.get("feedOddsSource"),
+            "previousOddsUpdatedAt": fresh_blend_upgrade.get(
+                "previousOddsUpdatedAt"),
+            "appliedAt": captured,
         }
     new["preparedMeta"] = meta
     return new, unified["receiptSha256"]
