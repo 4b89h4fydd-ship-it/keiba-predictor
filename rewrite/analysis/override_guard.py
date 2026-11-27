@@ -26,6 +26,23 @@ metric out of sample (LogLoss 0.2389 -> 0.2110, top-pick win rate
      REGRESSION_LAMBDA (0.50) of the way toward the market-implied
      vector and renormalized. A race A replaced is already pure
      market, so B leaves it unchanged.
+  C (market lean, override-guard-v2, adopted 2026-11-27 night by
+     explicit user instruction after the day's issued card lost
+     to the favourite again): the B output is geometrically
+     pooled once more toward the market, q ∝ p^(1-w) * m^w with
+     MARKET_LEAN_WEIGHT w = 0.30. Measured the same day on the
+     issued vectors themselves (blend-lean-20261127: parameters
+     read on 2026-11-24..25, 70 races, tested on 2026-11-26..27,
+     82 races): leaning the issued vector by w = 0.25..0.5
+     improved log-loss on BOTH halves (train 1.8380 -> 1.7633 at
+     w = 0.4; test 1.7310 -> 1.6234) and the top-pick win rate
+     (train 42.9% -> 44.3%; test 46.9% -> 51.9% at w = 0.25..0.4,
+     the test half carrying a small odds-coverage quirk in two
+     11-27 races), while the pure market (w = 1) was WORSE than
+     the current vector on the train half (40.0% vs 42.9%) — the
+     ability layer still adds something; the issued vector was
+     simply under-anchored after the materials shifts. w = 0.30
+     is the conservative middle of the measured band.
 
 The market is built from the SAME win odds the v9b blend consumed
 — the publisher's payload odds at compute time — never from final
@@ -59,7 +76,7 @@ from ..safety.probability import distribution, marginals
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .shadow_v9 import market_probs, usable_market
 
-GUARD_VERSION = "override-guard-v1"
+GUARD_VERSION = "override-guard-v2"
 
 # Step A threshold (adopted rule, see module docstring): an
 # override of the favourite is replaced by the market vector
@@ -72,11 +89,17 @@ MARGIN_THRESHOLD = 0.15
 # market-implied vector.
 REGRESSION_LAMBDA = 0.50
 
+# Step C market-lean weight (override-guard-v2, see module
+# docstring): the step-B output is geometrically pooled toward
+# the market with this weight.
+MARKET_LEAN_WEIGHT = 0.30
+
 
 def _info() -> dict:
     return {"applied": False, "version": GUARD_VERSION,
             "marginThreshold": MARGIN_THRESHOLD,
             "regressionLambda": REGRESSION_LAMBDA,
+            "marketLean": MARKET_LEAN_WEIGHT,
             "aFired": False, "modelPick": None, "favourite": None,
             "margin": None}
 
@@ -128,7 +151,18 @@ def guard_probabilities(probs: dict, win_odds: dict):
     if total <= 0:
         info["reason"] = "degenerate-vector"
         return None, info
-    guarded = {n: v / total for n, v in regressed.items()}
+    regressed = {n: v / total for n, v in regressed.items()}
+    # Step C (v2): geometric lean of the step-B output toward
+    # the market. A pure-market vector (step A fired) is
+    # unchanged by construction.
+    w = MARKET_LEAN_WEIGHT
+    leaned = {n: (regressed[n] ** (1.0 - w)) * (market[n] ** w)
+              for n in numbers}
+    total = fsum(leaned.values())
+    if total <= 0:
+        info["reason"] = "degenerate-vector"
+        return None, info
+    guarded = {n: v / total for n, v in leaned.items()}
     info["applied"] = True
     return guarded, info
 
