@@ -588,7 +588,25 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # _frame_group_for_label since before v16). The bump
 # re-issues v16-stamped pre-race races once so the
 # restored course_frame term reaches them.
-NK_MATERIALS_VERSION = "nk-materials-v17"
+# nk-materials-v18 (2026-11-27): the pro-index terms (see
+# the module docstring): netkeiba's two pro-forecast indices
+# the forward collection did not read until today — the
+# Maria index (マリア指数, yosoka_id 19) and the track-
+# aptitude index (馬場適正指数, yosoka_id 20) — carried by
+# the builder on each horse row as mariaIndex / babaIndex,
+# gain trial terms (maria_index / baba_index) as
+# post-integrate logit shifts at +0.10 each. A same-day
+# back-read of 2026-11-25 (17 races, Urawa) measured the
+# signal before wiring: finish-rank correlation -0.46
+# (Maria) / -0.36 (baba), index-top win rates 41% / 35%,
+# and every trial blend improved the issued vector's
+# logloss in-sample; the walk-forward read (fit 11-25,
+# test 11-26) is recorded separately. Wired the same day
+# on the user's direction, as UNVALIDATED trials like the
+# families before them. The bump re-issues v17-stamped
+# pre-race races once so the terms reach them; both
+# families also join the materials fingerprint.
+NK_MATERIALS_VERSION = "nk-materials-v18"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
@@ -780,6 +798,21 @@ NK_STYLE_LABEL = (
     "unvalidated)")
 NK_STYLE_TRIAL = "style-terms-trial-20261126"
 STYLE_TERMS = ("style_fit", "stretch")
+# Pro-index terms (2026-11-27, nk-materials-v18): TRIAL
+# weight, UNVALIDATED — see the version note at
+# NK_MATERIALS_VERSION. netkeiba's pro-forecast Maria
+# index and track-aptitude index, carried per horse as
+# mariaIndex / babaIndex and applied as post-integrate
+# logit shifts on the within-race z-score, at the same
+# +0.10 order as the other trial families. Higher is
+# better for both indices (the pro's own rating of the
+# horse / of the horse on today's track condition).
+INDEX_WEIGHT = 0.10
+NK_INDEX_LABEL = (
+    "pro-index-terms-trial-20261127(maria-index+0.10/"
+    "baba-index+0.10;unvalidated)")
+NK_INDEX_TRIAL = "pro-index-terms-trial-20261127"
+INDEX_TERMS = ("maria_index", "baba_index")
 # The style classification as a closingness in [-1, 1]: the
 # four classes evenly spaced, the front trait (逃げ) at -1
 # and the deepest closer (追込) at +1 — the same scale
@@ -1064,6 +1097,10 @@ def parse_materials_payload(payload) -> dict:
     this race's course, joined by the builder) is carried
     as a positive number or None and read by
     first_corner_score.
+    The v18 pro-index fields ride the same way: mariaIndex
+    (the pro-forecast Maria index) and babaIndex (the
+    track-aptitude index) are read as numbers and read by
+    the pro-index terms in apply_nk_materials.
     Anything unreadable normalises to {} (no materials
     for the date) or drops the offending race/horse — a
     malformed entry must never take the lane down, and a dropped
@@ -1137,6 +1174,14 @@ def parse_materials_payload(payload) -> dict:
                 horse["stretch"] = (
                     stretch if stretch is not None
                     and 1 <= stretch <= 3 else None)
+                # v18 pro-index fields (2026-11-27): the
+                # pro-forecast Maria index and track-aptitude
+                # index, carried as numbers — an absent or
+                # unreadable value is no material, never a
+                # guessed one. Read by the pro-index terms in
+                # apply_nk_materials.
+                horse["mariaIndex"] = _num(values.get("mariaIndex"))
+                horse["babaIndex"] = _num(values.get("babaIndex"))
                 horse["nkFormDev"] = _num(values.get("nkFormDev"))
                 horse["nkAiScore"] = _num(values.get("nkAiScore"))
                 odds_block = values.get("odds")
@@ -1214,6 +1259,9 @@ def materials_fingerprint(entry) -> dict:
         # fingerprint on the same rule.
         "style_fit": 0, "stretch": 0,
         "first_corner": 0,
+        # 2026-11-27 (v18): the pro-index families join the
+        # fingerprint on the same rule.
+        "maria_index": 0, "baba_index": 0,
     }
     if not isinstance(entry, dict):
         return counts
@@ -1277,6 +1325,10 @@ def materials_fingerprint(entry) -> dict:
         if first_corner_score(first_corner_meters,
                               horse.get("pace")) is not None:
             counts["first_corner"] += 1
+        if _num(horse.get("mariaIndex")) is not None:
+            counts["maria_index"] += 1
+        if _num(horse.get("babaIndex")) is not None:
+            counts["baba_index"] += 1
     return counts
 
 
@@ -1807,6 +1859,18 @@ def apply_nk_materials(forecast: RaceForecast, entry,
     NK_STYLE_LABEL, and "style_fit" / "stretch" join
     info["terms"] for the terms that contributed.
 
+    The pro-index terms (2026-11-27, nk-materials-v18)
+    follow the style pattern once per index: maria_index
+    reads the entry's per-horse mariaIndex (netkeiba's
+    pro-forecast Maria index) and baba_index reads
+    babaIndex (the track-aptitude index), each applied as
+    a post-integrate logit shift at INDEX_WEIGHT on the
+    within-race z-score under the same liveness rule.
+    When either contributes, info["proIndexTrial"] is
+    NK_INDEX_TRIAL, the weights label carries
+    NK_INDEX_LABEL, and "maria_index" / "baba_index" join
+    info["terms"] for the terms that contributed.
+
     The first-corner term (2026-11-26, nk-materials-v16)
     follows the bias-pace pattern instead: it reads the
     entry's firstCornerMeters (the standing course-geometry
@@ -1936,6 +2000,12 @@ def apply_nk_materials(forecast: RaceForecast, entry,
             # parsed pace block already carried as pace_block.
             "style_class": mat.get("styleClass"),
             "stretch": mat.get("stretch"),
+            # Pro-index families (v18, 2026-11-27 — see the
+            # version note): netkeiba's pro-forecast Maria
+            # index and track-aptitude index, raw values;
+            # applied below as post-integrate logit shifts.
+            "maria_index": _num(mat.get("mariaIndex")),
+            "baba_index": _num(mat.get("babaIndex")),
         }
         if course_active:
             ci = course_inputs.get(r.number) or {}
@@ -2103,6 +2173,33 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         total = sum(shifted.values())
         probs = {n: p / total for n, p in shifted.items()}
         st_applied.append(term_name)
+    # Pro-index terms (2026-11-27 trial, nk-materials-v18
+    # — see the version note): the same post-integrate
+    # logit shift, once per index, under the same liveness
+    # rule. A horse the pro pages do not list carries no
+    # value and is never shifted; a race whose entry
+    # carries neither index simply never shifts.
+    idx_scores = {
+        "maria_index": [h.get("maria_index") for h in horses],
+        "baba_index": [h.get("baba_index") for h in horses],
+    }
+    idx_applied: list = []
+    for term_name in INDEX_TERMS:
+        scores = idx_scores[term_name]
+        coverage[term_name] = sum(
+            1 for s in scores if s is not None)
+        idx_z = _zscores(scores)
+        if not any(z is not None and z != 0.0 for z in idx_z):
+            continue
+        shifted = {}
+        for h, z in zip(horses, idx_z):
+            p = probs[h["num"]]
+            shifted[h["num"]] = (
+                p * math.exp(INDEX_WEIGHT * z)
+                if z is not None else p)
+        total = sum(shifted.values())
+        probs = {n: p / total for n, p in shifted.items()}
+        idx_applied.append(term_name)
     # First-corner term (2026-11-26 trial, nk-materials-v16
     # — see the module docstring): the course shape (the
     # recorded run to the first corner) against each horse's
@@ -2245,6 +2342,10 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         label_parts.append(NK_STYLE_LABEL)
         info["styleTrial"] = NK_STYLE_TRIAL
         info["styleTerms"] = st_applied
+    if idx_applied:
+        label_parts.append(NK_INDEX_LABEL)
+        info["proIndexTrial"] = NK_INDEX_TRIAL
+        info["proIndexTerms"] = idx_applied
     if first_corner_applied:
         label_parts.append(NK_FIRST_CORNER_LABEL)
         info["firstCornerTrial"] = NK_FIRST_CORNER_TRIAL
@@ -2255,7 +2356,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         info["weights"] = "+".join(label_parts)
     if not ha_applied and not cp_applied and not bp_applied \
             and not fc_applied and not st_applied \
-            and not first_corner_applied \
+            and not idx_applied and not first_corner_applied \
             and not any(d["terms"] for d in detail):
         # No term could contribute (e.g. fewer than three horses
         # carry an index, so every z-score is None): the vector
@@ -2295,6 +2396,7 @@ def apply_nk_materials(forecast: RaceForecast, entry,
         post_terms.add(f"course_{kind}")
     post_terms.update(fc_applied)
     post_terms.update(st_applied)
+    post_terms.update(idx_applied)
     if first_corner_applied:
         post_terms.add("first_corner")
     if bp_applied:
