@@ -7,7 +7,8 @@ const fixture={ok:true,race_id:id,odds:[
 ]};
 (async()=>{
   let calls=0;
-  const fetcher=async url=>{calls++;assert.ok(url.includes('/api/live-odds/'));
+  const fetcher=async url=>{calls++;assert.ok(url.includes('/api-static/live-odds/'));
+    assert.ok(url.includes(encodeURIComponent(id)+'.json'));
     assert.ok(!url.includes('/api/race/'));return fixture};
   const [a,b]=await Promise.all([mod.fetch(id,fetcher),mod.fetch(id,fetcher)]);
   assert.equal(calls,1);assert.deepEqual(a,b);
