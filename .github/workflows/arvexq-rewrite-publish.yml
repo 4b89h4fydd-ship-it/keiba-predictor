@@ -82,15 +82,43 @@ jobs:
         with:
           python-version: "3.12"
       - name: Publish rewrite forecasts
-        env:
-          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
           set -o pipefail
+          # GitHub-only local mode (2026-11-27): this step used to run
+          # the publish script against the D1-backed production API.
+          # That API was retired with the Cloudflare exit and the D1
+          # deletion (2026-11-24); it now answers HTTP 500, so the step
+          # died in about a second on every run while the real
+          # publishing happened in the prefetch lane.  This workflow's
+          # role is the redundancy re-publish (engine/material pushes
+          # and the hourly schedule): the day file is synthesized from
+          # the committed packs (summaries only, no collected facts),
+          # so each race is re-diagnosed from its committed pack state
+          # with the committed extras/materials — the same local-input
+          # mode the prefetch lane publishes with.  A date with no
+          # committed day pack is skipped: its first publication
+          # belongs to the prefetch / day-ahead lanes, which carry the
+          # fresh collected facts.
           if [ -n "${{ inputs.date }}" ]; then
-            python3 scripts/arvexq_rewrite_publish.py --date "${{ inputs.date }}" 2>&1 | tee publish-run.log
+            DATES="${{ inputs.date }}"
           else
-            python3 scripts/arvexq_rewrite_publish.py 2>&1 | tee publish-run.log
+            DATES="$(TZ=Asia/Tokyo date +%F) $(TZ=Asia/Tokyo date -d tomorrow +%F)"
           fi
+          : > publish-run.log
+          FAILED=0
+          for d in $DATES; do
+            DAY="arvexq/ui/static/api-static/day/$d.json"
+            if [ ! -f "$DAY" ]; then
+              echo "SKIP $d: no committed day pack" | tee -a publish-run.log
+              continue
+            fi
+            jq --arg d "$d" '{date: $d, races: (.races // []), details: []}' "$DAY" > "persisted-facts-$d.json"
+            python3 scripts/arvexq_rewrite_publish.py \
+              --date "$d" --local-input \
+              --local-day-file "persisted-facts-$d.json" \
+              --local-packs-dir arvexq/ui/static/api-static 2>&1 | tee -a publish-run.log || FAILED=1
+          done
+          exit $FAILED
       - name: Build static API packs from emitted publish payload (parallel, migration block A)
         if: always()
         continue-on-error: true

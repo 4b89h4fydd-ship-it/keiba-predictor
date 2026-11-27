@@ -503,7 +503,12 @@ jobs:
         if: always() && env.ARVEXQ_DAY_AHEAD != '1'
         uses: actions/upload-artifact@v4
         with:
-          name: arvexq-issued-payload-prefetch-${{ github.run_id }}
+          # Distinct name (2026-11-27): upload-artifact v4 rejects a
+          # second upload to the same artifact name in one run, which
+          # failed every prefetch run after all real work succeeded.
+          # The follow-up lane downloads by the arvexq-issued-payload-*
+          # pattern, so the staged copy stays inside that pattern.
+          name: arvexq-issued-payload-prefetch-staged-${{ github.run_id }}
           path: issued-payloads
           if-no-files-found: ignore
           retention-days: 7
