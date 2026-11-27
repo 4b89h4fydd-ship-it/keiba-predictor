@@ -209,25 +209,24 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     else{try{assertOdds(settled,r.id)}catch(e){oddsProblem=e.message}}
     if(oddsProblem){
       // Sources may have been backfilled mid-check (the node-side fetch
-      // itself can trigger the on-demand official fetch), or the page's
-      // initial odds request raced ahead of the backfill. Re-read the
-      // sources and re-query through the existing user-visible refresh
-      // control once — the same bounded recovery as before — then assert
-      // against the refreshed reality. A still-broken screen fails here.
+      // itself can trigger the on-demand official fetch), or the pack
+      // itself may have been republished after the page loaded it —
+      // result ingest rewrites finished races' packs while these checks
+      // run (observed 2026-11-27: Nagoya 1R's favourite moved 1.8 -> 1.9
+      // between the page's pack fetch and the node-side source fetch,
+      // and the user-visible odds-update control only refreshes the
+      // live feed, so it can never repair a stale pack). Reload the
+      // race page so the panel is rebuilt from the current pack, then
+      // assert against sources re-read after the reload. A
+      // still-broken screen fails here.
       console.warn('ODDS_RECOVERY '+r.id+' '+oddsProblem);
+      await page.reload({waitUntil:'domcontentloaded',timeout:45000});
+      await page.waitForFunction(count=>document.querySelectorAll('.arv-entry-table tbody tr').length===count,roster.horses.length,{timeout:20000});
+      await page.locator('[data-panel="odds"]').click();
       sources=await oddsSources(r.id);
       expected=buildExpected();
-      const update=page.locator('[data-action="odds-update"]');
-      if(await update.count()){
-        await update.click();
-        // The refresh targets the static live-odds feed, which may
-        // itself carry no odds (its ok:false payload is tolerated by
-        // design: the panel must re-settle from the static pack). No
-        // status is asserted on the feed response; the settle +
-        // assert below is the check.
-      }
       settled=await waitSettledOdds(30000);
-      assert.ok(settled,'odds panel did not settle after refresh '+r.id);
+      assert.ok(settled,'odds panel did not settle after reload '+r.id);
       assertOdds(settled,r.id);
       console.log('ODDS_RECOVERY_PASS '+r.id);
     }
