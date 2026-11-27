@@ -38,6 +38,7 @@ from rewrite.analysis.override_guard import (
     GUARD_VERSION,
     MARGIN_THRESHOLD,
     MARKET_LEAN_WEIGHT,
+    NK_FORECAST_LEAN_WEIGHT,
     REGRESSION_LAMBDA,
     apply_override_guard,
     guard_probabilities,
@@ -130,6 +131,44 @@ class GuardProbabilitiesTests(TestCase):
         for n in probs:
             self.assertAlmostEqual(guarded[n], leaned[n] / total,
                                    places=9)
+
+    def test_d_leans_toward_nk_forecast_on_full_coverage(self):
+        # v3 step D: after A->B->C, the vector leans
+        # geometrically toward the netkeiba forecast vector.
+        probs = {1: 0.50, 2: 0.25, 3: 0.15, 4: 0.10}
+        nk_odds = {1: 4.0, 2: 2.0, 3: 8.0, 4: 16.0}
+        guarded, info = guard_probabilities(probs, ODDS_A, nk_odds)
+        self.assertTrue(info["applied"])
+        self.assertTrue(info["nkLeanApplied"])
+        self.assertEqual(info["nkForecastLean"],
+                         NK_FORECAST_LEAN_WEIGHT)
+        b = {n: (1 - REGRESSION_LAMBDA) * probs[n]
+             + REGRESSION_LAMBDA * MARKET_A[n] for n in probs}
+        c = {n: (b[n] ** (1 - MARKET_LEAN_WEIGHT))
+             * (MARKET_A[n] ** MARKET_LEAN_WEIGHT) for n in probs}
+        cs = sum(c.values())
+        c = {n: v / cs for n, v in c.items()}
+        nk = {n: (1 / nk_odds[n]) / sum(1 / nk_odds[k]
+                                        for k in nk_odds)
+              for n in probs}
+        d = {n: (c[n] ** (1 - NK_FORECAST_LEAN_WEIGHT))
+             * (nk[n] ** NK_FORECAST_LEAN_WEIGHT) for n in probs}
+        ds = sum(d.values())
+        for n in probs:
+            self.assertAlmostEqual(guarded[n], d[n] / ds, places=9)
+        # The nk favourite (horse 2) gains from the lean.
+        plain, _ = guard_probabilities(probs, ODDS_A)
+        self.assertGreater(guarded[2], plain[2])
+
+    def test_d_skipped_on_partial_nk_coverage(self):
+        probs = {1: 0.50, 2: 0.25, 3: 0.15, 4: 0.10}
+        partial = {1: 4.0, 2: 2.0, 3: 8.0}  # horse 4 missing
+        guarded, info = guard_probabilities(probs, ODDS_A, partial)
+        plain, _ = guard_probabilities(probs, ODDS_A)
+        self.assertTrue(info["applied"])
+        self.assertFalse(info["nkLeanApplied"])
+        for n in probs:
+            self.assertAlmostEqual(guarded[n], plain[n], places=12)
 
     def test_margin_just_below_and_above_threshold(self):
         # Market favourite implied exactly 0.40 (inverses sum to 1).
