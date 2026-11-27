@@ -32,27 +32,33 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   // the source returns NOW, never the archived snapshot's stored state.
   // Since the 2026-11-23 GitHub-only migration the odds panel merges
   // two sources, in the app's own order: the static race pack this
-  // origin serves (api-static/race/<id>.json — the saved detail, whose
-  // odds rows the sync lane keeps overlaying with the latest official
-  // odds) first, then the detached live-odds relay
-  // (arvexq-live-relay /api/live-odds) overriding per horse. Both
-  // payloads carry WIN odds only; no source returns place odds, so the
-  // panel's place column is explicitly '―' unless a future feed adds
-  // placeOddsLow/High (a numeric range is then the factual display).
-  // The retired D1-backed edge API (kraiz-api /api/race) is gone.
-  const RELAY='https://arvexq-live-relay.4b89h4fydd.workers.dev';
+  // origin serves (api-static/race/<id>.json) first — per horse, the
+  // saved detail's winOdds (which the sync lane keeps overlaying with
+  // the latest official odds), overridden by the pack's top-level odds
+  // rows where present, exactly as mergeRaceReflection merges them —
+  // then the same-origin static live-odds feed
+  // (api-static/live-odds/<id>.json) overriding per horse. The
+  // detached relay worker the feed replaced is retired (503 since the
+  // migration), and the D1-backed edge API (kraiz-api /api/race) is
+  // gone. Both payloads carry WIN odds only; no source returns place
+  // odds, so the panel's place column is explicitly '―' unless a
+  // future feed adds placeOddsLow/High (a numeric range is then the
+  // factual display).
   async function oddsSources(id){
     const out={live:null,detail:null,liveScratched:new Set(),detailScratched:new Set()};
-    try{const res=await fetch(RELAY+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
+    try{const res=await fetch(base+'/api-static/live-odds/'+encodeURIComponent(id)+'.json',{signal:AbortSignal.timeout(20000)});
       if(res.ok){const body=await res.json();
         if(body&&body.ok===true){out.live=new Map();
-          for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
+          for(const o of body.odds||[]){const no=Number(o&&(o.horseNumber!=null?o.horseNumber:o.horse_no)),v=Number(o&&(o.winOdds!=null?o.winOdds:o.win_odds));
             if(Number.isInteger(no)&&v>0)out.live.set(no,v);
-            if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.horse_status||''))))out.liveScratched.add(no);}}}}
-    catch(e){/* relay unavailable: expectation falls back to the pack */}
+            if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.status!=null?o.status:o.horse_status||''))))out.liveScratched.add(no);}}}}
+    catch(e){/* feed unavailable: expectation falls back to the pack */}
     try{const res=await fetch(base+'/api-static/race/'+encodeURIComponent(id)+'.json',{signal:AbortSignal.timeout(20000)});
       if(res.ok){const body=await res.json();
         if(body&&body.ok===true){out.detail=new Map();
+          for(const h of (body.detail&&body.detail.horses)||[]){const no=Number(h&&h.horseNumber),v=Number(h&&h.winOdds);
+            if(Number.isInteger(no)&&v>0)out.detail.set(no,v);
+            if(Number.isInteger(no)&&h&&(h.scratched===true||/取消|除外/.test(String(h.status||''))))out.detailScratched.add(no);}
           for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
             if(Number.isInteger(no)&&v>0)out.detail.set(no,v);
             if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.horse_status||''))))out.detailScratched.add(no);}}}}
@@ -214,10 +220,11 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       const update=page.locator('[data-action="odds-update"]');
       if(await update.count()){
         await update.click();
-        // The refresh targets the live-odds relay, which may itself be
-        // down (its failure is tolerated by design: the panel must
-        // re-settle from the static pack). No status is asserted on
-        // the relay response; the settle + assert below is the check.
+        // The refresh targets the static live-odds feed, which may
+        // itself carry no odds (its ok:false payload is tolerated by
+        // design: the panel must re-settle from the static pack). No
+        // status is asserted on the feed response; the settle +
+        // assert below is the check.
       }
       settled=await waitSettledOdds(30000);
       assert.ok(settled,'odds panel did not settle after refresh '+r.id);
@@ -267,13 +274,13 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   try{
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
     page._arvexqIntentionalApiOutage=true;
-    await page.route('https://arvexq-live-relay.4b89h4fydd.workers.dev/**',route=>route.abort());
+    await page.route(base+'/api-static/live-odds/**',route=>route.abort());
     // Consume rejection even if another assertion closes the browser first;
     // a missing actual response is still an explicit failure when awaited.
     const initialResponse=page.waitForResponse(res=>res.url().includes('/api-static/race/'),{timeout:20000}).catch(()=>null);
     await check(page,r);
     const firstSource=await initialResponse;
-    assert.equal(firstSource?.status(),200,'surviving pack source must answer while the relay is down');
+    assert.equal(firstSource?.status(),200,'surviving pack source must answer while the live-odds feed is down');
     await page.waitForTimeout(250);
     const before=await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
     await page.locator('[data-action="odds-update"]').click();
@@ -285,7 +292,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     for(const archived of records.filter(r=>r.preRaceBet).slice(0,2)){
       const ticketPage=await context.newPage();
       ticketPage._arvexqIntentionalApiOutage=true;
-      await ticketPage.route('https://arvexq-live-relay.4b89h4fydd.workers.dev/**',route=>route.abort());
+      await ticketPage.route(base+'/api-static/live-odds/**',route=>route.abort());
       await check(ticketPage,archived);
       assert.equal(await ticketPage.locator('.arv-entry-table .arv-marks-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
       // v349: the forecast (bets) subpage was merged into the entry
@@ -296,7 +303,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       await ticketPage.close();
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-    await fresh.route('https://arvexq-live-relay.4b89h4fydd.workers.dev/**',route=>route.abort());
+    await fresh.route(base+'/api-static/live-odds/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
     // Only demand venues that genuinely have races on this exact audited day.
