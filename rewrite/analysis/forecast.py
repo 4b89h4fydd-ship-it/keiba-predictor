@@ -13,15 +13,18 @@ runner outside the top four — highest top-3 probability among those
 whose win probability is below the race's marked four — falling back
 to the fifth-ranked runner when no such outsider exists.
 
-Extended marks (2026-11-21, user-directed after the mark-coverage
-verification in mark-coverage-20261121): the runners at win-probability
-ranks 6-8 that are not already marked additionally receive 注, 穴, 伏
-(in rank order) when their win probability is at least
-EXTENDED_MARK_MIN_WIN. The verification measured the unmarked top-3
-finishers concentrated at ranks 6-8 (78% of them) and this rule
-halving the "one unmarked finisher" races. The mark count is capped
-at eight. The ticket formations keep slicing the first five marks,
-so the extension changes no ticket construction.
+Five marks only (2026-11-27, user-directed; supersedes the
+2026-11-21 extended marks 注/穴/伏 at win-probability ranks 6-8).
+The extended marks made the published ticket selection hard to
+read, and a same-day re-measurement on the issued vectors of
+2026-11-24..26 (117-118 races) showed no selection rule built
+from the issued numbers picks a better five: ranking by top-3
+probability or by the ability score captured FEWER podium
+finishers (68.7-72.3%) than the plain win-probability top five
+(72.4%, full-podium capture 35.9%). The five marks are therefore
+exactly the win-probability top five under the assignment above;
+improving WHICH five is a probability-quality question, not a
+selection-rule question.
 """
 from __future__ import annotations
 
@@ -94,16 +97,6 @@ def _pace_adjustments(race: RaceRecord, pace: PaceForecast) -> dict[int, tuple[f
     return adjustments
 
 
-#: Extended marks for win-probability ranks 6-8 (see module docstring).
-EXTENDED_MARKS = ("注", "穴", "伏")
-#: Minimum win probability for an extended mark (verification: 2%).
-EXTENDED_MARK_MIN_WIN = 0.02
-#: Win-probability ranks eligible for an extended mark (1-based,
-#: inclusive on both ends); the total mark count never exceeds the
-#: last eligible rank.
-EXTENDED_MARK_RANKS = range(6, 9)
-
-
 def _assign_marks(ranked: list[int], probs: dict[int, tuple]) -> dict[int, str]:
     marks: dict[int, str] = {}
     for index, symbol in enumerate(("◎", "○", "▲", "△")):
@@ -113,19 +106,6 @@ def _assign_marks(ranked: list[int], probs: dict[int, tuple]) -> dict[int, str]:
     if rest:
         star = max(rest, key=lambda n: (probs[n][2], probs[n][0], -n))
         marks[star] = "☆"
-    extended = iter(EXTENDED_MARKS)
-    for rank in EXTENDED_MARK_RANKS:
-        if rank > len(ranked):
-            break
-        number = ranked[rank - 1]
-        if number in marks:
-            continue
-        if probs[number][0] < EXTENDED_MARK_MIN_WIN:
-            continue
-        symbol = next(extended, None)
-        if symbol is None:
-            break
-        marks[number] = symbol
     return marks
 
 
