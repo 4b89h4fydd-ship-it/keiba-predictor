@@ -5,6 +5,10 @@ mariaIndex / babaIndex, and the adapter's pro-index terms
 (maria_index / baba_index).
 
 Covered here:
+  - the builder merges the forward collection's pro-index
+    file into each horse's mariaIndex / babaIndex, counts
+    both in fieldCoverage, and records a build with no
+    pro-index file as an EXPLAINED zero;
   - the parser carries both fields as numbers and drops
     unreadable values (never guessed);
   - both terms fire as post-integrate logit shifts when
@@ -28,6 +32,7 @@ from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.nk_materials import (
     NK_INDEX_LABEL, NK_INDEX_TRIAL, apply_nk_materials,
     materials_fingerprint, parse_materials_payload)
+from scripts.arvexq_nk_materials_build import build as build_materials
 
 NK_ID = "202648112708"
 RACE_ID = "nar-2026-11-27-名古屋-08"
@@ -59,6 +64,39 @@ def _parsed(per_horse):
                    "courseAnalysis": None,
                    "paceLabel": None}}}
     return parse_materials_payload(payload)[RACE_ID]
+
+
+class ProIndexBuilderTests(TestCase):
+    TARGETS = {"targets": [{"netkeiba_race_id": NK_ID,
+                            "arvexq_race_id": RACE_ID}]}
+    SPEED = {"races": {NK_ID: {"horses": {
+        str(n): {"name": NAMES[n], "nk_best": 65, "nk_avg5": 60,
+                 "nk_dist": None, "nk_course": None,
+                 "nk_recent": [55, 54, 53]}
+        for n in NAMES}}}}
+    PRO = {NK_ID: {
+        "maria": {str(n): 40.0 + n for n in NAMES},
+        "baba": {str(n): 50.0 + n for n in NAMES}}}
+
+    def test_builder_carries_indices_and_counts_them(self):
+        payload = build_materials(DATE, self.SPEED, {}, self.TARGETS,
+                                  pro_index=self.PRO)
+        horses = payload["races"][RACE_ID]["horses"]
+        self.assertEqual(horses["1"]["mariaIndex"], 41.0)
+        self.assertEqual(horses["5"]["babaIndex"], 55.0)
+        self.assertEqual(payload["fieldCoverage"]["mariaIndex"], 5)
+        self.assertEqual(payload["fieldCoverage"]["babaIndex"], 5)
+
+    def test_builder_without_pro_index_records_explained_zero(self):
+        payload = build_materials(DATE, self.SPEED, {}, self.TARGETS)
+        self.assertEqual(payload["fieldCoverage"]["mariaIndex"], 0)
+        self.assertIn("mariaIndex",
+                      payload["zeroCoverageExplained"])
+        self.assertNotIn("mariaIndex",
+                         payload["zeroCoverageUnexplained"])
+        horses = payload["races"][RACE_ID]["horses"]
+        self.assertIsNone(horses["1"]["mariaIndex"])
+        self.assertIsNone(horses["1"]["babaIndex"])
 
 
 class ProIndexParserTests(TestCase):
