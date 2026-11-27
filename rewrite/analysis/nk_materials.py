@@ -606,7 +606,16 @@ from .integrated_eval import DEFAULT_WEIGHTS, comment_score, integrate
 # families before them. The bump re-issues v17-stamped
 # pre-race races once so the terms reach them; both
 # families also join the materials fingerprint.
-NK_MATERIALS_VERSION = "nk-materials-v18"
+# nk-materials-v19 (2026-11-27): no materials change — the
+# bump carries the five-mark rule (rewrite/analysis/forecast.py:
+# the 2026-11-21 extended marks 注/穴/伏 are removed on the
+# user's instruction; marks are exactly ◎○▲△☆, the
+# win-probability top five) into still-pre-post races, the
+# same mechanism as the v13 bump: every v18-stamped race with
+# a materials entry re-issues exactly once through the full
+# rebuild, which re-derives the marks from the adjusted
+# probabilities. Term weights are unchanged from v18.
+NK_MATERIALS_VERSION = "nk-materials-v19"
 NK_WEIGHTS_LABEL = "integrated-eval-defaults-20261116"
 # All-materials trial terms (v5, see the module docstring):
 # bestTime / headToHead / pedigree / press at trial weights.
