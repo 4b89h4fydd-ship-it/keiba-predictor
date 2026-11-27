@@ -43,6 +43,25 @@ metric out of sample (LogLoss 0.2389 -> 0.2110, top-pick win rate
      ability layer still adds something; the issued vector was
      simply under-anchored after the materials shifts. w = 0.30
      is the conservative middle of the measured band.
+  D (netkeiba forecast lean, override-guard-v3, adopted
+     2026-11-27 night by explicit user instruction "両方やる"
+     after the beat-market search): the C output is geometrically
+     pooled toward the vector implied by netkeiba's published
+     FORECAST win odds (the materials file's per-horse
+     forecastWin — a second market-style opinion, NOT the real
+     market), q ∝ p^(1-w) * f^w with NK_FORECAST_LEAN_WEIGHT
+     w = 0.30. The search (beat-market-search-20261127, 145
+     races, weights read on 2026-11-24..25, tested on
+     2026-11-26..27, reverse direction also checked) found this
+     the strongest incremental signal over the v2 baseline:
+     test log-loss -0.0631, top pick +3.9pt, and the leaned
+     vector beat even the market-only vector on test log-loss
+     (1.6827 vs 1.7133). The signal was already present in the
+     lane as the weak +0.10 odds_forecast materials term; the
+     measured dose is this final-stage lean. Step D fires only
+     when forecast odds cover every runner in the vector
+     (> 1.0 each); otherwise C's output stands. Jumps races
+     never reach the guard, so D is v9b-lane only like A–C.
 
 The market is built from the SAME win odds the v9b blend consumed
 — the publisher's payload odds at compute time — never from final
@@ -76,7 +95,7 @@ from ..safety.probability import distribution, marginals
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 from .shadow_v9 import market_probs, usable_market
 
-GUARD_VERSION = "override-guard-v2"
+GUARD_VERSION = "override-guard-v3"
 
 # Step A threshold (adopted rule, see module docstring): an
 # override of the favourite is replaced by the market vector
@@ -94,17 +113,25 @@ REGRESSION_LAMBDA = 0.50
 # the market with this weight.
 MARKET_LEAN_WEIGHT = 0.30
 
+# Step D netkeiba-forecast lean weight (override-guard-v3, see
+# module docstring): the step-C output is geometrically pooled
+# toward the netkeiba forecast-odds vector with this weight.
+NK_FORECAST_LEAN_WEIGHT = 0.30
+
 
 def _info() -> dict:
     return {"applied": False, "version": GUARD_VERSION,
             "marginThreshold": MARGIN_THRESHOLD,
             "regressionLambda": REGRESSION_LAMBDA,
             "marketLean": MARKET_LEAN_WEIGHT,
+            "nkForecastLean": NK_FORECAST_LEAN_WEIGHT,
+            "nkLeanApplied": False,
             "aFired": False, "modelPick": None, "favourite": None,
             "margin": None}
 
 
-def guard_probabilities(probs: dict, win_odds: dict):
+def guard_probabilities(probs: dict, win_odds: dict,
+                        nk_forecast_odds: Optional[dict] = None):
     """The guard on a plain win-probability vector.
 
     ``probs`` is {horse number: issued win probability} (it need
@@ -163,12 +190,25 @@ def guard_probabilities(probs: dict, win_odds: dict):
         info["reason"] = "degenerate-vector"
         return None, info
     guarded = {n: v / total for n, v in leaned.items()}
+    # Step D (v3): geometric lean toward the netkeiba forecast
+    # vector, only on full forecast-odds coverage of the vector.
+    if nk_forecast_odds and usable_market(nk_forecast_odds,
+                                          numbers):
+        nk_vector = market_probs(nk_forecast_odds, numbers)
+        wd = NK_FORECAST_LEAN_WEIGHT
+        leaned_d = {n: (guarded[n] ** (1.0 - wd))
+                    * (nk_vector[n] ** wd) for n in numbers}
+        total = fsum(leaned_d.values())
+        if total > 0:
+            guarded = {n: v / total for n, v in leaned_d.items()}
+            info["nkLeanApplied"] = True
     info["applied"] = True
     return guarded, info
 
 
 def apply_override_guard(forecast: RaceForecast,
-                         win_odds: Optional[dict] = None):
+                         win_odds: Optional[dict] = None,
+                         nk_forecast_odds: Optional[dict] = None):
     """Apply the override guard to a v9b RaceForecast.
 
     Returns (forecast, info); when the guard cannot fire (status
@@ -193,7 +233,8 @@ def apply_override_guard(forecast: RaceForecast,
     if len(base) < 3:
         info["reason"] = "insufficient-strengths"
         return forecast, info
-    guarded, info = guard_probabilities(base, win_odds or {})
+    guarded, info = guard_probabilities(base, win_odds or {},
+                                        nk_forecast_odds)
     if guarded is None:
         return forecast, info
     pl = marginals(distribution(dict(guarded)))
