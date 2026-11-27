@@ -13,6 +13,17 @@ runner outside the top four — highest top-3 probability among those
 whose win probability is below the race's marked four — falling back
 to the fifth-ranked runner when no such outsider exists.
 
+Debut lane (2026-11-28, user-directed): a first-starters-only
+race has no past-run evidence, so the ability layer scores nobody
+and forecast_race can only answer "insufficient-scored-runners".
+forecast_debut_market below supplies the segment's declared prior
+instead — the market itself, from the win odds observed at publish
+time — so the collected materials (training grades, press marks,
+comments) can be layered onto it by the materials adjustment
+exactly as on the other lanes. The probabilities stay labelled
+"uncalibrated-prior": the market is a prior here, not a fitted
+model, and no ability claim is made for any runner.
+
 Five marks only (2026-11-27, user-directed; supersedes the
 2026-11-21 extended marks 注/穴/伏 at win-probability ranks 6-8).
 The extended marks made the published ticket selection hard to
@@ -169,3 +180,109 @@ def forecast_race(
                 status=a.status,
             ))
     return RaceForecast(race.race_id, beta, PROBABILITY_STATUS, tuple(runners), "ok")
+
+
+# Status of a debut race whose market base is not yet usable: the
+# publish lane defers on it (the same "wait for the input, then
+# publish" pattern as the v8-extras deferral and the blend
+# upgrade), so a debut race is never first-published on a partial
+# market and never falls back to an ability vector that does not
+# exist for the segment.
+DEBUT_MARKET_INCOMPLETE = "debut-market-incomplete"
+# Runner status on the debut lane's base vector: the runner's
+# probability IS the market's, before any materials term moves it.
+DEBUT_RUNNER_STATUS = "market-prior"
+
+
+def forecast_debut_market(
+    race: RaceRecord,
+    win_odds: dict | None,
+    beta: float = DEFAULT_BETA,
+) -> RaceForecast:
+    """Market-base forecast for a debut (first-starters-only) race.
+
+    The base vector is the market-implied win probability of every
+    active runner: inverse win odds, normalised so the overround
+    is distributed proportionally — the same construction
+    shadow_v9.market_probs uses for the v9b blend (kept local:
+    shadow_v9 imports this module). The probabilities are carried
+    as Plackett-Luce strengths (win marginal = strength / total,
+    and the strengths already sum to 1), so the materials
+    adjustment, the marks and the tickets downstream consume
+    exactly the shape they consume on every other lane.
+
+    The base is used only when the market is COMPLETE: every
+    active runner must carry a real win odd (> 1.0) in
+    ``win_odds``. Partial coverage returns a forecast with status
+    DEBUT_MARKET_INCOMPLETE and no probabilities at all — odds are
+    never imputed, and no runner is ever assigned a share of
+    another runner's price. A field of fewer than three active
+    runners is likewise incomplete (no Plackett-Luce vector, no
+    five marks).
+
+    Join keys are the race card's own horse numbers — the runners
+    of the normalised race record itself. The v8 extras are never
+    read here: their debut entries carry no ability evidence for
+    the segment, and their horse-number keys are known to drift
+    from the card in this segment.
+
+    Every active runner keeps ability_score None and the status
+    "market-prior": the lane makes no ability claim, and a runner
+    no materials term covers keeps exactly her market probability
+    (the materials adjustment only shifts runners a term actually
+    covers). Scratched runners carry no probability.
+    """
+    active = race.active_runners
+    numbers = [r.number for r in active]
+    odds = win_odds or {}
+    usable = len(numbers) >= 3 and all(
+        isinstance(odds.get(n), (int, float))
+        and not isinstance(odds.get(n), bool)
+        and odds[n] > 1.0
+        for n in numbers
+    )
+    if not usable:
+        runners = tuple(
+            RunnerForecast(
+                number=r.number,
+                name=r.name.value if r.name.present else None,
+                ability_score=None, strength=None,
+                pace_adjustment=1.0, pace_reasons=(),
+                p_win=None, p_top2=None, p_top3=None, mark="",
+                status=DEBUT_MARKET_INCOMPLETE,
+            )
+            for r in sorted(race.runners, key=lambda r: r.number)
+        )
+        return RaceForecast(race.race_id, beta, PROBABILITY_STATUS,
+                            runners, DEBUT_MARKET_INCOMPLETE)
+    inverse = {n: 1.0 / float(odds[n]) for n in numbers}
+    total = sum(inverse.values())
+    strengths = {n: v / total for n, v in inverse.items()}
+    outcomes = distribution(strengths)
+    probs = marginals(outcomes)
+    ranked = sorted(probs, key=lambda n: (-probs[n][0], -probs[n][2], n))
+    marks = _assign_marks(ranked, probs)
+    active_numbers = set(numbers)
+    runners = []
+    for r in sorted(race.runners, key=lambda r: r.number):
+        name = r.name.value if r.name.present else None
+        if r.number in active_numbers:
+            runners.append(RunnerForecast(
+                number=r.number, name=name, ability_score=None,
+                strength=round(strengths[r.number], 6),
+                pace_adjustment=1.0, pace_reasons=(),
+                p_win=round(probs[r.number][0], 4),
+                p_top2=round(probs[r.number][1], 4),
+                p_top3=round(probs[r.number][2], 4),
+                mark=marks.get(r.number, ""),
+                status=DEBUT_RUNNER_STATUS,
+            ))
+        else:
+            runners.append(RunnerForecast(
+                number=r.number, name=name, ability_score=None,
+                strength=None, pace_adjustment=1.0, pace_reasons=(),
+                p_win=None, p_top2=None, p_top3=None, mark="",
+                status="scratched",
+            ))
+    return RaceForecast(race.race_id, beta, PROBABILITY_STATUS,
+                        tuple(runners), "ok")
