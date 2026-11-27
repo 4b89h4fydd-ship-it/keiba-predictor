@@ -157,6 +157,34 @@ race whose extras never land is not first-published at all; past
 post it is not publishable anyway, and no forecast is ever built
 from results after the fact.
 
+Debut lane (2026-11-28, user instruction: first-starters races
+carry usable material — training grades, press marks, comments —
+so they get a forecast too): a debut race has no past-run
+evidence, the ability layer scores nobody, and the v1 fallback
+can only answer "insufficient-scored-runners", so until now the
+segment never published at all. The debut lane's declared prior
+is the market itself: when the current payload carries a real
+win odd (> 1.0) for every active runner, the race is published
+on the market-implied vector (inverse odds, normalised —
+forecast.forecast_debut_market), the collected materials are
+layered onto it through the same nk-materials adjustment the
+jumps segment receives on its v1 vector, and the publication is
+stamped abilityLane "debut-market" with a debutMarket record of
+what the base stood on. Until the market is complete the race
+DEFERS, exactly like the v8-extras deferral: it is never
+first-published on a partial market, and the probabilities stay
+labelled "uncalibrated-prior" — the market is a prior for this
+segment, not a calibrated model, and no runner carries an
+ability score. The override guard does not apply (it is defined
+on the v9b vector; the debut base already IS the market). A
+frozen debut publication qualifies for the nk-materials upgrade
+on the same rules as jumps (materials collected after first
+publication still reach a pre-post race, exactly-once per
+materials state); the v8 extras are never read for the segment
+— their debut entries carry no ability evidence, and their
+horse-number keys are known to drift from the race card, so
+every join on this lane keys on the card's own numbers.
+
 Supply visibility (2026-11-12): the deferral deadline is also the
 hole the 2026-11-12 incident fell through — the extras export had
 stopped the night before, so at 06:00 every one of the day's 48
@@ -207,7 +235,8 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from rewrite.analysis.forecast import forecast_race  # noqa: E402
+from rewrite.analysis.forecast import (  # noqa: E402
+    forecast_debut_market, forecast_race)
 from rewrite.analysis.lane_config import LANE_BETA, LANE_WEIGHTS  # noqa: E402
 from rewrite.analysis.pace import forecast_pace  # noqa: E402
 from rewrite.analysis.shadow_v8 import WEIGHTS as V8_WEIGHTS  # noqa: E402
@@ -299,6 +328,20 @@ V9B_ABILITY_MODEL_VERSION = "arvexq-v9b-elo-speed2-temp0.6692-blend50"
 V9B_ABILITY_STATUS = "rewrite-ability-elo-speed2-v9b"
 V9B_PROBABILITY_STATUS = "calibrated-market-blend-v9b"
 V9B_ADOPTION_DATE = "2026-11-04"
+
+# Debut lane (2026-11-28, user instruction — see the module
+# docstring): a first-starters-only race stands on the market
+# itself as its declared prior, with the collected materials
+# layered on through the nk-materials adjustment. The lane label
+# is deliberately distinct from "v1-prior": the supply grading
+# counts only "v1-prior" as fallback, and a debut publication is
+# not a degraded flat forecast — it is the segment's own lane,
+# with no ability score for any runner and the probabilities
+# labelled "uncalibrated-prior" (the forecast layer's own
+# PROBABILITY_STATUS, never the v9b calibrated label).
+DEBUT_LANE = "debut-market"
+DEBUT_ABILITY_MODEL_VERSION = "arvexq-debut-market-prior"
+DEBUT_ABILITY_STATUS = "rewrite-ability-market-prior-debut"
 
 # F1 evidence decay, NAR only (2026-11-12, user instruction after
 # the development evaluation on research branch
@@ -1847,7 +1890,13 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
       segment, so jumps races never reach the v9b lane, and
       since 2026-11-21 the lane applies the adjustment to
       their v1 vector instead of leaving their collected
-      materials permanently unread;
+      materials permanently unread — OR, since 2026-11-28, it
+      is a debut race standing on the debut lane (abilityLane
+      debut-market): the adjustment is defined on that lane's
+      market base vector in exactly the same way, and a debut
+      race first published before its materials completed
+      (e.g. the morning newspaper collection) must not be left
+      standing on the bare market either;
     - its lane marker does NOT already carry the CURRENT
       nkMaterials stamp standing on the CURRENT materials: a
       marker stamped at an older version — e.g. a v1
@@ -1872,7 +1921,10 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
       exist); on the jumps path, any single family at the
       same threshold (jump entries carry no speed index at
       all, but their bestTime / press / course-persons
-      coverage is full);
+      coverage is full); on the debut path the same
+      any-family rule (debut entries likewise carry no speed
+      index — no runner has a past run — but their grade /
+      press / comment coverage is the segment's material);
     - the post is still at least NK_MATERIALS_UPGRADE_MIN_LEAD
       away (the guard was removed on the user's instruction,
       like the decay upgrade's: eligibility holds until post).
@@ -1892,7 +1944,9 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
         return None
     lane = marker.get("abilityLane")
     is_jumps = race_family(old) == "jumps"
-    if lane != V9B_LANE and not (is_jumps and lane == "v1-prior"):
+    is_debut = race_family(old) == "debut"
+    if lane != V9B_LANE and not (is_jumps and lane == "v1-prior") \
+            and not (is_debut and lane == DEBUT_LANE):
         return None
     race_id = str(old.get("id") or "")
     if not race_id:
@@ -1905,7 +1959,7 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
             and stamp.get("version") == NK_MATERIALS_VERSION:
         if not _nk_materials_growth(stamp, entry):
             return None
-    elif is_jumps and lane != V9B_LANE:
+    elif (is_jumps or is_debut) and lane != V9B_LANE:
         if max(materials_fingerprint(entry).values()) \
                 < NK_MATERIALS_MIN_SPEED_HORSES:
             return None
@@ -3365,8 +3419,19 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     race = normalize_race(summary, old, source="production-api-readback")
     race_date = str(old.get("date") or race.date or "")
     segment = race.segment.value
+    # The payload's own win odds at compute time, read once here:
+    # the debut lane's base vector is built from them below, and
+    # the v9b blend / override guard further down consume the
+    # same read (never final odds, never imputed).
+    win_odds = {
+        r.number: r.win_odds.value
+        for r in race.runners
+        if r.win_odds.present
+        and isinstance(r.win_odds.value, (int, float))
+    }
     forecast = None
     used_v8 = False
+    used_debut = False
     nar_evidence_decay = False
     v8_fallback_status = None
     # The v8 extras as consumed by the forecast, kept for the
@@ -3426,6 +3491,26 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                               f"not yet available; first publication "
                               f"waits for the extras or the race's "
                               f"post time")
+    if forecast is None and segment == "debut":
+        # Debut lane (2026-11-28 — see the module docstring): no
+        # ability vector exists for the segment (every runner is
+        # a first starter; the v1 fallback below can only answer
+        # "insufficient-scored-runners"), so the race stands on
+        # the market base. Until the payload's win odds cover
+        # every active runner the race DEFERS — the same
+        # wait-for-the-input pattern as the v8-extras deferral
+        # above — instead of first-publishing on a partial
+        # market; a later cycle publishes it once the market is
+        # complete, and the freeze then holds it like any other
+        # publication (roster changes and the nk-materials
+        # upgrade aside).
+        forecast = forecast_debut_market(race, win_odds)
+        if forecast.status != "ok":
+            return None, (f"deferred: debut market not complete "
+                          f"for {race.race_id}; first publication "
+                          f"waits for win odds covering every "
+                          f"active runner")
+        used_debut = True
     if forecast is None:
         forecast = forecast_race(
             race, beta=LANE_BETA,
@@ -3433,12 +3518,6 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     if forecast.status != "ok":
         return None, f"forecast not ok: {forecast.status}"
     pace = forecast_pace(race)
-    win_odds = {
-        r.number: r.win_odds.value
-        for r in race.runners
-        if r.win_odds.present
-        and isinstance(r.win_odds.value, (int, float))
-    }
     # v9b post-processing (adopted 2026-11-03): on the v8 lane the
     # probability vector is calibrated and market-blended with the
     # shadow lane's exact transform before marks, tickets and the
@@ -3475,10 +3554,20 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     # reads strength/p_win off whatever forecast it is given)
     # and its course terms treat the segment as JRA under the
     # separate "jra-jumps" trial marker.
+    #
+    # Debut races (2026-11-28) run the same adjustment on their
+    # market base vector, for the same reason: the segment's
+    # collected materials (training grades, press marks, stable
+    # comments) are the only evidence that can move a debut
+    # runner off her market price. The adapter is handed NO
+    # extras on this lane (extras_by_number is empty for the
+    # segment — the v8 branch above never runs), so every join
+    # keys on the race card's own horse numbers, never on the
+    # extras' keys.
     nk_info: dict = {"applied": False}
     nk_entry = None
     bias_overlay = None
-    if (used_v9b or segment == "jumps") \
+    if (used_v9b or segment == "jumps" or used_debut) \
             and race_date >= NK_MATERIALS_CUTOVER_DATE:
         nk_entry = _load_nk_materials(race_date).get(race.race_id)
         if nk_entry is not None:
@@ -3771,6 +3860,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         unified["abilityModelVersion"] = (
             NAR_DECAY_V8_ABILITY_MODEL_VERSION if nar_evidence_decay
             else V8_ABILITY_MODEL_VERSION)
+    elif used_debut:
+        # Per-race honest labeling: no ability layer ran for this
+        # race — the base vector is the market prior, adjusted by
+        # whatever materials terms landed. Stamped before the
+        # receipt hash so the label is part of the verified
+        # product. The probabilityStatus is deliberately NOT
+        # restamped: it stays the forecast layer's own
+        # "uncalibrated-prior", never the v9b calibrated label.
+        unified["abilityModelVersion"] = DEBUT_ABILITY_MODEL_VERSION
     unified["receiptSha256"] = _canonical_receipt(unified)
 
     win = {r.number: round(r.p_win, 6) for r in forecast.runners}
@@ -3803,6 +3901,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         "stages": {
             "ability": {"status": V9B_ABILITY_STATUS if used_v9b
                         else V8_ABILITY_STATUS if used_v8
+                        else DEBUT_ABILITY_STATUS if used_debut
                         else "rewrite-ability-prior-v1"},
             "pace": {"status": "past-corner-evidence-uncalibrated",
                      "text": built["forecastText"]},
@@ -3904,7 +4003,28 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         "modelVersion": MODEL_VERSION, "publishedAt": captured,
         "receiptSha256": unified["receiptSha256"],
         "abilityLane": V9B_LANE if used_v9b
-        else "v8-elo-speed2" if used_v8 else "v1-prior"}
+        else "v8-elo-speed2" if used_v8
+        else DEBUT_LANE if used_debut else "v1-prior"}
+    if used_debut:
+        # Debut lane record (2026-11-28): what this publication's
+        # base vector stood on — the payload's win odds at compute
+        # time, covering every active runner (the lane publishes
+        # only on a complete market, so the two counts are equal
+        # by construction; both are recorded so a reader never has
+        # to take that on faith). Which materials terms then moved
+        # the vector, and their per-term coverage, are recorded in
+        # the nkMaterials stamp below when the adjustment applied;
+        # a runner no term covered keeps exactly the market
+        # probability this base assigned her, and every runner's
+        # ability score stays null — the record must never read
+        # as if an ability layer ran.
+        meta["rewritePublish"]["debutMarket"] = {
+            "base": "win-odds-market",
+            "activeRunners": len(race.active_runners),
+            "oddsCoveredRunners": sum(
+                1 for r in race.active_runners
+                if r.number in win_odds and win_odds[r.number] > 1.0),
+        }
     if used_v9b:
         meta["rewritePublish"]["temperature"] = V9B_TEMPERATURE
         meta["rewritePublish"]["blendApplied"] = blend_applied
