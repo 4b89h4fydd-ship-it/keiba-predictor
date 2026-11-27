@@ -38,12 +38,12 @@ async function check(browserType,browserName){
   const browser=await browserType.launch({headless:true});
   try{
     const page=await browser.newPage({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-    for(const pagePath of ['', 'keiba']){
+    for(const pagePath of ['']){ // the retired worker's /keiba mount is gone; Pages serves only the subpath root
       const errors=[],morningRequests=[];
       const onError=e=>errors.push(String(e));
       const onRequest=request=>{
         const u=new URL(request.url());
-        if(u.pathname.startsWith('/morning-picks/'))morningRequests.push(Number(u.searchParams.get('t'))||0);
+        if(u.pathname.includes('/morning-picks/'))morningRequests.push(Number(u.searchParams.get('t'))||0);
       };
       page.on('pageerror',onError);page.on('request',onRequest);
       await page.goto(base+'/'+pagePath+'/?pull-smoke='+Date.now(),{waitUntil:'domcontentloaded',timeout:50000});
@@ -58,7 +58,7 @@ async function check(browserType,browserName){
       const priorSequence=Math.max(0,...morningRequests);
       const freshRequest=page.waitForRequest(request=>{
         const u=new URL(request.url());
-        return u.pathname.startsWith('/morning-picks/')&&Number(u.searchParams.get('t'))>priorSequence;
+        return u.pathname.includes('/morning-picks/')&&Number(u.searchParams.get('t'))>priorSequence;
       },{timeout:15000});
       await page.locator('[data-action="reload-all"]').click();
       await freshRequest;
