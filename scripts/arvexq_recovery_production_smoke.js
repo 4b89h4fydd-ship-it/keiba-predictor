@@ -30,20 +30,25 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   // backfilled on demand from the official archive, so the population of
   // odds-carrying races grows between runs: expectations must follow what
   // the source returns NOW, never the archived snapshot's stored state.
-  // Since the 2026-11-23 GitHub-only migration the odds panel merges
-  // two sources, in the app's own order: the static race pack this
-  // origin serves (api-static/race/<id>.json) first — per horse, the
-  // saved detail's winOdds (which the sync lane keeps overlaying with
-  // the latest official odds), overridden by the pack's top-level odds
-  // rows where present, exactly as mergeRaceReflection merges them —
-  // then the same-origin static live-odds feed
-  // (api-static/live-odds/<id>.json) overriding per horse. The
-  // detached relay worker the feed replaced is retired (503 since the
-  // migration), and the D1-backed edge API (kraiz-api /api/race) is
-  // gone. Both payloads carry WIN odds only; no source returns place
-  // odds, so the panel's place column is explicitly '―' unless a
-  // future feed adds placeOddsLow/High (a numeric range is then the
-  // factual display).
+  // Since the 2026-11-23 GitHub-only migration the odds panel has two
+  // published states. On open it shows the static race pack this
+  // origin serves (api-static/race/<id>.json): per horse, the saved
+  // detail's winOdds (which the sync lane keeps overlaying with the
+  // latest official odds), overridden by the pack's top-level odds
+  // rows where present, exactly as mergeRaceReflection merges them.
+  // The same-origin static live-odds feed
+  // (api-static/live-odds/<id>.json) is fetched on open too, but the
+  // pack merge landing afterwards overwrites it; feed values become
+  // the shown state only after an odds refresh (odds-update control
+  // or the auto refresh for today's upcoming races), applied per
+  // horse by mergeOddsPayload. The check verifies the open state
+  // against both published states and the refreshed state against
+  // the feed state. The detached relay worker the feed replaced is
+  // retired (503 since the migration), and the D1-backed edge API
+  // (kraiz-api /api/race) is gone. Both payloads carry WIN odds only;
+  // no source returns place odds, so the panel's place column is
+  // explicitly '―' unless a future feed adds placeOddsLow/High (a
+  // numeric range is then the factual display).
   async function oddsSources(id){
     const out={live:null,detail:null,liveScratched:new Set(),detailScratched:new Set()};
     try{const res=await fetch(base+'/api-static/live-odds/'+encodeURIComponent(id)+'.json',{signal:AbortSignal.timeout(20000)});
@@ -112,19 +117,37 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     // odds the table is replaced by an explicit not-acquired message.
     await page.locator('[data-panel="odds"]').click();
     // Ask the independent sources first and build the per-horse win-odds
-    // expectation from what they return at execution time (live store
-    // overrides detail rows, mirroring the app's merge order). The
-    // archived snapshot is never an expectation source: its stored odds
-    // state predates the on-demand official backfill, and its carried
-    // winOdds are forecast odds, not acquired official odds.
+    // expectations from what they return at execution time. The panel
+    // has two legitimate published states, both verified below:
+    //  - the pack state: detail rows overridden by the pack's top-level
+    //    odds rows. This is what opening a race shows: the app fetches
+    //    the static feed too, but the pack merge that lands afterwards
+    //    overwrites the feed values again (mergeRaceReflection applies
+    //    the pack's odds rows last on load), so feed values do not
+    //    survive the initial load.
+    //  - the feed state: the pack state overridden by the static
+    //    live-odds feed. It becomes the shown state after an explicit
+    //    odds refresh (the odds-update control, or the auto refresh
+    //    for today's upcoming races) via mergeOddsPayload.
+    // Observed 2026-11-27: Nagoya 1R's favourite was 1.8 in the pack
+    // (sync lane, 13:00) and 1.9 in the feed (NAR official, 13:02);
+    // the app deterministically showed the pack value on open.
+    // The archived snapshot is never an expectation source: its stored
+    // odds state predates the on-demand official backfill, and its
+    // carried winOdds are forecast odds, not acquired official odds.
     let sources=await oddsSources(r.id);
-    const buildExpected=()=>{
+    const buildPackExpected=()=>{
       const map=new Map();
       if(sources.detail)for(const [no,v] of sources.detail)map.set(no,v);
+      return map;
+    };
+    const buildFeedExpected=()=>{
+      const map=buildPackExpected();
       if(sources.live)for(const [no,v] of sources.live)map.set(no,v);
       return map;
     };
-    let expected=buildExpected();
+    let expected=buildPackExpected();
+    let feedExpected=buildFeedExpected();
     const sourcesResponded=()=>sources.live!==null||sources.detail!==null;
     // The odds panel re-renders as each independent source lands (detail,
     // live odds, result refresh), and a replacement race object can move
@@ -163,7 +186,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
         // When sources publish win odds, the message generation is not
         // terminal: the live merge is still owed. When no source does,
         // the explicit message is the terminal guarantee.
-        const terminal=s.state==='table'||(s.state==='message'&&expected.size===0);
+        const terminal=s.state==='table'||(s.state==='message'&&(page._arvexqIntentionalApiOutage?expected.size:feedExpected.size)===0);
         if(terminal){
           const ser=JSON.stringify(s);
           if(ser===prev)return s;
@@ -174,9 +197,9 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       return null;
     }
     const fmtOdds=v=>(Math.round(v*10)/10).toFixed(1);
-    function assertOdds(s,id){
+    function assertOdds(s,id,expMap){
       if(s.state==='message'){
-        assert.equal(expected.size,0,'odds missing state must be explicit '+id+' (panel shows not-acquired but sources publish win odds '+JSON.stringify([...expected]) +')');
+        assert.equal(expMap.size,0,'odds missing state must be explicit '+id+' (panel shows not-acquired but sources publish win odds '+JSON.stringify([...expMap]) +')');
         return;
       }
       assert.equal(s.state,'table','odds panel must settle to a table or an explicit missing message '+id+' last='+JSON.stringify(s).slice(0,200));
@@ -185,7 +208,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       for(const row of s.rows){
         const h=byName.get(row.name);
         assert.ok(h,'odds row identity missing '+id+' '+row.name);
-        const no=Number(h.horseNumber),exp=expected.get(no);
+        const no=Number(h.horseNumber),exp=expMap.get(no);
         const scratched=sources.liveScratched.has(no)||sources.detailScratched.has(no);
         if(row.win==='取消'){
           // An explicit factual state; the place cell must then be the
@@ -204,35 +227,71 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       }
     }
     let settled=await waitSettledOdds(45000);
-    let oddsProblem=null;
+    // On open, either published state is legitimate (the auto refresh
+    // may already have applied the feed for today's upcoming races).
+    // A panel showing values that match NEITHER state is the failure
+    // this check exists for: stale cache, cross-race contamination, or
+    // fabricated numbers.
+    const matchEither=(s)=>{
+      try{assertOdds(s,r.id,expected);return 'pack'}catch(e){/* try feed state */}
+      try{assertOdds(s,r.id,feedExpected);return 'feed'}catch(e){/* neither */}
+      return null;
+    };
+    let oddsProblem=null,matched=null;
     if(!settled)oddsProblem='did not settle';
-    else{try{assertOdds(settled,r.id)}catch(e){oddsProblem=e.message}}
+    else{matched=matchEither(settled);if(!matched){try{assertOdds(settled,r.id,expected)}catch(e){oddsProblem=e.message}}}
     if(oddsProblem){
       // Sources may have been backfilled mid-check (the node-side fetch
       // itself can trigger the on-demand official fetch), or the pack
       // itself may have been republished after the page loaded it —
       // result ingest rewrites finished races' packs while these checks
-      // run (observed 2026-11-27: Nagoya 1R's favourite moved 1.8 -> 1.9
-      // between the page's pack fetch and the node-side source fetch,
-      // and the user-visible odds-update control only refreshes the
-      // live feed, so it can never repair a stale pack). Reload the
-      // race page so the panel is rebuilt from the current pack, then
-      // assert against sources re-read after the reload. A
-      // still-broken screen fails here.
+      // run, and the odds-update control only refreshes the live feed,
+      // so it can never repair a stale pack. Reload the race page so
+      // the panel is rebuilt from the current pack, then assert
+      // against sources re-read after the reload. A still-broken
+      // screen fails here.
       console.warn('ODDS_RECOVERY '+r.id+' '+oddsProblem);
       await page.reload({waitUntil:'domcontentloaded',timeout:45000});
       await page.waitForFunction(count=>document.querySelectorAll('.arv-entry-table tbody tr').length===count,roster.horses.length,{timeout:20000});
       await page.locator('[data-panel="odds"]').click();
       sources=await oddsSources(r.id);
-      expected=buildExpected();
+      expected=buildPackExpected();
+      feedExpected=buildFeedExpected();
       settled=await waitSettledOdds(30000);
       assert.ok(settled,'odds panel did not settle after reload '+r.id);
-      assertOdds(settled,r.id);
+      matched=matchEither(settled);
+      if(!matched)assertOdds(settled,r.id,expected);
       console.log('ODDS_RECOVERY_PASS '+r.id);
     }
-    if(expected.size>0)console.log('ODDS_SOURCE_MATCH '+r.id+' horses='+expected.size+' live='+(sources.live?sources.live.size:'n/a')+' detail='+(sources.detail?sources.detail.size:'n/a'));
+    if(matched)console.log('ODDS_SOURCE_MATCH '+r.id+' state='+matched+' horses='+(matched==='feed'?feedExpected.size:expected.size)+' live='+(sources.live?sources.live.size:'n/a')+' detail='+(sources.detail?sources.detail.size:'n/a'));
     else if(sourcesResponded())console.log('ODDS_NOT_YET_PUBLISHED '+r.id);
     else console.log('ODDS_SOURCE_UNAVAILABLE '+r.id);
+    // Refresh phase: the odds-update control applies the static feed
+    // over the pack state. When the feed is reachable from this page
+    // (not in the outage scenario) and publishes odds, the panel must
+    // end in the feed state; in the outage scenario the refresh cannot
+    // land and the panel must stay in the pack state.
+    const feedUsable=!page._arvexqIntentionalApiOutage&&!!(sources.live&&sources.live.size>0);
+    const updateBtn=page.locator('[data-action="odds-update"]');
+    if(await updateBtn.count()){
+      await updateBtn.first().click();
+      let s2=await waitSettledOdds(30000);
+      let refreshProblem=null;
+      if(!s2)refreshProblem='did not settle after odds refresh';
+      else{try{assertOdds(s2,r.id,feedUsable?feedExpected:expected)}catch(e){refreshProblem=e.message}}
+      if(refreshProblem){
+        console.warn('ODDS_REFRESH_RECOVERY '+r.id+' '+refreshProblem);
+        sources=await oddsSources(r.id);
+        expected=buildPackExpected();
+        feedExpected=buildFeedExpected();
+        await updateBtn.first().click();
+        s2=await waitSettledOdds(30000);
+        assert.ok(s2,'odds panel did not settle after refresh retry '+r.id);
+        assertOdds(s2,r.id,(!page._arvexqIntentionalApiOutage&&sources.live&&sources.live.size>0)?feedExpected:expected);
+        console.log('ODDS_REFRESH_RECOVERY_PASS '+r.id);
+      }
+      settled=s2;
+    }
     // The retired racecard rows coloured single-digit odds red via
     // .odd.single; the current odds/entry tables render win odds as
     // plain text with no single-digit class, so that styling check has
