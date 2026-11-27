@@ -1077,10 +1077,40 @@ def _derived_coverage(race_horses: list) -> dict:
 # machine-readable signal instead of an agent reading stdout.
 # ------------------------------------------------------------------
 
+def _pro_index_races(payload) -> dict:
+    """{netkeiba race id: {"maria": {number: value},
+    "baba": {number: value}}} from the forward collection's
+    pro-index file (the pro-forecast opinion pages' Maria
+    index / track-aptitude index, yosoka_id 19 / 20).
+    Accepts the wrapped shape ({"races": {...}}) and the
+    flat shape the collectors save ({race_id: {...}});
+    anything unreadable indexes nothing."""
+    if not isinstance(payload, dict):
+        return {}
+    races = payload.get("races")
+    if not isinstance(races, dict):
+        races = payload
+    out: dict = {}
+    for race_id, entry in races.items():
+        if not isinstance(entry, dict):
+            continue
+        cell: dict = {}
+        for key in ("maria", "baba"):
+            values = entry.get(key)
+            if isinstance(values, dict):
+                cell[key] = {str(n): _num(v)
+                             for n, v in values.items()
+                             if _num(v) is not None}
+        if cell:
+            out[str(race_id)] = cell
+    return out
+
+
 def _classify_zero_coverage(zero_fields, *, jra_present,
                             odds_snapshots, stable_unpublished_only,
                             pace_supplied=True,
-                            geometry_supplied=True):
+                            geometry_supplied=True,
+                            pro_index_supplied=True):
     explained: dict = {}
     unexplained: list = []
     for field in zero_fields:
@@ -1092,6 +1122,15 @@ def _classify_zero_coverage(zero_fields, *, jra_present,
             reason = ("no pace forecast supplied to this build "
                       "(the style / stretch values ride the "
                       "pace-forecast file)")
+        elif field in ("mariaIndex", "babaIndex") \
+                and not pro_index_supplied:
+            # The pro indices ride the forward collection's
+            # pro-index file (the pro-forecast opinion
+            # pages); a build given no such file has no
+            # source for them.
+            reason = ("no pro-index file supplied to this build "
+                      "(the Maria / track-aptitude indices ride "
+                      "the pro-forecast opinion pages)")
         elif field == "firstCorner" and not geometry_supplied:
             # The first-corner distances ride the standing
             # course-geometry records; a build given no
@@ -1168,7 +1207,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
           course_persons: dict | None = None,
           stable_comments: dict | None = None,
           race_entries: dict | None = None,
-          course_geometry: dict | None = None) -> dict:
+          course_geometry: dict | None = None,
+          pro_index: dict | None = None) -> dict:
     speed_races = (speed_index.get("races")
                    if isinstance(speed_index, dict) else None) or {}
     profiles = _profiles_by_name(horse_profiles)
@@ -1179,6 +1219,7 @@ def build(date: str, speed_index: dict, course_analysis: dict,
     judgement_races = (nk_judgements.get("races")
                        if isinstance(nk_judgements, dict)
                        else None) or {}
+    pro_races = _pro_index_races(pro_index)
     stable_races = (stable_comments.get("races")
                     if isinstance(stable_comments, dict)
                     else None) or {}
@@ -1308,6 +1349,21 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                 horse["styleClass"] = cell["styleClass"]
             if "stretch" in cell:
                 horse["stretch"] = cell["stretch"]
+        # --- 2026-11-27 addition: the pro-forecast indices
+        # (Maria index / track-aptitude index) from the
+        # forward collection's pro-index file, carried per
+        # horse as mariaIndex / babaIndex for the adapter's
+        # v18 pro-index terms. A horse the pro pages do not
+        # list simply lacks the fields (uniform nulls
+        # below) — not collected, never estimated.
+        pro_cell = pro_races.get(nk_id) or {}
+        for key, horse in horses.items():
+            maria = (pro_cell.get("maria") or {}).get(key)
+            if maria is not None:
+                horse["mariaIndex"] = maria
+            baba = (pro_cell.get("baba") or {}).get(key)
+            if baba is not None:
+                horse["babaIndex"] = baba
         # --- v6 additions: netkeiba judgements / odds -------
         # Carried verbatim (numbers only) when a collection
         # supplies them; no current collection does, so on
@@ -1488,7 +1544,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                     + ("pace", "horseAnalysis", "coursePersons") \
                     + V6_HORSE_FIELDS \
                     + ("grade", "comment_text", "stableComment",
-                       "pressRating", "styleClass", "stretch"):
+                       "pressRating", "styleClass", "stretch",
+                       "mariaIndex", "babaIndex"):
                 horse.setdefault(field, None)
         if not horses and course is None:
             continue
@@ -1533,6 +1590,13 @@ def build(date: str, speed_index: dict, course_analysis: dict,
                                  if h.get("styleClass") is not None)
     coverage["stretch"] = sum(1 for h in all_horses
                               if h.get("stretch") is not None)
+    # 2026-11-27: the pro-forecast indices, counted like
+    # every other expected field so a missing pro-index
+    # file is an on-the-record zero.
+    coverage["mariaIndex"] = sum(1 for h in all_horses
+                                 if h.get("mariaIndex") is not None)
+    coverage["babaIndex"] = sum(1 for h in all_horses
+                                if h.get("babaIndex") is not None)
     # 2026-11-26 (builder v14): the first-corner distance is
     # a race-level value; the count is the horses of the
     # races that carry one — the horses the adapter's
@@ -1608,7 +1672,8 @@ def build(date: str, speed_index: dict, course_analysis: dict,
             isinstance(e, dict) and e.get("published") is False
             for e in stable_races.values()),
         pace_supplied=bool(pace_races),
-        geometry_supplied=course_geometry is not None)
+        geometry_supplied=course_geometry is not None,
+        pro_index_supplied=bool(pro_races))
     return {
         "version": "nk-materials-v14",
         "date": date,
@@ -1663,6 +1728,7 @@ def main() -> int:
     parser.add_argument("--race-entries")
     parser.add_argument("--stable-comments")
     parser.add_argument("--course-geometry")
+    parser.add_argument("--pro-index")
     parser.add_argument("--out")
     args = parser.parse_args()
 
@@ -1701,6 +1767,8 @@ def main() -> int:
                                      args.stable_comments)
     args.race_entries = _discover("race-entries.json",
                                   args.race_entries)
+    args.pro_index = _discover("pro-index.json",
+                               args.pro_index)
     # Odds snapshots: every odds*.json sibling joins the named
     # ones, each file once, in file-mtime order (collection
     # order) — the two-stage snapshot merge then has its evening
@@ -1756,7 +1824,8 @@ def main() -> int:
                     course_persons=_load(args.course_persons),
                     stable_comments=_load(args.stable_comments),
                     race_entries=_load(args.race_entries),
-                    course_geometry=geometry_payload)
+                    course_geometry=geometry_payload,
+                    pro_index=_load(args.pro_index))
     out = (Path(args.out) if args.out else
            ROOT / "rewrite" / "data" / "nk_materials" / f"{args.date}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
