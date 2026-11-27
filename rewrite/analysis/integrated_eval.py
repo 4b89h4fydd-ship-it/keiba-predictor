@@ -642,24 +642,15 @@ def integrate(horses, weights=None):
 
 # ---------------------------------------------------------------- outputs
 MARKS = ["◎", "○", "▲", "△", "☆"]
-# Extended marks (2026-11-21): win-probability ranks 6-8 at >= 2%
-# additionally receive 注, 穴, 伏 — the production rule in
-# rewrite/analysis/forecast.py (_assign_marks), mirrored here so
-# verification runs grade the same assignment the lane publishes.
-EXTENDED_MARKS = ["注", "穴", "伏"]
-EXTENDED_MARK_MIN_WIN = 0.02
+# Five marks only (2026-11-27): the 2026-11-21 extended marks
+# (注, 穴, 伏 at win-probability ranks 6-8) were removed on the
+# user's instruction — see rewrite/analysis/forecast.py
+# (_assign_marks), mirrored here so verification runs grade the
+# same assignment the lane publishes.
 
 def marks_from_probs(probs):
     order = sorted(probs, key=lambda n: -probs[n])
     marks = [(MARKS[i], n, probs[n]) for i, n in enumerate(order[:5])]
-    extra = iter(EXTENDED_MARKS)
-    for n in order[5:8]:
-        if probs[n] < EXTENDED_MARK_MIN_WIN:
-            continue
-        symbol = next(extra, None)
-        if symbol is None:
-            break
-        marks.append((symbol, n, probs[n]))
     return marks, order
 
 def _harville_pair(p, a, b):
