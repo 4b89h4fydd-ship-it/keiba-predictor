@@ -1109,12 +1109,81 @@ def _deproject_pack_detail(detail: dict) -> dict:
     return detail
 
 
+def _overlay_pack_scratches(merged: dict, prior: dict | None) -> dict:
+    """Carry the prior pack's official scratches into the merged
+    detail (2026-11-27).
+
+    The realtime sync lane learns official withdrawals from the
+    NAR change table within minutes and writes them into the
+    committed pack's horses (scratched / status / withdrawn).
+    protect_detail, however, takes the horses wholesale from the
+    fresh facts detail, and the facts are rebuilt only at the
+    collection lane's fixed slots — so a scratch announced after
+    the last facts build never reached this lane at all: on
+    2026-11-27 Sonoda 8R's scratched runner stood as active in
+    the publisher's view, the roster never changed, and no
+    re-issue could fire. The overlay restores the sync lane's
+    standing rule — an officially withdrawn runner is never
+    revived by a slower source — at the one point where the two
+    lanes' states meet. Only explicit scratch states carry over
+    (scratched true with a scratch status); every other horse
+    field stays exactly as the merge produced it.
+    """
+    if not isinstance(prior, dict) or not isinstance(merged, dict):
+        return merged
+    scratched: dict[int, dict] = {}
+    for horse in prior.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        status = str(horse.get("status") or "")
+        if horse.get("scratched") is not True:
+            continue
+        if status not in SCRATCH_STATUSES and not any(
+                token in status for token in ("取消", "除外", "欠場")):
+            continue
+        try:
+            scratched[int(horse["horseNumber"])] = horse
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not scratched:
+        return merged
+    out = dict(merged)
+    horses = []
+    changed = False
+    for horse in merged.get("horses") or []:
+        if isinstance(horse, dict):
+            try:
+                number = int(horse["horseNumber"])
+            except (KeyError, TypeError, ValueError):
+                number = None
+            source = scratched.get(number) if number is not None else None
+            if source is not None and horse.get("scratched") is not True:
+                horse = dict(horse)
+                horse["status"] = source.get("status") or "出走取消"
+                horse["scratched"] = True
+                horse["withdrawn"] = True
+                horse["winOdds"] = None
+                horse["popularity"] = None
+                horse["oddsForecast"] = False
+                horse["scratchSource"] = (
+                    source.get("scratchSource") or "NAR公式変更情報")
+                changed = True
+        horses.append(horse)
+    if changed:
+        out["horses"] = horses
+    return out
+
+
 def load_local_input_detail(local_input: dict, race_id: str,
                             protect_detail) -> dict:
     """The local-mode equivalent of the stored detail for one
     race: the fresh facts detail merged over the prior pack state
     by protect_detail — the same merge the retired D1 facts sync
-    applied before posting (see the section header above)."""
+    applied before posting (see the section header above). The
+    prior pack's official scratches are then overlaid onto the
+    merged horses (see _overlay_pack_scratches): the sync lane's
+    withdrawals must reach this lane even when the facts predate
+    the announcement."""
     prior = _local_pack_detail(local_input["packs_dir"], race_id)
     facts = local_input["facts_by_id"].get(str(race_id))
     if facts is None:
@@ -1123,9 +1192,10 @@ def load_local_input_detail(local_input: dict, race_id: str,
                 f"local input: neither the day file nor the packs "
                 f"carry a detail for {race_id}")
         return prior
-    return protect_detail(
+    merged = protect_detail(
         _deproject_pack_detail(prior) if isinstance(prior, dict) else None,
         facts)
+    return _overlay_pack_scratches(merged, prior)
 
 
 def _load_protect():
