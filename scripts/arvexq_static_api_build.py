@@ -532,6 +532,73 @@ def carry_over_research_evidence(model: DayModel, out_dir: Path) -> list[str]:
     return healed
 
 
+def carry_over_career_history(model: DayModel, out_dir: Path) -> list[str]:
+    """Restore stored career history that an incoming detail thins.
+
+    A horse's past-run lists (``_PAST_RUN_KEYS``) and its
+    ``_careerHistoryAudit`` are accumulated facts: the full-career
+    collection writes dozens of runs per horse, while a daytime
+    refresh payload may carry only the recent-form view (five runs)
+    for the same horse.  A full build regenerates the packs from the
+    payload alone, so without this guard the first thin payload of
+    the day overwrites the rich history the packs already hold
+    (2026-11-27: a 09:43 JST full build cut 122 horses to exactly
+    five stored runs — one from 65 — and the readiness stamps
+    followed the thinner data down).  The rule mirrors the other
+    carry-overs: history never shrinks.  For each horse and each
+    past-run key the longer list wins, and the audit that observed
+    more runs wins; an incoming value that is already at least as
+    rich is never replaced.  The derived ``careerReadiness`` summary
+    is deliberately left to the next analyze/publish cycle, which
+    recomputes it from the restored histories.  Returns the healed
+    race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, detail in model.details.items():
+        if not isinstance(detail, dict):
+            continue
+        prior = existing.details.get(rid)
+        if not isinstance(prior, dict):
+            continue
+        prior_horses = {_horse_number(h): h for h in (prior.get("horses") or [])
+                        if _horse_number(h) > 0}
+        if not prior_horses:
+            continue
+        grafted = False
+        for horse in detail.get("horses") or []:
+            no = _horse_number(horse)
+            if no <= 0:
+                continue
+            source = prior_horses.get(no)
+            if source is None:
+                continue
+            for key in _PAST_RUN_KEYS:
+                old_runs = source.get(key)
+                new_runs = horse.get(key)
+                if isinstance(old_runs, list) and (
+                        not isinstance(new_runs, list)
+                        or len(old_runs) > len(new_runs)):
+                    horse[key] = copy.deepcopy(old_runs)
+                    grafted = True
+            old_audit = source.get("_careerHistoryAudit")
+            new_audit = horse.get("_careerHistoryAudit")
+            if isinstance(old_audit, dict) and (
+                    not isinstance(new_audit, dict)
+                    or (old_audit.get("observedRuns") or 0)
+                    > (new_audit.get("observedRuns") or 0)):
+                horse["_careerHistoryAudit"] = copy.deepcopy(old_audit)
+                grafted = True
+        if grafted:
+            healed.append(rid)
+    if healed:
+        print("STATIC_API_CAREER_CARRYOVER", model.date,
+              len(healed), sorted(healed))
+    return healed
+
+
 def carry_over_day_statuses(model: DayModel, out_dir: Path) -> list[str]:
     """Preserve a published raceStatus when the incoming summary
     row carries none.
@@ -1044,6 +1111,10 @@ def main() -> int:
         # of the day erases the evidence for every race and the app
         # renders all horses as unevaluated.
         carry_over_research_evidence(model, Path(args.out_dir))
+        # Same rule for career history: a payload whose collection
+        # only refreshed recent form must not shrink the full career
+        # the packs already store for a horse.
+        carry_over_career_history(model, Path(args.out_dir))
         # Same rule for the day rows' raceStatus: a build whose
         # payload summaries predate the races must not blank the
         # status the result lane already published for them.
