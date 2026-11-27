@@ -58,13 +58,15 @@ async function run(browserType,name){
    if(!focus(k))continue;
    assert.ok(output[k]&&brightness(output[k].bg)>490,'Dark background '+name+'/'+k+': '+JSON.stringify(output[k]));
   }
-  // All horse-profile surfaces must match the same paper background, not just
+  // All horse-profile surfaces must match the same home background, not just
   // pass a loose brightness threshold. The regression was a navy OUTER frame.
+  // The home background itself is white since the 2026-11-21 white-base
+  // redesign (the same value the navigation smoke asserts).
   for(const k of ['horseFrame','horseOverall','horseGrade','horseMark','horseReason',
     'horseInfo','horseRecent','horseResearch','horseResearchItem']){
    if(!focus(k))continue;
-   assert.equal(output[k]&&output[k].bg,'rgb(246, 242, 232)',
-    'Horse detail background diverged from home paper '+name+'/'+k+': '+JSON.stringify(output[k]));
+   assert.equal(output[k]&&output[k].bg,'rgb(255, 255, 255)',
+    'Horse detail background diverged from home background '+name+'/'+k+': '+JSON.stringify(output[k]));
   }
   for(const k of ['horseResearchTitle']){
    if(!focus(k))continue;
