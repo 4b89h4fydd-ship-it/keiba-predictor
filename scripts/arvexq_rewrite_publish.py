@@ -1391,6 +1391,28 @@ def _day_race_snapshot(summary: dict, detail_raw: dict) -> dict | None:
     }
 
 
+def _nk_forecast_odds(nk_entry: dict | None) -> dict:
+    """Per-horse netkeiba FORECAST win odds from a materials
+    entry ({horse number: forecastWin}), for the override
+    guard's step D (override-guard-v3). Empty when the entry or
+    its odds blocks are absent; the guard itself decides
+    coverage and skips step D on anything incomplete."""
+    out: dict = {}
+    if not nk_entry:
+        return out
+    for key, horse in (nk_entry.get("horses") or {}).items():
+        if not isinstance(horse, dict):
+            continue
+        fw = (horse.get("odds") or {}).get("forecastWin")
+        if isinstance(fw, (int, float)) and not isinstance(fw, bool) \
+                and fw > 1.0:
+            try:
+                out[int(key)] = float(fw)
+            except (TypeError, ValueError):
+                continue
+    return out
+
+
 def _bias_pace_overlay(summary: dict, old: dict, race_date: str,
                        entry: dict, day_races: list | None,
                        field_size: int):
@@ -3490,7 +3512,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     guard_info: dict = {"applied": False}
     if used_v9b:
         forecast, guard_info = apply_override_guard(
-            forecast, win_odds)
+            forecast, win_odds, _nk_forecast_odds(nk_entry))
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -4064,6 +4086,8 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "marginThreshold": guard_info.get("marginThreshold"),
             "regressionLambda": guard_info.get("regressionLambda"),
             "marketLean": guard_info.get("marketLean"),
+            "nkForecastLean": guard_info.get("nkForecastLean"),
+            "nkLeanApplied": bool(guard_info.get("nkLeanApplied")),
             "aFired": bool(guard_info.get("aFired")),
             "modelPick": guard_info.get("modelPick"),
             "favourite": guard_info.get("favourite"),
