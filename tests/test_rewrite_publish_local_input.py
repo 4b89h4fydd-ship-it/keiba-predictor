@@ -27,9 +27,9 @@ from zoneinfo import ZoneInfo
 
 from rewrite.output.api_shape import MODEL_VERSION
 from scripts.arvexq_rewrite_publish import (
-    _deproject_pack_detail, _freeze_decision, _load_local_day,
-    _load_protect, _local_input_for_date, _local_pack_detail,
-    build_publish_detail, load_local_input_detail)
+    _active_roster, _deproject_pack_detail, _freeze_decision,
+    _load_local_day, _load_protect, _local_input_for_date,
+    _local_pack_detail, build_publish_detail, load_local_input_detail)
 
 JST = ZoneInfo("Asia/Tokyo")
 RECEIPT = "a" * 64
@@ -222,6 +222,51 @@ class LocalInputConstructionTests(TestCase):
     def test_neither_source_fails_closed(self):
         with self.assertRaises(FileNotFoundError):
             load_local_input_detail(self._ctx(None), RID, self.protect)
+
+    def test_pack_scratch_reaches_the_merged_detail(self):
+        # The 2026-11-27 Sonoda 8R shape: the realtime sync lane
+        # has written an official withdrawal into the pack, but
+        # the facts (built at the collection lane's last slot)
+        # still carry the runner as active. The publisher's input
+        # must show the scratch, or the roster never changes and
+        # no re-issue can fire.
+        pack = published_detail(status="unified-reference-ready")
+        pack["horses"][1]["status"] = "出走取消"
+        pack["horses"][1]["scratched"] = True
+        pack["horses"][1]["withdrawn"] = True
+        self._write_pack(pack)
+        facts = facts_detail()
+        facts["horses"][1]["winOdds"] = 5.5
+        built = load_local_input_detail(
+            self._ctx(facts), RID, self.protect)
+        horse = built["horses"][1]
+        self.assertEqual(horse["status"], "出走取消")
+        self.assertIs(horse["scratched"], True)
+        self.assertIsNone(horse["winOdds"])
+        self.assertEqual([n for n, _ in _active_roster(built)], [1, 3])
+        decision = _freeze_decision(built)
+        self.assertEqual(decision[0], "reissue")
+
+    def test_no_scratch_in_pack_leaves_the_merge_frozen(self):
+        self._write_pack(published_detail(
+            status="unified-reference-ready"))
+        built = load_local_input_detail(
+            self._ctx(facts_detail()), RID, self.protect)
+        self.assertEqual([n for n, _ in _active_roster(built)],
+                         [1, 2, 3])
+        self.assertEqual(_freeze_decision(built), ("frozen", RECEIPT))
+
+    def test_unstatused_pack_flag_does_not_carry(self):
+        # A stray scratched flag without an official scratch
+        # status is not an authoritative withdrawal; the overlay
+        # must not invent one.
+        pack = published_detail(status="unified-reference-ready")
+        pack["horses"][1]["scratched"] = True
+        self._write_pack(pack)
+        built = load_local_input_detail(
+            self._ctx(facts_detail()), RID, self.protect)
+        self.assertEqual([n for n, _ in _active_roster(built)],
+                         [1, 2, 3])
 
     def test_build_gate_keeps_the_frozen_forecast(self):
         self._write_pack(published_detail(
