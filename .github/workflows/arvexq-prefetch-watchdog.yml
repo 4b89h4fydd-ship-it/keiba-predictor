@@ -54,6 +54,16 @@ name: ARVEXQ Same-Day Prefetch Watchdog
       - arvexq/databanks/**
       - .github/workflows/arvexq-prefetch.yml
       - .github/workflows/arvexq-prefetch-watchdog.yml
+      # Lane data commits land every few minutes during racing hours
+      # (static pack rebuilds, result ingest, odds overlays). Waking
+      # on them keeps the staleness check alive even when GitHub's
+      # scheduler drops both this watchdog's own slots and the
+      # Realtime Sync completions its workflow_run trigger needs
+      # (2026-11-27: no watchdog run at all between 09:40 and noon
+      # JST while the 11:30 prefetch slot was dropped). The 45-minute
+      # dispatch throttle and the in-flight check below bound how
+      # often this can actually dispatch.
+      - arvexq/ui/static/api-static/**
   workflow_run:
     workflows: ["ARVEXQ Realtime Sync"]
     types: [completed]
@@ -117,8 +127,11 @@ jobs:
             echo "WATCHDOG_WARN today's day pack is missing or empty (fetch=$FETCH); treating it as a possible lane outage, not as a dark day."
           fi
           # Recent prefetch activity: any event counts. If a run is in
-          # flight, or one started within the last 100 minutes, the
-          # normal lanes are alive.
+          # flight, or one started within the last 65 minutes, the
+          # normal lanes are alive. (Was 100 minutes until 2026-11-27:
+          # with hourly scheduled slots, a single dropped slot plus a
+          # 100-minute tolerance left issuance unsupervised for over
+          # two hours.)
           RUNS=$(gh api "repos/$GH_REPO/actions/workflows/arvexq-prefetch.yml/runs?per_page=5" 2>/dev/null || echo "")
           if [ -n "$RUNS" ]; then
             INFLIGHT=$(echo "$RUNS" | jq '[.workflow_runs[] | select(.status != "completed")] | length')
@@ -130,7 +143,7 @@ jobs:
             if [ -n "$LAST" ]; then
               AGE=$(( $(date +%s) - $(date -d "$LAST" +%s) ))
               echo "WATCHDOG_LAST_RUN age_sec=$AGE"
-              if [ "$AGE" -lt 6000 ]; then
+              if [ "$AGE" -lt 3900 ]; then
                 echo "Prefetch ran recently; lanes are alive."
                 exit 0
               fi
