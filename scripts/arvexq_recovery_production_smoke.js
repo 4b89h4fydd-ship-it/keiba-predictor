@@ -6,7 +6,7 @@ const directory='arvexq/ui/static/saved-snapshots';
 const day=process.env.ARVEXQ_AUDIT_DATE||fs.readdirSync(directory).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().at(-1).slice(0,10);
 const manifest=JSON.parse(fs.readFileSync(path.join(directory,day+'.json')));
 const cards=JSON.parse(fs.readFileSync('arvexq/ui/static/racecards/'+day+'.json')).races;
-const base=process.env.ARVEXQ_BASE_URL||'https://kraizweb1.4b89h4fydd.workers.dev';
+const base=process.env.ARVEXQ_BASE_URL||'https://4b89h4fydd-ship-it.github.io/keiba-predictor';
 const type=process.env.ARVEXQ_BROWSER==='webkit'?webkit:chromium;
 // Archives are immutable and may contain retired Banei, but production-app
 // smoke tests must navigate only the explicitly supported racing venues.
@@ -29,29 +29,34 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   // Independent odds reality at execution time. Historical NAR odds are
   // backfilled on demand from the official archive, so the population of
   // odds-carrying races grows between runs: expectations must follow what
-  // the APIs return NOW, never the archived snapshot's stored state.
-  // Two official sources feed the odds panel, in the app's merge order:
-  // the edge detail's odds rows (kraiz-api /api/race) first, then the
-  // live-odds store (this origin's /api/live-odds) overriding per horse.
-  // Both payloads carry WIN odds only; no source returns place odds, so
-  // the panel's place column is explicitly '―' unless a future feed adds
+  // the source returns NOW, never the archived snapshot's stored state.
+  // Since the 2026-11-23 GitHub-only migration the odds panel merges
+  // two sources, in the app's own order: the static race pack this
+  // origin serves (api-static/race/<id>.json — the saved detail, whose
+  // odds rows the sync lane keeps overlaying with the latest official
+  // odds) first, then the detached live-odds relay
+  // (arvexq-live-relay /api/live-odds) overriding per horse. Both
+  // payloads carry WIN odds only; no source returns place odds, so the
+  // panel's place column is explicitly '―' unless a future feed adds
   // placeOddsLow/High (a numeric range is then the factual display).
+  // The retired D1-backed edge API (kraiz-api /api/race) is gone.
+  const RELAY='https://arvexq-live-relay.4b89h4fydd.workers.dev';
   async function oddsSources(id){
     const out={live:null,detail:null,liveScratched:new Set(),detailScratched:new Set()};
-    try{const res=await fetch(base+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
+    try{const res=await fetch(RELAY+'/api/live-odds/'+encodeURIComponent(id),{signal:AbortSignal.timeout(20000)});
       if(res.ok){const body=await res.json();
         if(body&&body.ok===true){out.live=new Map();
           for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
             if(Number.isInteger(no)&&v>0)out.live.set(no,v);
             if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.horse_status||''))))out.liveScratched.add(no);}}}}
-    catch(e){/* source unavailable: expectation falls back to detail */}
-    try{const res=await fetch('https://kraiz-api.4b89h4fydd.workers.dev/api/race/'+encodeURIComponent(id)+'?view=display',{signal:AbortSignal.timeout(20000)});
+    catch(e){/* relay unavailable: expectation falls back to the pack */}
+    try{const res=await fetch(base+'/api-static/race/'+encodeURIComponent(id)+'.json',{signal:AbortSignal.timeout(20000)});
       if(res.ok){const body=await res.json();
         if(body&&body.ok===true){out.detail=new Map();
           for(const o of body.odds||[]){const no=Number(o&&o.horse_no),v=Number(o&&o.win_odds);
             if(Number.isInteger(no)&&v>0)out.detail.set(no,v);
-            if(Number.isInteger(no)&&o&&/取消|除外/.test(String(o.horse_status||'')))out.detailScratched.add(no);}}}}
-    catch(e){/* source unavailable: expectation falls back to live */}
+            if(Number.isInteger(no)&&o&&(o.scratched===true||/取消|除外/.test(String(o.horse_status||''))))out.detailScratched.add(no);}}}}
+    catch(e){/* source unavailable: expectations stay empty */}
     return out;
   }
   async function check(page,r){
@@ -250,7 +255,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     const unexpected=errors.filter(message=>!(
       page._arvexqIntentionalApiOutage &&
       /Fetch API cannot load/.test(message) &&
-      /kraiz-api\.4b89h4fydd\.workers\.dev\s*\/api\//.test(message) &&
+      /\/api-static\//.test(message) &&
       /due to access control checks/.test(message)
     ));
     assert.equal(unexpected.length,0,'runtime errors '+unexpected.join(';'));
@@ -262,7 +267,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
   try{
     const r=chosen.find(r=>r.circuit==='地方')||chosen[0],page=await context.newPage();
     page._arvexqIntentionalApiOutage=true;
-    await page.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
+    await page.route(base+'/api-static/**',route=>route.abort());
     // Consume rejection even if another assertion closes the browser first;
     // a missing actual response is still an explicit failure when awaited.
     const initialResponse=page.waitForResponse(res=>res.url().includes('/api/live-odds/'),{timeout:20000}).catch(()=>null);
@@ -280,7 +285,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
         await page.waitForTimeout(delay);
         recovered=await page.evaluate(async id=>{
           try {
-            const response=await fetch('/api/live-odds/'+encodeURIComponent(id));
+            const response=await fetch('https://arvexq-live-relay.4b89h4fydd.workers.dev/api/live-odds/'+encodeURIComponent(id));
             return response.status;
           } catch (_) { return 0; }
         },r.id);
@@ -295,7 +300,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     const before=await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark')));
     const response=page.waitForResponse(res=>res.url().includes('/api/live-odds/')&&res.url().includes('force=1'),{timeout:20000}).catch(()=>null);
     await page.locator('[data-action="odds-update"]').click();
-    assert.equal((await response)?.status(),200,'manual source update with D1 API aborted');
+    assert.equal((await response)?.status(),200,'manual source update with static pack aborted');
     await page.waitForTimeout(300);
     assert.deepEqual(await page.locator('.arv-entry-table .arv-marks-mark').evaluateAll(xs=>xs.map(x=>x.getAttribute('data-ai-mark'))),before,'odds refresh must not rewrite saved marks');
     await page.close();
@@ -304,7 +309,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
     for(const archived of records.filter(r=>r.preRaceBet).slice(0,2)){
       const ticketPage=await context.newPage();
       ticketPage._arvexqIntentionalApiOutage=true;
-      await ticketPage.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
+      await ticketPage.route(base+'/api-static/**',route=>route.abort());
       await check(ticketPage,archived);
       assert.equal(await ticketPage.locator('.arv-entry-table .arv-marks-mark[data-ai-mark="◎"]').count(),0,'no stored axis becomes live');
       // v349: the forecast (bets) subpage was merged into the entry
@@ -315,7 +320,7 @@ assert.ok(chosen.length>0,'No verified current-day race data available');
       await ticketPage.close();
     }
     const fresh=await browser.newContext({...devices['iPhone 15 Pro'],locale:'ja-JP'});
-    await fresh.route('https://kraiz-api.4b89h4fydd.workers.dev/**',route=>route.abort());
+    await fresh.route(base+'/api-static/**',route=>route.abort());
     const home=await fresh.newPage();
     await home.goto(base+'/?date='+day+'&offline-home='+Date.now(),{waitUntil:'domcontentloaded'});
     // Only demand venues that genuinely have races on this exact audited day.
