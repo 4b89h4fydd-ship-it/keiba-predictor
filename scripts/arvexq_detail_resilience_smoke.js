@@ -32,9 +32,9 @@ const instrumented = source.replace(boot, `
   const requests=[];
   await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
-   if(url.pathname.startsWith('/racecards/')&&extras.card){await extras.card(route);return}
-   if(url.pathname.startsWith('/api/odds/')&&extras.odds){await extras.odds(route);return}
-   if(url.pathname.startsWith('/api-static/race/')){requests.push({url:url.href,at:Date.now()});await response(route,requests.length);return}
+   if(url.pathname.includes('/racecards/')&&extras.card){await extras.card(route);return}
+   if(url.pathname.includes('/api/odds/')&&extras.odds){await extras.odds(route);return}
+   if(url.pathname.includes('/api-static/race/')){requests.push({url:url.href,at:Date.now()});await response(route,requests.length);return}
    await route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="app"></div></body></html>'});
   });
   await page.goto('https://arvexq.test/');
