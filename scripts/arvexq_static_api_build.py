@@ -70,8 +70,13 @@ markings the stored facts recorded wrongly: a horse the official
 result records with a finish position ran, so a ``scratched`` /
 除外 marking on its roster rows is a reading error that a rebuild
 must not resurrect over a hand-cleaned pack (2026-11-28 Tokyo 9R:
-officially 6th in a dead heat, republished as 除外）.  Clean
-details are untouched.
+officially 6th in a dead heat, republished as 除外）.  The same
+pass also imposes the official result's numbering on rosters
+whose numbering itself is a permuted morning reading (no
+duplicates, so nothing to drop): when the roster's name set is
+exactly the result's, every roster block is renumbered by horse
+name and a genuine scratch's lost marking is restored
+(2026-11-28 Kyoto 1R/4R/10R/11R).  Clean details are untouched.
 
 Research evidence carry-over guard: the observed mineta/margin
 evidence (``horses[].researchEvidence``, attached by the prefetch
@@ -852,6 +857,15 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
     verbatim ever since) is cleared by name.  A horse the result
     records without a position — its own scratch accounting —
     keeps its marking.
+
+    The numbering pass runs first, under the same authority: a
+    roster with no duplicate names can still be wholly permuted
+    (a garbled morning reading stored once and rebuilt forever),
+    so when the roster's name set is exactly the resolved result's
+    name set, the result's number/frame for each name is imposed
+    on every roster block — rows keep their own materials, only
+    identity fields move — and a genuine scratch's marking, lost
+    the same way, is restored.
     """
     if not DATE_RE.match(model.date or ""):
         return []
@@ -860,8 +874,9 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
         if str(root) not in sys.path:
             sys.path.insert(0, str(root))
         from arvexq.ingest.entry_reconcile import (
-            finisher_names, reconcile_detail_roster,
-            reconcile_finisher_flags, result_identity_map)
+            finisher_names, reconcile_detail_numbers,
+            reconcile_detail_roster, reconcile_finisher_flags,
+            result_identity_map)
     except Exception:
         return []
     existing = model_from_existing_packs(out_dir, model.date)
@@ -870,13 +885,23 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
         if not isinstance(detail, dict):
             continue
         truth = result_identity_map(detail.get("result"))
+        authority_result = detail.get("result")
         if not truth:
             prior = existing.details.get(rid)
             if isinstance(prior, dict):
                 truth = result_identity_map(prior.get("result"))
+                if truth:
+                    authority_result = prior.get("result")
+        number_entries = reconcile_detail_numbers(
+            detail, authority_result)
+        if number_entries:
+            healed.append(rid)
+            print("STATIC_API_NUMBER_RECONCILE", model.date, rid,
+                  json.dumps(number_entries, ensure_ascii=False))
         entries = reconcile_detail_roster(detail, truth or None)
         if entries:
-            healed.append(rid)
+            if rid not in healed:
+                healed.append(rid)
             print("STATIC_API_ROSTER_RECONCILE", model.date, rid,
                   json.dumps(entries, ensure_ascii=False))
         flag_result = detail.get("result")
