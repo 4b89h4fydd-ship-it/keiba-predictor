@@ -1456,6 +1456,41 @@ def _nk_forecast_odds(nk_entry: dict | None) -> dict:
     return out
 
 
+def _forecast_history(old: dict, race_id: str,
+                      race_date: str) -> dict | None:
+    """Career history for the clean-forecast history leans
+    (clean-forecast-v5): each runner's past runs exactly as
+    the detail itself carries them (allPastRuns first, then
+    recentRaces — the order the measurement's feature build
+    read them), the race date, and the venue the race id
+    names. The foundation filters the runs to dates before
+    the race date itself, so nothing from the day (or
+    later) can leak into a signal. None when the detail
+    carries no runs at all or the date is unknown — the
+    leans then simply do not fire."""
+    parts = (race_id or "").split("-")
+    venue = parts[4] if len(parts) > 4 else ""
+    horses: dict = {}
+    for horse in old.get("horses") or []:
+        if not isinstance(horse, dict):
+            continue
+        number = horse.get("horseNumber")
+        if not isinstance(number, int):
+            continue
+        runs = []
+        for key in ("allPastRuns", "recentRaces"):
+            raw = horse.get(key)
+            if isinstance(raw, list):
+                runs.extend(r for r in raw
+                            if isinstance(r, dict))
+        if runs:
+            horses[str(number)] = runs
+    if not race_date or not horses:
+        return None
+    return {"date": race_date, "venue": venue,
+            "horses": horses}
+
+
 def _bias_pace_overlay(summary: dict, old: dict, race_date: str,
                        entry: dict, day_races: list | None,
                        field_size: int):
@@ -3597,13 +3632,22 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             # neither odds set covers the field (see
             # rewrite/analysis/clean_forecast.py). The race's
             # segment goes along so the foundation can resolve
-            # the circuit: since clean-forecast-v4 the NAR
-            # circuit runs the measured winning configuration
+            # the circuit: since clean-forecast-v4 the two
+            # circuits run different configurations, and
+            # clean-forecast-v5 gives each circuit its own
+            # measured additions on top: the NAR circuit
             # (scenario mixture, temperature 1.25, per-circuit
-            # calibration) while the JRA circuit keeps the v3
-            # configuration byte-identical.
+            # calibration) gains the history leans, which
+            # read the career history the detail itself
+            # carries (see _forecast_history), and the JRA
+            # circuit runs its combo5 configuration (the
+            # press_all aggregate lean, the pace-label
+            # scenario mixture on the entry's paceLabel, the
+            # field-size temperature split).
             forecast, nk_info = apply_nk_foundation(
-                forecast, nk_entry, win_odds, segment=segment)
+                forecast, nk_entry, win_odds, segment=segment,
+                history=_forecast_history(old, race.race_id,
+                                          race_date))
             if nk_info.get("applied"):
                 nk_info["netkeibaRaceId"] = (
                     nk_entry.get("netkeibaRaceId"))
@@ -4108,6 +4152,7 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "leans": nk_info.get("leans"),
             "coverage": nk_info.get("coverage"),
             "scenarioMix": nk_info.get("scenarioMix"),
+            "labelScenarioMix": nk_info.get("labelScenarioMix"),
             "calibration": nk_info.get("calibration"),
             "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
         if nk_entry is not None:
