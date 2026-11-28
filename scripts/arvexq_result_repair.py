@@ -25,6 +25,7 @@ if str(ROOT) not in sys.path:
 
 import app
 from arvexq.ingest.entry_reconcile import (
+    reconcile_detail_numbers,
     reconcile_detail_roster,
     reconcile_finisher_flags,
 )
@@ -601,6 +602,36 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                       json.dumps(entries, ensure_ascii=False))
     # === roster reconciliation (end) ===
 
+    # === numbering reconciliation (begin) ===
+    # The roster pass above only drops duplicate names.  The other
+    # garbled shape has no duplicates at all: the roster's numbering
+    # itself is a permuted morning reading, and every rebuild from
+    # the stored facts re-issues it next to the (independently
+    # refreshed, officially correct) result — Kyoto 1R/4R/10R/11R
+    # on 2026-11-28, where the result accounted for every horse by
+    # name and number while the roster put almost every name under
+    # a different number, and Kyoto 11R's genuine scratch
+    # (ネーロノワール) lost its marking the same way.  When the
+    # roster's name set is exactly the result's, impose the
+    # result's numbering on every roster block, by horse NAME
+    # (arvexq.ingest.entry_reconcile): rows keep their own
+    # materials, only identity fields move, and a genuine scratch's
+    # marking is restored.  Healed races are published so the
+    # renumbering actually lands in the packs.
+    number_reconciled: dict[str, list[dict[str, Any]]] = {}
+    if not light:
+        for rid in started_ids:
+            detail = by_id.get(rid)
+            if not isinstance(detail, dict):
+                continue
+            entries = reconcile_detail_numbers(detail)
+            if entries:
+                number_reconciled[rid] = entries
+                published.add(rid)
+                print("NUMBER_RECONCILED", rid,
+                      json.dumps(entries, ensure_ascii=False))
+    # === numbering reconciliation (end) ===
+
     # === finisher-flag reconciliation (begin) ===
     # The roster pass above only drops phantom duplicate rows; it
     # never looks at a row's scratch marking.  A marking recorded
@@ -742,6 +773,14 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 roster_reconciled.setdefault(rid, []).extend(extra)
                 print("ROSTER_RECONCILED", rid,
                       json.dumps(extra, ensure_ascii=False))
+            # Same for the numbering: the healed entry's roster
+            # predates the numbering pass above, and its
+            # transplanted result is the authority here too.
+            extra_numbers = reconcile_detail_numbers(entry)
+            if extra_numbers:
+                number_reconciled.setdefault(rid, []).extend(extra_numbers)
+                print("NUMBER_RECONCILED", rid,
+                      json.dumps(extra_numbers, ensure_ascii=False))
             # Same for the scratch markings: the healed entry's
             # roster predates the flag pass above, and its
             # transplanted result is the authority here too.
@@ -793,6 +832,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "result_repaired_count": len(repaired),
             "marks_healed_count": len(marks_healed),
             "roster_reconciled_count": len(roster_reconciled),
+            "number_reconciled_count": len(number_reconciled),
             "flag_reconciled_count": len(flag_reconciled),
             "environment_filled_count": len(environment_filled),
             "result_published_count": len(published | repaired),
@@ -818,6 +858,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "repaired": sorted(repaired),
         "marks_healed": sorted(marks_healed),
         "roster_reconciled": roster_reconciled,
+        "number_reconciled": number_reconciled,
         "flag_reconciled": flag_reconciled,
         "environment_filled": sorted(environment_filled),
         "published": sorted(published | repaired),
