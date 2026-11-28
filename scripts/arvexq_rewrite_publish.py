@@ -3595,9 +3595,15 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             # blend. The lane vector survives only in the
             # "preLean" stage record and as the fallback when
             # neither odds set covers the field (see
-            # rewrite/analysis/clean_forecast.py).
+            # rewrite/analysis/clean_forecast.py). The race's
+            # segment goes along so the foundation can resolve
+            # the circuit: since clean-forecast-v4 the NAR
+            # circuit runs the measured winning configuration
+            # (scenario mixture, temperature 1.25, per-circuit
+            # calibration) while the JRA circuit keeps the v3
+            # configuration byte-identical.
             forecast, nk_info = apply_nk_foundation(
-                forecast, nk_entry, win_odds)
+                forecast, nk_entry, win_odds, segment=segment)
             if nk_info.get("applied"):
                 nk_info["netkeibaRaceId"] = (
                     nk_entry.get("netkeibaRaceId"))
@@ -4095,10 +4101,14 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "path": "clean-forecast",
             "applied": True,
             "base": nk_info.get("base"),
+            "circuit": nk_info.get("segment"),
+            "temperature": nk_info.get("temperature"),
             "blendApplied": bool(nk_info.get("blendApplied")),
             "blendWeight": nk_info.get("blendWeight"),
             "leans": nk_info.get("leans"),
             "coverage": nk_info.get("coverage"),
+            "scenarioMix": nk_info.get("scenarioMix"),
+            "calibration": nk_info.get("calibration"),
             "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
         if nk_entry is not None:
             # The content state this publication stands on:
