@@ -82,8 +82,16 @@ if(fs.existsSync(v26File)){
   }catch(e){console.error('MORNING_V26_MARKS_UNREADABLE',String(e&&e.message||e))}
 }
 // Unified predictor in app.js owns all marks and tickets.
+// Retired 2026-11-28: the rich-UI predictor that powered this freeze was
+// removed when the app became the entry-table-only shell, so the boot
+// entry (and predict) no longer exists. Without that engine this script
+// must never fabricate a freeze: it takes the same no-freeze path as an
+// incomplete morning (payload written back unchanged, exit 0), and the
+// static publisher simply records no archive for the day. The
+// archive-restore path above does not depend on the engine and keeps
+// honouring days that were frozen while the engine existed.
 const boot='installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);';
-if(!root.includes(boot))throw Error('morning picker boot entry missing');
+if(!root.includes(boot)){save('ENGINE_UNAVAILABLE_NO_FREEZE');process.exit(0)}
 const source=root.replace(boot,'window.__morningPicks={state,predict,selectedRaceCandidates:computeMorningRaceCandidates,rankSelectedRaceCandidates:computeMorningRankCandidates,specialForecastRaceCandidates:computeMorningSpecialRaceCandidates,add:function(k,v){instantTrackDetails[k]=v;}};');
 const items=new Map(),store={getItem:k=>items.get(k)||null,setItem:(k,v)=>items.set(k,String(v)),removeItem:k=>items.delete(k)};
 const document={getElementById:()=>({innerHTML:''}),addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'hidden'};

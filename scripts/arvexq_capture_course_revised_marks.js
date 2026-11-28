@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 // Exact ARVEXQ browser marks for one licensed, pre-off official condition change.
+// Retired 2026-11-28: the in-app predictor this capture ran was removed
+// with the rich UI (the app is now the entry-table-only shell), so no
+// revised marks can be captured from the terminal any more. The script
+// fails loudly with that reason instead of producing marks; its only
+// caller (user_approved_model_revision.py, itself gated to 2026-10-09)
+// treats a failed capture as "compute-failed" and keeps the original.
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm');
 const root=fs.readFileSync('arvexq/ui/static/app.js','utf8');
 const boot="installNavigation();installEdgeBack();installPullRefresh();installPwaCache();evictRetiredRaceCaches();normalizeInitialAppLaunch();restoreLocation();setTimeout(load,0);";
-if(!root.includes(boot))throw Error('JS boot anchor changed');
+if(!root.includes(boot))throw Error('course mark capture unavailable: in-app predictor retired 2026-11-28 (entry-table-only app)');
 const source=root.replace(boot,'window.__captureMarks={predict,state};');
 const memory=new Map(),store={getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)};
 const document={getElementById:()=>({innerHTML:''}),addEventListener:()=>{},querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'hidden'};

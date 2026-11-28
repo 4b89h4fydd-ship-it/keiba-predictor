@@ -1,68 +1,44 @@
 #!/usr/bin/env node
-// A late odds update, changed AI scores, or result publication must never
-// reshuffle the morning's selected/special race list.
+// Morning selection immutability after the 2026-11-28 app rebuild.
+// The terminal no longer computes or reshuffles morning selections:
+// the rich-UI readers (morningPickOf / selectedRaceCandidates / ...)
+// were removed with the entry-table-only app, and the freeze producer
+// no longer stamps anything without its retired engine. What must
+// stay true:
+//   - the evidence module that verifies frozen ticket receipts still
+//     loads and exposes capture/verify;
+//   - the terminal has no machinery that could recompute, reshuffle
+//     or resurrect a morning selection (no predict, no candidate
+//     builders, no localStorage state), so a late odds update, a
+//     changed AI score or a result publication can never rewrite the
+//     morning's selected/special list;
+//   - the producer keeps its first-write-wins archive contract
+//     (restore, corrupt-archive refusal, honest no-freeze).
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-function take(name){
-  const a=src.lastIndexOf('function '+name+'('),b=src.indexOf('\n}',a);
-  assert(a>=0&&b>a,'missing '+name);
-  return src.slice(a,b+2);
-}
-const code=['legacyMorningPickOf','morningPickOf','morningPickReady','morningPublicStatus','selectedRaceCandidates','specialForecastRaceCandidates']
-  .map(take).join('\n')+'\nreturn {morningPickReady,morningPublicStatus,selectedRaceCandidates,specialForecastRaceCandidates};';
 const win={};
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/ticket_lane_classifier.js','utf8'))(win);
 new Function('window',fs.readFileSync('arvexq/ui/static/morning/frozen_ticket_evidence.js','utf8'))(win);
-const fixedAt='2026-10-10T06:30:00+09:00';
-const receipt={version:win.ARVEXQMorningEvidence.VERSION,raceId:'one',raceDate:'2026-10-10',
- fixedAt,axisStatus:'honmei',axisHorseNumber:1,
- marks:[1,2,3,4,5].map(n=>({horseNumber:n,mark:n===1?'◎':'△'})),
- items:[{level:'本線',kind:'ワイド',combos:[[1,2]],points:1}],
- ticketKinds:['ワイド'],modelVersion:'test-frozen-preoff'};
-const state={races:[
-  {id:'one',date:'2026-10-10',circuit:'中央',track:'東京',raceNumber:1,startTime:'10:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:86,morningSpecial:false,
-     morningSelectionModelVersion:'arvexq-empirical-ticket-hit-v1',
-     morningPrimaryType:'的中重視型',morningSelectedTypes:['的中重視型'],morningSelectionReason:'朝の固定分類',morningTicketKinds:['ワイド']},
-  {id:'old',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:2,startTime:'11:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:true,morningSelectedScore:87,morningSpecial:false},
-  {id:'two',date:'2026-10-10',circuit:'地方',track:'高知',raceNumber:12,startTime:'20:30',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSelectedScore:0,morningSpecial:true},
-  {id:'three',date:'2026-10-10',circuit:'地方',track:'大井',raceNumber:5,startTime:'15:00',morningPickVersion:'v1',morningPickFixedAt:'2026-10-10T06:30:00+09:00',morningSelected:false,morningSpecial:false},
-]};
-state.races[0].morningTicketEvidence=receipt;
-const helper=new Function('state','n','raceChronologicalCompare','window',code);
-const api=helper(state,(v,d=0)=>Number.isFinite(Number(v))?Number(v):d,(a,b)=>a.raceNumber-b.raceNumber,win);
-assert(api.morningPickReady());
-assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
-state.races[0].morningSelectedScore=79;
-assert.equal(api.selectedRaceCandidates().length,1,'ability points do not decide archived hit-qualified selection');
-state.races[0].morningSelectedScore=86;
-assert.equal(api.selectedRaceCandidates()[0].selection.primaryType,'的中重視型');
-assert(!src.includes('function legacyMorningSelectionCandidates('),'old unverified selection panel removed');
-assert.equal(api.morningPublicStatus(state.races[1]),'legacy-unverified');
-assert.equal(api.selectedRaceCandidates('地方').length,0);
-assert.deepEqual(api.selectedRaceCandidates()[0].selection.ticketKinds,['ワイド']);
-assert.deepEqual(api.specialForecastRaceCandidates().map(x=>x.id),['two']);
-state.races[0].winOdds=160;state.races[0].raceStatus='確定';
-state.races[1].title='レース名訂正';state.races[2].volatility={label:'荒'};
-state.races[2].integratedEvaluation={score:99,mark:'◎'};
-assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
-assert.deepEqual(api.specialForecastRaceCandidates().map(x=>x.id),['two']);
-state.races.push({id:'late',circuit:'中央',raceNumber:11,startTime:'15:45'});
-assert.deepEqual(api.selectedRaceCandidates().map(x=>x.race.id),['one']);
-assert.deepEqual(api.specialForecastRaceCandidates().map(x=>x.id),['two']);
-for (const r of state.races) {
-  delete r.morningPickVersion;delete r.morningPickFixedAt;
-}
-assert.equal(api.morningPickReady(),false);
-assert.equal(api.selectedRaceCandidates().length,0);
-assert.equal(api.specialForecastRaceCandidates().length,0);
+assert(win.ARVEXQMorningEvidence,'evidence module must load');
+assert.equal(win.ARVEXQMorningEvidence.VERSION,'arvexq-morning-ticket-evidence-v1');
+assert.equal(typeof win.ARVEXQMorningEvidence.capture,'function');
+assert.equal(typeof win.ARVEXQMorningEvidence.verify,'function');
+// The terminal reads only the static packs.
+assert(src.includes('api-static/day/')&&src.includes('api-static/race/'),
+  'terminal must read the static packs');
+// None of the retired morning machinery may come back.
+for(const gone of ['function predict(','selectedRaceCandidates',
+  'specialForecastRaceCandidates','morningPickOf','legacyMorningPickOf',
+  'localStorage','installNavigation();installEdgeBack();'])
+  assert(!src.includes(gone),'retired morning machinery must stay removed: '+gone);
+// The producer's archive contract stays in force.
+const producer=fs.readFileSync('scripts/arvexq_morning_picks.js','utf8');
+assert(producer.includes('invalid immutable morning archive'),
+  'corrupt archives must stay fatal');
+assert(producer.includes('MORNING_PICKS_REUSED_ALREADY_FIXED'),
+  'first-write-wins restore must stay');
+assert(producer.includes('ENGINE_UNAVAILABLE_NO_FREEZE'),
+  'producer must stay honest about the retired engine');
 console.log('MORNING_PICK_IMMUTABLE_AND_NO_LATE_ADDITION_PASS');
-
-// Purchase decisions must not erase the separate main/graded-race membership.
-state.date='2026-11-11';
-state.races=[{id:'future-special',date:state.date,circuit:'地方',track:'川崎',raceNumber:11,
-  startTime:'20:00',morningPickVersion:'v1',morningPickFixedAt:'2026-11-11T06:30:00+09:00',
-  morningSelected:true,morningSpecial:true,morningSelectionModelVersion:'arvexq-rank-selection-v1'}];
-assert.equal(api.selectedRaceCandidates().length,0,'legacy rank-only archive cannot select future purchases');
-assert.equal(api.specialForecastRaceCandidates().length,1,'special membership survives missing purchase proof');
-console.log('SPECIAL_FORECAST_INDEPENDENT_OF_NEW_PURCHASE_GATE_PASS');
+console.log('MORNING_TERMINAL_CANNOT_RECOMPUTE_PASS');
