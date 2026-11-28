@@ -1,19 +1,17 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
+// 2026-11-28 shell migration (commit 827df37): the entry-table shell has
+// no bet UI and no in-app bet engine filter (currentBetEnginePlan /
+// frozenAiBetForRace were removed with the rich UI), so retired tickets
+// cannot be displayed by the shell at all. That absence is now pinned
+// directly; the isolated bet_view.js renderer contract below is
+// unchanged from the original smoke.
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const start=src.indexOf('function currentBetEnginePlan('),stop=src.indexOf('function frozenAiBetForRace(',start);
-assert(start>=0&&stop>start);
-const filter=new Function(src.slice(start,stop)+'return currentBetEnginePlan')();
-const base={fixedAt:'2026-10-12T21:54:31.159Z',items:[{level:'本線',kind:'馬連',combos:[[8,11],[6,11]]}]};
-assert.ok(filter({...base,engineVersion:'arvexq-old-v345'}));
-assert.ok(filter({...base,engineVersion:'three-way-v346'}));
-assert.ok(filter({...base,engineVersion:undefined}));
-const modernJra={...base,engineVersion:'arvexq-jra-mineta-margin-60-40-v1'};
-const modernNar={...base,engineVersion:'arvexq-nar-mineta-margin-60-40-v1'};
-assert.equal(filter(modernJra),modernJra);
-assert.equal(filter(modernNar),modernNar);
-assert.ok(filter({...base,engineVersion:'arvexq-true-run-pure-sectional-v2'}));
+for(const retired of ['function currentBetEnginePlan(','function frozenAiBetForRace(',
+  'function buildAiBetPlan(','ARVEXQBetView'])
+  assert(!src.includes(retired),'retired bet UI wiring must stay removed: '+retired);
 const code=fs.readFileSync('arvexq/ui/static/betting/bet_view.js','utf8');
 const root={};new Function('window',code)(root);
+const base={fixedAt:'2026-10-12T21:54:31.159Z',items:[{level:'本線',kind:'馬連',combos:[[8,11],[6,11]]}]};
 const deps={buildAiBetPlan:()=>({...base,engineVersion:'arvexq-old-v345'}),
 esc:String,n:Number,isFinal:()=>false,raceMarkClock:()=>({started:false}),
 aiBetExplanationHtml:()=>'',betComboText:()=>''};

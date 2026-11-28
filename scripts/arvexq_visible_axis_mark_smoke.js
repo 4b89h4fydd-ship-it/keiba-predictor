@@ -1,62 +1,26 @@
 'use strict';
-// Regression for screenshot: a live ◎【軸】 candidate must not display "—"
-// in the leftmost racecard mark cell. This is presentation-only; do not
-// rewrite official core marks, locked originals or betting inputs.
+// Visible axis mark integrity under the 2026-11-28 shell migration
+// (commit 827df37, user-confirmed entry-table-only app).
+//
+// The retired shell rendered marks through markRoleLabel /
+// visiblePredictionMark / racecardEntryRow. The regression protected
+// here was: display code must never fabricate, promote or mutate a
+// mark (a live axis candidate must not become a displayed ◎, a retired
+// mark must not be restored, a scratched runner must not gain a mark).
+// The current shell has no mark roles at all: the mark column shows
+// exactly the pack's unifiedForecast.marks value for that horse number
+// (marksByNumber), and nothing in the shell assigns or rewrites a mark.
+// This smoke pins that contract, and re-checks through the production
+// forecast interface that an axis candidate still yields no mark.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const src=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-function span(start,end){
-  const a=src.indexOf('function '+start+'('),b=src.indexOf('function '+end+'(',a+1);
-  assert(a>=0&&b>a,start+' function boundaries');
-  return src.slice(a,b);
-}
-const isScratchHorse=h=>!!(h&&(h.scratched||h.withdrawn||/取消|除外|欠場/.test(h.status||'')));
-const roleFactory=new Function('window','isScratchHorse',
-  span('markRoleLabel','racecardMarkLegend')+
-  'return {markRoleLabel,visiblePredictionMark,honmeiA11yText}');
-const {markRoleLabel,visiblePredictionMark,honmeiA11yText}=roleFactory(require('./test_support/production_ui.cjs').window,isScratchHorse);
-const horse={horseNumber:6,name:'ホウオウバトラー',frameNumber:5,
-  sex:'牡',age:3,jockey:'小笠鈴'};
-const x={horse,predMark:'',preOffAxisCandidate:true,markFrozen:false};
-assert.equal(markRoleLabel(x),'');
-assert.equal(visiblePredictionMark(x),'');
-assert.equal(x.predMark,'','original marks must not be mutated by display');
-assert.equal(visiblePredictionMark({...x,preOffAxisCandidate:false}),'');
-assert.equal(visiblePredictionMark({...x,predMark:'△'}),'',
-  'retired mark cannot be restored');
-assert.equal(visiblePredictionMark({...x,horse:{...horse,scratched:true}}),'',
-  'scratched runners cannot display fabricated marks');
-assert.equal(visiblePredictionMark({...x,markFrozen:true,preOffAxisCandidate:false,
-  podiumAxisEligible:false,honmeiRole:'axis'}),'',
-  'do not fabricate marks from legacy frozen axis metadata');
-// Actually execute the production racecard renderer, including its mark box.
-const render=new Function('isScratchHorse','n','horseDisplayName','clamp',
-  'currentBodyWeight','currentBodyWeightChange','referenceBodyWeight','esc',
-  'markRoleLabel','visiblePredictionMark','honmeiA11yText','racecardMarkDisplay',
-  'racecardOddsHtml','carriedWeightText','v25AddedHtml','v26CellHtml','racecardMarkCellHtml',
-  // racecardEntryRow also renders the sub-line strip; inject its production
-  // helpers (userMarkKey through racecardSublineHtml), not mocks.
-  span('userMarkKey','racecardUserMarkToolsHtml')+
-  span('racecardEntryRow','morningSavedMarkRows')+'return racecardEntryRow')(
-  isScratchHorse,(n,d=0)=>Number(n)||d,(_,h)=>h.name,(v,a,b)=>Math.max(a,Math.min(b,v)),
-  ()=>0,()=>null,()=>0,s=>String(s),markRoleLabel,visiblePredictionMark,honmeiA11yText,
-  m=>String(m||'—'),()=>'<em>odds</em>',()=> '55kg',()=> '',()=>'',x=>String(visiblePredictionMark(x)||'—'));
-const html=render({},horse,x);
-// v348 (user direction 2026-11-17): the racecard row no longer
-// renders an AI mark cell — marks live on the 予想 tab table. The
-// row keeps only the user's own-mark check, and rendering still
-// must not mutate or fabricate the underlying marks.
-assert.doesNotMatch(html,/rc-mark-box/);
-assert.doesNotMatch(html,/data-ai-mark/);
-assert.match(html,/data-user-mark="6"/);
-assert.doesNotMatch(html,/class="rc-honmei-role"/);
-assert.equal(x.predMark,'','HTML rendering cannot rewrite underlying score');
-const off=render({},horse,{...x,preOffAxisCandidate:false});
-assert.doesNotMatch(off,/data-ai-mark/);
-const scratch=render({},{...horse,scratched:true},{...x,horse:{...horse,scratched:true}});
-assert.doesNotMatch(scratch,/data-ai-mark="◎"/);
-for(const target of [
-  "racecardMarkCellHtml(x)",
-  "window.ARVEXQMarkFrame.render(r)",
-  "data-ai-mark=\"'+esc(visiblePredictionMark(x))",
-])assert(src.includes(target),'display authority missing '+target);
+for(const retired of ['function markRoleLabel(','function visiblePredictionMark(',
+  'function racecardEntryRow(','preOffAxisCandidate','honmeiRole','predMark',
+  'data-ai-mark','rc-mark-box','racecardMarkCellHtml(','ARVEXQMarkFrame'])
+  assert(!src.includes(retired),'retired mark display machinery must stay removed: '+retired);
+assert(src.includes('function marksByNumber('),'mark column source is the pack marks map');
+assert(src.includes('uf.marks'),'shell reads unifiedForecast.marks only');
+assert(src.includes("marks[row.number] || ''"),'mark cell renders the pack value verbatim, blank when absent');
+require('./test_support/production_ui.cjs').assertNoForecast({
+  horses:[{horseNumber:6,name:'ホウオウバトラー',frameNumber:5,sex:'牡',age:3,jockey:'小笠鈴'}]});
 console.log('UNIFIED_VISIBLE_HONMEI_OK no_independent_axis_promotion existing_marks_untouched frozen_immutable');

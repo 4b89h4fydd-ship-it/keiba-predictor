@@ -1,65 +1,25 @@
+'use strict';
+// Scratch (取消) integrity under the 2026-11-28 shell migration
+// (commit 827df37, user-confirmed entry-table-only app).
+//
+// The retired shell merged live odds payloads into the displayed race
+// (mergeOddsPayload / mergeHorseReflection / edgeOddsRow). Its contract
+// was: once a horse is officially scratched, a later stale market reply
+// can never re-enable it, its odds stay null, and stale predictions are
+// invalidated. The current shell merges nothing — it renders the static
+// pack exactly as built, and scratch state is fixed server-side when
+// the pack is built (entry reconciliation against the official result).
+// The client-side re-enable vector is therefore gone, and this smoke
+// pins its absence: no odds merge, no scratch reflection, no odds
+// rendering exists in the shell (the entry table shows no odds column
+// at all, per the confirmed app form).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const source = fs.readFileSync('arvexq/ui/static/app.js', 'utf8');
-
-function extract(start, end) {
-  const a = source.indexOf('function ' + start + '(');
-  const b = source.indexOf('\nfunction ' + end + '(', a);
-  assert.ok(a >= 0 && b > a, 'could not isolate ' + start);
-  return source.slice(a, b);
-}
-const n = (v, fallback = 0) => {
-  const x = Number(v);
-  return v == null || !Number.isFinite(x) ? fallback : x;
-};
-const state = {
-  race: {id: 'nar-2026-10-08-園田-05',
-    _prediction: {old: true},
-    horses: [
-      {horseNumber: 4, name: 'ミルトコルサ', winOdds: 5.4, popularity: 3},
-      {horseNumber: 5, name: '稼働馬', winOdds: 3.2, popularity: 2}
-    ]},
-  pred: {stale: true}, analysisSaved: {stale: true}
-};
-const impl = [
-  extract('isScratchHorse', 'analysisRace'),
-  extract('reflectUseful', 'raceDisplayCoreReady'),
-  extract('mergeOddsPayload', 'refreshRaceAfterCollect')
-].join('\n');
-const obj = new Function('state', 'n', impl +
-  '\nreturn {isScratchHorse,edgeOddsRow,mergeHorseReflection,mergeOddsPayload};')(state, n);
-const {isScratchHorse, edgeOddsRow, mergeHorseReflection, mergeOddsPayload} = obj;
-const official = edgeOddsRow({
-  race_id: state.race.id,
-  horse_no: 4, horse_status: '出走取消',
-  win_odds: null, popularity: null
-});
-assert.equal(official.scratched, true);
-assert.equal(official.horseNumber, 4);
-assert.equal(official.status, '出走取消');
-assert.equal(mergeOddsPayload({horses: [official]}), true);
-assert.equal(state.race.horses[0].scratched, true);
-assert.equal(state.race.horses[0].status, '出走取消');
-assert.equal(state.race.horses[0].winOdds, null);
-assert.equal(state.race.horses[1].winOdds, 3.2);
-assert.equal(state.race._prediction, undefined, 'prediction inputs invalidated');
-assert.equal(state.pred, null, 'stale predicted runner must be removed');
-assert.equal(isScratchHorse(state.race.horses[0]), true);
-
-// A later stale market reply cannot re-enable the scratched horse.
-assert.equal(mergeOddsPayload({horses: [
-  {horseNumber: 4, status: '通常', scratched: false, winOdds: 8.4}
-]}), false);
-assert.equal(state.race.horses[0].status, '出走取消');
-assert.equal(state.race.horses[0].winOdds, null);
-const preserved = mergeHorseReflection(
-  state.race.horses[0],
-  {horseNumber: 4, status: '通常', scratched: false},
-  {horseNumber: 4, status: '通常', scratched: false}
-);
-assert.equal(preserved.status, '出走取消');
-assert.equal(preserved.scratched, true);
-assert.match(source, /scratch\?' disabled aria-disabled="true"'/);
-assert.match(source, /scratch\?' scratched'/);
-assert.match(source, /if\(isScratchHorse\(h\)\)return '<span class="odd scratch-odds">取消/);
+for(const retired of ['function isScratchHorse(','function mergeOddsPayload(',
+  'function mergeHorseReflection(','function edgeOddsRow(','function reflectUseful(',
+  'scratch-odds','取消'])
+  assert(!source.includes(retired),'retired live odds/scratch reflection must stay removed: '+retired);
+assert(source.includes('function raceRows('),'race rows come from the pack only');
+assert(source.includes('function staticRaceUrl('),'race display is pack-driven only');
 console.log('ARVEXQ_SCRATCH_LIVE_REFLECTION_OK');
