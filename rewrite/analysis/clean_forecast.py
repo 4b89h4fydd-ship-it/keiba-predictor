@@ -198,6 +198,84 @@ only:
     over the v4 pipeline, shrunk by the same 0.5; the
     JRA circuit keeps the pooled v3 constants above.
 
+V5 changes (2026-11-28, later the same day; the two
+circuit-specific follow-up measurements — beat-market-nar2
+for NAR, beat-market-jra for JRA — each measured on its own
+circuit's saved corpus with the same walk-forward folds as
+everything above). The circuits now differ in construction,
+not only in constants, and each side's additions are the
+parts that measured as earning it on THAT circuit:
+
+  NAR (the v4 winning configuration plus three additions;
+  validation 79 races: LogLoss 1.5395 -> 1.5279, top-pick
+  46.8% -> 48.1%, better in both folds, stable across the
+  neighbouring weights 1.5279..1.5301):
+  * rotation bucket lean (w=0.10, after press_cp): the
+    days since the runner's previous start, bucketed
+    <=14 days -> +1, 15..35 -> 0, >=36 -> -1. The
+    continuous -log(days) form failed on fold 2; only the
+    bucket (short-interval runners lifted) survived. The
+    signal is built from the runner's career history as
+    the detail itself carries it (allPastRuns /
+    recentRaces), runs dated before the race date only;
+  * venue aptitude lean (w=0.10, after the rotation
+    lean): the sign-flipped mean finish position at
+    today's venue (finish / field size, averaged over
+    the runner's past runs at the same track, pre-race
+    runs only). The win-rate and top-3-rate forms of the
+    same idea measured worse; the mean-finish form was
+    the one that held in both folds;
+  * the pace scenario mixture's strength w rises
+    1.5 -> 2.0 (NAR only; alone it costs top-pick rate,
+    with the two leans above it measures best).
+  Caveat recorded by the measurement: the two leans'
+  selection used the validation folds' results, so the
+  -0.012 gain includes selection upside, and on the
+  learning folds the additions score slightly WORSE than
+  the v4 configuration — a provisional gain that forward
+  data must confirm, adopted on the user's instruction
+  to use what the validation numbers support.
+
+  JRA (the v3 skeleton plus the combo5 additions;
+  validation 67 races of the 89-race JRA corpus: LogLoss
+  2.0963 (v3) -> 2.0662, market 2.1162, top-pick 23.9%
+  -> 25.4% = the market's rate; better than both
+  benchmarks combined and in folds A and C, worse in
+  fold B — the day the market itself was strongest and
+  every one of the 39 measured patterns lost to it):
+  * press_all lean (w=0.30, after press_cp): the
+    point-scored sum of ALL newspaper tipsters' marks
+    (◎5 ○4 ▲3 △2 ☆1), not only the CP column. The CP
+    column alone covers 14.6% of JRA runners and never
+    passes the 60% gate there; the aggregate covers
+    92.2% and was the largest single gain measured on
+    the JRA corpus (alone: 2.0851, top-pick 28.4%);
+  * pace-label scenario mixture (after the leans,
+    before the blend): the same three-scenario mixture
+    shape as NAR but the scenario tilt t comes from the
+    race's pace label (paceLabel in the materials
+    entry): H -> +2.6, S -> -2.6, anything else
+    (including no label) -> 0, with w=1.5 on the start
+    percentile. The NAR form (t from the front-runner
+    COUNT) measured as a clear loss on JRA in every
+    refit tried; the label form is a different mechanism
+    and the two must not be conflated. A race whose
+    label is absent still gets the symmetric (t=0)
+    mixture when the start percentiles cover the field
+    — that is the measured construction;
+  * base temperature by field size: <=13 runners ->
+    1.0, >=14 runners -> 1.25 (the same point selected
+    on every fold; the field-size split of the
+    CALIBRATION was also measured and was harmful, so
+    the calibration stays the pooled v3 constants).
+  The class-movement candidate was dropped unmeasured:
+  neither the corpus nor the materials carry a class
+  field. Course-aptitude and shrunk course-persons
+  leans measured at or below v3 after press_all and
+  are not in. An unresolved circuit (segment=None)
+  keeps the v3 configuration exactly, as the
+  conservative default.
+
 Fallbacks (stamped, never silent): when the forecast odds
 do not cover every runner of the vector, the base is the
 real market's Shin-devig vector (base="market") and stages
@@ -214,17 +292,26 @@ randomness, no network.
 
 from __future__ import annotations
 
+from datetime import date as _date
 from math import exp, fsum, sqrt
 
 from ..safety.probability import distribution, marginals
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 
-CLEAN_FORECAST_VERSION = "clean-forecast-v4"
+CLEAN_FORECAST_VERSION = "clean-forecast-v5"
 
 NK_TEMPERATURE = 1.1
 # NAR circuit (v4): the beat-the-market measurement's
 # temperature grid point — see the module docstring.
 NK_TEMPERATURE_NAR = 1.25
+# JRA circuit (v5): the base temperature depends on the
+# field size — the beat-market-jra measurement's fs-tau
+# point, selected identically on every fold (the pooled
+# 1.1 sits between the two and was worse than the split
+# on the learning folds).
+NK_TEMPERATURE_JRA_SMALL_FIELD = 1.0
+NK_TEMPERATURE_JRA_LARGE_FIELD = 1.25
+JRA_FIELD_SIZE_BOUNDARY = 13
 MARKET_BLEND_WEIGHT = 0.45
 LEAN_MIN_COVERAGE = 0.60
 
@@ -264,11 +351,27 @@ POPULARITY_BAND_BIASES_NAR = (0.180, 0.009, -0.165, -0.024)
 LEAN_SPECS = (("pace_arrow", 0.10), ("nk_best", 0.20),
               ("course_jockey", 0.20), ("press_cp", 0.10))
 
-# NAR circuit (v4): the pace-arrow fade is replaced by the
-# pace scenario mixture below, so the NAR lean set is the
-# other three corrections in the same relative order.
+# NAR circuit (v4, v5): the pace-arrow fade is replaced by
+# the pace scenario mixture below, so the NAR lean set is
+# the other three corrections in the same relative order,
+# plus (v5) the two history leans at the end — the
+# rotation bucket and the venue aptitude, in the order
+# the beat-market-nar2 measurement stacked them (both
+# after press_cp, before the scenario mixture).
 LEAN_SPECS_NAR = (("nk_best", 0.20), ("course_jockey", 0.20),
-                  ("press_cp", 0.10))
+                  ("press_cp", 0.10), ("rotation_bucket", 0.10),
+                  ("venue_avgfin", 0.10))
+
+# JRA circuit (v5): the v3 lean set plus the press_all
+# aggregate (the summed newspaper marks) after press_cp —
+# the beat-market-jra measurement's largest single gain.
+# The CP column stays in the set at its v3 weight (the
+# measurement's skeleton kept it; on JRA fields it rarely
+# passes the coverage gate, which the gate decides per
+# race, exactly as measured).
+LEAN_SPECS_JRA = (("pace_arrow", 0.10), ("nk_best", 0.20),
+                  ("course_jockey", 0.20), ("press_cp", 0.10),
+                  ("press_all", 0.30))
 
 # Pace scenario mixture (NAR, v4): scenario probabilities
 # pi = softmax(-t, 0, +t) over (slow, average, high) with
@@ -285,6 +388,22 @@ SCENARIO_W = 1.5
 SCENARIO_T_SCALE = 1.5
 SCENARIO_CENTER_LEADERS = 2.5
 SCENARIO_LEADER_MAX_PCT = 0.25
+
+# NAR circuit (v5): the scenario mixture's strength rises
+# to 2.0 — the beat-market-nar2 measurement's plateau
+# point when combined with the two history leans (alone
+# it cost top-pick rate; combined it measured best).
+SCENARIO_W_NAR = 2.0
+
+# Pace-LABEL scenario mixture (JRA, v5): the same mixture
+# shape, but the tilt t is beta * (+1 for an H label,
+# -1 for S, 0 otherwise) from the race's pace label —
+# a different mechanism from the NAR count-based tilt
+# above (which measured as a clear loss on JRA). The
+# (beta, w) point was selected identically on every fold
+# of the beat-market-jra measurement.
+LABEL_SCENARIO_BETA = 2.6
+LABEL_SCENARIO_W = 1.5
 
 _PRESS_POINTS = {"◎": 5, "○": 4, "▲": 3, "△": 2, "☆": 1}
 
@@ -550,6 +669,30 @@ def pace_start_signal(entry: dict | None) -> dict:
     return out
 
 
+def _scenario_mixture(win_probs: dict, signal: dict,
+                      t: float, w: float):
+    """The shared three-scenario mixture arithmetic: pi =
+    softmax(-t, 0, +t) over (slow, average, high); each
+    runner is multiplied by pi_slow * exp(+w f) + pi_avg
+    + pi_high * exp(-w f), f = 0.5 - start percentile
+    (a runner without the signal takes f = 0), and the
+    vector is renormalised. Returns (vector, pi)."""
+    numbers = sorted(win_probs)
+    e_slow, e_avg, e_high = exp(-t), 1.0, exp(t)
+    pi_total = e_slow + e_avg + e_high
+    pi = (e_slow / pi_total, e_avg / pi_total,
+          e_high / pi_total)
+    covered = {n for n in numbers
+               if _num(signal.get(n)) is not None}
+    out = {}
+    for n in numbers:
+        f = (0.5 - signal[n]) if n in covered else 0.0
+        mix = pi[0] * exp(w * f) + pi[1] + pi[2] * exp(-w * f)
+        out[n] = win_probs[n] * mix
+    total = fsum(out.values())
+    return {n: v / total for n, v in out.items()}, pi
+
+
 def pace_scenario_mix(win_probs: dict, signal: dict,
                       beta: float = SCENARIO_BETA,
                       w: float = SCENARIO_W):
@@ -577,18 +720,43 @@ def pace_scenario_mix(win_probs: dict, signal: dict,
     leaders = sum(1 for n in covered
                   if signal[n] <= SCENARIO_LEADER_MAX_PCT)
     t = beta * (leaders - SCENARIO_CENTER_LEADERS) / SCENARIO_T_SCALE
-    e_slow, e_avg, e_high = exp(-t), 1.0, exp(t)
-    pi_total = e_slow + e_avg + e_high
-    pi = (e_slow / pi_total, e_avg / pi_total, e_high / pi_total)
-    out = {}
-    for n in numbers:
-        f = (0.5 - signal[n]) if n in covered else 0.0
-        mix = pi[0] * exp(w * f) + pi[1] + pi[2] * exp(-w * f)
-        out[n] = win_probs[n] * mix
-    total = fsum(out.values())
+    out, pi = _scenario_mixture(win_probs, signal, t, w)
     info.update({"applied": True, "leaders": leaders,
                  "pi": [round(p, 6) for p in pi]})
-    return {n: v / total for n, v in out.items()}, info
+    return out, info
+
+
+def pace_label_scenario_mix(win_probs: dict, signal: dict,
+                            label,
+                            beta: float = LABEL_SCENARIO_BETA,
+                            w: float = LABEL_SCENARIO_W):
+    """The pace-LABEL scenario mixture (JRA, v5 — the
+    beat-market-jra measurement's combo5 part, verbatim).
+    The same three-scenario mixture as pace_scenario_mix,
+    but the tilt comes from the race's pace label (the
+    materials entry's paceLabel): t = beta * (+1) for an
+    "H" label, beta * (-1) for "S", and 0 for anything
+    else — including a missing label, which therefore
+    still applies the symmetric mixture when the start
+    percentiles cover the field (the measured
+    construction; the label selects the tilt, not whether
+    the stage runs). Returns (vector, info); fires only
+    at >= LEAN_MIN_COVERAGE field coverage of the start
+    percentile, like a lean."""
+    numbers = sorted(win_probs)
+    covered = [n for n in numbers
+               if _num(signal.get(n)) is not None]
+    info = {"applied": False, "beta": beta, "w": w,
+            "label": label if isinstance(label, str) else None,
+            "coverage": len(covered), "pi": None}
+    if not numbers or len(covered) < LEAN_MIN_COVERAGE * len(numbers):
+        return dict(win_probs), info
+    t = beta * (1.0 if label == "H" else
+                -1.0 if label == "S" else 0.0)
+    out, pi = _scenario_mixture(win_probs, signal, t, w)
+    info.update({"applied": True,
+                 "pi": [round(p, 6) for p in pi]})
+    return out, info
 
 
 def nk_best_signal(entry: dict | None) -> dict:
@@ -654,10 +822,162 @@ def press_cp_signal(entry: dict | None) -> dict:
     return out
 
 
+def press_all_signal(entry: dict | None) -> dict:
+    """Point-scored sum of ALL newspaper tipsters' marks
+    per horse (◎5 ○4 ▲3 △2 ☆1, any other mark 0) — the
+    aggregate the beat-market-jra measurement calls
+    press_all, construction verbatim: a horse whose press
+    block is absent is absent from the signal; a horse
+    with a press block but no marks scores 0 (present).
+    The CP column alone (press_cp_signal) covers too few
+    JRA runners to pass the coverage gate; the aggregate
+    is the form that measured."""
+    out = {}
+    for key, horse in _entry_horses(entry).items():
+        if not isinstance(horse, dict):
+            continue
+        try:
+            number = int(key)
+        except (TypeError, ValueError):
+            continue
+        press = horse.get("press")
+        if not isinstance(press, dict):
+            continue
+        marks = press.get("marks")
+        if not isinstance(marks, dict):
+            marks = {}
+        out[number] = sum(_PRESS_POINTS.get(mark, 0)
+                          for mark in marks.values())
+    return out
+
+
+def _history_horses(history: dict | None) -> dict:
+    if not isinstance(history, dict):
+        return {}
+    horses = history.get("horses")
+    return horses if isinstance(horses, dict) else {}
+
+
+def _parse_day(value):
+    if not isinstance(value, str):
+        return None
+    try:
+        return _date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _past_runs(runs, race_day: _date) -> list:
+    """One runner's past runs as the measurement built
+    them (beat-market-nar2 prep, verbatim): the runs the
+    detail carries (allPastRuns then recentRaces, in the
+    caller's order), keeping runs with a date and a
+    finish, de-duplicated on (date, track, raceNumber,
+    distance) with the first occurrence winning, filtered
+    to dates strictly before the race date, sorted by
+    date. Runs from the race day itself or later can
+    never enter a signal — no leakage by construction."""
+    seen = set()
+    past = []
+    for run in runs or []:
+        if not isinstance(run, dict):
+            continue
+        if not run.get("date") or not run.get("finish"):
+            continue
+        key = (run["date"], run.get("track"),
+               run.get("raceNumber"), run.get("distance"))
+        if key in seen:
+            continue
+        seen.add(key)
+        day = _parse_day(run["date"])
+        if day is not None and day < race_day:
+            past.append((day, run))
+    past.sort(key=lambda item: item[0])
+    return [run for _, run in past]
+
+
+def rotation_bucket_signal(history: dict | None) -> dict:
+    """Days since the runner's previous start, bucketed
+    (the beat-market-nar2 measurement's surviving form):
+    <=14 days -> +1.0, 15..35 days -> 0.0, >=36 days ->
+    -1.0. A runner with no pre-race past run is absent
+    (the lean's z=0), never an estimate. The history
+    argument is {"date": race date, "venue": track name,
+    "horses": {str(number): [run, ...]}} as the publisher
+    assembles it from the detail."""
+    out = {}
+    race_day = _parse_day(
+        history.get("date") if isinstance(history, dict)
+        else None)
+    if race_day is None:
+        return out
+    for key, runs in _history_horses(history).items():
+        try:
+            number = int(key)
+        except (TypeError, ValueError):
+            continue
+        past = _past_runs(runs, race_day)
+        if not past:
+            continue
+        last_day = _parse_day(past[-1]["date"])
+        if last_day is None:
+            continue
+        days = (race_day - last_day).days
+        out[number] = 1.0 if days <= 14 else \
+            0.0 if days <= 35 else -1.0
+    return out
+
+
+def venue_avgfin_signal(history: dict | None) -> dict:
+    """Venue aptitude (the beat-market-nar2 measurement's
+    surviving form): the sign-flipped mean finish
+    position at today's venue — finish / field size (a
+    missing field size counts as 12, as measured),
+    averaged over the runner's pre-race runs at the same
+    track (the track name the race id carries). A runner
+    with no pre-race run at the venue is absent."""
+    out = {}
+    if not isinstance(history, dict):
+        return out
+    race_day = _parse_day(history.get("date"))
+    venue = history.get("venue")
+    if race_day is None or not isinstance(venue, str) \
+            or not venue:
+        return out
+    for key, runs in _history_horses(history).items():
+        try:
+            number = int(key)
+        except (TypeError, ValueError):
+            continue
+        past = _past_runs(runs, race_day)
+        local = [run for run in past
+                 if run.get("track") == venue]
+        if not local:
+            continue
+        values = []
+        for run in local:
+            finish = _num(run.get("finish"))
+            if finish is None:
+                continue
+            values.append(finish / (run.get("fieldSize")
+                                    or 12))
+        if values:
+            out[number] = -fsum(values) / len(values)
+    return out
+
+
 _SIGNAL_EXTRACTORS = {"pace_arrow": pace_arrow_signal,
                       "nk_best": nk_best_signal,
                       "course_jockey": course_jockey_signal,
-                      "press_cp": press_cp_signal}
+                      "press_cp": press_cp_signal,
+                      "press_all": press_all_signal}
+
+# The leans whose signal is built from the runner's
+# career history (the publisher's history argument)
+# rather than from the materials entry.
+_HISTORY_SIGNAL_EXTRACTORS = {
+    "rotation_bucket": rotation_bucket_signal,
+    "venue_avgfin": venue_avgfin_signal}
 
 
 _CIRCUIT_BY_SEGMENT = {"nar": "nar", "jra": "jra",
@@ -699,7 +1019,8 @@ def _resolved_biases(circuit, band_biases):
 def nk_foundation_vector(numbers, entry: dict | None,
                          win_odds: dict,
                          band_biases=None,
-                         segment: str | None = None):
+                         segment: str | None = None,
+                         history: dict | None = None):
     """The foundation's stages 1-4 on a plain win vector.
     Returns (vector, info); vector is None when neither the
     forecast odds nor the market covers the field (the
@@ -707,18 +1028,38 @@ def nk_foundation_vector(numbers, entry: dict | None,
     stage vectors and the per-stage facts for the stamp.
 
     segment is the resolved circuit ("jra" / "nar" /
-    None): "nar" runs the v4 winning configuration
-    (temperature 1.25, the pace scenario mixture instead
-    of the arrow fade, per-circuit calibration biases);
-    every other value runs the v3 configuration exactly.
+    None): "nar" runs the v5 NAR configuration (v4's
+    winner — temperature 1.25, the count-based pace
+    scenario mixture, per-circuit calibration biases —
+    plus the rotation-bucket and venue-aptitude history
+    leans and the mixture strength 2.0); "jra" runs the
+    v5 JRA configuration (combo5: the v3 skeleton plus
+    the press_all aggregate lean, the pace-LABEL scenario
+    mixture, and the base temperature split by field
+    size, with the pooled calibration biases); every
+    other value runs the v3 configuration exactly.
     band_biases overrides the stage-4 calibration biases
-    (the walk-forward measurement passes its fold-fitted
+    (the walk-forward measurements pass their fold-fitted
     values; production callers take the module constants
-    for the circuit)."""
+    for the circuit). history is the publisher's career-
+    history argument ({"date", "venue", "horses"}) the
+    NAR history leans read; without it those leans simply
+    do not fire."""
     circuit = segment if segment in ("jra", "nar") else None
     nar = circuit == "nar"
-    tau = NK_TEMPERATURE_NAR if nar else NK_TEMPERATURE
-    lean_specs = LEAN_SPECS_NAR if nar else LEAN_SPECS
+    jra = circuit == "jra"
+    numbers = sorted(numbers)
+    if nar:
+        tau = NK_TEMPERATURE_NAR
+        lean_specs = LEAN_SPECS_NAR
+    elif jra:
+        tau = NK_TEMPERATURE_JRA_SMALL_FIELD \
+            if len(numbers) <= JRA_FIELD_SIZE_BOUNDARY \
+            else NK_TEMPERATURE_JRA_LARGE_FIELD
+        lean_specs = LEAN_SPECS_JRA
+    else:
+        tau = NK_TEMPERATURE
+        lean_specs = LEAN_SPECS
     band_biases, bias_fit = _resolved_biases(circuit,
                                              band_biases)
     info = {"base": None, "segment": circuit,
@@ -727,9 +1068,15 @@ def nk_foundation_vector(numbers, entry: dict | None,
             "leans": {}, "coverage": {},
             "scenarioMix": {"applied": False,
                             "beta": SCENARIO_BETA,
-                            "w": SCENARIO_W,
+                            "w": SCENARIO_W_NAR if nar
+                            else SCENARIO_W,
                             "leaders": None, "coverage": 0,
                             "pi": None},
+            "labelScenarioMix": {"applied": False,
+                                 "beta": LABEL_SCENARIO_BETA,
+                                 "w": LABEL_SCENARIO_W,
+                                 "label": None, "coverage": 0,
+                                 "pi": None},
             "blendApplied": False,
             "blendWeight": MARKET_BLEND_WEIGHT,
             "calibration": {"applied": False,
@@ -740,7 +1087,6 @@ def nk_foundation_vector(numbers, entry: dict | None,
                             "segment": circuit,
                             "fit": bias_fit},
             "stages": {}}
-    numbers = sorted(numbers)
     if not numbers:
         info["base"] = "lane"
         return None, info
@@ -761,7 +1107,10 @@ def nk_foundation_vector(numbers, entry: dict | None,
     current = _temperature(base, tau)
     info["stages"]["nkBase"] = dict(current)
     for name, weight in lean_specs:
-        signal = _SIGNAL_EXTRACTORS[name](entry)
+        if name in _HISTORY_SIGNAL_EXTRACTORS:
+            signal = _HISTORY_SIGNAL_EXTRACTORS[name](history)
+        else:
+            signal = _SIGNAL_EXTRACTORS[name](entry)
         covered = sum(1 for n in numbers if n in signal)
         info["coverage"][name] = covered
         current, fired = z_lean(current, signal, weight)
@@ -771,9 +1120,19 @@ def nk_foundation_vector(numbers, entry: dict | None,
         start_signal = pace_start_signal(entry)
         info["coverage"]["pace_start"] = sum(
             1 for n in numbers if n in start_signal)
-        current, mix_info = pace_scenario_mix(current,
-                                              start_signal)
+        current, mix_info = pace_scenario_mix(
+            current, start_signal, w=SCENARIO_W_NAR)
         info["scenarioMix"] = mix_info
+        info["stages"]["scenario"] = dict(current)
+    elif jra:
+        start_signal = pace_start_signal(entry)
+        info["coverage"]["pace_start"] = sum(
+            1 for n in numbers if n in start_signal)
+        label = entry.get("paceLabel") \
+            if isinstance(entry, dict) else None
+        current, lab_info = pace_label_scenario_mix(
+            current, start_signal, label)
+        info["labelScenarioMix"] = lab_info
         info["stages"]["scenario"] = dict(current)
     if win_odds and all(_num(win_odds.get(n)) is not None
                          and _num(win_odds.get(n)) > 1.0
@@ -801,7 +1160,8 @@ def apply_nk_foundation(forecast: RaceForecast,
                         entry: dict | None,
                         win_odds: dict | None,
                         band_biases=None,
-                        segment: str | None = None):
+                        segment: str | None = None,
+                        history: dict | None = None):
     """The whole netkeiba-foundation path for one race, over
     the caller's lane forecast (whose runners, names and
     statuses the rebuilt forecast keeps; its probabilities
@@ -812,11 +1172,19 @@ def apply_nk_foundation(forecast: RaceForecast,
     carries every stage's win vector for the stamp,
     info['segment'] records the resolved circuit ("jra" /
     "nar" / None — from the segment argument when given,
-    else the race id prefix), info['scenarioMix'] the pace
-    scenario mixture's facts (NAR only) and
-    info['calibration'] the stage-4 popularity-band
-    calibration (bands, the biases used, the shrink, and
-    the biases' provenance in 'fit')."""
+    else the race id prefix), info['scenarioMix'] the NAR
+    count-based pace scenario mixture's facts,
+    info['labelScenarioMix'] the JRA pace-label scenario
+    mixture's facts (the label included), info['leans'] /
+    info['coverage'] every correction's weight, firing and
+    coverage — the NAR history leans (rotation_bucket /
+    venue_avgfin) included, so the stamp shows whether
+    they spoke — and info['calibration'] the stage-4
+    popularity-band calibration (bands, the biases used,
+    the shrink, and the biases' provenance in 'fit').
+    history is the publisher's career-history argument
+    ({"date", "venue", "horses"}) for the NAR history
+    leans; it is ignored on the other circuits."""
     circuit = _circuit_of(segment, forecast.race_id)
     resolved_biases, bias_fit = _resolved_biases(circuit,
                                                  band_biases)
@@ -827,9 +1195,16 @@ def apply_nk_foundation(forecast: RaceForecast,
             "leans": {}, "coverage": {},
             "scenarioMix": {"applied": False,
                             "beta": SCENARIO_BETA,
-                            "w": SCENARIO_W,
+                            "w": SCENARIO_W_NAR
+                            if circuit == "nar"
+                            else SCENARIO_W,
                             "leaders": None, "coverage": 0,
                             "pi": None},
+            "labelScenarioMix": {"applied": False,
+                                 "beta": LABEL_SCENARIO_BETA,
+                                 "w": LABEL_SCENARIO_W,
+                                 "label": None, "coverage": 0,
+                                 "pi": None},
             "calibration": {"applied": False,
                             "bands": list(POPULARITY_BANDS),
                             "biases": [float(b) for b in
@@ -844,10 +1219,11 @@ def apply_nk_foundation(forecast: RaceForecast,
         return forecast, info
     vector, finfo = nk_foundation_vector(
         sorted(win), entry, win_odds or {}, band_biases,
-        segment=circuit)
+        segment=circuit, history=history)
     info.update({k: finfo[k] for k in
                  ("base", "segment", "temperature", "devig",
                   "leans", "coverage", "scenarioMix",
+                  "labelScenarioMix",
                   "blendApplied", "blendWeight",
                   "calibration", "stages")})
     if vector is None:
