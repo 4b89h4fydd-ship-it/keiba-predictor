@@ -719,3 +719,295 @@ def reconcile_finisher_flags(detail: Any,
                     "cleared": cleared,
                 })
     return entries
+
+
+# ---------------------------------------------------------------------
+# Numbering reconciliation against an official result.
+#
+# The dedupe pass above only fires when a name appears TWICE.  The
+# 2026-11-28 Kyoto 1R/4R/10R/11R failure was the other shape: no
+# duplicates at all, but the roster's numbering itself was a permuted
+# morning reading (e.g. Kyoto 1R's horses carried numbers
+# 1,2,3,4,5,6,7,8,9,10,11,14,15,16,17,18 for a 16-horse field), and
+# every rebuild from the stored facts re-issued that permutation next
+# to the hand-cleaned, officially-correct result block — the result
+# said one horse won under number 15 while the roster put that name
+# under number 11.  Kyoto 11R additionally lost a genuine scratch's
+# marking (ネーロノワール, officially scratched) the same way.
+#
+# The official result is the authority on which horse ran under
+# which number: its finisher / non-finisher rows account for every
+# horse by name AND number.  When a detail's roster name set is
+# EXACTLY the result's name set (a bijection — no duplicates, no
+# missing, no extras), the result's numbering is imposed on every
+# roster-shaped block, keyed by horse NAME:
+#
+#   * each row keeps its own materials (probabilities, marks,
+#     features all travel with the row, i.e. with the NAME) — only
+#     the identity fields (number / frame) are rewritten, so a mark
+#     can never migrate to a different horse;
+#   * frames come from the result rows themselves, falling back to
+#     the standard frame map;
+#   * number-only blocks (horseFeatures) are remapped through the
+#     permutation the roster itself proved (old number -> the
+#     official number of the horse the roster had under the old
+#     number), so they stay attached to the same horse;
+#   * a horse the result records WITHOUT a finish position under a
+#     scratch label (its own scratch accounting) has its scratch
+#     marking restored if the stored roster lost it — the mirror
+#     image of reconcile_finisher_flags.
+#
+# The bijection gate is the safety: a race with no result, a partial
+# (flash) result, a roster with duplicates (the dedupe pass's job),
+# or a roster whose names do not exactly match the result's is left
+# completely untouched.
+# ---------------------------------------------------------------------
+
+_RESULT_ROW_KEYS = ("finishers", "nonFinishers", "non_finishers",
+                    "didNotFinish")
+
+# A result row's own scratch label -> the roster's status spelling
+# for that scratch (the published packs spell a JRA scratch
+# 出走取消 even though the result's finishLabel says 取消）.
+_SCRATCH_LABEL_STATUS = {
+    "取消": "出走取消",
+    "取消し": "出走取消",
+    "出走取消": "出走取消",
+    "除外": "除外",
+    "競走除外": "競走除外",
+}
+
+
+def _result_rows_by_name(result: Any) -> dict[str, dict[str, Any]]:
+    """name-key -> the official result row for that horse (finishers
+    and non-finisher accounting; the first row per name wins)."""
+    out: dict[str, dict[str, Any]] = {}
+    if not isinstance(result, dict):
+        return out
+    rows: list[Any] = []
+    for key in _RESULT_ROW_KEYS:
+        value = result.get(key)
+        if isinstance(value, list):
+            rows.extend(value)
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = horse_name_key(row)
+        no = _any_no(row)
+        if name and no > 0 and name not in out:
+            out[name] = row
+    return out
+
+
+def _identity_snapshot(row: dict[str, Any]) -> dict[str, Any]:
+    return {k: row.get(k) for k in _IDENTITY_KEYS if k in row}
+
+
+def _renumber_row(row: dict[str, Any], new_no: int,
+                  new_frame: int) -> bool:
+    """Rewrite the identity keys a row actually carries (a number
+    under "horseNumber" and/or "number"; a frame under "frameNumber"
+    and/or "frame", where a None frame means the view does not carry
+    frames and is left alone).  Returns True when anything changed."""
+    before = _identity_snapshot(row)
+    for key in _NUMBER_KEYS:
+        if key in row:
+            row[key] = new_no
+    if new_frame > 0:
+        for key in _FRAME_KEYS:
+            if key in row and row.get(key) is not None:
+                row[key] = new_frame
+    return _identity_snapshot(row) != before
+
+
+def reconcile_detail_numbers(detail: Any,
+                             result: Any = None,
+                             ) -> list[dict[str, Any]]:
+    """Impose the official result's numbering on a race detail's
+    roster blocks, keyed by horse NAME, in place.
+
+    ``result`` defaults to the detail's own result block; a caller
+    holding the authoritative result for the same race (e.g. the
+    published pack's, when the incoming detail carries none) may
+    pass it — it is only read, never written into the detail.
+
+    Fires only when the detail's horses block and the result
+    account for exactly the same set of horse names, each exactly
+    once, and the result's numbers are unique.  Anything else — no
+    result, a partial result, duplicate names, a name the result
+    does not know — leaves the detail completely untouched.
+
+    Only identity fields change: every row keeps its own materials,
+    so probabilities and marks stay attached to the horse (the
+    NAME) they were computed for.  Returns one report entry per
+    changed row: {block, name, fromNumber, toNumber, fromFrame,
+    toFrame} for renumbering, {block, name, number, restored} for
+    a restored scratch marking."""
+    if not isinstance(detail, dict):
+        return []
+    if result is None:
+        result = detail.get("result")
+    truth_rows = _result_rows_by_name(result)
+    if not truth_rows:
+        return []
+    truth_no = {name: _any_no(r) for name, r in truth_rows.items()}
+    if len(set(truth_no.values())) != len(truth_no):
+        return []
+    horses = detail.get("horses")
+    if not isinstance(horses, list) or not horses:
+        return []
+    names: list[str] = []
+    for row in horses:
+        if not isinstance(row, dict):
+            return []
+        name = horse_name_key(row)
+        if not name or _any_no(row) <= 0:
+            return []
+        names.append(name)
+    if len(set(names)) != len(names):
+        return []  # duplicates: the dedupe pass's job, not this one
+    if set(names) != set(truth_no):
+        return []  # the result does not account for exactly this roster
+
+    field_size = max(len(truth_no), max(truth_no.values()))
+
+    def frame_of(name: str) -> int:
+        frame = _any_frame(truth_rows[name])
+        if frame > 0:
+            return frame
+        return frame_for_number(truth_no[name], field_size)
+
+    # The permutation the roster itself proves: the horse the stored
+    # roster had under old number N is the name on that row, and its
+    # official number is truth_no[name].
+    perm = {_any_no(r): truth_no[horse_name_key(r)] for r in horses}
+
+    entries: list[dict[str, Any]] = []
+    for path in _ROSTER_BLOCK_PATHS:
+        rows = _block_at(detail, path)
+        if not isinstance(rows, list) or not rows:
+            continue
+        if any(not isinstance(r, dict) or not horse_name_key(r)
+               or _any_no(r) <= 0 for r in rows):
+            continue
+        block_names = [horse_name_key(r) for r in rows]
+        if len(set(block_names)) != len(block_names):
+            continue
+        if any(name not in truth_no for name in block_names):
+            continue
+        changed = False
+        for row in rows:
+            name = horse_name_key(row)
+            new_no, new_frame = truth_no[name], frame_of(name)
+            old_no, old_frame = _any_no(row), _any_frame(row)
+            if _renumber_row(row, new_no, new_frame):
+                entries.append({
+                    "block": ".".join(path),
+                    "name": name,
+                    "fromNumber": old_no, "toNumber": new_no,
+                    "fromFrame": old_frame, "toFrame": new_frame,
+                })
+                changed = True
+            # Nested per-horse rows (e.g. diagnosisView.horseDetail)
+            # carry the same name and number one level down; they
+            # are the same horse's identity, so they follow.
+            for value in row.values():
+                if not isinstance(value, dict):
+                    continue
+                if horse_name_key(value) != name or _any_no(value) <= 0:
+                    continue
+                v_old, v_old_frame = _any_no(value), _any_frame(value)
+                if _renumber_row(value, new_no, new_frame):
+                    entries.append({
+                        "block": ".".join(path) + ".*",
+                        "name": name,
+                        "fromNumber": v_old, "toNumber": new_no,
+                        "fromFrame": v_old_frame, "toFrame": new_frame,
+                        "nested": True,
+                    })
+                    changed = True
+        if changed:
+            rows.sort(key=lambda r: (_any_no(r) <= 0, _any_no(r),
+                                     horse_name_key(r)))
+
+    if any(old != new for old, new in perm.items()):
+        # Number-only blocks (horseFeatures): their rows belong to
+        # the horse the roster had under that number, so they move
+        # through the same permutation and stay with that horse.
+        for path in _NUMBER_ONLY_BLOCK_PATHS:
+            rows = _block_at(detail, path)
+            if not isinstance(rows, list) or not rows:
+                continue
+            if any(not isinstance(r, dict) or _any_no(r) <= 0
+                   or _any_no(r) not in perm for r in rows):
+                continue
+            changed = False
+            for row in rows:
+                old = _any_no(row)
+                if perm[old] == old:
+                    continue
+                for key in _NUMBER_KEYS:
+                    if key in row:
+                        row[key] = perm[old]
+                entries.append({
+                    "block": ".".join(path),
+                    "name": "",
+                    "fromNumber": old, "toNumber": perm[old],
+                    "numberOnly": True,
+                })
+                changed = True
+            if changed:
+                rows.sort(key=lambda r: (_any_no(r) <= 0, _any_no(r)))
+        # Number-keyed metadata dicts (preparedMeta's
+        # firstCornerSamplesByHorse, biasPace.adjustments) are NOT
+        # remapped: their keys are sequential 1..N even on garbled
+        # days, so they cannot be shown to be keyed to the garbled
+        # roster, and rewriting them could corrupt a correctly
+        # keyed dict.  They are provenance/derived metadata, not
+        # roster blocks; a rebuild recomputes them.
+
+    # Genuine-scratch restoration: a horse the result records
+    # without a finish position under a scratch label IS scratched
+    # (the result's own accounting); if the stored roster lost that
+    # marking, restore it — by name, on the blocks that carry a
+    # marking at all (a boolean scratched flag, a string status).
+    for name, trow in truth_rows.items():
+        try:
+            finish = int(trow.get("finish") or 0)
+        except (TypeError, ValueError):
+            finish = 0
+        if finish > 0:
+            continue
+        status_text = _SCRATCH_LABEL_STATUS.get(
+            str(trow.get("finishLabel") or ""))
+        if not status_text:
+            continue
+        for path in _ROSTER_BLOCK_PATHS:
+            rows = _block_at(detail, path)
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                if horse_name_key(row) != name:
+                    continue
+                restored: list[str] = []
+                if row.get("scratched") is False:
+                    row["scratched"] = True
+                    restored.append("scratched")
+                # Only a MISSING status is restored: an existing
+                # scratch-family spelling (e.g. the roster's
+                # 競走除外 where the result's label says 除外） is
+                # the pack's own correct accounting and stands.
+                if isinstance(row.get("status"), str) \
+                        and row["status"] == "":
+                    row["status"] = status_text
+                    restored.append("status")
+                if restored:
+                    entries.append({
+                        "block": ".".join(path),
+                        "name": name,
+                        "number": truth_no[name],
+                        "restored": restored,
+                    })
+    return entries
