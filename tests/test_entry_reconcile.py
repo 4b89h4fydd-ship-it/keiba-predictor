@@ -19,6 +19,7 @@ from arvexq.ingest.entry_reconcile import (
     identity_map,
     merge_rows_by_name,
     numbering_report,
+    reconcile_detail_numbers,
     reconcile_finisher_flags,
     reconcile_rosters,
 )
@@ -269,6 +270,169 @@ class FinisherFlagTest(unittest.TestCase):
         for row in detail["raceCardView"]:
             row["scratched"] = False
         self.assertEqual(reconcile_finisher_flags(detail), [])
+
+
+def permuted_detail():
+    """The Kyoto 11R garble shape in miniature: no duplicate names,
+    but the roster's numbering is a permuted reading (frames lost),
+    while the official result accounts for every horse by name,
+    number and frame.  One horse is a genuine scratch whose marking
+    the stored roster lost.  Each roster row carries a per-horse
+    payload (winProbability / mark) that must stay with its NAME."""
+    return {
+        "horses": [
+            {"name": "サノノキセキ", "horseNumber": 1, "frameNumber": 0,
+             "winProbability": 0.30, "mark": "◎", "scratched": False,
+             "status": ""},
+            {"name": "ネーロノワール", "horseNumber": 2, "frameNumber": 0,
+             "winProbability": 0.0, "mark": "", "scratched": False,
+             "status": ""},
+            {"name": "ドラゴンバルド", "horseNumber": 9, "frameNumber": 0,
+             "winProbability": 0.10, "mark": "▲", "scratched": True,
+             "status": "出走取消"},
+            {"name": "アーケントレイル", "horseNumber": 10,
+             "frameNumber": 0, "winProbability": 0.20, "mark": "○",
+             "scratched": False, "status": ""},
+        ],
+        "raceCardView": [
+            {"name": "サノノキセキ", "number": 1, "frame": None,
+             "scratched": False},
+            {"name": "ネーロノワール", "number": 2, "frame": None,
+             "scratched": False},
+            {"name": "ドラゴンバルド", "number": 9, "frame": None,
+             "scratched": True},
+            {"name": "アーケントレイル", "number": 10, "frame": None,
+             "scratched": False},
+        ],
+        "horseFeatures": [
+            {"horseNumber": 1, "samples": 11},
+            {"horseNumber": 2, "samples": 22},
+            {"horseNumber": 9, "samples": 99},
+            {"horseNumber": 10, "samples": 44},
+        ],
+        "result": {
+            "status": "確定",
+            "finishers": [
+                {"name": "アーケントレイル", "horseNumber": 1,
+                 "frameNumber": 1, "finish": 2},
+                {"name": "ネーロノワール 牝2 川田 55.0 栗東・斉藤崇",
+                 "horseNumber": 9, "frameNumber": 7, "finish": 0,
+                 "finishLabel": "取消"},
+                {"name": "ドラゴンバルド", "horseNumber": 10,
+                 "frameNumber": 8, "finish": 7},
+                {"name": "サノノキセキ", "horseNumber": 11,
+                 "frameNumber": 8, "finish": 5},
+            ],
+        },
+    }
+
+
+class DetailNumbersTest(unittest.TestCase):
+    def test_permuted_roster_renumbered_by_name_everywhere(self):
+        detail = permuted_detail()
+        entries = reconcile_detail_numbers(detail)
+        self.assertTrue(entries)
+        by_name = {r["name"]: r for r in detail["horses"]}
+        self.assertEqual(by_name["サノノキセキ"]["horseNumber"], 11)
+        self.assertEqual(by_name["サノノキセキ"]["frameNumber"], 8)
+        self.assertEqual(by_name["ネーロノワール"]["horseNumber"], 9)
+        self.assertEqual(by_name["ネーロノワール"]["frameNumber"], 7)
+        self.assertEqual(by_name["ドラゴンバルド"]["horseNumber"], 10)
+        self.assertEqual(by_name["アーケントレイル"]["horseNumber"], 1)
+        # Blocks are re-sorted by the official number.
+        self.assertEqual([r["horseNumber"] for r in detail["horses"]],
+                         [1, 9, 10, 11])
+        view = {r["name"]: r for r in detail["raceCardView"]}
+        self.assertEqual(view["サノノキセキ"]["number"], 11)
+        # A None frame means the view carries no frames: left alone.
+        self.assertIsNone(view["サノノキセキ"]["frame"])
+
+    def test_materials_stay_with_the_name(self):
+        # The mark and the probability were computed for the horse
+        # (the name on the row); renumbering must not move them to
+        # whichever horse previously held the new number.
+        detail = permuted_detail()
+        reconcile_detail_numbers(detail)
+        by_name = {r["name"]: r for r in detail["horses"]}
+        self.assertEqual(by_name["サノノキセキ"]["mark"], "◎")
+        self.assertEqual(by_name["サノノキセキ"]["winProbability"],
+                         0.30)
+        self.assertEqual(by_name["アーケントレイル"]["mark"], "○")
+        self.assertEqual(by_name["アーケントレイル"]["horseNumber"],
+                         1)
+
+    def test_number_only_blocks_follow_the_permutation(self):
+        detail = permuted_detail()
+        reconcile_detail_numbers(detail)
+        feats = {r["horseNumber"]: r["samples"]
+                 for r in detail["horseFeatures"]}
+        # The feature row stored under the garbled number belongs
+        # to the horse the roster had under that number: garbled 1
+        # was サノノキセキ, whose official number is 11.
+        self.assertEqual(feats, {11: 11, 9: 22, 10: 99, 1: 44})
+
+    def test_genuine_scratch_marking_restored(self):
+        detail = permuted_detail()
+        entries = reconcile_detail_numbers(detail)
+        by_name = {r["name"]: r for r in detail["horses"]}
+        self.assertTrue(by_name["ネーロノワール"]["scratched"])
+        self.assertEqual(by_name["ネーロノワール"]["status"],
+                         "出走取消")
+        view = {r["name"]: r for r in detail["raceCardView"]}
+        self.assertTrue(view["ネーロノワール"]["scratched"])
+        self.assertTrue(any(e.get("restored")
+                            and e["name"] == "ネーロノワール"
+                            for e in entries))
+
+    def test_existing_scratch_spelling_not_rewritten(self):
+        # Kochi 10R shape (2026-11-28): the result's non-finisher
+        # label is 除外 while the roster already carries the more
+        # specific 競走除外.  Restoration fills only what is
+        # missing; it never rewrites an existing scratch marking.
+        detail = permuted_detail()
+        detail["result"]["finishers"] = [
+            r for r in detail["result"]["finishers"]
+            if "ネーロ" not in str(r.get("name"))]
+        detail["result"]["nonFinishers"] = [
+            {"name": "ネーロノワール", "horseNumber": 9,
+             "frameNumber": 7, "finish": 0, "finishLabel": "除外"}]
+        row = {r["name"]: r for r in detail["horses"]}["ネーロノワール"]
+        row["scratched"] = True
+        row["status"] = "競走除外"
+        entries = reconcile_detail_numbers(detail)
+        self.assertEqual(row["status"], "競走除外")
+        # The horses row needed nothing; the raceCardView row's
+        # missing flag is still restored, as it should be.
+        self.assertFalse(any(e.get("restored")
+                             and e["name"] == "ネーロノワール"
+                             and e["block"] == "horses"
+                             for e in entries))
+
+    def test_no_result_no_change(self):
+        detail = permuted_detail()
+        del detail["result"]
+        before = [dict(r) for r in detail["horses"]]
+        self.assertEqual(reconcile_detail_numbers(detail), [])
+        self.assertEqual(detail["horses"], before)
+
+    def test_partial_result_no_change(self):
+        # A flash result that does not account for the whole roster
+        # must not renumber anything.
+        detail = permuted_detail()
+        detail["result"]["finishers"] = \
+            detail["result"]["finishers"][:2]
+        self.assertEqual(reconcile_detail_numbers(detail), [])
+        self.assertEqual(detail["horses"][0]["horseNumber"], 1)
+
+    def test_duplicate_names_left_to_the_dedupe_pass(self):
+        detail = permuted_detail()
+        detail["horses"].append(dict(detail["horses"][0]))
+        self.assertEqual(reconcile_detail_numbers(detail), [])
+
+    def test_clean_detail_untouched(self):
+        detail = permuted_detail()
+        reconcile_detail_numbers(detail)
+        self.assertEqual(reconcile_detail_numbers(detail), [])
 
 
 if __name__ == "__main__":
