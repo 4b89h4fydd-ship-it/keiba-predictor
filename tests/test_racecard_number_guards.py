@@ -35,7 +35,11 @@ def jra_card(numbers, frames=None, field_size=None):
 
 class CardUsableNumberGuardTests(unittest.TestCase):
     def test_clean_jra_card_is_usable(self):
-        frames = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7]
+        # True frame map for a 13-horse JRA field (extras ride the
+        # high frames; verified against the real 2026-11-28 Kyoto 9R
+        # card: 1,2,3,4,4,5,5,6,6,7,7,8,8).  The previous fixture
+        # ([1,1,2,2,...]) left frame 8 empty and is not a real card.
+        frames = [1, 2, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8]
         self.assertTrue(prefetch._card_usable(jra_card(list(range(1, 14)), frames)))
 
     def test_garbled_numbers_are_not_usable(self):
