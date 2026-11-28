@@ -285,7 +285,7 @@ class BiasPaceBuildTests(TestCase):
         # read no longer stands in the probability path, so
         # the stamp records no bias term, no trial label and
         # no bias block — the stamp is the foundation's alone.
-        self.assertEqual(stamp["version"], "clean-forecast-v4")
+        self.assertEqual(stamp["version"], "clean-forecast-v5")
         self.assertNotIn("terms", stamp)
         self.assertNotIn("biasPace", stamp)
         self.assertNotIn("biasPaceTrial", stamp)

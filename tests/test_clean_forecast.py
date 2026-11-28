@@ -1,6 +1,6 @@
 """Netkeiba-foundation path (2026-11-28 rebuild stage 2,
-v3 corrections, v4 circuit split): the probability path's
-contract tests.
+v3 corrections, v4 circuit split, v5 circuit-specific
+configurations): the probability path's contract tests.
 
 Covered:
   * determinism — same inputs, byte-identical probabilities;
@@ -41,13 +41,27 @@ Covered:
     >=60% start-percentile coverage, and it moves a
     front-runner's probability up when the field has few
     front-runners (slow scenario likely) and down when
-    it has many (high scenario likely).
+    it has many (high scenario likely);
+  * v5 circuit configurations — an unresolved circuit
+    keeps the v3 configuration exactly. The NAR circuit
+    adds the two history leans (rotation bucket, venue
+    aptitude; both read only runs dated before the race
+    date) after press_cp and strengthens the scenario
+    mixture to w=2.0. The JRA circuit runs combo5: the
+    press_all aggregate lean (all tipsters' marks summed,
+    firing where the CP column alone cannot pass the
+    gate), the pace-LABEL scenario mixture (H tilts to
+    the high scenario, S to the slow, no label is the
+    symmetric mixture), and the base temperature split
+    by field size (<=13 runners 1.0, >=14 runners 1.25),
+    with the pooled calibration biases unchanged.
 """
 
 from rewrite.analysis.clean_forecast import (
     CLEAN_FORECAST_VERSION, POPULARITY_BAND_BIASES,
     POPULARITY_BAND_BIASES_NAR, apply_nk_foundation,
-    shin_devig, z_lean)
+    press_all_signal, rotation_bucket_signal, shin_devig,
+    venue_avgfin_signal, z_lean)
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.tickets import generate_tickets
 
@@ -118,7 +132,7 @@ def test_determinism():
     assert _win(first) == _win(second)
     assert info1["stages"] == info2["stages"]
     assert info1["version"] == CLEAN_FORECAST_VERSION == \
-        "clean-forecast-v4"
+        "clean-forecast-v5"
 
 
 def test_base_is_netkeiba_not_the_lane():
@@ -273,41 +287,186 @@ def test_band_calibration_direction():
     assert calibrated[8] < blended[8]
 
 
-def test_jra_circuit_keeps_the_v3_configuration():
-    # The v4 split is NAR-only: a JRA race runs the v3
+def test_unresolved_circuit_keeps_the_v3_configuration():
+    # The conservative default is unchanged in v5: a race
+    # whose circuit cannot be resolved runs the v3
     # configuration exactly — temperature 1.1, the arrow
     # fade among the leans, the pooled calibration biases,
-    # no scenario stage — and the explicit segment the
-    # publisher passes ("jra_flat") resolves to the same
-    # circuit as the race id prefix.
+    # no scenario stage of either kind.
     entry = _full_entry()
-    derived, info = apply_nk_foundation(
-        _forecast("jra-2026-11-28-東京-04"), entry, ODDS)
-    assert info["segment"] == "jra"
+    _, info = apply_nk_foundation(_forecast(), entry, ODDS)
+    assert info["segment"] is None
     assert info["temperature"] == 1.1
+    assert set(info["leans"]) == {"pace_arrow", "nk_best",
+                                  "course_jockey", "press_cp"}
     assert info["leans"]["pace_arrow"]["fired"] is True
     assert info["scenarioMix"]["applied"] is False
+    assert info["labelScenarioMix"]["applied"] is False
     assert set(info["stages"]) == {"nkBase", "corrected",
                                    "blended", "calibrated",
                                    "final"}
     assert info["calibration"]["biases"] == \
         list(POPULARITY_BAND_BIASES)
     assert info["calibration"]["fit"] == "pooled-fit"
+
+
+def test_jra_circuit_runs_combo5():
+    # The v5 JRA configuration (beat-market-jra combo5):
+    # the v3 leans plus the press_all aggregate at 0.30,
+    # the pace-label scenario mixture after the leans,
+    # the field-size temperature (this field has 8
+    # runners, so 1.0), and the pooled calibration biases.
+    # The full entry carries no paceLabel, so the label
+    # mixture runs symmetric (t=0, pi in thirds) — the
+    # measured construction for a missing label.
+    entry = _full_entry()
+    final, info = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry, ODDS)
+    assert info["segment"] == "jra"
+    assert info["temperature"] == 1.0
+    assert set(info["leans"]) == {"pace_arrow", "nk_best",
+                                  "course_jockey", "press_cp",
+                                  "press_all"}
+    assert info["leans"]["press_all"] == \
+        {"weight": 0.30, "fired": True}
+    assert info["scenarioMix"]["applied"] is False
+    lab = info["labelScenarioMix"]
+    assert lab["applied"] is True and lab["label"] is None
+    assert lab["beta"] == 2.6 and lab["w"] == 1.5
+    assert lab["pi"] == [round(1 / 3, 6)] * 3
+    assert set(info["stages"]) == {"nkBase", "corrected",
+                                   "scenario", "blended",
+                                   "calibrated", "final"}
+    assert info["stages"]["final"] == info["stages"]["calibrated"]
+    assert info["calibration"]["biases"] == \
+        list(POPULARITY_BAND_BIASES)
+    assert info["calibration"]["fit"] == "pooled-fit"
+    assert info["calibration"]["segment"] == "jra"
     explicit, info2 = apply_nk_foundation(
         _forecast("jra-2026-11-28-東京-04"), entry, ODDS,
         segment="jra_flat")
     assert info2["segment"] == "jra"
-    assert _win(explicit) == _win(derived)
+    assert _win(explicit) == _win(final)
     assert info2["stages"] == info["stages"]
+
+
+def test_jra_label_scenario_direction():
+    # An H label tilts the mixture to the high-pace
+    # scenario: the front-runner (start pct 0.1) loses at
+    # the scenario stage relative to an S label, and the
+    # back-marker (start pct 0.8) gains — and vice versa.
+    entry_h = _full_entry()
+    entry_h["paceLabel"] = "H"
+    entry_s = _full_entry()
+    entry_s["paceLabel"] = "S"
+    _, info_h = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry_h, ODDS)
+    _, info_s = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry_s, ODDS)
+    assert info_h["labelScenarioMix"]["label"] == "H"
+    assert info_s["labelScenarioMix"]["label"] == "S"
+    assert info_h["stages"]["corrected"] == \
+        info_s["stages"]["corrected"]
+    assert info_h["stages"]["scenario"][1] < \
+        info_s["stages"]["scenario"][1]
+    assert info_h["stages"]["scenario"][8] > \
+        info_s["stages"]["scenario"][8]
+
+
+def _field_forecast(count, race_id):
+    strengths = {n: 1.0 / count
+                 for n in range(1, count + 1)}
+    runners = tuple(
+        RunnerForecast(
+            number=n, name=f"horse-{n}", ability_score=50.0,
+            strength=strengths[n], pace_adjustment=1.0,
+            pace_reasons=(), p_win=strengths[n], p_top2=None,
+            p_top3=None, mark="", status="ok")
+        for n in sorted(strengths))
+    return RaceForecast(race_id, 3.0, "uncalibrated",
+                        runners, "ok")
+
+
+def _field_entry(count):
+    horses = {}
+    for n in range(1, count + 1):
+        horses[str(n)] = {
+            "odds": {"forecastWin": 2.0 + n},
+            "pace": {"start": {"pct": n / (count + 1.0)},
+                     "corner4": {"pct": 0.5}}}
+    return {"horses": horses}
+
+
+def _field_odds(count):
+    return {n: 2.0 + n for n in range(1, count + 1)}
+
+
+def test_jra_temperature_splits_by_field_size():
+    # <=13 runners -> 1.0; >=14 runners -> 1.25 (the
+    # fs-tau point selected on every fold).
+    _, info13 = apply_nk_foundation(
+        _field_forecast(13, "jra-2026-11-28-東京-04"),
+        _field_entry(13), _field_odds(13))
+    assert info13["temperature"] == 1.0
+    _, info14 = apply_nk_foundation(
+        _field_forecast(14, "jra-2026-11-28-東京-04"),
+        _field_entry(14), _field_odds(14))
+    assert info14["temperature"] == 1.25
+
+
+def test_jra_press_all_aggregate_passes_the_gate():
+    # No CP column anywhere: press_cp cannot fire, but
+    # the aggregate over the other tipsters covers the
+    # field and fires. The signal is the point sum over
+    # every tipster's mark.
+    horses = {}
+    top_marks = ("◎", "○", "▲", "△", "☆")
+    for i, n in enumerate(sorted(STRENGTHS)):
+        horses[str(n)] = {
+            "odds": {"forecastWin": NK_ODDS[n]},
+            "press": {"marks": {"本紙": top_marks[i % 5],
+                                "AI予想": "○",
+                                "厩舎": "▲"}}}
+    entry = {"horses": horses}
+    signal = press_all_signal(entry)
+    assert signal[1] == 12 and signal[2] == 11
+    assert signal[5] == 8
+    _, info = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry, ODDS)
+    assert info["leans"]["press_cp"]["fired"] is False
+    assert info["leans"]["press_all"]["fired"] is True
+    assert info["coverage"]["press_all"] == 8
+    # A horse with no press block at all is absent; a
+    # horse with a press block but no marks scores 0.
+    sparse = {"horses": {"1": {"press": {"marks": {}}},
+                         "2": {}}}
+    assert press_all_signal(sparse) == {1: 0}
+
+
+def test_jra_ignores_the_history_argument():
+    # The history leans are NAR-only: a JRA race produces
+    # the identical stages with and without history.
+    history = _history()
+    plain, _ = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), _full_entry(),
+        ODDS)
+    with_history, info = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), _full_entry(),
+        ODDS, history=history)
+    assert "rotation_bucket" not in info["leans"]
+    assert _win(plain) == _win(with_history)
 
 
 def test_nar_circuit_runs_the_winning_configuration():
     # The measured winner, NAR only: temperature 1.25, the
     # pace scenario mixture replaces the arrow fade (the
     # other three leans unchanged), and the calibration
-    # takes the per-circuit NAR biases. The full entry's
-    # start percentiles are 0.1..0.8, so L = 2 runners are
-    # at <= 0.25.
+    # takes the per-circuit NAR biases. v5 adds the two
+    # history leans to the recorded lean set — with no
+    # history argument they are present in the stamp with
+    # zero coverage and do not fire — and strengthens the
+    # mixture to w=2.0. The full entry's start percentiles
+    # are 0.1..0.8, so L = 2 runners are at <= 0.25.
     final, info = apply_nk_foundation(
         _forecast("nar-2026-11-28-高知-12"), _full_entry(),
         ODDS)
@@ -315,9 +474,19 @@ def test_nar_circuit_runs_the_winning_configuration():
     assert info["temperature"] == 1.25
     assert "pace_arrow" not in info["leans"]
     assert set(info["leans"]) == {"nk_best", "course_jockey",
-                                  "press_cp"}
-    assert all(lean["fired"] for lean in info["leans"].values())
+                                  "press_cp",
+                                  "rotation_bucket",
+                                  "venue_avgfin"}
+    for name in ("nk_best", "course_jockey", "press_cp"):
+        assert info["leans"][name]["fired"] is True
+    for name in ("rotation_bucket", "venue_avgfin"):
+        assert info["leans"][name] == \
+            {"weight": 0.10, "fired": False}
+        assert info["coverage"][name] == 0
+    assert info["labelScenarioMix"]["applied"] is False
     assert info["scenarioMix"]["applied"] is True
+    assert info["scenarioMix"]["beta"] == 2.6
+    assert info["scenarioMix"]["w"] == 2.0
     assert info["scenarioMix"]["leaders"] == 2
     assert set(info["stages"]) == {"nkBase", "corrected",
                                    "scenario", "blended",
@@ -376,3 +545,91 @@ def test_nar_scenario_mix_coverage_gate():
     assert info["scenarioMix"]["coverage"] == 3
     assert info["stages"]["scenario"] == \
         info["stages"]["corrected"]
+
+
+def _run(day, track="高知", finish=5, field=12):
+    return {"date": day, "track": track, "raceNumber": 3,
+            "distance": 1400, "finish": finish,
+            "fieldSize": field}
+
+
+def _history():
+    # Race: 2026-11-28 at 高知. Horse 1 ran 8 days ago at
+    # the venue and finished 2nd of 12 (bucket +1, strong
+    # venue figure); horse 2 ran 88 days ago at the venue
+    # and finished 11th of 12 (bucket -1, weak venue
+    # figure); the rest ran 18 days ago at the venue,
+    # mid-pack (bucket 0, middling venue figure).
+    horses = {}
+    for n in sorted(STRENGTHS):
+        if n == 1:
+            runs = [_run("2026-11-20", finish=2)]
+        elif n == 2:
+            runs = [_run("2026-09-01", finish=11)]
+        else:
+            runs = [_run("2026-11-10", finish=6)]
+        horses[str(n)] = runs
+    return {"date": "2026-11-28", "venue": "高知",
+            "horses": horses}
+
+
+def test_nar_history_leans_fire_and_move_the_vector():
+    with_h, info = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"), _full_entry(),
+        ODDS, history=_history())
+    assert info["leans"]["rotation_bucket"] == \
+        {"weight": 0.10, "fired": True}
+    assert info["leans"]["venue_avgfin"] == \
+        {"weight": 0.10, "fired": True}
+    assert info["coverage"]["rotation_bucket"] == 8
+    assert info["coverage"]["venue_avgfin"] == 8
+    without_h, _ = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"), _full_entry(),
+        ODDS)
+    # The short-rotation, venue-proven horse gains; the
+    # long-absent, venue-poor horse loses.
+    assert _win(with_h)[1] > _win(without_h)[1]
+    assert _win(with_h)[2] < _win(without_h)[2]
+
+
+def test_rotation_bucket_boundaries():
+    def hist(day):
+        return {"date": "2026-11-28", "venue": "高知",
+                "horses": {"1": [_run(day)]}}
+    assert rotation_bucket_signal(hist("2026-11-14")) == \
+        {1: 1.0}   # 14 days: short rotation
+    assert rotation_bucket_signal(hist("2026-11-13")) == \
+        {1: 0.0}   # 15 days
+    assert rotation_bucket_signal(hist("2026-10-24")) == \
+        {1: 0.0}   # 35 days
+    assert rotation_bucket_signal(hist("2026-10-23")) == \
+        {1: -1.0}  # 36 days: long absence
+
+
+def test_history_uses_only_pre_race_runs():
+    # A run ON the race date (or later) is not a past run:
+    # the horse is absent from both signals — nothing
+    # from the day itself can leak into a lean.
+    same_day = {"date": "2026-11-28", "venue": "高知",
+                "horses": {"1": [_run("2026-11-28")],
+                           "2": [_run("2026-12-05")]}}
+    assert rotation_bucket_signal(same_day) == {}
+    assert venue_avgfin_signal(same_day) == {}
+    # A duplicate of the same race (the detail carries it
+    # in both run lists) counts once for the venue mean,
+    # and the rotation reads the LATEST pre-race run.
+    dup = _run("2026-11-20", finish=3, field=10)
+    history = {"date": "2026-11-28", "venue": "高知",
+               "horses": {"1": [dup, dict(dup),
+                                _run("2026-11-05", finish=9,
+                                     field=10)]}}
+    venue = venue_avgfin_signal(history)
+    assert abs(venue[1] - (-(0.3 + 0.9) / 2)) < 1e-12
+    assert rotation_bucket_signal(history) == {1: 1.0}
+    # Runs at another track count for the rotation but
+    # not for the venue figure.
+    away = {"date": "2026-11-28", "venue": "高知",
+            "horses": {"1": [_run("2026-11-20",
+                                  track="佐賀")]}}
+    assert rotation_bucket_signal(away) == {1: 1.0}
+    assert venue_avgfin_signal(away) == {}
