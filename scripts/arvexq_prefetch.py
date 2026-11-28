@@ -59,6 +59,80 @@ def _meaningful(value: Any) -> bool:
     return value not in (None, "", [], {})
 
 
+def _horse_no(row: Any) -> int:
+    try:
+        return int((row or {}).get("horseNumber") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _numbers_are_clean_field(rows: Any) -> bool:
+    """True when a roster's horse numbers are exactly 1..N, no gaps/dupes."""
+    numbers = [_horse_no(h) for h in (rows or []) if isinstance(h, dict)]
+    if not numbers or any(no <= 0 for no in numbers):
+        return False
+    return sorted(numbers) == list(range(1, len(numbers) + 1))
+
+
+def _fresh_numbering_trusted(base_rows: list[dict[str, Any]],
+                             fresh_rows: list[dict[str, Any]]) -> bool:
+    """Decide whether a fresh roster's horse numbers may key the merge.
+
+    The 2026-11-28 garble carried the right horses under wrong numbers.
+    Merging that by number overwrote good rows and appended duplicates.
+    Numbering is trusted only when it has no duplicates and never
+    renumbers a horse the base roster already knows by name.
+    """
+    numbers = [no for no in (_horse_no(h) for h in fresh_rows) if no > 0]
+    if len(numbers) != len(set(numbers)):
+        return False
+    base_no_by_name: dict[str, int] = {}
+    for h in base_rows:
+        name = str(h.get("name") or "").strip()
+        no = _horse_no(h)
+        if name and no > 0:
+            base_no_by_name[name] = no
+    for h in fresh_rows:
+        name = str(h.get("name") or "").strip()
+        no = _horse_no(h)
+        if name and no > 0 and name in base_no_by_name and base_no_by_name[name] != no:
+            return False
+    return True
+
+
+def _merge_fresh_fields(row: dict[str, Any], raw: dict[str, Any], cutoff: str) -> None:
+    for key, value in raw.items():
+        if key == "horseNumber":
+            continue
+        if key in ("recentRaces", "allPastRuns") and isinstance(value, list) and cutoff:
+            union = merge_career([*(row.get("allPastRuns") or []), *(row.get("recentRaces") or [])], value, cutoff)
+            if union:
+                row["allPastRuns"] = union
+                row["recentRaces"] = union[:5]
+            continue
+        if _meaningful(value) or key not in row:
+            row[key] = copy.deepcopy(value)
+
+
+def _merge_horses_by_name(out: list[dict[str, Any]], fresh_rows: list[dict[str, Any]],
+                          cutoff: str) -> list[dict[str, Any]]:
+    """Fallback merge for an untrusted-numbering roster: match by name,
+    never renumber, never reframe, never append unknown horses."""
+    by_name: dict[str, dict[str, Any]] = {}
+    for row in out:
+        name = str(row.get("name") or "").strip()
+        if name and name not in by_name:
+            by_name[name] = row
+    for raw in fresh_rows:
+        name = str(raw.get("name") or "").strip()
+        row = by_name.get(name) if name else None
+        if row is None:
+            continue
+        safe = {k: v for k, v in raw.items() if k != "frameNumber"}
+        _merge_fresh_fields(row, safe, cutoff)
+    return out
+
+
 def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any]]:
     """Preserve the rich card while allowing newer diagnosis/live fields to win."""
     out = [copy.deepcopy(h) for h in (base or []) if isinstance(h, dict)]
@@ -70,6 +144,10 @@ def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any
             no = 0
         if no > 0:
             by_no[no] = row
+
+    fresh_rows = [h for h in (fresh or []) if isinstance(h, dict)]
+    if fresh_rows and not _fresh_numbering_trusted(out, fresh_rows):
+        return _merge_horses_by_name(out, fresh_rows, cutoff)
 
     for raw in fresh or []:
         if not isinstance(raw, dict):
@@ -159,6 +237,25 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
               if isinstance(h, dict) and str(h.get("horseNumber") or "").isdigit()}
     if expected >= 2 and len(roster - {0}) < expected:
         return False
+    # 2026-11-28 garble guard: a roster whose numbers are not a clean
+    # 1..N field (gaps, duplicates, unnumbered rows) is a corrupted card,
+    # however complete its names/jockeys look; count/name checks alone
+    # passed the garbled lists and the recovery below locked them in.
+    # Central cards must also carry a real frame (1..8) on every runner:
+    # the garbled lists had frame 0 across the board. Local cards are not
+    # frame-gated here, as some local sources publish rosters whose frame
+    # assignment is not part of the roster payload.
+    roster_rows = [h for h in (detail.get("horses") or []) if isinstance(h, dict)]
+    if not _numbers_are_clean_field(roster_rows):
+        return False
+    if str(detail.get("id") or "").startswith("jra-") or str(detail.get("circuit") or "") == "中央":
+        for h in roster_rows:
+            try:
+                frame = int(h.get("frameNumber") or 0)
+            except (TypeError, ValueError):
+                frame = 0
+            if not 1 <= frame <= 8:
+                return False
     return core >= max(1, (len(active) * 7 + 9) // 10)
 
 
