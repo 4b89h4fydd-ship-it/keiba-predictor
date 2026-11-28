@@ -41,7 +41,7 @@ from zoneinfo import ZoneInfo
 from rewrite.analysis.forecast import (
     DEBUT_MARKET_INCOMPLETE, RaceForecast, forecast_debut_market)
 from rewrite.analysis.clean_forecast import (
-    CLEAN_FORECAST_VERSION, power_devig)
+    CLEAN_FORECAST_VERSION, shin_devig)
 from rewrite.analysis.nk_materials import apply_nk_materials
 from rewrite.data.normalize import Obs, RaceRecord, RunnerRecord, obs
 from rewrite.output.api_shape import MODEL_VERSION
@@ -256,13 +256,13 @@ class DebutBuildTests(TestCase):
         self.assertEqual(new["predictionStatus"], "ready")
         self.assertEqual(len(new["predictionMarks"]), 5)
         # Probabilities stand on the market alone: they are
-        # exactly the foundation's market base (the power
+        # exactly the foundation's market base (the Shin
         # devig of the win odds). The grade material is
         # collected and recorded (see the fingerprint above)
         # but, since the clean-forecast-v2 rebuild, no longer
         # shifts a debut probability in its direction.
         win = new["prediction"]["stages"]["probability"]["value"]["win"]
-        base = power_devig(ODDS, sorted(ODDS))
+        base = shin_devig(ODDS, sorted(ODDS))
         for number in ODDS:
             self.assertAlmostEqual(win[number], base[number],
                                    places=3)
