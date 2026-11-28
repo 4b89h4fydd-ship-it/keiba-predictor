@@ -1814,15 +1814,25 @@ class ClosingAdapterTests(TestCase):
 
 
 class PaceBuildTests(TestCase):
-    def test_build_stamps_the_pace_arrow_lean(self):
-        # The pace forecast's place in the clean-forecast-v2
-        # path is the pace_arrow lean: corner4 pct minus start
-        # pct, leaned in the fade direction the walk-forward
-        # supported (the forecast odds over-price the horses
-        # their own pace forecast sends forward). The stamp
-        # records the lean's weight, whether it fired, and its
-        # field coverage; the retired pace-trial record
-        # (paceTrial / terms / weights label) is gone.
+    def test_build_stamps_the_pace_scenario_mixture(self):
+        # The pace forecast's place in the clean path is
+        # circuit-split since clean-forecast-v4. This fixture
+        # race is NAR (金沢), where the measured winning
+        # configuration replaced the pace_arrow fade with the
+        # pace scenario mixture, so the published stamp
+        # records the mixture instead of the lean: its facts
+        # (beta / w / leaders / pi), that it applied, and the
+        # pace material's field coverage — stamped as
+        # coverage["pace_start"] (the mixture's input signal,
+        # the same start percentile the arrow read) and as
+        # scenarioMix["coverage"], with no pace_arrow entry
+        # in leans or coverage. The arrow fade itself
+        # survives on the JRA path, and test_clean_forecast
+        # pins both circuit shapes at the foundation level;
+        # this test pins that the publisher carries the NAR
+        # shape into the published stamp verbatim. The
+        # retired pace-trial record (paceTrial / terms /
+        # weights label) stays gone.
         extra = {n: {"pace": {
             "start": {"rank": n, "pct": n / 5.0},
             "corner3": {"rank": n, "pct": n / 5.0},
@@ -1833,16 +1843,27 @@ class PaceBuildTests(TestCase):
         self.assertIsNotNone(new, receipt)
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["coverage"]["pace_arrow"], 5)
-        self.assertEqual(stamp["leans"]["pace_arrow"]["weight"],
-                         0.10)
-        self.assertTrue(stamp["leans"]["pace_arrow"]["fired"])
+        self.assertEqual(stamp["circuit"], "nar")
+        self.assertNotIn("pace_arrow", stamp["leans"])
+        self.assertNotIn("pace_arrow", stamp["coverage"])
+        self.assertEqual(stamp["coverage"]["pace_start"], 5)
+        mix = stamp["scenarioMix"]
+        self.assertTrue(mix["applied"])
+        self.assertEqual(mix["coverage"], 5)
+        self.assertEqual(mix["beta"], 2.6)
+        self.assertEqual(mix["w"], 1.5)
+        # Only horse 1's start percentile (0.2) is <= 0.25,
+        # so L = 1 and the slow scenario dominates pi.
+        self.assertEqual(mix["leaders"], 1)
+        self.assertGreater(mix["pi"][0], mix["pi"][1])
+        self.assertGreater(mix["pi"][1], mix["pi"][2])
         self.assertNotIn("paceTrial", stamp)
         self.assertNotIn("terms", stamp)
-        # Direction: horse 1 carries the field's largest
-        # corner4-minus-start (the pace forecast sends her
-        # backwards through the race) and is lifted; horse 5,
-        # the mirror image, is cut.
+        # Direction: with L = 1 the slow scenario dominates,
+        # so the mixture lifts the field's lone front-runner
+        # (horse 1, start pct 0.2) and cuts the deepest
+        # back-marker (horse 5, start pct 1.0), against the
+        # build whose materials carry no pace block.
         plain, _ = _build(fresh_detail(), materials=v2_materials())
         win = new["prediction"]["stages"]["probability"]["value"]["win"]
         win_plain = plain["prediction"]["stages"]["probability"]["value"]["win"]
