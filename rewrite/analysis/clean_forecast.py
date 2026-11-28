@@ -1,6 +1,7 @@
 """Netkeiba-foundation forecast (2026-11-28 rebuild, stage 2;
-the v3 corrections at the end of this docstring are the
-same day's follow-up measurement).
+the v3 corrections are the same day's follow-up measurement
+and the v4 changes at the end of this docstring are the
+same day's beat-the-market measurement).
 
 Why this module exists — the user instruction of 2026-11-28:
 "オリジナルださんでいい。とりあえずネット競馬を使って予想をしろ"
@@ -157,6 +158,46 @@ above — the correction-validation measurement):
     below stays the raw market vector, exactly as the
     fallback contract has always promised.
 
+V4 changes (2026-11-28 beat-the-market measurement; 179
+configurations measured on the same corpus and folds, see
+the measurement report): ONE configuration beat both the
+market (Shin) and v3 on the test folds — combined 1.5395
+vs market 1.6460 and v3 1.5755, better in both folds —
+but the evidence is NAR ONLY: both test folds are entirely
+NAR races, and on the small JRA auxiliary check (22 races
+of 2026-11-23, within-day split) the winning configuration
+measured WORSE than v3 and worse than the market. V4
+therefore applies the winning configuration to the NAR
+circuit only; the JRA circuit (jra_flat / debut / jumps)
+keeps the v3 configuration byte-identical. The circuit is
+resolved from the publisher's segment (or the race id
+prefix) and recorded in the stamp. The three changes, NAR
+only:
+
+  * the pace-arrow fade lean is REPLACED by a pace
+    scenario mixture: three scenarios (slow / average /
+    high pace) with probabilities pi = softmax(-t, 0, +t),
+    t = 2.6 * (L - 2.5) / 1.5, L = the number of runners
+    whose predicted start percentile is <= 0.25. Each
+    runner's probability is multiplied by
+    pi_slow * exp(+1.5 f) + pi_avg + pi_high * exp(-1.5 f),
+    f = 0.5 - start percentile (front-runners positive;
+    a runner without a start percentile takes f = 0),
+    then renormalised. The mixture fires only at >=60%
+    field coverage of the start percentile, like a lean.
+    On the (beta, w) grid the gain was monotone up to the
+    adopted (2.6, 1.5), the plateau's most conservative
+    point; the other three leans (nk_best 0.20, course
+    jockey 0.20, CP points 0.10) are unchanged.
+  * the base temperature is 1.25 instead of 1.1 (the
+    temperature grid's best point on both folds);
+  * the popularity-band calibration biases are fitted
+    PER CIRCUIT. The production NAR constants
+    (POPULARITY_BAND_BIASES_NAR) are the measurement's
+    NAR fit on the fold-2 learning races (2026-11-23..26)
+    over the v4 pipeline, shrunk by the same 0.5; the
+    JRA circuit keeps the pooled v3 constants above.
+
 Fallbacks (stamped, never silent): when the forecast odds
 do not cover every runner of the vector, the base is the
 real market's Shin-devig vector (base="market") and stages
@@ -178,9 +219,12 @@ from math import exp, fsum, sqrt
 from ..safety.probability import distribution, marginals
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
 
-CLEAN_FORECAST_VERSION = "clean-forecast-v3"
+CLEAN_FORECAST_VERSION = "clean-forecast-v4"
 
 NK_TEMPERATURE = 1.1
+# NAR circuit (v4): the beat-the-market measurement's
+# temperature grid point — see the module docstring.
+NK_TEMPERATURE_NAR = 1.25
 MARKET_BLEND_WEIGHT = 0.45
 LEAN_MIN_COVERAGE = 0.60
 
@@ -200,6 +244,17 @@ POPULARITY_BANDS = ("1", "2-3", "4-5", "6+")
 POPULARITY_BAND_SHRINK = 0.5
 POPULARITY_BAND_BIASES = (0.1721, 0.0104, -0.0842, -0.0983)
 
+# NAR circuit (v4): the popularity-band biases fitted on
+# the NAR races only — the beat-the-market measurement's
+# per-circuit fit (fold-2 learning races, 2026-11-23..26,
+# over this module's v4 NAR pipeline), shrunk by the same
+# POPULARITY_BAND_SHRINK = 0.5, rounded to 3 decimals as
+# published in the measurement report. The JRA circuit
+# keeps the pooled constants above (the per-circuit JRA
+# fit rests on 22 races and measured unstably, and the
+# winning configuration itself did not transfer to JRA).
+POPULARITY_BAND_BIASES_NAR = (0.180, 0.009, -0.165, -0.024)
+
 # Correction leans, in application order: (signal name,
 # weight). The signal extractors are the *_signal functions
 # below; the order is the greedy selection's order on the
@@ -208,6 +263,28 @@ POPULARITY_BAND_BIASES = (0.1721, 0.0104, -0.0842, -0.0983)
 # (see the module docstring).
 LEAN_SPECS = (("pace_arrow", 0.10), ("nk_best", 0.20),
               ("course_jockey", 0.20), ("press_cp", 0.10))
+
+# NAR circuit (v4): the pace-arrow fade is replaced by the
+# pace scenario mixture below, so the NAR lean set is the
+# other three corrections in the same relative order.
+LEAN_SPECS_NAR = (("nk_best", 0.20), ("course_jockey", 0.20),
+                  ("press_cp", 0.10))
+
+# Pace scenario mixture (NAR, v4): scenario probabilities
+# pi = softmax(-t, 0, +t) over (slow, average, high) with
+# t = SCENARIO_BETA * (L - SCENARIO_CENTER_LEADERS)
+#     / SCENARIO_T_SCALE,
+# L = number of covered runners whose predicted start
+# percentile is <= SCENARIO_LEADER_MAX_PCT. A runner's
+# multiplier is pi_slow * exp(+SCENARIO_W * f) + pi_avg
+# + pi_high * exp(-SCENARIO_W * f) with f = 0.5 - start
+# percentile. The (beta, w) point is the plateau's most
+# conservative point of the measured grid.
+SCENARIO_BETA = 2.6
+SCENARIO_W = 1.5
+SCENARIO_T_SCALE = 1.5
+SCENARIO_CENTER_LEADERS = 2.5
+SCENARIO_LEADER_MAX_PCT = 0.25
 
 _PRESS_POINTS = {"◎": 5, "○": 4, "▲": 3, "△": 2, "☆": 1}
 
@@ -451,6 +528,69 @@ def pace_arrow_signal(entry: dict | None) -> dict:
     return out
 
 
+def pace_start_signal(entry: dict | None) -> dict:
+    """{horse number: predicted start percentile} from the
+    pace forecast — the scenario mixture's input (the same
+    percentile the arrow fade reads as its start point). A
+    horse without a start percentile is absent."""
+    out = {}
+    for key, horse in _entry_horses(entry).items():
+        if not isinstance(horse, dict):
+            continue
+        try:
+            number = int(key)
+        except (TypeError, ValueError):
+            continue
+        pace = horse.get("pace")
+        if not isinstance(pace, dict):
+            continue
+        start = _num((pace.get("start") or {}).get("pct"))
+        if start is not None:
+            out[number] = start
+    return out
+
+
+def pace_scenario_mix(win_probs: dict, signal: dict,
+                      beta: float = SCENARIO_BETA,
+                      w: float = SCENARIO_W):
+    """The pace scenario mixture (NAR, v4 — the measured
+    replacement for the pace-arrow fade; the arithmetic is
+    the beat-the-market measurement's verbatim). Three
+    scenarios (slow / average / high pace) get probabilities
+    pi = softmax(-t, 0, +t), t = beta * (L - 2.5) / 1.5,
+    L = the number of covered runners whose start
+    percentile is <= 0.25; each runner's probability is
+    multiplied by pi_slow * exp(+w f) + pi_avg
+    + pi_high * exp(-w f), f = 0.5 - start percentile
+    (front-runners positive; a runner without the signal
+    takes f = 0), and the vector is renormalised. Returns
+    (vector, info); fires only at >= LEAN_MIN_COVERAGE
+    field coverage, like a lean."""
+    numbers = sorted(win_probs)
+    covered = [n for n in numbers
+               if _num(signal.get(n)) is not None]
+    info = {"applied": False, "beta": beta, "w": w,
+            "leaders": None, "coverage": len(covered),
+            "pi": None}
+    if not numbers or len(covered) < LEAN_MIN_COVERAGE * len(numbers):
+        return dict(win_probs), info
+    leaders = sum(1 for n in covered
+                  if signal[n] <= SCENARIO_LEADER_MAX_PCT)
+    t = beta * (leaders - SCENARIO_CENTER_LEADERS) / SCENARIO_T_SCALE
+    e_slow, e_avg, e_high = exp(-t), 1.0, exp(t)
+    pi_total = e_slow + e_avg + e_high
+    pi = (e_slow / pi_total, e_avg / pi_total, e_high / pi_total)
+    out = {}
+    for n in numbers:
+        f = (0.5 - signal[n]) if n in covered else 0.0
+        mix = pi[0] * exp(w * f) + pi[1] + pi[2] * exp(-w * f)
+        out[n] = win_probs[n] * mix
+    total = fsum(out.values())
+    info.update({"applied": True, "leaders": leaders,
+                 "pi": [round(p, 6) for p in pi]})
+    return {n: v / total for n, v in out.items()}, info
+
+
 def nk_best_signal(entry: dict | None) -> dict:
     out = {}
     for key, horse in _entry_horses(entry).items():
@@ -520,27 +660,85 @@ _SIGNAL_EXTRACTORS = {"pace_arrow": pace_arrow_signal,
                       "press_cp": press_cp_signal}
 
 
+_CIRCUIT_BY_SEGMENT = {"nar": "nar", "jra": "jra",
+                       "jra_flat": "jra", "debut": "jra",
+                       "jumps": "jra"}
+
+
+def _circuit_of(segment, race_id) -> str | None:
+    """Resolve the circuit ("jra" / "nar") for the stamp
+    and the v4 configuration split. The publisher's segment
+    wins when given (its Segment values map jra_flat /
+    debut / jumps onto the JRA circuit); otherwise the
+    race id prefix decides. An unresolvable circuit returns
+    None, which runs the pooled v3 configuration — the
+    conservative default."""
+    if segment is not None:
+        return _CIRCUIT_BY_SEGMENT.get(segment)
+    rid = race_id or ""
+    if rid.startswith("nar"):
+        return "nar"
+    if rid.startswith("jra"):
+        return "jra"
+    return None
+
+
+def _resolved_biases(circuit, band_biases):
+    """(biases, fit) for a call: an explicit band_biases
+    override wins (the walk-forward measurements pass
+    their fold-fitted values); otherwise the NAR circuit
+    takes its per-circuit constants and every other
+    circuit the pooled v3 constants."""
+    if band_biases is not None:
+        return band_biases, "override"
+    if circuit == "nar":
+        return POPULARITY_BAND_BIASES_NAR, "nar-fit"
+    return POPULARITY_BAND_BIASES, "pooled-fit"
+
+
 def nk_foundation_vector(numbers, entry: dict | None,
                          win_odds: dict,
-                         band_biases=POPULARITY_BAND_BIASES):
+                         band_biases=None,
+                         segment: str | None = None):
     """The foundation's stages 1-4 on a plain win vector.
     Returns (vector, info); vector is None when neither the
     forecast odds nor the market covers the field (the
     caller then keeps the lane vector). info carries the
     stage vectors and the per-stage facts for the stamp.
+
+    segment is the resolved circuit ("jra" / "nar" /
+    None): "nar" runs the v4 winning configuration
+    (temperature 1.25, the pace scenario mixture instead
+    of the arrow fade, per-circuit calibration biases);
+    every other value runs the v3 configuration exactly.
     band_biases overrides the stage-4 calibration biases
     (the walk-forward measurement passes its fold-fitted
-    values; production callers take the module constants)."""
-    info = {"base": None, "temperature": NK_TEMPERATURE,
+    values; production callers take the module constants
+    for the circuit)."""
+    circuit = segment if segment in ("jra", "nar") else None
+    nar = circuit == "nar"
+    tau = NK_TEMPERATURE_NAR if nar else NK_TEMPERATURE
+    lean_specs = LEAN_SPECS_NAR if nar else LEAN_SPECS
+    band_biases, bias_fit = _resolved_biases(circuit,
+                                             band_biases)
+    info = {"base": None, "segment": circuit,
+            "temperature": tau,
             "devig": "shin",
             "leans": {}, "coverage": {},
+            "scenarioMix": {"applied": False,
+                            "beta": SCENARIO_BETA,
+                            "w": SCENARIO_W,
+                            "leaders": None, "coverage": 0,
+                            "pi": None},
             "blendApplied": False,
             "blendWeight": MARKET_BLEND_WEIGHT,
             "calibration": {"applied": False,
                             "bands": list(POPULARITY_BANDS),
                             "biases": [float(b)
                                        for b in band_biases],
-                            "shrink": POPULARITY_BAND_SHRINK},
+                            "shrink": POPULARITY_BAND_SHRINK,
+                            "segment": circuit,
+                            "fit": bias_fit},
             "stages": {}}
     numbers = sorted(numbers)
     if not numbers:
@@ -560,15 +758,23 @@ def nk_foundation_vector(numbers, entry: dict | None,
         info["stages"]["final"] = dict(market)
         return market, info
     info["base"] = "nk"
-    current = _temperature(base, NK_TEMPERATURE)
+    current = _temperature(base, tau)
     info["stages"]["nkBase"] = dict(current)
-    for name, weight in LEAN_SPECS:
+    for name, weight in lean_specs:
         signal = _SIGNAL_EXTRACTORS[name](entry)
         covered = sum(1 for n in numbers if n in signal)
         info["coverage"][name] = covered
         current, fired = z_lean(current, signal, weight)
         info["leans"][name] = {"weight": weight, "fired": fired}
     info["stages"]["corrected"] = dict(current)
+    if nar:
+        start_signal = pace_start_signal(entry)
+        info["coverage"]["pace_start"] = sum(
+            1 for n in numbers if n in start_signal)
+        current, mix_info = pace_scenario_mix(current,
+                                              start_signal)
+        info["scenarioMix"] = mix_info
+        info["stages"]["scenario"] = dict(current)
     if win_odds and all(_num(win_odds.get(n)) is not None
                          and _num(win_odds.get(n)) > 1.0
                          for n in numbers):
@@ -594,7 +800,8 @@ def nk_foundation_vector(numbers, entry: dict | None,
 def apply_nk_foundation(forecast: RaceForecast,
                         entry: dict | None,
                         win_odds: dict | None,
-                        band_biases=POPULARITY_BAND_BIASES):
+                        band_biases=None,
+                        segment: str | None = None):
     """The whole netkeiba-foundation path for one race, over
     the caller's lane forecast (whose runners, names and
     statuses the rebuilt forecast keeps; its probabilities
@@ -602,28 +809,46 @@ def apply_nk_foundation(forecast: RaceForecast,
     Returns (forecast, info); info['pathApplied'] tells the
     publisher the issued vector is the foundation's (so the
     retired guard stage must not run on it), info['stages']
-    carries every stage's win vector for the stamp and
-    info['calibration'] records the stage-4 popularity-band
-    calibration (bands, the biases used, the shrink)."""
+    carries every stage's win vector for the stamp,
+    info['segment'] records the resolved circuit ("jra" /
+    "nar" / None — from the segment argument when given,
+    else the race id prefix), info['scenarioMix'] the pace
+    scenario mixture's facts (NAR only) and
+    info['calibration'] the stage-4 popularity-band
+    calibration (bands, the biases used, the shrink, and
+    the biases' provenance in 'fit')."""
+    circuit = _circuit_of(segment, forecast.race_id)
+    resolved_biases, bias_fit = _resolved_biases(circuit,
+                                                 band_biases)
     info = {"applied": False, "pathApplied": False,
             "version": CLEAN_FORECAST_VERSION, "base": None,
+            "segment": circuit,
             "devig": "shin",
             "leans": {}, "coverage": {},
+            "scenarioMix": {"applied": False,
+                            "beta": SCENARIO_BETA,
+                            "w": SCENARIO_W,
+                            "leaders": None, "coverage": 0,
+                            "pi": None},
             "calibration": {"applied": False,
                             "bands": list(POPULARITY_BANDS),
-                            "biases": [float(b)
-                                       for b in band_biases],
-                            "shrink": POPULARITY_BAND_SHRINK},
+                            "biases": [float(b) for b in
+                                      resolved_biases],
+                            "shrink": POPULARITY_BAND_SHRINK,
+                            "segment": circuit,
+                            "fit": bias_fit},
             "stages": {}}
     win = _win_vector(forecast)
     if not win:
         info["base"] = "lane"
         return forecast, info
     vector, finfo = nk_foundation_vector(
-        sorted(win), entry, win_odds or {}, band_biases)
+        sorted(win), entry, win_odds or {}, band_biases,
+        segment=circuit)
     info.update({k: finfo[k] for k in
-                 ("base", "temperature", "devig", "leans",
-                  "coverage", "blendApplied", "blendWeight",
+                 ("base", "segment", "temperature", "devig",
+                  "leans", "coverage", "scenarioMix",
+                  "blendApplied", "blendWeight",
                   "calibration", "stages")})
     if vector is None:
         return forecast, info
