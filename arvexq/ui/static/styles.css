@@ -13,6 +13,10 @@ h2.section-title{font-size:15px;margin:20px 0 8px;padding-bottom:4px;border-bott
 h2.race-title{font-size:16px;margin:4px 0 12px}
 p.message{padding:24px 0;color:#666666}
 a.back{display:inline-block;margin:0 0 12px;color:#222222;text-decoration:none;font-size:14px}
+.race-nav{display:flex;justify-content:space-between;gap:12px;margin:0 0 12px}
+.race-nav-slot{display:flex}
+a.race-nav-link{display:inline-block;padding:10px 16px;border:1px solid #cccccc;border-radius:4px;background:#ffffff;color:#222222;text-decoration:none;font-size:14px}
+a.race-nav-link:active{background:#f5f5f5}
 ul.pick-list{list-style:none;margin:0;padding:0}
 ul.pick-list li{border-bottom:1px solid #dddddd}
 ul.pick-list a{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 4px;color:#222222;text-decoration:none}

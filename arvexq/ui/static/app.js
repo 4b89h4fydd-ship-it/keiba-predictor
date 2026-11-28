@@ -8,6 +8,9 @@
    win probability / top-3 probability (unifiedForecast.diagnosis,
    by horse number, shown as percentages).
    Fixed column widths and one uniform row height for every row.
+   Under the race title sits a previous / next nav that walks the
+   same venue's races for the day in race-number order (the ends
+   of the card get no link on that side).
    Data sources are unchanged: api-static/day/<date>.json and
    api-static/race/<raceId>.json ({detail, summary} wrapper). */
 (function () {
@@ -248,6 +251,44 @@
     });
   }
 
+  /* Previous / next race within the same venue on the same day,
+     in the venue race list's order (race number ascending); venues
+     are never crossed. The nav slots are rendered with the race and
+     filled from the day pack: at the ends of the venue's card the
+     slot on that side stays empty, so the other side keeps its
+     place. Links use the normal hash routing (#/r/<id>), so moving
+     between races never reloads the page. */
+  function fillRaceNav(nav, detail, currentId) {
+    loadDay().then(function (day) {
+      if (!app.contains(nav)) return;
+      var races = day.races.filter(function (r) {
+        return String(r.circuit || '') === String(detail.circuit || '') &&
+          String(r.track || '') === String(detail.track || '');
+      });
+      races.sort(function (a, b) { return Number(a.raceNumber) - Number(b.raceNumber); });
+      var idx = -1;
+      races.forEach(function (r, i) {
+        if (idx === -1 && String(r.id || '') === String(currentId)) idx = i;
+      });
+      if (idx === -1) {
+        races.forEach(function (r, i) {
+          if (idx === -1 && Number(r.raceNumber) === Number(detail.raceNumber)) idx = i;
+        });
+      }
+      if (idx === -1) return;
+      if (idx > 0) {
+        var prev = el('a', 'race-nav-link', '← 前のレース');
+        prev.href = '#/r/' + encodeURIComponent(String(races[idx - 1].id || ''));
+        nav.children[0].appendChild(prev);
+      }
+      if (idx < races.length - 1) {
+        var next = el('a', 'race-nav-link', '次のレース →');
+        next.href = '#/r/' + encodeURIComponent(String(races[idx + 1].id || ''));
+        nav.children[1].appendChild(next);
+      }
+    }).catch(function () { /* no day pack: the nav stays empty */ });
+  }
+
   function renderRace(id) {
     var done = function (detail) {
       app.textContent = '';
@@ -256,6 +297,11 @@
       app.appendChild(back);
       app.appendChild(el('h2', 'race-title',
         String(detail.track || '') + ' ' + String(detail.raceNumber) + 'R ' + String(detail.title || '')));
+      var nav = el('nav', 'race-nav');
+      nav.appendChild(el('span', 'race-nav-slot'));
+      nav.appendChild(el('span', 'race-nav-slot race-nav-next'));
+      app.appendChild(nav);
+      fillRaceNav(nav, detail, id);
       var marks = marksByNumber(detail);
       var table = el('table', 'racecard');
       var colgroup = document.createElement('colgroup');
