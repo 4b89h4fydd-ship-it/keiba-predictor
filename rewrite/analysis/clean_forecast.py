@@ -1,4 +1,6 @@
-"""Netkeiba-foundation forecast (2026-11-28 rebuild, stage 2).
+"""Netkeiba-foundation forecast (2026-11-28 rebuild, stage 2;
+the v3 corrections at the end of this docstring are the
+same day's follow-up measurement).
 
 Why this module exists — the user instruction of 2026-11-28:
 "オリジナルださんでいい。とりあえずネット競馬を使って予想をしろ"
@@ -98,7 +100,7 @@ place and what did not:
 
 The path, in one line:
 
-  stage 1  nk base     netkeiba forecast odds -> power
+  stage 1  nk base     netkeiba forecast odds -> Shin
                        devig -> temperature 1.1
   stage 2  corrections z-leans, in order: pace arrow
                        fade 0.10, nk_best 0.20, course
@@ -107,16 +109,58 @@ The path, in one line:
                        a runner without the signal takes
                        z=0, never an estimate)
   stage 3  market      ONE geometric blend with the real
-           blend       market (multiplicative devig) at
-                       market weight 0.45 (selected on the
+           blend       market (Shin devig) at market
+                       weight 0.45 (selected on the
                        learning folds; 0.30 and 0.60 both
                        measured worse out of sample)
-  stage 4  —           no guard, no further layers.
+  stage 4  popularity  a fixed log-bias per popularity
+           calibration band (1st / 2-3 / 4-5 / 6+ by the
+                       market win odds), fitted on the
+                       saved corpus and shrunk x0.5 (the
+                       v3 note below)
+  stage 5  —           no guard, no further layers.
+
+V3 changes (2026-11-28 follow-up; measured on the same
+corpus and the same two walk-forward folds as everything
+above — the correction-validation measurement):
+
+  * devig: the base's power devig and the market's
+    multiplicative devig are both replaced by Shin's
+    method. No parameter is fitted — an arithmetic swap
+    only. Combined test LogLoss 1.6100 -> 1.5859 (folds
+    1.5133 / 1.6772), better in both folds, top-pick rate
+    unchanged; most of the gain is on the market side
+    (Shin alone also beat multiplicative for the market
+    alone, 1.6460 vs 1.6695, the same direction as an
+    earlier in-house measurement).
+  * popularity-band calibration: on top of the Shin
+    vectors the pipeline still under-prices the favourite
+    and over-prices longshots (the favourite/longshot
+    bias). Fitted per fold on the learning races only,
+    the biases came out at +0.346 / +0.360 for the
+    favourite and -0.296 / -0.145 for 6th-favourite-or-
+    lower in the two folds — the same direction both
+    times. With the fold-fitted biases the stack measures
+    a combined 1.5771 (folds 1.5067 / 1.6655), the best
+    of every configuration measured, at one race's cost
+    in top-pick rate (45.6% vs 46.8%). The production
+    constants (POPULARITY_BAND_BIASES) are fitted once on
+    the full measured corpus (the 193 races with full
+    forecast-odds and market coverage) on this v3
+    pipeline, then SHRUNK by POPULARITY_BAND_SHRINK =
+    0.5: the fitted magnitudes are large for a
+    4-parameter fit, and the measurement report asked
+    for the shrink as caution. The unshrunk fit is
+    recorded next to the constants. The calibration runs
+    only where the market blend ran (it needs the market
+    odds to rank popularity); the market-base fallback
+    below stays the raw market vector, exactly as the
+    fallback contract has always promised.
 
 Fallbacks (stamped, never silent): when the forecast odds
 do not cover every runner of the vector, the base is the
-real market's power-devig vector (base="market") and stages
-2-3 do not run; when neither odds set covers the field, the
+real market's Shin-devig vector (base="market") and stages
+2-4 do not run; when neither odds set covers the field, the
 lane vector stands (base="lane", applied=False) — no number
 is ever invented. Every stage's win vector is returned in
 the info dict so the publisher can stamp it: the next
@@ -133,13 +177,28 @@ from math import exp, fsum, sqrt
 
 from ..safety.probability import distribution, marginals
 from .forecast import RaceForecast, RunnerForecast, _assign_marks
-from .shadow_v9 import market_probs
 
-CLEAN_FORECAST_VERSION = "clean-forecast-v2"
+CLEAN_FORECAST_VERSION = "clean-forecast-v3"
 
 NK_TEMPERATURE = 1.1
 MARKET_BLEND_WEIGHT = 0.45
 LEAN_MIN_COVERAGE = 0.60
+
+# Popularity-band calibration (stage 4, v3). Bands by the
+# market win-odds rank at issuance: favourite / 2nd-3rd /
+# 4th-5th / 6th or lower. The biases are log-biases fitted
+# by maximum likelihood on the full measured corpus (the
+# 193 races with full forecast-odds and market coverage,
+# 2026-11-23..28) over this module's own uncalibrated v3
+# vectors, then shrunk by POPULARITY_BAND_SHRINK (the
+# measurement's caution: the fitted magnitudes are large
+# for a 4-parameter fit). Unshrunk fit on the corpus:
+# (+0.3442, +0.0208, -0.1684, -0.1966) for the bands
+# (1 / 2-3 / 4-5 / 6+); the constants below are that fit
+# at shrink 0.5, rounded to 4 decimals.
+POPULARITY_BANDS = ("1", "2-3", "4-5", "6+")
+POPULARITY_BAND_SHRINK = 0.5
+POPULARITY_BAND_BIASES = (0.1721, 0.0104, -0.0842, -0.0983)
 
 # Correction leans, in application order: (signal name,
 # weight). The signal extractors are the *_signal functions
@@ -200,9 +259,10 @@ def power_devig(odds: dict, numbers) -> dict | None:
     """Power-method devig: implied probabilities raised to
     the exponent k that makes them sum to 1 (k solved by
     bisection). Returns None unless every number carries a
-    usable odd (> 1.0). Measured as the best of
-    multiplicative / power / Shin for the netkeiba forecast
-    odds on both learning folds."""
+    usable odd (> 1.0). This was the v2 base's devig;
+    v3 devigs with shin_devig instead (see the module
+    docstring) and the function is retained only so the
+    two stages' measurements stay reproducible."""
     raw = {}
     for n in numbers:
         value = _num(odds.get(n))
@@ -220,6 +280,77 @@ def power_devig(odds: dict, numbers) -> dict | None:
     out = {n: raw[n] ** k for n in numbers}
     total = fsum(out.values())
     return {n: out[n] / total for n in numbers}
+
+
+def shin_devig(odds: dict, numbers) -> dict | None:
+    """Shin's devig: the implied probabilities are read as
+    a mix of informed and uninformed money, with the
+    informed share z solved (bisection) so the corrected
+    probabilities sum to 1. Returns None unless every
+    number carries a usable odd (> 1.0). The arithmetic is
+    the measured implementation verbatim — v3 replaced
+    both the base's power devig and the market's
+    multiplicative devig with this (module docstring)."""
+    numbers = list(numbers)
+    q = {}
+    for n in numbers:
+        value = _num(odds.get(n))
+        if value is None or value <= 1.0:
+            return None
+        q[n] = 1.0 / value
+    big_q = fsum(q.values())
+
+    def total(z):
+        return fsum(
+            (sqrt(z * z + 4 * (1 - z) * q[n] ** 2 / big_q) - z)
+            / (2 * (1 - z)) for n in numbers)
+
+    lo, hi = 1e-9, 0.5
+    if total(hi) > 1.0:
+        z = hi
+    else:
+        for _ in range(80):
+            mid = (lo + hi) / 2
+            if total(mid) > 1.0:
+                lo = mid
+            else:
+                hi = mid
+        z = (lo + hi) / 2
+    out = {n: (sqrt(z * z + 4 * (1 - z) * q[n] ** 2 / big_q) - z)
+           / (2 * (1 - z)) for n in numbers}
+    t = fsum(out.values())
+    return {n: out[n] / t for n in numbers}
+
+
+def popularity_band_map(win_odds: dict, numbers) -> dict | None:
+    """{number: band index} by the market win-odds rank:
+    rank 1 -> band 0, ranks 2-3 -> band 1, ranks 4-5 ->
+    band 2, rank 6 or lower -> band 3. Equal odds break
+    by horse number (the measured construction). None
+    unless every number carries a usable odd (> 1.0)."""
+    values = {}
+    for n in numbers:
+        value = _num(win_odds.get(n))
+        if value is None or value <= 1.0:
+            return None
+        values[n] = value
+    order = sorted(numbers, key=lambda n: (values[n], n))
+    out = {}
+    for i, n in enumerate(order):
+        rank = i + 1
+        out[n] = 0 if rank == 1 else 1 if rank <= 3 \
+            else 2 if rank <= 5 else 3
+    return out
+
+
+def apply_band_calibration(vec: dict, bands: dict,
+                           biases) -> dict:
+    """Multiply each runner's probability by exp(bias of
+    its popularity band) and renormalise — the measured
+    stage-4 construction, verbatim."""
+    out = {n: vec[n] * exp(biases[bands[n]]) for n in vec}
+    total = fsum(out.values())
+    return {n: v / total for n, v in out.items()}
 
 
 def _temperature(vec: dict, tau: float) -> dict:
@@ -390,16 +521,26 @@ _SIGNAL_EXTRACTORS = {"pace_arrow": pace_arrow_signal,
 
 
 def nk_foundation_vector(numbers, entry: dict | None,
-                         win_odds: dict):
-    """The foundation's stages 1-3 on a plain win vector.
+                         win_odds: dict,
+                         band_biases=POPULARITY_BAND_BIASES):
+    """The foundation's stages 1-4 on a plain win vector.
     Returns (vector, info); vector is None when neither the
     forecast odds nor the market covers the field (the
     caller then keeps the lane vector). info carries the
-    stage vectors and the per-stage facts for the stamp."""
+    stage vectors and the per-stage facts for the stamp.
+    band_biases overrides the stage-4 calibration biases
+    (the walk-forward measurement passes its fold-fitted
+    values; production callers take the module constants)."""
     info = {"base": None, "temperature": NK_TEMPERATURE,
+            "devig": "shin",
             "leans": {}, "coverage": {},
             "blendApplied": False,
             "blendWeight": MARKET_BLEND_WEIGHT,
+            "calibration": {"applied": False,
+                            "bands": list(POPULARITY_BANDS),
+                            "biases": [float(b)
+                                       for b in band_biases],
+                            "shrink": POPULARITY_BAND_SHRINK},
             "stages": {}}
     numbers = sorted(numbers)
     if not numbers:
@@ -408,9 +549,9 @@ def nk_foundation_vector(numbers, entry: dict | None,
     nk_odds = nk_forecast_odds(entry)
     info["coverage"]["nkForecast"] = sum(
         1 for n in numbers if n in nk_odds)
-    base = power_devig(nk_odds, numbers)
+    base = shin_devig(nk_odds, numbers)
     if base is None:
-        market = power_devig(win_odds or {}, numbers)
+        market = shin_devig(win_odds or {}, numbers)
         if market is None:
             info["base"] = "lane"
             return None, info
@@ -431,7 +572,7 @@ def nk_foundation_vector(numbers, entry: dict | None,
     if win_odds and all(_num(win_odds.get(n)) is not None
                          and _num(win_odds.get(n)) > 1.0
                          for n in numbers):
-        market = market_probs(win_odds, numbers)
+        market = shin_devig(win_odds, numbers)
         w = MARKET_BLEND_WEIGHT
         blended = {n: current[n] ** (1.0 - w) * market[n] ** w
                    for n in numbers}
@@ -439,13 +580,21 @@ def nk_foundation_vector(numbers, entry: dict | None,
         current = {n: v / total for n, v in blended.items()}
         info["blendApplied"] = True
     info["stages"]["blended"] = dict(current)
+    if info["blendApplied"]:
+        bands = popularity_band_map(win_odds, numbers)
+        if bands is not None:
+            current = apply_band_calibration(current, bands,
+                                             band_biases)
+            info["calibration"]["applied"] = True
+    info["stages"]["calibrated"] = dict(current)
     info["stages"]["final"] = dict(current)
     return current, info
 
 
 def apply_nk_foundation(forecast: RaceForecast,
                         entry: dict | None,
-                        win_odds: dict | None):
+                        win_odds: dict | None,
+                        band_biases=POPULARITY_BAND_BIASES):
     """The whole netkeiba-foundation path for one race, over
     the caller's lane forecast (whose runners, names and
     statuses the rebuilt forecast keeps; its probabilities
@@ -453,19 +602,29 @@ def apply_nk_foundation(forecast: RaceForecast,
     Returns (forecast, info); info['pathApplied'] tells the
     publisher the issued vector is the foundation's (so the
     retired guard stage must not run on it), info['stages']
-    carries every stage's win vector for the stamp."""
+    carries every stage's win vector for the stamp and
+    info['calibration'] records the stage-4 popularity-band
+    calibration (bands, the biases used, the shrink)."""
     info = {"applied": False, "pathApplied": False,
             "version": CLEAN_FORECAST_VERSION, "base": None,
-            "leans": {}, "coverage": {}, "stages": {}}
+            "devig": "shin",
+            "leans": {}, "coverage": {},
+            "calibration": {"applied": False,
+                            "bands": list(POPULARITY_BANDS),
+                            "biases": [float(b)
+                                       for b in band_biases],
+                            "shrink": POPULARITY_BAND_SHRINK},
+            "stages": {}}
     win = _win_vector(forecast)
     if not win:
         info["base"] = "lane"
         return forecast, info
     vector, finfo = nk_foundation_vector(
-        sorted(win), entry, win_odds or {})
+        sorted(win), entry, win_odds or {}, band_biases)
     info.update({k: finfo[k] for k in
-                 ("base", "temperature", "leans", "coverage",
-                  "blendApplied", "blendWeight", "stages")})
+                 ("base", "temperature", "devig", "leans",
+                  "coverage", "blendApplied", "blendWeight",
+                  "calibration", "stages")})
     if vector is None:
         return forecast, info
     info["pathApplied"] = True
