@@ -246,10 +246,10 @@ from rewrite.analysis.shadow_v9 import BLEND_WEIGHT as V9B_BLEND_WEIGHT  # noqa:
 from rewrite.analysis.shadow_v9 import TEMPERATURE as V9B_TEMPERATURE  # noqa: E402
 from rewrite.analysis.shadow_v9 import postprocess_forecast  # noqa: E402
 from rewrite.analysis.nk_materials import (  # noqa: E402
-    NK_MATERIALS_VERSION, apply_nk_materials, closing_inputs_from_race,
-    combo_inputs_from_race, course_inputs_from_race,
     materials_fingerprint, parse_materials_payload,
     speed_coverage as nk_speed_coverage)
+from rewrite.analysis.clean_forecast import (  # noqa: E402
+    CLEAN_FORECAST_VERSION, apply_nk_foundation)
 from rewrite.analysis.bias_pace import (  # noqa: E402
     BIAS_PACE_VERSION, compute_same_day_bias, overlay_bias_on_pace)
 from rewrite.analysis.tickets import generate_tickets  # noqa: E402
@@ -1956,7 +1956,7 @@ def _nk_materials_upgrade_info(old: dict, now: datetime) -> dict | None:
         return None
     stamp = marker.get("nkMaterials")
     if isinstance(stamp, dict) and stamp.get("applied") \
-            and stamp.get("version") == NK_MATERIALS_VERSION:
+            and stamp.get("version") == CLEAN_FORECAST_VERSION:
         if not _nk_materials_growth(stamp, entry):
             return None
     elif (is_jumps or is_debut) and lane != V9B_LANE:
@@ -2130,6 +2130,16 @@ def _override_guard_upgrade_info(old: dict, now: datetime) -> dict | None:
     stamp = marker.get("overrideGuard")
     if isinstance(stamp, dict) and stamp.get("applied") \
             and stamp.get("version") == GUARD_VERSION:
+        return None
+    clean_stamp = marker.get("cleanForecast")
+    if isinstance(clean_stamp, dict) \
+            and clean_stamp.get("version") == CLEAN_FORECAST_VERSION:
+        # Netkeiba-foundation products (clean-forecast-v2):
+        # the guard is not part of that path by design (it
+        # measured worse on the foundation), so the missing
+        # guard stamp is not a defect to re-issue for — and
+        # qualifying here would block every later upgrade in
+        # the chain behind a rebuild that can never land it.
         return None
     post = _post_at(old)
     if post is None or post - now <= OVERRIDE_GUARD_UPGRADE_MIN_LEAD:
@@ -3537,57 +3547,67 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
         else:
             used_v9b = True
             blend_applied = bool(pp_info["blendApplied"])
-    # netkeiba materials adjustment (2026-11-17, user
-    # instruction — see the NK_MATERIALS constants): applied to
-    # the v9b vector HERE, inside the build, so marks, tickets,
-    # the win/top-3 prediction and the master shadow below all
-    # derive from the adjusted probabilities. A race with no
-    # materials entry (or an entry that cannot produce a term)
-    # keeps the plain v9b vector byte-identical.
-    #
-    # Jumps races (2026-11-21) run the same adjustment on their
-    # v1 probability vector: no fitted v8 candidate exists for
-    # the segment, so they never reach the v9b branch above,
-    # and before this change their collected materials (full
-    # bestTime / press / course-persons coverage) were never
-    # applied at all. apply_nk_materials is lane-agnostic (it
-    # reads strength/p_win off whatever forecast it is given)
-    # and its course terms treat the segment as JRA under the
-    # separate "jra-jumps" trial marker.
-    #
-    # Debut races (2026-11-28) run the same adjustment on their
-    # market base vector, for the same reason: the segment's
-    # collected materials (training grades, press marks, stable
-    # comments) are the only evidence that can move a debut
-    # runner off her market price. The adapter is handed NO
-    # extras on this lane (extras_by_number is empty for the
-    # segment — the v8 branch above never runs), so every join
-    # keys on the race card's own horse numbers, never on the
-    # extras' keys.
+    # Clean-forecast stage 3 (2026-11-28 rebuild — see
+    # rewrite/analysis/clean_forecast.py): the ONLY netkeiba
+    # materials that move the issued probability are the two
+    # signals the saved-corpus walk-forward measured as earning
+    # it — the time index's nk_best and the Maria pro index,
+    # each a geometric lean at w=0.20 (the nk forecast odds, the
+    # strongest measured signal, lean in stage 4 via the guard's
+    # step D). The old nk-materials z-term stack (25+ mostly
+    # unvalidated trial terms) no longer touches the vector;
+    # the materials are still collected and displayed. Applied
+    # HERE, inside the build, so marks, tickets, the win/top-3
+    # prediction and the master shadow below all derive from
+    # the leaned probabilities. A race with no materials entry
+    # keeps the plain stage-2 vector byte-identical. Lane-
+    # agnostic like the old adapter: v9b, jumps (v1 vector) and
+    # debut (market vector) all pass through; a lean fires only
+    # at >=60% field coverage of its signal.
     nk_info: dict = {"applied": False}
     nk_entry = None
     bias_overlay = None
+    # Clean-forecast stage vectors (2026-11-28 rebuild): each
+    # stage's win vector is captured so the stamp below can
+    # record exactly what each stage produced — the next
+    # ablation then reads saved vectors instead of trying to
+    # reconstruct the computation.
+    stage_vectors: dict = {"preLean": {
+        str(r.number): round(r.p_win, 6)
+        for r in forecast.runners if r.p_win is not None}}
     if (used_v9b or segment == "jumps" or used_debut) \
             and race_date >= NK_MATERIALS_CUTOVER_DATE:
         nk_entry = _load_nk_materials(race_date).get(race.race_id)
         if nk_entry is not None:
-            # Same-day bias pace (nk-materials-v12): read the
-            # day's bias from the card's already-final races
-            # (the caller's snapshots) and overlay it on this
-            # race's pace forecast, for the adapter to apply
-            # as the bias_pace term. Computed here, at publish
-            # time, because the source pool is whatever has
-            # finished by now — never precomputed.
+            # Same-day bias pace: still computed for the detail's
+            # display block below (race information only — it
+            # does not move the probability; the saved-corpus
+            # measurement found the pace/bias terms
+            # absorbed-to-harmful on every base tried).
             bias_overlay = _bias_pace_overlay(
                 summary, old, race_date, nk_entry, day_races,
                 len(race.runners))
-            forecast, nk_info = apply_nk_materials(
-                forecast, nk_entry, extras_by_number,
-                segment=segment,
-                course_inputs=course_inputs_from_race(race),
-                combo_inputs=combo_inputs_from_race(race),
-                closing_inputs=closing_inputs_from_race(race),
-                bias_overlay=bias_overlay)
+            # Netkeiba foundation (2026-11-28 rebuild stage 2,
+            # user instruction: issue the forecast from
+            # netkeiba's data): the issued probabilities are
+            # rebuilt from this entry — forecast odds as the
+            # base, the measured corrections, one market
+            # blend. The lane vector survives only in the
+            # "preLean" stage record and as the fallback when
+            # neither odds set covers the field (see
+            # rewrite/analysis/clean_forecast.py).
+            forecast, nk_info = apply_nk_foundation(
+                forecast, nk_entry, win_odds)
+            if nk_info.get("applied"):
+                nk_info["netkeibaRaceId"] = (
+                    nk_entry.get("netkeibaRaceId"))
+            for _stage_name, _stage_vec in (
+                    nk_info.get("stages") or {}).items():
+                if _stage_name == "final":
+                    continue
+                stage_vectors[_stage_name] = {
+                    str(n): round(p, 6) for n, p in
+                    sorted(_stage_vec.items())}
     # Override guard (2026-11-27, user instruction — see
     # rewrite/analysis/override_guard.py): the final stage of
     # the probability pipeline on the v9b lane. Applied HERE,
@@ -3598,10 +3618,22 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
     # win odds the blend consumed at compute time — never
     # final odds. A race whose odds do not cover the vector
     # keeps the unguarded vector byte-identical.
+    stage_vectors["leaned"] = {
+        str(r.number): round(r.p_win, 6)
+        for r in forecast.runners if r.p_win is not None}
     guard_info: dict = {"applied": False}
-    if used_v9b:
+    if used_v9b and not nk_info.get("pathApplied"):
+        # The override guard belongs to the retired v1 path:
+        # on the netkeiba foundation it measured worse on
+        # log loss in every learn/test comparison of the
+        # stage-2 screen, so it runs only when the foundation
+        # did not produce this race's vector (no materials
+        # entry — the race still stands on the lane vector).
         forecast, guard_info = apply_override_guard(
             forecast, win_odds, _nk_forecast_odds(nk_entry))
+    stage_vectors["final"] = {
+        str(r.number): round(r.p_win, 6)
+        for r in forecast.runners if r.p_win is not None}
     if lane_upgrade is not None and not used_v9b:
         # The extras exist but this race still cannot take the top
         # lane (a segment without a candidate, or the v8 forecast
@@ -4045,148 +4077,44 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
             "k": NAR_EVIDENCE_DECAY_K,
             "scope": "nar-only"}
     if nk_info.get("applied"):
-        # netkeiba materials adjustment (2026-11-17, user
-        # instruction): this publication's v9b probabilities were
-        # adjusted by the integrated evaluation over the collected
-        # materials (see the NK_MATERIALS constants). The stamp is
-        # the lane-side record of that fact AND the exactly-once
-        # marker for the one-time nk-materials upgrade: a stored
-        # product carrying it never qualifies again. Coverage is
-        # the integrate() coverage dict verbatim (horses per term
-        # source), so what the adjustment stood on stays auditable.
+        # Netkeiba-foundation stamp (2026-11-28 rebuild
+        # stage 2): this publication's probabilities were
+        # built by the foundation path (base = netkeiba
+        # forecast odds, or the market fallback the "base"
+        # field records; corrections and blend as recorded —
+        # see rewrite/analysis/clean_forecast.py). The stamp
+        # keeps the nkMaterials KEY because the one-time
+        # upgrade machinery (_nk_materials_upgrade_info) keys
+        # on it, and it is that machinery's exactly-once
+        # marker: a stored product carrying it at the clean
+        # version never qualifies again. Which leans fired,
+        # at what weight and with what field coverage, is
+        # recorded verbatim.
         meta["rewritePublish"]["nkMaterials"] = {
-            "version": NK_MATERIALS_VERSION,
+            "version": CLEAN_FORECAST_VERSION,
+            "path": "clean-forecast",
             "applied": True,
-            "weights": nk_info.get("weights"),
-            "terms": nk_info.get("terms"),
+            "base": nk_info.get("base"),
+            "blendApplied": bool(nk_info.get("blendApplied")),
+            "blendWeight": nk_info.get("blendWeight"),
+            "leans": nk_info.get("leans"),
             "coverage": nk_info.get("coverage"),
             "netkeibaRaceId": nk_info.get("netkeibaRaceId")}
         if nk_entry is not None:
-            # The content state this publication stands on
-            # (2026-11-21): _nk_materials_growth compares the
-            # then-current entry against this fingerprint to
-            # re-qualify the race when the materials file grows
-            # after publication (B1 — morning-collected
-            # bestTime / headToHead / odds cells reaching a race
-            # stamped off the thinner evening file).
+            # The content state this publication stands on:
+            # _nk_materials_growth compares the then-current
+            # entry against this fingerprint to re-qualify the
+            # race when the materials file grows after
+            # publication.
             meta["rewritePublish"]["nkMaterials"]["entryFingerprint"] = (
                 materials_fingerprint(nk_entry))
-        if nk_info.get("courseTrial"):
-            # JRA course-weights trial (nk-materials-v3): the
-            # stamp records that this publication's course terms
-            # ran at the trial weights (the NAR weights, applied
-            # to JRA without a JRA-learned fit — see
-            # rewrite/analysis/nk_materials.py), so the trial's
-            # forward record stays separable from NAR's
-            # fit+calib-validated one.
-            meta["rewritePublish"]["nkMaterials"]["courseTrial"] = (
-                nk_info["courseTrial"])
-        if nk_info.get("materialsTrial"):
-            # All-materials trial (nk-materials-v5): the stamp
-            # records that this publication's bestTime /
-            # headToHead / pedigree / press terms ran at the
-            # trial weights — weights that have NOT passed a
-            # retrospective validation (see
-            # rewrite/analysis/nk_materials.py) — so the trial's
-            # forward record stays separable and auditable.
-            meta["rewritePublish"]["nkMaterials"]["materialsTrial"] = (
-                nk_info["materialsTrial"])
-        if nk_info.get("paceTrial"):
-            # AI pace-forecast trial (nk-materials-v4, merged
-            # into v5; UNVALIDATED — no historical pace-forecast
-            # data exists): the stamp records that this
-            # publication's pace term ran at the trial weight,
-            # so the trial's forward record stays separable (see
-            # rewrite/analysis/nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"]["paceTrial"] = (
-                nk_info["paceTrial"])
-        if nk_info.get("speedDerivedTrial"):
-            # Speed-derived trial (nk-materials-v6; UNVALIDATED):
-            # the stamp records that this publication's trend /
-            # deviation / dispersion / aptitude terms — computed
-            # by the integrated evaluation from the speed page's
-            # raw columns all along, weightless until v6 — ran
-            # at the trial weights, so their forward record
-            # stays separable (see rewrite/analysis/
-            # nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"][
-                "speedDerivedTrial"] = nk_info["speedDerivedTrial"]
-        if nk_info.get("comboTrial"):
-            # Jockey x horse combo trial (nk-materials-v6;
-            # UNVALIDATED): the stamp records that this
-            # publication's combination term (the pair's record
-            # together, read from the race record) ran at the
-            # trial weight, so its forward record stays
-            # separable.
-            meta["rewritePublish"]["nkMaterials"]["comboTrial"] = (
-                nk_info["comboTrial"])
-        if nk_info.get("judgementTrial"):
-            # netkeiba judgement trial (nk-materials-v6;
-            # UNVALIDATED): the stamp records that this
-            # publication's form-deviation / AI-forecast terms
-            # ran at the trial weights. No collection file
-            # carries the values yet, so this marker cannot
-            # appear until they do — its absence is the record
-            # that the terms stayed inert.
-            meta["rewritePublish"]["nkMaterials"][
-                "judgementTrial"] = nk_info["judgementTrial"]
-        if nk_info.get("oddsTrial"):
-            # Odds-movement trial (nk-materials-v6;
-            # UNVALIDATED): the stamp records that this
-            # publication's odds drift / win-place gap terms ran
-            # at the trial weights. Same armed-but-dataless
-            # status as the judgement trial above.
-            meta["rewritePublish"]["nkMaterials"]["oddsTrial"] = (
-                nk_info["oddsTrial"])
-        if nk_info.get("closingTrial"):
-            # Closing trial (nk-materials-v7; UNVALIDATED):
-            # the stamp records that this publication's closing
-            # term — the horses' own observed last-3F deviation,
-            # read from the race record's past runs — ran at the
-            # trial weight, so the trial's forward record stays
-            # separable (see rewrite/analysis/nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"]["closingTrial"] = (
-                nk_info["closingTrial"])
-        if nk_info.get("horseAnalysisTrial"):
-            # Horse-analysis trial (2026-11-19; UNVALIDATED):
-            # the stamp records that this publication's
-            # horse-analysis term — netkeiba's per-horse
-            # data-analysis judgements (overall grade + section
-            # suitability marks) — ran at the trial weight, so
-            # the trial's forward record stays separable (see
-            # rewrite/analysis/nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"][
-                "horseAnalysisTrial"] = nk_info["horseAnalysisTrial"]
-        if nk_info.get("coursePersonsTrial"):
-            # Course-persons trial (2026-11-19, nk-materials-v10;
-            # UNVALIDATED): the stamp records that this
-            # publication's course-persons terms — this race's
-            # jockey's / trainer's records at today's course,
-            # from the course-analysis persons tables' per-horse
-            # rows — ran at the trial weights, so the trial's
-            # forward record stays separable (see
-            # rewrite/analysis/nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"][
-                "coursePersonsTrial"] = nk_info["coursePersonsTrial"]
-        if nk_info.get("biasPaceTrial"):
-            # Bias-pace trial (2026-11-19, nk-materials-v12;
-            # UNVALIDATED): the stamp records that this
-            # publication's bias_pace term — the same-day bias
-            # read overlaid on the pace forecast — ran at the
-            # trial weight cap, so the trial's forward record
-            # stays separable (see rewrite/analysis/
-            # nk_materials.py).
-            meta["rewritePublish"]["nkMaterials"][
-                "biasPaceTrial"] = nk_info["biasPaceTrial"]
-        if isinstance(nk_info.get("biasPace"), dict):
-            # The day's bias read itself (frontBack /
-            # insideOutside / sampleRaces / strength), stamped
-            # whenever an overlay was computed — including the
-            # reads that shifted nothing (no qualifying source
-            # race yet), so the day's evidence growth stays
-            # auditable from the stamp alone.
-            meta["rewritePublish"]["nkMaterials"]["biasPace"] = (
-                nk_info["biasPace"])
+    if used_v9b or used_debut or segment == "jumps":
+        # Clean-forecast stage record (2026-11-28 rebuild):
+        # the win vector after each stage of the clean path,
+        # so any later layer ablation is exact.
+        meta["rewritePublish"]["cleanForecast"] = {
+            "version": CLEAN_FORECAST_VERSION,
+            "stages": stage_vectors}
     if guard_info.get("applied"):
         # Override guard (2026-11-27, user instruction): this
         # publication's v9b probabilities passed through the
@@ -4433,18 +4361,17 @@ def build_publish_detail(old_detail: dict, summary: dict, now: datetime,
                 nk_upgrade.get("previousAbilityLane") or V9B_LANE),
             "abilityLane": (
                 meta["rewritePublish"].get("abilityLane") or V9B_LANE),
-            "note": ("one-time netkeiba-materials adoption "
-                     "(user instruction 2026-11-17: put ALL of "
-                     "the collected data into the forecast): this "
-                     "race was first published before the current "
-                     f"materials adjustment ({NK_MATERIALS_VERSION}: "
-                     "the collected course analysis weighted in — "
-                     "NAR at its fit+calib weights, JRA at the "
-                     "same weights as a trial) reached the "
-                     "production lane, so its probabilities were "
-                     "computed without it; the forecast is "
-                     "recomputed with the materials adjustment "
-                     "while the race is still pre-post"),
+            "note": ("one-time clean-forecast adoption "
+                     "(2026-11-28 rebuild): this race was first "
+                     "published before the netkeiba-foundation "
+                     f"path ({CLEAN_FORECAST_VERSION}: netkeiba "
+                     "forecast odds as the base -> the measured "
+                     "corrections -> one market blend) reached "
+                     "the production lane, so its probabilities "
+                     "were computed by the retired layered stack; "
+                     "the forecast is recomputed on the "
+                     "foundation path while the race is still "
+                     "pre-post"),
         }
     if career_upgrade is not None:
         prev_revision = (old.get("preparedMeta") or {}).get(
