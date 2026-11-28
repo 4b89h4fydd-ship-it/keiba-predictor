@@ -1,8 +1,13 @@
 """Publish a tiny factual racecard-only backup independently of full D1 writes.
 
 No odds, AI marks, predictions, results or post-off changes are published.
-An existing racecard's original runners are immutable; later runs can only add
-previously missing race IDs with verified runner names, never erase starts.
+Later runs can add previously missing race IDs with verified runner names
+and never erase starts.  A later roster for an already-published race
+replaces the stored one only when it is the same set of horses read
+more consistently (or a fuller set): the earlier "first complete
+roster wins, immutable forever" rule locked a permuted roster into
+this file on 2026-11-28 and the prefetch recovery then read it back
+as verified truth.
 """
 from __future__ import annotations
 import argparse
@@ -75,6 +80,45 @@ def racecard_manifest(payload: dict[str, Any]) -> dict[str, Any] | None:
             "raceCount":len(cards),"races":cards}
 
 
+def _roster_quality(card: dict[str, Any]) -> tuple[int, int, int]:
+    """(frame-map matches, runners, numbers are a clean 1..N) for one
+    roster, judged against the standard frame map.  The frame is read
+    from a different page feature than the number, so a permuted
+    roster scores below the true one even though both look complete.
+    """
+    horses=[h for h in (card.get("horses") or []) if isinstance(h,dict)]
+    numbers=[]
+    matches=0
+    for h in horses:
+        try:
+            no=int(h.get("horseNumber") or 0)
+            frame=int(h.get("frameNumber") or 0)
+        except (TypeError,ValueError):
+            no,frame=0,0
+        numbers.append(no)
+        if frame>0 and frame==_frame_for_number(no,len(horses)):
+            matches+=1
+    clean=1 if numbers and all(n>0 for n in numbers) and \
+        sorted(numbers)==list(range(1,len(numbers)+1)) else 0
+    return (matches,len(horses),clean)
+
+
+def _frame_for_number(number: int, field_size: int) -> int:
+    """Standard frame for a horse number (same rule as
+    arvexq.ingest.entry_reconcile.frame_for_number, inlined so this
+    rescue publisher stays dependency-free)."""
+    if number<=0 or field_size<=0 or number>field_size:
+        return 0
+    if field_size<=8:
+        return number
+    base,rem=divmod(field_size,8)
+    small_frames=8-rem
+    small_horses=small_frames*base
+    if number<=small_horses:
+        return (number-1)//base+1
+    return small_frames+(number-small_horses-1)//(base+1)+1
+
+
 def merge_manifest(existing: dict[str, Any] | None, fresh: dict[str, Any]) -> dict[str, Any]:
     if existing is None:
         return fresh
@@ -82,7 +126,30 @@ def merge_manifest(existing: dict[str, Any] | None, fresh: dict[str, Any]) -> di
         raise ValueError("static racecard date/version mismatch")
     saved={r["id"]:r for r in existing.get("races") or []}
     for r in fresh["races"]:
-        saved.setdefault(r["id"],r)  # first observed complete roster wins
+        rid=r["id"]
+        old=saved.get(rid)
+        if old is None:
+            saved[rid]=r
+            continue
+        # The old rule ("first observed complete roster wins") locked
+        # the 2026-11-28 garble in permanently: the first roster was
+        # form-complete but permuted, and no later correct roster
+        # could ever replace it — while the prefetch recovery read
+        # the file back as verified truth.  Two rosters of the same
+        # race are two readings of the same card: when they name the
+        # same horses, the internally consistent reading (standard
+        # frame map) replaces the scrambled one; when they name
+        # different horses, the fuller reading wins; ties keep the
+        # existing roster.
+        old_names={str(h.get("name") or "").strip() for h in old.get("horses") or []}
+        new_names={str(h.get("name") or "").strip() for h in r.get("horses") or []}
+        if old_names==new_names:
+            if _roster_quality(r)>_roster_quality(old):
+                print("STATIC_RACECARDS_ROSTER_CORRECTED",rid)
+                saved[rid]=r
+        elif len(new_names)>len(old_names):
+            print("STATIC_RACECARDS_ROSTER_CORRECTED",rid)
+            saved[rid]=r
     ordered=sorted(saved.values(),key=lambda x:str(x["id"]))
     return {"version":fresh["version"],"date":fresh["date"],"raceCount":len(ordered),"races":ordered}
 
