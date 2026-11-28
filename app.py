@@ -1462,19 +1462,28 @@ def _netkeiba_detail_rows(detail:dict)->list[dict]:
         except Exception as exc:print("netkeiba past failed",rid,exc);return ""
     with ThreadPoolExecutor(max_workers=2) as pool:
         f1=pool.submit(_get_now);f2=pool.submit(_get_past);html=f1.result() or "";past_html=f2.result() or ""
+    # Keyed by horse NAME, never by number: the shutuba and
+    # shutuba_past pages are two readings of the same card, and the
+    # past page's number extraction is the layout-fragile one — when
+    # its numbers shifted (2026-11-28), the old number-keyed dict
+    # poured each horse's recent runs onto whichever horse carried
+    # its number, and added past-only numbers as phantom rows.  The
+    # current page owns the identity; the past page contributes only
+    # the runs of the horse with the same name.
     rows={}
     if html:
         soup=BeautifulSoup(html,"html.parser")
         for tr in soup.select("tr.HorseList"):
             horse=_nk_row_horse(tr)
             if not horse:continue
-            rows[horse["horseNumber"]]=horse
+            rows[str(horse.get("name") or "").strip()]=horse
     if past_html:
         soup=BeautifulSoup(past_html,"html.parser")
         for tr in soup.select("tr.HorseList"):
             horse=_nk_row_horse(tr)
             if not horse:continue
-            key=horse["horseNumber"]
+            key=str(horse.get("name") or "").strip()
+            if not key:continue
             if key not in rows:rows[key]=horse
             rr=[]
             for td in tr.find_all("td"):
@@ -2635,10 +2644,22 @@ def central_race_detail(race_id: str) -> dict | None:
                     for k in ("title","distance","surface","condition","weather","fieldSize","startTime","scheduledStartTime"):
                         v=live.get(k)
                         if v not in (None,"",0,"不明"):detail[k]=v
-                    by_no={int(h.get("horseNumber") or 0):h for h in live.get("horses",[]) or []}
+                    # Join by NAME and let the official reading
+                    # correct the stored identity: the official card
+                    # is one row-consistent reading of the real card,
+                    # while the stored detail is an accumulated merge
+                    # product.  The old number-keyed overlay poured
+                    # each horse's jockey / weight / runs onto the
+                    # horse that happened to carry its number when
+                    # the stored numbering was scrambled (2026-11-28).
+                    by_name={str(h.get("name") or "").strip():h for h in live.get("horses",[]) or [] if str(h.get("name") or "").strip()}
                     for h in detail.get("horses",[]) or []:
-                        z=by_no.get(int(h.get("horseNumber") or 0))
+                        z=by_name.get(str(h.get("name") or "").strip())
                         if z:
+                            if int(z.get("horseNumber") or 0)>0 and int(h.get("horseNumber") or 0)!=int(z.get("horseNumber") or 0):
+                                h["horseNumber"]=int(z.get("horseNumber") or 0)
+                            if int(z.get("frameNumber") or 0)>0 and int(h.get("frameNumber") or 0)!=int(z.get("frameNumber") or 0):
+                                h["frameNumber"]=int(z.get("frameNumber") or 0)
                             for k in ("bodyWeight","bodyWeightChange","sex","age","carriedWeight","jockey","trainer"):
                                 if z.get(k) not in (None,"",0,[]):h[k]=z.get(k)
                             if z.get("recentRaces"):
@@ -2673,6 +2694,13 @@ def central_race_detail(race_id: str) -> dict | None:
                 for f in rr.get("finishers",[]) or []:
                     h=by_no.get(int(f.get("horseNumber") or 0))
                     if h:
+                        # The finisher row names its horse (the name
+                        # leads the finisher text); if the name does
+                        # not match the horse carrying that number,
+                        # the numbering on one side is scrambled and
+                        # the weights must not cross over.
+                        _hn=str(h.get("name") or "").strip();_fn=str(f.get("name") or "").strip()
+                        if _hn and _fn and not _fn.startswith(_hn):continue
                         for k in ("bodyWeight","bodyWeightChange"):
                             if f.get(k) not in (None,""):h[k]=f.get(k)
         except Exception as exc:print("central result fallback failed",race_id,exc)
@@ -2760,8 +2788,18 @@ def _fetch_extra_sources(detail:dict)->list[dict]:
 
 def _merge_enrichment(detail:dict,data:dict)->dict:
     hs=detail.get("horses") or [];by_no={int(h.get("horseNumber") or 0):h for h in hs if h.get("horseNumber")};by_name={str(h.get("name") or "").strip():h for h in hs if h.get("name")};sources=[]
+    def _resolve_enrichment_row(row):
+        # Name is the identity; a number may only confirm it.  The old
+        # number-first lookup attached a feed row to whichever horse
+        # carried its number when the stored numbering was scrambled,
+        # even though the row also carried the horse's name.
+        _nm=str(row.get("name") or "").strip()
+        if _nm and _nm in by_name:return by_name[_nm]
+        _cand=by_no.get(int(row.get("horseNumber") or 0))
+        if _cand is not None and (not str(_cand.get("name") or "").strip() or str(_cand.get("name") or "").strip()==_nm):return _cand
+        return None
     for row in data.get("smartRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+        h=_resolve_enrichment_row(row)
         if not h:continue
         if "SmartRc" not in sources:sources.append("SmartRc")
         if row.get("smartRc"):h["smartRc"]={**(h.get("smartRc") or {}),**row.get("smartRc")}
@@ -2770,7 +2808,7 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
             if h.get(k) in (None,"") and row.get(k) not in (None,""):h[k]=row.get(k)
         if row.get("recentRaces"):h["recentRaces"]=_jra_merge_runs(h.get("recentRaces") or [],row.get("recentRaces") or [],5)
     for row in data.get("netkeibaRows") or []:
-        h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+        h=_resolve_enrichment_row(row)
         if not h:continue
         sources.append("netkeiba") if "netkeiba" not in sources else None
         for k in ("sex","age","carriedWeight","jockey","trainer","bodyWeight","bodyWeightChange","owner","producer"):
@@ -2793,7 +2831,7 @@ def _merge_enrichment(detail:dict,data:dict)->dict:
     for b in data.get("extra") or []:
         src=str(b.get("source") or "補助")
         for row in b.get("rows") or []:
-            h=by_no.get(int(row.get("horseNumber") or 0)) or by_name.get(str(row.get("name") or "").strip())
+            h=_resolve_enrichment_row(row)
             if h:
                 extra=_strip_excluded(row.get("extra") or {})
                 h.setdefault("extraSources",{})[src]=extra
