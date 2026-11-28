@@ -50,9 +50,47 @@ class PrePostMarkConsistency(unittest.TestCase):
     self.assertNotIn('circuit',gate)
     self.assertNotIn('中央',gate)
     self.assertNotIn('地方',gate)
-  # The foundation module itself is the v2 path both circuits share.
+  # The foundation module itself is the v3 path both circuits share:
+  # Shin devig on the nk base and on the market alike, then the
+  # stage-4 popularity-band calibration behind the blend gate.
   cf=(root/'rewrite/analysis/clean_forecast.py').read_text(encoding='utf-8')
-  self.assertIn('CLEAN_FORECAST_VERSION = "clean-forecast-v2"',cf)
+  self.assertIn('CLEAN_FORECAST_VERSION = "clean-forecast-v3"',cf)
   self.assertIn('def nk_foundation_vector(',cf)
   self.assertIn('def apply_nk_foundation(',cf)
+  # v3 devig: Shin feeds both the base vector and the market vector
+  # of the blend. The v2 power devig survives only as a measurement
+  # reference and must not feed either vector.
+  self.assertIn('def shin_devig(',cf)
+  self.assertIn('"devig": "shin"',cf)
+  self.assertIn('base = shin_devig(nk_odds, numbers)',cf)
+  self.assertIn('market = shin_devig(win_odds, numbers)',cf)
+  self.assertNotIn('base = power_devig(',cf)
+  self.assertNotIn('market = power_devig(',cf)
+  # Stage 4: the popularity-band calibration — the corpus-fitted
+  # biases shrunk x0.5, the band map by market popularity rank and
+  # the calibration entry point.
+  self.assertIn('POPULARITY_BAND_BIASES = (0.1721, 0.0104, -0.0842, -0.0983)',cf)
+  self.assertIn('POPULARITY_BAND_SHRINK = 0.5',cf)
+  self.assertIn('def popularity_band_map(',cf)
+  self.assertIn('def apply_band_calibration(',cf)
+  # The calibration needs the market odds to rank popularity, so it
+  # may only run where the market blend ran: structurally, the one
+  # apply_band_calibration call in nk_foundation_vector sits inside
+  # the blendApplied gate.
+  cftree=ast.parse(cf)
+  vec=[n for n in cftree.body
+       if isinstance(n,ast.FunctionDef) and n.name=='nk_foundation_vector']
+  self.assertEqual(len(vec),1)
+  gated=[n for n in ast.walk(vec[0])
+         if isinstance(n,ast.If)
+         and isinstance(n.test,ast.Subscript)
+         and isinstance(n.test.value,ast.Name)
+         and n.test.value.id=='info'
+         and isinstance(n.test.slice,ast.Constant)
+         and n.test.slice.value=='blendApplied']
+  self.assertEqual(len(gated),1)
+  cal=[n for n in ast.walk(gated[0])
+       if isinstance(n,ast.Call) and isinstance(n.func,ast.Name)
+       and n.func.id=='apply_band_calibration']
+  self.assertEqual(len(cal),1)
 if __name__=='__main__':unittest.main()
