@@ -7,12 +7,26 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class VersionedAssetCacheTest(unittest.TestCase):
-    def test_horse_modules_have_content_fingerprint_in_html(self):
+    def test_page_assets_are_version_pinned_and_modules_retired(self):
         source = (ROOT / "arvexq/ui/static/index.html").read_text(encoding="utf-8")
+        # The retired module families are no longer referenced
+        # by the page at all (minimal app, 2026-11-28, user
+        # instruction): no asset of theirs is loaded, so none
+        # can be cached — immutably or otherwise.
         for prefix in ("/betting/","/morning/","/research/","/styles/"):
             urls = re.findall(r'["\'](' + re.escape(prefix) + r'[^"\']+)["\']', source)
-            self.assertTrue(urls, prefix)
-            self.assertTrue(all("?v=__ARVEXQ_" in u for u in urls), (prefix,urls))
+            self.assertEqual(urls, [], prefix)
+        # Every script and stylesheet the page does load
+        # carries a version pin (?fix=...), so nothing
+        # unversioned is served to the browser.
+        scripts = re.findall(r'<script[^>]+src="([^"]+)"', source)
+        self.assertTrue(scripts)
+        for url in scripts:
+            self.assertIn("?fix=", url, url)
+        styles = re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', source)
+        self.assertTrue(styles)
+        for url in styles:
+            self.assertIn("?fix=", url, url)
 
     def test_version_manifest_names_current_live_model_not_retired_factor_scorer(self):
         import json

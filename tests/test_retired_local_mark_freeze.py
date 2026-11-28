@@ -18,14 +18,20 @@ class RetiredLocalMarkFreezeTests(unittest.TestCase):
         self.assertNotIn("端末の発走前印・固定済み", self.source)
 
     def test_archived_original_is_not_republished_by_legacy_view(self):
-        # Original immutable audit data stays in storage; retiring its HTML
-        # presentation must not require reinstating the old scoring engine.
+        # Original immutable audit data stays in storage; the
+        # minimal app (2026-11-28, user instruction) has no
+        # legacy view that could republish it: no
+        # frozen-prediction view, no saved-revision panels and
+        # no pre-off mark authoriser remain. The only marks on
+        # screen are the published pack's unifiedForecast.marks.
         self.assertNotIn("function serverFrozenPrediction(r)", self.source)
         self.assertNotIn("function savedRevisionDiagnosisPanel(r,p)", self.source)
         self.assertNotIn("function savedRevisionHorseDetail(r,x)", self.source)
-        self.assertIn("function authorizedPreOffMarks(r)", self.source)
+        self.assertNotIn("function authorizedPreOffMarks(r)", self.source)
         self.assertNotIn("function applyFrozenMarks(r,p)", self.source)
-        self.assertIn("ARVEXQProductionMarks.visible(x)", self.source)
+        self.assertNotIn("ARVEXQProductionMarks.visible(x)", self.source)
+        self.assertIn("function marksByNumber(detail)", self.source)
+        self.assertIn("map[Number(m.horseNumber)] = String(m.markSymbol)", self.source)
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,10 +6,17 @@ class RetiredSameDayCorrection(unittest.TestCase):
         s=APP.read_text(encoding="utf-8")
         self.assertNotIn("sameDayCorrectionProfileV313",s)
         self.assertNotIn("当日補正 ON",s)
-    def test_existing_mark_signature_and_three_factor_model_preserved(self):
+    def test_marks_come_from_the_pack_not_a_client_model(self):
+        # The v313 same-day signature and every other
+        # client-side mark model are gone (minimal app,
+        # 2026-11-28, user instruction): marks are read from
+        # the published pack's unifiedForecast.marks, so no
+        # local signature or three-factor model remains whose
+        # preservation could be at stake.
         s=APP.read_text(encoding="utf-8")
-        self.assertIn("function sameDayTrendSignatureV313(",s)
+        self.assertNotIn("function sameDayTrendSignatureV313(",s)
         self.assertNotIn("function assignPredictionMarks(",s)
         self.assertNotIn("score:.45*(tr===null?.5:tr)+.35*(pure===null?.5:pure)+.20*(sec===null?.5:sec)",s)
-        self.assertNotIn("function assignPredictionMarks(",s)
+        self.assertIn("function marksByNumber(detail)",s)
+        self.assertIn("map[Number(m.horseNumber)] = String(m.markSymbol)",s)
 if __name__=="__main__": unittest.main()

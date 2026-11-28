@@ -128,6 +128,7 @@ from zoneinfo import ZoneInfo
 
 from arvexq.prediction.unified_product import verified as verified_unified
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
+from rewrite.analysis.clean_forecast import CLEAN_FORECAST_VERSION
 from rewrite.analysis.override_guard import GUARD_VERSION
 from rewrite.analysis.nk_materials import (
     CLOSING_WEIGHT, COMBO_WEIGHT, NK_ALL_TERMS_LABEL,
@@ -828,8 +829,23 @@ class UpgradeQualificationTests(TestCase):
         self.assertEqual(info["previousAbilityLane"], V9B_LANE)
 
     def test_current_version_stamp_never_qualifies(self):
+        # The current stamp is the clean-forecast-v2 foundation
+        # stamp (2026-11-28 rebuild): a race already standing on
+        # it, with no materials growth recorded against it,
+        # never qualifies again.
         self.assertIsNone(self._info(stored_detail(
-            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION)))
+            nk_stamp=True, nk_stamp_version=CLEAN_FORECAST_VERSION)))
+
+    def test_v19_stamp_qualifies_once_more_for_clean_forecast(self):
+        # The last nk-materials stamp (v19) predates the
+        # clean-forecast-v2 foundation: it qualifies exactly
+        # once more, and the rebuilt product — stamped
+        # clean-forecast-v2 — does not qualify again (see the
+        # build-level tests).
+        info = self._info(stored_detail(
+            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION))
+        self.assertIsNotNone(info)
+        self.assertEqual(info["reason"], "nk-materials-upgrade")
 
     def test_older_version_stamp_qualifies_once_more(self):
         # A v1 (speed-only) publication predates the course
@@ -953,7 +969,7 @@ JUMPS_MATERIALS = parse_materials_payload(JUMPS_PAYLOAD)
 
 
 def jumps_stored_detail(*, nk_stamp=False,
-                        nk_stamp_version=NK_MATERIALS_VERSION) -> dict:
+                        nk_stamp_version=CLEAN_FORECAST_VERSION) -> dict:
     detail = stored_detail(lane="v1-prior", date=JUMPS_DATE,
                            post=JUMPS_POST, nk_stamp=nk_stamp,
                            nk_stamp_version=nk_stamp_version)
@@ -981,7 +997,7 @@ class GrowthQualificationTests(TestCase):
 
     def test_grown_materials_requalify_a_current_version_stamp(self):
         detail = stored_detail(
-            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp=True, nk_stamp_version=CLEAN_FORECAST_VERSION,
             nk_stamp_extra={"terms": ["speed"],
                             "coverage": {"speed": 5, "mochitime": 0,
                                          "h2h": 0}})
@@ -995,7 +1011,7 @@ class GrowthQualificationTests(TestCase):
         # recorded by the current adapter over unchanged
         # materials therefore shows no growth.
         detail = stored_detail(
-            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp=True, nk_stamp_version=CLEAN_FORECAST_VERSION,
             nk_stamp_extra={"terms": ["speed"],
                             "coverage": {"speed": 5, "mochitime": 0,
                                          "h2h": 0, "nk_best": 5}})
@@ -1003,7 +1019,7 @@ class GrowthQualificationTests(TestCase):
 
     def test_fingerprint_stamp_requalifies_only_on_growth(self):
         detail = stored_detail(
-            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp=True, nk_stamp_version=CLEAN_FORECAST_VERSION,
             nk_stamp_extra={"entryFingerprint":
                             materials_fingerprint(MATERIALS[RACE_ID])})
         self.assertIsNone(self._info(detail, MATERIALS))
@@ -1016,7 +1032,7 @@ class GrowthQualificationTests(TestCase):
                                              "tier": 1}}
                        for n in (1, 2)}}}})
         detail = stored_detail(
-            nk_stamp=True, nk_stamp_version=NK_MATERIALS_VERSION,
+            nk_stamp=True, nk_stamp_version=CLEAN_FORECAST_VERSION,
             nk_stamp_extra={"terms": ["speed"],
                             "coverage": {"speed": 5, "mochitime": 0}})
         self.assertIsNone(self._info(detail, thin_growth))
@@ -1154,15 +1170,55 @@ def _build(detail, materials=MATERIALS, race=None, **patches):
             c.stop()
 
 
+# Forecast odds the clean-forecast-v2 foundation stands on:
+# they invert the market's order (horse 5 shortest, horse 1
+# longest), so a build on the foundation is visibly a
+# different vector from both the lane's and the market's.
+NK_FORECAST_ODDS = {1: 15.0, 2: 9.0, 3: 6.0, 4: 4.0, 5: 3.0}
+
+
+def v2_materials(horse_extra=None):
+    """Parsed materials in the shape the clean-forecast-v2
+    foundation consumes: per-horse forecast odds (the base)
+    plus the nk_best index the nk_best lean reads.
+    horse_extra maps a horse number to extra parsed-shape
+    fields (pace, coursePersons, press, ...) merged in."""
+    horses = {}
+    for n in NAMES:
+        horse = {"nk_best": NK_AVG5[n] + 5, "nk_avg5": NK_AVG5[n],
+                 "nk_dist": None, "nk_course": None,
+                 "nk_recent": [NK_AVG5[n]] * 3,
+                 "odds": {"forecastWin": NK_FORECAST_ODDS[n]}}
+        horse.update((horse_extra or {}).get(n, {}))
+        horses[str(n)] = horse
+    return parse_materials_payload({
+        "version": "nk-materials-v19", "date": DATE,
+        "races": {RACE_ID: {"netkeibaRaceId": NK_ID,
+                            "horses": horses,
+                            "courseAnalysis": {"コース": "金沢1500m"}}}})
+
+
 class BuildTests(TestCase):
     def test_first_publication_carries_the_stamp(self):
-        new, receipt = _build(fresh_detail())
+        new, receipt = _build(fresh_detail(), materials=v2_materials())
         self.assertIsNotNone(new, receipt)
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
+        # The clean-forecast-v2 foundation stamp (2026-11-28
+        # rebuild): the base it stood on, the leans that fired
+        # with their weights, and the field coverage of each —
+        # the retired terms/weights record is gone.
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
+        self.assertEqual(stamp["path"], "clean-forecast")
+        self.assertEqual(stamp["base"], "nk")
         self.assertEqual(stamp["netkeibaRaceId"], NK_ID)
-        self.assertEqual(stamp["coverage"]["speed"], 5)
+        self.assertEqual(stamp["coverage"]["nkForecast"], 5)
+        self.assertEqual(stamp["coverage"]["nk_best"], 5)
+        self.assertEqual(stamp["leans"]["nk_best"]["weight"], 0.20)
+        self.assertTrue(stamp["leans"]["nk_best"]["fired"])
+        self.assertTrue(stamp["blendApplied"])
+        self.assertNotIn("terms", stamp)
         self.assertNotIn("revision", marker)
         self.assertIsNotNone(verified_unified(new))
 
@@ -1173,10 +1229,15 @@ class BuildTests(TestCase):
         self.assertNotIn("nkMaterials", marker)
 
     def test_materials_move_the_published_probabilities(self):
-        with_mat, _ = _build(fresh_detail())
+        with_mat, _ = _build(fresh_detail(), materials=v2_materials())
         without_mat, _ = _build(fresh_detail(), materials={})
         win_with = with_mat["prediction"]["stages"]["probability"]["value"]["win"]
         win_without = without_mat["prediction"]["stages"]["probability"]["value"]["win"]
+        # The foundation stands on netkeiba's forecast odds,
+        # which invert the market in this fixture: horse 5 (the
+        # forecast's shortest price, the market's longest) is
+        # lifted and horse 1 (the market favourite the forecast
+        # dismisses) is cut, against the no-materials build.
         self.assertGreater(win_with[5], win_without[5])
         self.assertLess(win_with[1], win_without[1])
 
@@ -1234,7 +1295,7 @@ class BuildTests(TestCase):
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
         self.assertEqual(marker["revision"]["kind"],
                          "nk-materials-upgrade")
         self.assertIsNotNone(verified_unified(new))
@@ -1249,7 +1310,7 @@ class BuildTests(TestCase):
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
         self.assertEqual(marker["revision"]["kind"],
                          "nk-materials-upgrade")
         self.assertIsNotNone(verified_unified(new))
@@ -1264,85 +1325,80 @@ class BuildTests(TestCase):
         marker = new["preparedMeta"]["rewritePublish"]
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
         self.assertEqual(marker["revision"]["kind"],
                          "nk-materials-upgrade")
         self.assertIsNotNone(verified_unified(new))
         self.assertIsNone(self._recheck(new))
 
-    def test_build_records_the_all_materials_trial(self):
-        # The published stamp must show the v5 trial on its
-        # face: the terms that fired, the trial label with each
-        # weight in the weights string, and the materialsTrial
-        # marker — separable from the validated terms forever.
-        payload = {
-            "version": "nk-materials-v5", "date": DATE,
-            "races": {RACE_ID: {
-                "netkeibaRaceId": NK_ID,
-                "horses": {str(n): {
-                    "nk_best": NK_AVG5[n] + 5, "nk_avg5": NK_AVG5[n],
-                    "nk_dist": None, "nk_course": None,
-                    "nk_recent": [NK_AVG5[n]] * 3,
-                    "bestTime": {"seconds": 88.0 + n, "tier": 1},
-                    "headToHead": {"duels": 10, "ahead": n},
-                    "pedigree": {"sire": "種牡馬", "sireCourse": {
-                        "starts": 90, "wins": 3 * n, "top3": 9 * n,
-                        "winRate": 0.1}},
-                    "press": {"marks": {"記者": "○"}}}
-                    for n in NAMES},
-                "courseAnalysis": {"コース": "金沢1500m"}}}}
+    def test_build_stamp_records_leans_not_retired_trials(self):
+        # The clean-forecast-v2 stamp (2026-11-28 rebuild)
+        # shows exactly which leans fired, at what weight,
+        # with what coverage. The retired trial families
+        # (bestTime / headToHead / pedigree terms) no longer
+        # stand in the probability path: they are recorded
+        # only in the entryFingerprint as material the
+        # publication stood on, never as a fired term or a
+        # trial marker.
+        extra = {n: {
+            "bestTime": {"seconds": 88.0 + n, "tier": 1},
+            "headToHead": {"duels": 10, "ahead": n},
+            "pedigree": {"sire": "種牡馬", "sireCourse": {
+                "starts": 90, "wins": 3 * n, "top3": 9 * n,
+                "winRate": 0.1}},
+            "press": {"marks": {"CP予想": cp}}}
+            for n, cp in ((1, "○"), (2, "▲"), (3, "△"),
+                          (4, "☆"), (5, "◎"))}
         new, receipt = _build(
-            fresh_detail(), materials=parse_materials_payload(payload))
+            fresh_detail(), materials=v2_materials(extra))
         self.assertIsNotNone(new, receipt)
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        for term in ("mochitime", "h2h", "pedigree"):
-            self.assertIn(term, stamp["terms"])
-        self.assertIn("all-materials-trial-20261117",
-                      stamp["weights"])
-        self.assertIn("unvalidated", stamp["weights"])
-        self.assertEqual(stamp["materialsTrial"],
-                         "all-materials-trial-20261117")
-        self.assertEqual(stamp["coverage"]["mochitime"], 5)
-        self.assertEqual(stamp["coverage"]["h2h"], 5)
-        self.assertEqual(stamp["coverage"]["pedigree"], 5)
-        self.assertEqual(stamp["coverage"]["press"], 5)
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
+        self.assertNotIn("terms", stamp)
+        self.assertNotIn("materialsTrial", stamp)
+        self.assertNotIn("weights", stamp)
+        self.assertTrue(stamp["leans"]["press_cp"]["fired"])
+        self.assertEqual(stamp["leans"]["press_cp"]["weight"], 0.10)
+        self.assertEqual(stamp["coverage"]["press_cp"], 5)
+        self.assertEqual(stamp["entryFingerprint"]["mochitime"], 5)
+        self.assertEqual(stamp["entryFingerprint"]["h2h"], 5)
+        self.assertEqual(stamp["entryFingerprint"]["pedigree"], 5)
         self.assertIsNotNone(verified_unified(new))
 
-    def test_build_applies_course_terms_for_nar(self):
-        payload = {
-            "version": "nk-materials-v2", "date": DATE,
-            "races": {RACE_ID: {
-                "netkeibaRaceId": NK_ID,
-                "horses": {str(n): {"nk_best": None, "nk_avg5": 60,
-                                    "nk_dist": None, "nk_course": None,
-                                    "nk_recent": None}
-                           for n in NAMES},
-                "courseAnalysis": COURSE_ANALYSIS}}}
-        with_course, _ = _build(
-            fresh_detail(), materials=parse_materials_payload(payload),
+    def test_build_applies_course_jockey_lean_for_nar(self):
+        # The course family's place in the clean-forecast-v2
+        # path is the course_jockey lean: each horse's
+        # jockey's win rate at today's course, read from the
+        # entry's coursePersons block. The retired
+        # course_front / course_frame logit terms no longer
+        # stand in the path and leave no record in the stamp.
+        rates = {1: 0.30, 2: 0.05, 3: 0.10, 4: 0.15, 5: 0.20}
+        extra = {n: {"coursePersons": {
+            "jockey": {"winRate": rates[n]},
+            "trainer": {"winRate": 0.10}}} for n in NAMES}
+        with_persons, _ = _build(
+            fresh_detail(), materials=v2_materials(extra),
             race=fabricated_course_race())
-        self.assertIsNotNone(with_course)
-        stamp = with_course["preparedMeta"]["rewritePublish"]["nkMaterials"]
-        self.assertIn("course_front", stamp["terms"])
-        self.assertIn("course_frame", stamp["terms"])
-        self.assertIn("course-nar", stamp["weights"])
-        self.assertEqual(stamp["coverage"]["course_frame"], 5)
-        self.assertEqual(stamp["coverage"]["course_front"], 5)
-        # Same build without the course tables: the field's only
-        # front-runner (horse 1, net course logit +0.128 — the
-        # largest in the field) must sit higher with the course
-        # terms in, and a mid-frame non-front horse (2, net
-        # -0.071) lower.
-        payload["races"][RACE_ID]["courseAnalysis"] = None
-        without_course, _ = _build(
-            fresh_detail(), materials=parse_materials_payload(payload),
+        self.assertIsNotNone(with_persons)
+        stamp = with_persons["preparedMeta"]["rewritePublish"]["nkMaterials"]
+        self.assertEqual(stamp["coverage"]["course_jockey"], 5)
+        self.assertEqual(stamp["leans"]["course_jockey"]["weight"],
+                         0.20)
+        self.assertTrue(stamp["leans"]["course_jockey"]["fired"])
+        self.assertNotIn("terms", stamp)
+        # Direction: horse 1's rider owns the course's best
+        # win rate and horse 2's the worst, so 1 sits higher
+        # and 2 lower than the same build without the persons
+        # block.
+        without_persons, _ = _build(
+            fresh_detail(), materials=v2_materials(),
             race=fabricated_course_race())
-        win_with = with_course["prediction"]["stages"]["probability"]["value"]["win"]
-        win_without = without_course["prediction"]["stages"]["probability"]["value"]["win"]
+        win_with = with_persons["prediction"]["stages"]["probability"]["value"]["win"]
+        win_without = without_persons["prediction"]["stages"]["probability"]["value"]["win"]
         self.assertGreater(win_with[1], win_without[1])
         self.assertLess(win_with[2], win_without[2])
-        self.assertIsNotNone(verified_unified(with_course))
+        self.assertIsNotNone(verified_unified(with_persons))
 
     def test_frozen_race_without_materials_stays_frozen(self):
         detail = stored_detail()
@@ -1758,25 +1814,40 @@ class ClosingAdapterTests(TestCase):
 
 
 class PaceBuildTests(TestCase):
-    def test_build_stamps_the_pace_trial(self):
-        payload = json.loads(json.dumps(MATERIALS_PAYLOAD))
-        entry = payload["races"][RACE_ID]
-        entry["paceLabel"] = "H"
-        for n in NAMES:
-            entry["horses"][str(n)]["pace"] = {
-                ph: {"rank": n, "pct": n / 5.0}
-                for ph in ("start", "corner3", "corner4")}
+    def test_build_stamps_the_pace_arrow_lean(self):
+        # The pace forecast's place in the clean-forecast-v2
+        # path is the pace_arrow lean: corner4 pct minus start
+        # pct, leaned in the fade direction the walk-forward
+        # supported (the forecast odds over-price the horses
+        # their own pace forecast sends forward). The stamp
+        # records the lean's weight, whether it fired, and its
+        # field coverage; the retired pace-trial record
+        # (paceTrial / terms / weights label) is gone.
+        extra = {n: {"pace": {
+            "start": {"rank": n, "pct": n / 5.0},
+            "corner3": {"rank": n, "pct": n / 5.0},
+            "corner4": {"rank": n, "pct": (6 - n) / 5.0}}}
+            for n in NAMES}
         new, receipt = _build(
-            fresh_detail(), materials=parse_materials_payload(payload))
+            fresh_detail(), materials=v2_materials(extra))
         self.assertIsNotNone(new, receipt)
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertIn("pace", stamp["terms"])
-        self.assertIn("speed", stamp["terms"])
-        self.assertEqual(stamp["paceTrial"], "ai-pace-forecast")
-        self.assertIn("pace-trial-20261117", stamp["weights"])
-        self.assertIn("unvalidated-no-history", stamp["weights"])
-        self.assertEqual(stamp["coverage"]["pace"], 5)
+        self.assertEqual(stamp["coverage"]["pace_arrow"], 5)
+        self.assertEqual(stamp["leans"]["pace_arrow"]["weight"],
+                         0.10)
+        self.assertTrue(stamp["leans"]["pace_arrow"]["fired"])
+        self.assertNotIn("paceTrial", stamp)
+        self.assertNotIn("terms", stamp)
+        # Direction: horse 1 carries the field's largest
+        # corner4-minus-start (the pace forecast sends her
+        # backwards through the race) and is lifted; horse 5,
+        # the mirror image, is cut.
+        plain, _ = _build(fresh_detail(), materials=v2_materials())
+        win = new["prediction"]["stages"]["probability"]["value"]["win"]
+        win_plain = plain["prediction"]["stages"]["probability"]["value"]["win"]
+        self.assertGreater(win[1], win_plain[1])
+        self.assertLess(win[5], win_plain[5])
         self.assertIsNotNone(verified_unified(new))
 
 
@@ -2110,26 +2181,30 @@ class BuilderV6Tests(TestCase):
 
 
 class V6BuildStampTests(TestCase):
-    def test_build_stamps_derived_and_combo_trials(self):
+    def test_build_stamps_the_clean_forecast_record(self):
         new, receipt = _build(fresh_detail(), race=_combo_race())
         self.assertIsNotNone(new, receipt)
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertEqual(stamp["version"], NK_MATERIALS_VERSION)
-        # MATERIALS horses carry nk_recent sequences, so the
-        # derived family fires (at zero contrast here) and the
-        # combo family fires on the fabricated race's pairs.
-        self.assertIn("speed_slope", stamp["terms"])
-        self.assertEqual(stamp["speedDerivedTrial"],
-                         NK_SPEED_DERIVED_TRIAL)
-        self.assertIn("combo", stamp["terms"])
-        self.assertEqual(stamp["comboTrial"], NK_COMBO_TRIAL)
-        self.assertIn("speed-derived-trial-20261117",
-                      stamp["weights"])
-        self.assertIn("combo-trial-20261117", stamp["weights"])
-        # The armed-but-dataless families leave no marker.
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
+        self.assertEqual(stamp["path"], "clean-forecast")
+        # The retired v6 trial families (speed-derived /
+        # combo / judgement / odds) no longer stand in the
+        # probability path: the stamp carries no terms list,
+        # no weights label and no trial markers for them.
+        self.assertNotIn("terms", stamp)
+        self.assertNotIn("weights", stamp)
+        self.assertNotIn("speedDerivedTrial", stamp)
+        self.assertNotIn("comboTrial", stamp)
         self.assertNotIn("judgementTrial", stamp)
         self.assertNotIn("oddsTrial", stamp)
+        # This entry carries no forecast odds, so the
+        # foundation stands on the market base and records no
+        # leans; what the publication stood on is the
+        # fingerprint.
+        self.assertEqual(stamp["base"], "market")
+        self.assertEqual(stamp["leans"], {})
+        self.assertEqual(stamp["entryFingerprint"]["speed"], 5)
         self.assertIsNotNone(verified_unified(new))
 
 
@@ -2217,9 +2292,18 @@ class JumpsBuildTests(TestCase):
         self.assertEqual(marker["abilityLane"], "v1-prior")
         stamp = marker["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertIn("mochitime", stamp["terms"])
-        self.assertIn("press", stamp["terms"])
+        # Clean-forecast-v2 (2026-11-28 rebuild): the jumps
+        # entry carries no forecast odds, so the foundation
+        # stands on the market base and no lean fires; the
+        # collected materials the publication stood on
+        # (bestTime / press) are recorded in the fingerprint,
+        # not as retired terms.
+        self.assertEqual(stamp["version"], CLEAN_FORECAST_VERSION)
+        self.assertEqual(stamp["base"], "market")
+        self.assertEqual(stamp["leans"], {})
+        self.assertNotIn("terms", stamp)
         self.assertEqual(stamp["entryFingerprint"]["mochitime"], 5)
+        self.assertEqual(stamp["entryFingerprint"]["press"], 5)
         self.assertIsNotNone(verified_unified(new))
 
     def test_frozen_jumps_race_reissues_once_with_materials(self):

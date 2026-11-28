@@ -40,6 +40,8 @@ from zoneinfo import ZoneInfo
 
 from rewrite.analysis.forecast import (
     DEBUT_MARKET_INCOMPLETE, RaceForecast, forecast_debut_market)
+from rewrite.analysis.clean_forecast import (
+    CLEAN_FORECAST_VERSION, power_devig)
 from rewrite.analysis.nk_materials import apply_nk_materials
 from rewrite.data.normalize import Obs, RaceRecord, RunnerRecord, obs
 from rewrite.output.api_shape import MODEL_VERSION
@@ -230,11 +232,21 @@ class DebutBuildTests(TestCase):
                          "win-odds-market")
         self.assertEqual(marker["debutMarket"]["activeRunners"], 6)
         self.assertEqual(marker["debutMarket"]["oddsCoveredRunners"], 6)
-        # The materials adjustment landed and is stamped; the
-        # override guard is a v9b-lane stage and never stamps a
-        # debut publication.
+        # The foundation stamp landed; the override guard is
+        # a v9b-lane stage and never stamps a debut
+        # publication. Clean-forecast-v2 (2026-11-28 rebuild):
+        # the debut entry carries no forecast odds, so the
+        # foundation stands on the market base, and the grade
+        # material the publication stood on is recorded in
+        # the stamp's entryFingerprint — the retired grade
+        # term no longer stands in the probability path.
         self.assertTrue(marker["nkMaterials"]["applied"])
-        self.assertIn("grade", marker["nkMaterials"]["terms"])
+        self.assertEqual(marker["nkMaterials"]["version"],
+                         CLEAN_FORECAST_VERSION)
+        self.assertEqual(marker["nkMaterials"]["base"], "market")
+        self.assertEqual(
+            marker["nkMaterials"]["entryFingerprint"]["grade"], 4)
+        self.assertNotIn("terms", marker["nkMaterials"])
         self.assertNotIn("overrideGuard", marker)
         unified = new["unifiedForecast"]
         self.assertEqual(unified["abilityModelVersion"],
@@ -243,13 +255,17 @@ class DebutBuildTests(TestCase):
                          "uncalibrated-prior")
         self.assertEqual(new["predictionStatus"], "ready")
         self.assertEqual(len(new["predictionMarks"]), 5)
-        # Probabilities moved off the bare market in the grade's
-        # direction: horse 1 (grade B, second-shortest price)
-        # gains on horse 2 (grade C).
+        # Probabilities stand on the market alone: they are
+        # exactly the foundation's market base (the power
+        # devig of the win odds). The grade material is
+        # collected and recorded (see the fingerprint above)
+        # but, since the clean-forecast-v2 rebuild, no longer
+        # shifts a debut probability in its direction.
         win = new["prediction"]["stages"]["probability"]["value"]["win"]
-        base = market_base(ODDS)
-        self.assertGreater(win[1], base[1])
-        self.assertLess(win[2], base[2])
+        base = power_devig(ODDS, sorted(ODDS))
+        for number in ODDS:
+            self.assertAlmostEqual(win[number], base[number],
+                                   places=3)
 
     def test_first_publication_without_materials_is_market_only(self):
         new, receipt = self._build(fresh_detail(), fabricated_race(), {})

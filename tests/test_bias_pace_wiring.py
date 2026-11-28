@@ -20,10 +20,16 @@ These tests pin:
   - the lane helpers: snapshots only for FINAL results, and
     the overlay's leak filter (a later same-track race and
     an earlier other-track race never enter the read);
-  - the build: the stamp carries the bias read with its
-    sampleRaces, the detail's biasProvenance.estimated and
-    biasPace block carry the real values, and a build
-    without day_races stamps none of it.
+  - the build: the detail's biasProvenance.estimated and
+    biasPace block carry the real read, and a build
+    without day_races stamps none of it. Since the
+    clean-forecast-v2 rebuild (2026-11-28) the read is
+    display-only at build level: the foundation stamp
+    carries no bias term and the published probabilities
+    do not move with the read. The adapter-level term
+    above remains pinned because the retired adapter is
+    still the record the historical stamps were written
+    by; the build tests pin the new separation.
 """
 from __future__ import annotations
 
@@ -270,17 +276,19 @@ def _build_with_bias(detail, day_races):
 class BiasPaceBuildTests(TestCase):
     DAY = [_source_race(1, "18:00"), _source_race(2, "19:00")]
 
-    def test_build_stamps_and_displays_the_bias_read(self):
+    def test_build_displays_the_bias_read_and_stamps_no_bias_term(self):
         new, receipt = _build_with_bias(fresh_detail(), self.DAY)
         self.assertIsNotNone(new, receipt)
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertTrue(stamp["applied"])
-        self.assertIn("bias_pace", stamp["terms"])
-        self.assertEqual(stamp["coverage"]["bias_pace"], 5)
-        self.assertEqual(stamp["biasPaceTrial"],
-                         NK_BIAS_PACE_TRIAL)
-        self.assertEqual(stamp["biasPace"]["sampleRaces"], 2)
-        self.assertAlmostEqual(stamp["biasPace"]["frontBack"], 0.5)
+        # Clean-forecast-v2 (2026-11-28 rebuild): the bias
+        # read no longer stands in the probability path, so
+        # the stamp records no bias term, no trial label and
+        # no bias block — the stamp is the foundation's alone.
+        self.assertEqual(stamp["version"], "clean-forecast-v2")
+        self.assertNotIn("terms", stamp)
+        self.assertNotIn("biasPace", stamp)
+        self.assertNotIn("biasPaceTrial", stamp)
         # Display data: the provenance estimate carries the
         # real read, and the sibling block carries the summary.
         estimated = new["biasProvenance"]["estimated"]
@@ -298,16 +306,21 @@ class BiasPaceBuildTests(TestCase):
         stamp = new["preparedMeta"]["rewritePublish"]["nkMaterials"]
         self.assertNotIn("biasPace", stamp)
         self.assertNotIn("biasPaceTrial", stamp)
-        self.assertNotIn("bias_pace", stamp["terms"])
+        self.assertNotIn("terms", stamp)
         self.assertNotIn("biasPace", new)
         self.assertNotIn("biasProvenance", new)
 
-    def test_bias_moves_the_published_probabilities(self):
+    def test_bias_read_no_longer_moves_the_published_probabilities(self):
+        # The bias overlay is display-only since the
+        # clean-forecast-v2 rebuild: the read is still
+        # computed and shown (see the biasPace block above),
+        # but the published probabilities are the
+        # foundation's alone, identical with and without the
+        # day's earlier races.
         with_bias, _ = _build_with_bias(fresh_detail(), self.DAY)
         without, _ = _build_with_bias(fresh_detail(), None)
+        self.assertIn("biasPace", with_bias)
+        self.assertNotIn("biasPace", without)
         win_with = with_bias["prediction"]["stages"]["probability"]["value"]["win"]
         win_without = without["prediction"]["stages"]["probability"]["value"]["win"]
-        # Horse 5 is the forecast front-runner on a
-        # front-favourable card; horse 1 the back-marker.
-        self.assertGreater(win_with[5], win_without[5])
-        self.assertLess(win_with[1], win_without[1])
+        self.assertEqual(win_with, win_without)
