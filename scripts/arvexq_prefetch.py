@@ -74,35 +74,9 @@ def _numbers_are_clean_field(rows: Any) -> bool:
     return sorted(numbers) == list(range(1, len(numbers) + 1))
 
 
-def _fresh_numbering_trusted(base_rows: list[dict[str, Any]],
-                             fresh_rows: list[dict[str, Any]]) -> bool:
-    """Decide whether a fresh roster's horse numbers may key the merge.
-
-    The 2026-11-28 garble carried the right horses under wrong numbers.
-    Merging that by number overwrote good rows and appended duplicates.
-    Numbering is trusted only when it has no duplicates and never
-    renumbers a horse the base roster already knows by name.
-    """
-    numbers = [no for no in (_horse_no(h) for h in fresh_rows) if no > 0]
-    if len(numbers) != len(set(numbers)):
-        return False
-    base_no_by_name: dict[str, int] = {}
-    for h in base_rows:
-        name = str(h.get("name") or "").strip()
-        no = _horse_no(h)
-        if name and no > 0:
-            base_no_by_name[name] = no
-    for h in fresh_rows:
-        name = str(h.get("name") or "").strip()
-        no = _horse_no(h)
-        if name and no > 0 and name in base_no_by_name and base_no_by_name[name] != no:
-            return False
-    return True
-
-
 def _merge_fresh_fields(row: dict[str, Any], raw: dict[str, Any], cutoff: str) -> None:
     for key, value in raw.items():
-        if key == "horseNumber":
+        if key in ("horseNumber", "frameNumber"):
             continue
         if key in ("recentRaces", "allPastRuns") and isinstance(value, list) and cutoff:
             union = merge_career([*(row.get("allPastRuns") or []), *(row.get("recentRaces") or [])], value, cutoff)
@@ -114,66 +88,36 @@ def _merge_fresh_fields(row: dict[str, Any], raw: dict[str, Any], cutoff: str) -
             row[key] = copy.deepcopy(value)
 
 
-def _merge_horses_by_name(out: list[dict[str, Any]], fresh_rows: list[dict[str, Any]],
-                          cutoff: str) -> list[dict[str, Any]]:
-    """Fallback merge for an untrusted-numbering roster: match by name,
-    never renumber, never reframe, never append unknown horses."""
-    by_name: dict[str, dict[str, Any]] = {}
-    for row in out:
-        name = str(row.get("name") or "").strip()
-        if name and name not in by_name:
-            by_name[name] = row
-    for raw in fresh_rows:
-        name = str(raw.get("name") or "").strip()
-        row = by_name.get(name) if name else None
-        if row is None:
-            continue
-        safe = {k: v for k, v in raw.items() if k != "frameNumber"}
-        _merge_fresh_fields(row, safe, cutoff)
-    return out
-
-
 def _merge_horses(base: Any, fresh: Any, cutoff: str = "") -> list[dict[str, Any]]:
-    """Preserve the rich card while allowing newer diagnosis/live fields to win."""
-    out = [copy.deepcopy(h) for h in (base or []) if isinstance(h, dict)]
-    by_no: dict[int, dict[str, Any]] = {}
-    for row in out:
-        try:
-            no = int(row.get("horseNumber") or 0)
-        except Exception:
-            no = 0
-        if no > 0:
-            by_no[no] = row
+    """Preserve the rich card while allowing newer diagnosis/live fields to win.
 
+    The merge is keyed by horse NAME via the canonical reconciliation
+    module (arvexq.ingest.entry_reconcile).  The horseNumber-keyed
+    merge this replaces is what turned the 2026-11-28 numbering garble
+    into overwritten rows and phantom duplicates: a fresh roster with
+    the right horses under wrong numbers overwrote the good rows
+    number by number.  Identity fields are never taken from the fresh
+    side; materials follow the name; a number disagreement is printed
+    (PREFETCH_MERGE_IDENTITY_DISAGREEMENT), never silently absorbed,
+    and the identity itself is settled by reconciliation, not by a
+    merge.
+    """
+    from arvexq.ingest.entry_reconcile import merge_rows_by_name
+
+    base_rows = [h for h in (base or []) if isinstance(h, dict)]
     fresh_rows = [h for h in (fresh or []) if isinstance(h, dict)]
-    if fresh_rows and not _fresh_numbering_trusted(out, fresh_rows):
-        return _merge_horses_by_name(out, fresh_rows, cutoff)
+    if not fresh_rows:
+        return copy.deepcopy(base_rows)
+    disagreements: list[dict[str, Any]] = []
 
-    for raw in fresh or []:
-        if not isinstance(raw, dict):
-            continue
-        try:
-            no = int(raw.get("horseNumber") or 0)
-        except Exception:
-            no = 0
-        if no <= 0:
-            continue
-        row = by_no.get(no)
-        if row is None:
-            row = {"horseNumber": no}
-            out.append(row)
-            by_no[no] = row
-        for key, value in raw.items():
-            if key == "horseNumber":
-                continue
-            if key in ("recentRaces", "allPastRuns") and isinstance(value, list) and cutoff:
-                union = merge_career([*(row.get("allPastRuns") or []), *(row.get("recentRaces") or [])], value, cutoff)
-                if union:
-                    row["allPastRuns"] = union
-                    row["recentRaces"] = union[:5]
-                continue
-            if _meaningful(value) or key not in row:
-                row[key] = copy.deepcopy(value)
+    def _fields(row: dict[str, Any], raw: dict[str, Any]) -> None:
+        _merge_fresh_fields(row, raw, cutoff)
+
+    out = merge_rows_by_name(base_rows, fresh_rows,
+                             field_merger=_fields,
+                             disagreements=disagreements)
+    for d in disagreements:
+        print("PREFETCH_MERGE_IDENTITY_DISAGREEMENT", d, flush=True)
     return out
 
 
@@ -249,6 +193,8 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
     if not _numbers_are_clean_field(roster_rows):
         return False
     if str(detail.get("id") or "").startswith("jra-") or str(detail.get("circuit") or "") == "中央":
+        from arvexq.ingest.entry_reconcile import frame_for_number
+
         for h in roster_rows:
             try:
                 frame = int(h.get("frameNumber") or 0)
@@ -256,16 +202,30 @@ def _card_usable(detail: dict[str, Any] | None) -> bool:
                 frame = 0
             if not 1 <= frame <= 8:
                 return False
+            # A permuted roster passes the clean-permutation and 1..8
+            # checks while every number sits on the wrong horse; the
+            # frame (read from a different page feature than the
+            # number) must follow the standard frame map for the
+            # roster's own numbers, or the identity is scrambled.
+            if frame != frame_for_number(_horse_no(h), len(roster_rows)):
+                return False
     return core >= max(1, (len(active) * 7 + 9) // 10)
 
 
 def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
-    """Reuse this same pipeline's previously verified published roster cache.
+    """Reuse this same pipeline's previously published roster cache.
 
-    No second fetcher: the immutable static racecard is a materialized output
-    of an earlier successful official prefetch. It can fill gaps in current
-    network responses without ever fabricating horses or replacing richer
-    provider observations.
+    No second fetcher: the static racecard is a materialized output of
+    an earlier successful official prefetch.  It is a RESCUE source,
+    not a verified truth: the 2026-11-28 garble was written into this
+    very file by an earlier run and then "recovered" back into the
+    next one, locking the corruption in.  A roster is therefore only
+    eligible when it passes _card_usable AND its identity is
+    internally consistent under the standard frame map (checked in
+    _card_usable for central cards; repeated here for every circuit),
+    and prepare() may only graft its IDENTITY (name -> number/frame)
+    onto a current card whose name set is identical — never its
+    materials, and never onto a different set of horses.
     """
     if not date or len(date) != 10 or date[4] != "-" or date[7] != "-":
         return {}
@@ -273,13 +233,54 @@ def _recover_existing_racecards(date: str) -> dict[str, dict[str, Any]]:
     record = _read(str(path))
     if str(record.get("date") or "") != date:
         return {}
+    from arvexq.ingest.entry_reconcile import numbering_report
+
     recovered: dict[str, dict[str, Any]] = {}
     for row in record.get("races") or []:
         if not isinstance(row, dict) or str(row.get("date") or "") != date:
             continue
-        if _card_usable(row):
-            recovered[str(row["id"])] = row
+        if not _card_usable(row):
+            continue
+        rep = numbering_report(row.get("horses"))
+        if not rep["clean"] or rep["duplicateNames"]:
+            continue
+        if rep["frameKnown"] and rep["frameMatches"] != rep["frameKnown"]:
+            continue
+        recovered[str(row["id"])] = row
     return recovered
+
+
+def _apply_recovered_identity(current: dict[str, Any] | None,
+                              recovered: dict[str, Any]) -> dict[str, Any] | None:
+    """Graft a rescued roster's identity onto the current card.
+
+    Only the identity (each horse's number/frame, plus the rescued
+    roster's core entry fields) comes from the rescued roster, and
+    only when both cards name exactly the same horses; the current
+    card's materials are then merged in by name (identity fields are
+    never taken from them).  A different name set means the rescued
+    roster describes a different reading of the card: it is not
+    applied, and the caller records the rejection.
+    """
+    if not isinstance(current, dict) or not current.get("id"):
+        return None
+    cur_names = {str(h.get("name") or "").strip()
+                 for h in (current.get("horses") or []) if isinstance(h, dict)}
+    rec_names = {str(h.get("name") or "").strip()
+                 for h in (recovered.get("horses") or []) if isinstance(h, dict)}
+    cur_names.discard("")
+    rec_names.discard("")
+    if not cur_names or cur_names != rec_names:
+        return None
+    base = copy.deepcopy(recovered)
+    for key, value in current.items():
+        if key == "horses":
+            continue
+        if _meaningful(value) or key not in base:
+            base[key] = copy.deepcopy(value)
+    base["horses"] = _merge_horses(base.get("horses"), current.get("horses"),
+                                   str(base.get("date") or current.get("date") or ""))
+    return base
 
 
 from arvexq.features.readiness import diagnosis_ready as _analysis_ready
@@ -583,13 +584,20 @@ def prepare(
     # so a failed upstream HTTP fetch cannot erase a known published roster.
     static = _recover_existing_racecards(str(bundle.get("date") or ""))
     recovered_rosters = []
+    recovered_rejected: list[str] = []
     for summary in rows:
         rid = str(summary["id"])
         prior = by_id.get(rid)
         prepared = _merge_detail(prior, summary)
         if not _card_usable(prepared) and rid in static:
-            prepared = _merge_detail(static[rid], prepared)
-            recovered_rosters.append(rid)
+            grafted = _apply_recovered_identity(prepared, static[rid])
+            if grafted is not None:
+                prepared = grafted
+                recovered_rosters.append(rid)
+            else:
+                recovered_rejected.append(rid)
+                print("FULL_PREFETCH_RECOVERED_ROSTER_REJECTED", rid,
+                      "name set differs from the rescued roster", flush=True)
         by_id[rid] = prepared
     errors: dict[str, str] = {}
     analysis_errors: dict[str, str] = {}
@@ -691,6 +699,7 @@ def prepare(
         "details": len(decorated),
         "cards_ready": card_count,
         "reused_verified_rosters": sorted(recovered_rosters),
+        "recovered_roster_rejected": sorted(recovered_rejected),
         "analysis_ready": analysis_count,
         "analysis_skipped_unchanged": sorted(set(skipped_unchanged)),
         "missing_card": missing_card,
@@ -736,9 +745,19 @@ def _graft_evidence(fact: dict[str, Any], decorated: dict[str, Any] | None) -> d
     """
     if not isinstance(decorated, dict):
         return fact
-    src = {h.get("horseNumber"): h for h in (decorated.get("horses") or [])
-           if isinstance(h, dict) and h.get("horseNumber") is not None
-           and isinstance(h.get("researchEvidence"), dict)}
+    # Graft by horse NAME, never by number: the evidence was computed
+    # from a horse's own past runs, and a number-keyed graft is one of
+    # the routes that put one horse's record on another when the
+    # numbering garbled (2026-11-28).  When the two details disagree
+    # on a horse's number, that horse is skipped — its identity must
+    # be reconciled before its materials may move.
+    src: dict[str, dict[str, Any]] = {}
+    for h in (decorated.get("horses") or []):
+        if not isinstance(h, dict) or not isinstance(h.get("researchEvidence"), dict):
+            continue
+        name = str(h.get("name") or "").strip()
+        if name and name not in src:
+            src[name] = h
     if not src:
         return fact
     out = copy.deepcopy(fact)
@@ -746,8 +765,14 @@ def _graft_evidence(fact: dict[str, Any], decorated: dict[str, Any] | None) -> d
     for horse in out.get("horses") or []:
         if not isinstance(horse, dict) or isinstance(horse.get("researchEvidence"), dict):
             continue
-        donor = src.get(horse.get("horseNumber"))
+        donor = src.get(str(horse.get("name") or "").strip())
         if donor is None:
+            continue
+        if _horse_no(horse) > 0 and _horse_no(donor) > 0 \
+                and _horse_no(horse) != _horse_no(donor):
+            print("PREFETCH_EVIDENCE_GRAFT_SKIPPED", horse.get("name"),
+                  "number disagreement", _horse_no(horse), _horse_no(donor),
+                  flush=True)
             continue
         horse["researchEvidence"] = copy.deepcopy(donor["researchEvidence"])
         if isinstance(donor.get("careerCoverage"), dict) and not isinstance(horse.get("careerCoverage"), dict):
