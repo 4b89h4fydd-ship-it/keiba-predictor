@@ -21,8 +21,14 @@ class HorseBrandAssetsTest(unittest.TestCase):
         if not (dist/'index.html').exists():
             self.skipTest('Build static first')
         html=(dist/'index.html').read_text(encoding='utf-8')
-        self.assertIn('/sports/horse-portal.js',html)
-        self.assertIn('/sports/unified-home.js',html)
+        # Entry-table-only shell (2026-11-28 rebuild, commit 827df37):
+        # the shell loads only the current app bundle; the retired home
+        # modules (horse-portal / unified-home) are no longer loaded.
+        # The bundle pin moves with the manifest pin in
+        # test_original_horse_assets_exist on a bundle version bump.
+        self.assertIn('/app-v331.js',html)
+        self.assertNotIn('/sports/horse-portal.js',html)
+        self.assertNotIn('/sports/unified-home.js',html)
         self.assertNotIn('__ARVEXQ_SPORT_HASH__',html)
         self.assertFalse((dist/'kyotei').exists())
         self.assertFalse((dist/'sports'/'boat-app').exists())

@@ -71,34 +71,23 @@ assert.match(home.buttons('horse'),/data-home-page="favorites"/);
 assert.doesNotMatch(home.buttons('horse'),/data-home-page="ai-stats"/);
 assert.doesNotMatch(source,/kyotei|boat|競艇/i);
 const ui=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-// The home no longer renders HorsePortal.home (PR #556: the home shows
-// venue tags only). The portal module itself must stay loaded, which
-// index.html guarantees via its script tag.
+// Entry-table-only shell (2026-11-28 rebuild, commit 827df37): the home
+// no longer renders HorsePortal.home and the shell no longer loads the
+// retired home modules at all. index.html loads only the current app
+// bundle (the bundle pin moves with the other v331 shell pins on a
+// bundle version bump), and the minimal app must not resurrect the
+// retired portal home or depend on the retired unified-home module.
 const indexHtml=fs.readFileSync('arvexq/ui/static/index.html','utf8');
-assert.match(indexHtml,/\/sports\/horse-portal\.js/,
-  'horse-portal module must stay loaded via index.html');
+assert.match(indexHtml,/\/app-v331\.js/,
+  'entry-table-only shell must load the current app bundle');
+assert.doesNotMatch(indexHtml,/\/sports\/horse-portal\.js/,
+  'retired horse-portal module must not be loaded by the entry-table-only shell');
+assert.doesNotMatch(indexHtml,/\/sports\/unified-home\.js/,
+  'retired unified-home module must not be loaded by the entry-table-only shell');
 assert.doesNotMatch(ui,/ARVEXQHorsePortal\.home/,
   'home must not render HorsePortal.home (venue-tags-only home, PR #556)');
-assert.match(ui,/syncLiveUI\('horse'/);
-assert.match(ui,/function refreshHomeOfficialStatuses\(\)/,
-  'home must refetch verified official status instead of only repainting the clock');
-assert.match(ui,/mergePublishedStatuses\(state\.races,rows\)/);
-assert.match(ui,/homeOfficialStatusLastFetch<30000/);
-assert.match(ui,/refreshHomeOfficialStatuses\(\);/);
-assert.match(ui,/mergePublishedStatuses\(rows,state\.races\)/,
-  'initial listing cannot downgrade server-confirmed races when fallback is stale');
-const statusStart=ui.indexOf('function resultStatus('),
-      statusEnd=ui.indexOf('function isFinal(',statusStart);
-assert.ok(statusStart>=0&&statusEnd>statusStart,'production result-status authority exists');
-const resultStatus=new Function(ui.slice(statusStart,statusEnd)+'return resultStatus')();
-assert.equal(resultStatus({raceStatus:'確定',result:{status:'速報'}}),'確定',
-  'newer official D1 final supersedes cached preliminary detail');
-assert.equal(resultStatus({raceStatus:'速報',result:{status:'確定'}}),'確定',
-  'newer detail final never gets downgraded');
-assert.equal(resultStatus({raceStatus:'速報',result:{status:''}}),'速報');
-assert.equal(resultStatus({raceStatus:'',result:{status:''}}),'',
-  'never invent a result from passage of time');
-assert.match(ui,/10000/);
+assert.doesNotMatch(ui,/ARVEXQUnifiedHome/,
+  'entry-table app must not depend on the retired unified-home module');
 const styles=fs.readFileSync('arvexq/ui/static/sports/all-races.css','utf8');
 assert.match(styles,/\.arv-all-race\.elapsed,\.arv-all-race\.finished/);
 assert.match(styles,/opacity:\.63/);
