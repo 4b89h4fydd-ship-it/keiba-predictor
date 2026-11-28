@@ -1,5 +1,5 @@
-"""Netkeiba-foundation path (2026-11-28 rebuild stage 2):
-the v2 probability path's contract tests.
+"""Netkeiba-foundation path (2026-11-28 rebuild stage 2,
+v3 corrections): the v3 probability path's contract tests.
 
 Covered:
   * determinism — same inputs, byte-identical probabilities;
@@ -19,16 +19,22 @@ Covered:
     zero on the netkeiba base — the forecast odds already
     price it);
   * fallbacks — incomplete forecast odds fall back to the
-    market base; no usable odds at all keeps the lane
-    vector untouched;
-  * stage composition — base, corrections and blend run in
-    order, every stage vector is recorded, and there is no
-    post-blend stage (the retired guard is not in the path).
+    market base (Shin devig, verbatim, no calibration);
+    no usable odds at all keeps the lane vector untouched;
+  * stage composition — base, corrections, blend and the
+    popularity-band calibration run in order, every stage
+    vector is recorded, and the calibration is the only
+    post-blend stage (the retired guard is not in the
+    path);
+  * the calibration runs in the measured direction — it
+    raises the market favourite's probability and lowers
+    a 6th-favourite-or-lower runner's, relative to the
+    blended vector.
 """
 
 from rewrite.analysis.clean_forecast import (
-    CLEAN_FORECAST_VERSION, apply_nk_foundation, power_devig,
-    z_lean)
+    CLEAN_FORECAST_VERSION, POPULARITY_BAND_BIASES,
+    apply_nk_foundation, shin_devig, z_lean)
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.tickets import generate_tickets
 
@@ -99,19 +105,24 @@ def test_determinism():
     assert _win(first) == _win(second)
     assert info1["stages"] == info2["stages"]
     assert info1["version"] == CLEAN_FORECAST_VERSION == \
-        "clean-forecast-v2"
+        "clean-forecast-v3"
 
 
 def test_base_is_netkeiba_not_the_lane():
     # The lane vector ranks horse 1 first; the forecast odds
-    # rank horse 8 first by a wide margin. The foundation's
-    # top pick must follow the forecast odds.
+    # rank horse 8 first by a wide margin. The foundation
+    # through the blend must follow the forecast odds. (The
+    # stage-4 calibration may then tip a near-tie toward
+    # the market favourite — here it does, 0.146 vs 0.154
+    # blended — which is its measured purpose, so the
+    # contract is asserted on the blended vector.)
     flipped = {1: 60.0, 2: 50.0, 3: 40.0, 4: 30.0, 5: 20.0,
                6: 12.0, 7: 6.0, 8: 2.2}
     final, info = apply_nk_foundation(
         _forecast(), _entry(nk_odds=flipped), ODDS)
     assert info["base"] == "nk" and info["pathApplied"]
-    top = max(_win(final).items(), key=lambda kv: kv[1])[0]
+    blended = info["stages"]["blended"]
+    top = max(blended.items(), key=lambda kv: kv[1])[0]
     assert top == 8
 
 
@@ -193,12 +204,15 @@ def test_maria_is_not_an_input():
 
 def test_market_fallback_base():
     # No forecast odds in the entry: the base is the real
-    # market's power-devig vector, verbatim (no corrections,
-    # no blend on top of the market itself).
+    # market's Shin-devig vector, verbatim (no corrections,
+    # no blend on top of the market itself, and no
+    # popularity-band calibration — that stage was measured
+    # on the netkeiba path only).
     final, info = apply_nk_foundation(
         _forecast(), _entry(), ODDS)
     assert info["base"] == "market" and info["pathApplied"]
-    expected = power_devig(ODDS, sorted(STRENGTHS))
+    assert info["calibration"]["applied"] is False
+    expected = shin_devig(ODDS, sorted(STRENGTHS))
     got = _win(final)
     for n in STRENGTHS:
         assert abs(got[n] - round(expected[n], 4)) < 2e-4
@@ -216,12 +230,31 @@ def test_stages_recorded_in_order():
                                       ODDS)
     stages = info["stages"]
     assert set(stages) == {"nkBase", "corrected", "blended",
-                           "final"}
+                           "calibrated", "final"}
     assert info["blendApplied"] is True
     assert all(lean["fired"] for lean in info["leans"].values())
-    # No post-blend stage exists on this path: the recorded
-    # final vector IS the blended vector, and it is the
-    # vector the rebuilt forecast carries (rounded).
-    assert stages["final"] == stages["blended"]
+    # The calibration is stamped and is the only post-blend
+    # stage: the recorded final vector IS the calibrated
+    # vector, and it is the vector the rebuilt forecast
+    # carries (rounded).
+    assert info["calibration"]["applied"] is True
+    assert info["calibration"]["biases"] == \
+        list(POPULARITY_BAND_BIASES)
+    assert stages["calibrated"] != stages["blended"]
+    assert stages["final"] == stages["calibrated"]
     for n, p in stages["final"].items():
         assert abs(_win(final)[n] - round(p, 4)) < 2e-4
+
+
+def test_band_calibration_direction():
+    # The measured correction (favourite/longshot bias):
+    # relative to the blended vector, the market favourite
+    # (horse 1, band bias +0.1721) gains probability and a
+    # 6th-favourite-or-lower runner (horse 8, band bias
+    # -0.0983) loses it.
+    _, info = apply_nk_foundation(_forecast(), _full_entry(),
+                                  ODDS)
+    blended = info["stages"]["blended"]
+    calibrated = info["stages"]["calibrated"]
+    assert calibrated[1] > blended[1]
+    assert calibrated[8] < blended[8]
