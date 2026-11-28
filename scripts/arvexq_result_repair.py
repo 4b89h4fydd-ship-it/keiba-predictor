@@ -24,7 +24,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import app
-from arvexq.ingest.entry_reconcile import reconcile_detail_roster
+from arvexq.ingest.entry_reconcile import (
+    reconcile_detail_roster,
+    reconcile_finisher_flags,
+)
 from arvexq.results import (
     JST,
     TERMINAL_NO_PAYOUT,
@@ -598,6 +601,36 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                       json.dumps(entries, ensure_ascii=False))
     # === roster reconciliation (end) ===
 
+    # === finisher-flag reconciliation (begin) ===
+    # The roster pass above only drops phantom duplicate rows; it
+    # never looks at a row's scratch marking.  A marking recorded
+    # wrongly by the morning collection (a horse marked 除外 that
+    # actually ran) is carried verbatim by every rebuild from the
+    # stored facts — merge_detail protects the roster and only the
+    # result fields are refreshed — so a hand-clean of the published
+    # pack was silently undone by the next run (2026-11-28: Tokyo 9R
+    # ローズマイスター / リラゲイル, officially 6th in a dead heat,
+    # republished as 除外; same shape in Tokyo 7R/12R, Kyoto 11R).
+    # The official result is the authority on who ran: clear the
+    # scratch marking of every horse it records with a finish
+    # position, by horse NAME (arvexq.ingest.entry_reconcile).
+    # Horses the result records without a position (its own
+    # scratch accounting) keep their marking.  Healed races are
+    # published so the clearing actually lands in the packs.
+    flag_reconciled: dict[str, list[dict[str, Any]]] = {}
+    if not light:
+        for rid in started_ids:
+            detail = by_id.get(rid)
+            if not isinstance(detail, dict):
+                continue
+            entries = reconcile_finisher_flags(detail)
+            if entries:
+                flag_reconciled[rid] = entries
+                published.add(rid)
+                print("FLAG_RECONCILED", rid,
+                      json.dumps(entries, ensure_ascii=False))
+    # === finisher-flag reconciliation (end) ===
+
     # Marks-consistency heal: the candidates were healed from the
     # bundle copies above; register them for publication (the payload
     # assembly swaps their entries in, with any fresher refreshed
@@ -709,6 +742,14 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
                 roster_reconciled.setdefault(rid, []).extend(extra)
                 print("ROSTER_RECONCILED", rid,
                       json.dumps(extra, ensure_ascii=False))
+            # Same for the scratch markings: the healed entry's
+            # roster predates the flag pass above, and its
+            # transplanted result is the authority here too.
+            extra_flags = reconcile_finisher_flags(entry)
+            if extra_flags:
+                flag_reconciled.setdefault(rid, []).extend(extra_flags)
+                print("FLAG_RECONCILED", rid,
+                      json.dumps(extra_flags, ensure_ascii=False))
         payload_by_id[rid] = entry
     # Compact-tombstone shaping: for races whose stored detail is a
     # nightly-compact tombstone, the seed step recorded the pristine
@@ -752,6 +793,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
             "result_repaired_count": len(repaired),
             "marks_healed_count": len(marks_healed),
             "roster_reconciled_count": len(roster_reconciled),
+            "flag_reconciled_count": len(flag_reconciled),
             "environment_filled_count": len(environment_filled),
             "result_published_count": len(published | repaired),
             "result_missing_count": len(unresolved),
@@ -776,6 +818,7 @@ def repair(bundle_path: str, payload_path: str, report_path: str, workers: int =
         "repaired": sorted(repaired),
         "marks_healed": sorted(marks_healed),
         "roster_reconciled": roster_reconciled,
+        "flag_reconciled": flag_reconciled,
         "environment_filled": sorted(environment_filled),
         "published": sorted(published | repaired),
         "result_missing": unresolved,
