@@ -331,6 +331,18 @@ def _jra_program_title(info:str)->str:
 from arvexq.ingest.race_fields.meeting_schedule import extract as jra_meeting_schedule
 from arvexq.ingest.race_fields.grade_class import extract as jra_grade_class
 
+def _jra_head_has(head:str,*words:str)->bool:
+    """Heading match tolerant of markup-split words.
+
+    _jra_text joins inline elements with spaces, so a heading cell such as
+    レース<span>番号</span> arrives as "レース 番号" and a plain substring
+    check for "レース番号" silently misses every table (2026-11-28: the
+    JRA program parser returned nothing and discovery fell back to a
+    single source). Compare with all whitespace removed instead.
+    """
+    compact=re.sub(r"[\s　]+","",str(head or ""))
+    return all(re.sub(r"[\s　]+","",w) in compact for w in words)
+
 def _jra_program_summaries(iso_date:str)->list[dict]:
     now=time.time()
     with _jra_program_cache_lock:
@@ -344,7 +356,7 @@ def _jra_program_summaries(iso_date:str)->list[dict]:
     soup=BeautifulSoup(html,"html.parser"); out=[]
     for table in soup.find_all("table"):
         head=_jra_text(table.find("thead") or table.find("tr") or table)
-        if "レース番号" not in head or "発走時刻" not in head:continue
+        if not _jra_head_has(head,"レース番号","発走時刻"):continue
         meeting_no,track,day_no=jra_meeting_schedule(table,JRA_MEETING_DAY_RE,_jra_text)
         if not track:continue
         track_code=JRA_TRACK_CODE_BY_NAME.get(track,"")
@@ -436,7 +448,7 @@ def _jra_profile_runs(cname:str, cutoff:str, limit:int=5)->list[dict]:
     out=[]
     for table in soup.find_all("table"):
         head=_jra_text(table.find("thead") or table.find("tr"))
-        if "年月日" not in head or "レース名" not in head: continue
+        if not _jra_head_has(head,"年月日","レース名"): continue
         for tr in table.find_all("tr"):
             cells=tr.find_all(["th","td"])
             if len(cells)<8: continue
