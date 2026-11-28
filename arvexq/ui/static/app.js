@@ -1,6 +1,10 @@
 /* ARVEXQ minimal UI.
-   Venue list (JRA / NAR) -> race list -> racecard table only:
-   mark (unifiedForecast.marks, by horse number), frame, number, name.
+   Venue list (JRA / NAR) -> race list -> racecard table only.
+   Columns: mark (unifiedForecast.marks, by horse number), number
+   (coloured by frame, netkeiba waku colours), name, popularity,
+   win probability and top-3 probability (unifiedForecast.diagnosis,
+   by horse number, shown as percentages).
+   Rows are grouped by frame with a divider at each frame boundary.
    Data sources are unchanged: api-static/day/<date>.json and
    api-static/race/<raceId>.json ({detail, summary} wrapper). */
 (function () {
@@ -47,15 +51,18 @@
   }
 
   /* Standard frame assignment when the pack carries no frame for a horse:
-     8 frames; the outermost frames take the extra horses. */
-  function frameFor(number, field) {
-    if (!number || !field) return '';
-    if (field <= 8) return number;
+     8 frames; horses take frames in number order, and when the field is
+     larger than 8 the outermost frames take the extra horses. The input
+     is the horse's rank in number order (not the number itself), so
+     fields with skipped numbers still map onto frames 1..8. */
+  function frameFor(rank, field) {
+    if (!rank || !field) return '';
+    if (field <= 8) return rank;
     var q = Math.floor(field / 8), r = field % 8, acc = 0, i, count;
     for (i = 1; i <= 8; i++) {
       count = i > 8 - r ? q + 1 : q;
       acc += count;
-      if (number <= acc) return i;
+      if (rank <= acc) return i;
     }
     return 8;
   }
@@ -80,10 +87,75 @@
     rows = rows.filter(function (r) { return r.number >= 1; });
     rows.sort(function (a, b) { return a.number - b.number; });
     var field = rows.length;
+    rows.forEach(function (row, idx) {
+      if (!(row.frame >= 1)) row.frame = frameFor(idx + 1, field);
+    });
+    var odds = oddsByNumber(detail);
     rows.forEach(function (row) {
-      if (!(row.frame >= 1)) row.frame = frameFor(row.number, field);
+      var o = odds[row.number] || { win: 0, pop: 0 };
+      row.win = o.win > 0 ? o.win : null;
+      row.pop = o.pop >= 1 ? o.pop : null;
+    });
+    rows.forEach(function (row) {
+      if (row.pop == null && row.win != null) {
+        var rank = 1;
+        rows.forEach(function (other) {
+          if (other.win != null && other.win < row.win) rank++;
+        });
+        row.pop = rank;
+      }
+    });
+    var probs = probabilitiesByNumber(detail);
+    rows.forEach(function (row) {
+      var p = probs[row.number];
+      row.winProb = p ? p.win : null;
+      row.top3Prob = p ? p.top3 : null;
     });
     return rows;
+  }
+
+  /* Win / top-3 probabilities per horse number, from the forecast
+     diagnosis. Values are fractions (0..1) and are shown as
+     percentages. Horses with no diagnosis entry (or a race with no
+     forecast at all) stay blank -- never filled in. */
+  function probabilitiesByNumber(detail) {
+    var uf = detail.unifiedForecast || {};
+    var map = {};
+    (Array.isArray(uf.diagnosis) ? uf.diagnosis : []).forEach(function (d) {
+      if (!d || d.horseNumber == null) return;
+      var w = d.winProbability, t = d.top3Probability;
+      map[Number(d.horseNumber)] = {
+        win: (typeof w === 'number' && isFinite(w)) ? w : null,
+        top3: (typeof t === 'number' && isFinite(t)) ? t : null
+      };
+    });
+    return map;
+  }
+
+  function formatProb(p) {
+    return p != null ? (p * 100).toFixed(1) + '%' : '';
+  }
+
+  /* Win odds / popularity per horse number.
+     Primary: the pack's top-level odds rows (win_odds / popularity).
+     Fallback: raceCardView odds / popularity. When odds exist but the
+     pack carries no popularity rank, the rank is derived from the
+     ascending win odds. No odds anywhere -> both stay blank. */
+  function oddsByNumber(detail) {
+    var map = {};
+    (Array.isArray(detail.packOdds) ? detail.packOdds : []).forEach(function (o) {
+      if (o && o.horse_no != null) {
+        map[Number(o.horse_no)] = { win: Number(o.win_odds) || 0, pop: Number(o.popularity) || 0 };
+      }
+    });
+    (Array.isArray(detail.raceCardView) ? detail.raceCardView : []).forEach(function (r) {
+      if (!r || r.number == null) return;
+      var n = Number(r.number);
+      if (!map[n]) map[n] = { win: 0, pop: 0 };
+      if (!(map[n].win > 0) && Number(r.odds) > 0) map[n].win = Number(r.odds);
+      if (!(map[n].pop >= 1) && Number(r.popularity) >= 1) map[n].pop = Number(r.popularity);
+    });
+    return map;
   }
 
   function marksByNumber(detail) {
@@ -194,18 +266,25 @@
       var thead = el('thead');
       var htr = el('tr');
       htr.appendChild(el('th', 'mark', '印'));
-      htr.appendChild(el('th', 'frame', '枠'));
       htr.appendChild(el('th', 'number', '馬番'));
       htr.appendChild(el('th', 'name', '馬名'));
+      htr.appendChild(el('th', 'popularity', '人気'));
+      htr.appendChild(el('th', 'winprob', '勝率'));
+      htr.appendChild(el('th', 'top3prob', '3着内率'));
       thead.appendChild(htr);
       table.appendChild(thead);
       var tbody = el('tbody');
-      raceRows(detail).forEach(function (row) {
+      var rows = raceRows(detail);
+      rows.forEach(function (row, idx) {
         var tr = el('tr');
+        if (idx === 0 || row.frame !== rows[idx - 1].frame) tr.className = 'frame-first';
+        var waku = row.frame >= 1 && row.frame <= 8 ? ' waku' + row.frame : '';
         tr.appendChild(el('td', 'mark', marks[row.number] || ''));
-        tr.appendChild(el('td', 'frame', row.frame || ''));
-        tr.appendChild(el('td', 'number', row.number));
+        tr.appendChild(el('td', 'number' + waku, row.number));
         tr.appendChild(el('td', 'name', row.name));
+        tr.appendChild(el('td', 'popularity', row.pop != null ? row.pop : ''));
+        tr.appendChild(el('td', 'winprob', formatProb(row.winProb)));
+        tr.appendChild(el('td', 'top3prob', formatProb(row.top3Prob)));
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);
@@ -214,6 +293,7 @@
     if (raceCache[id]) { done(raceCache[id]); return; }
     fetchJson(staticRaceUrl(id)).then(function (body) {
       var detail = (body && body.detail) || {};
+      detail.packOdds = (body && body.odds) || [];
       raceCache[id] = detail;
       done(detail);
     }).catch(function () {

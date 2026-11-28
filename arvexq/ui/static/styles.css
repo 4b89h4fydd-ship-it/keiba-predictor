@@ -1,4 +1,4 @@
-/* ARVEXQ minimal UI: venue list -> race list -> racecard (mark / frame / number / name). */
+/* ARVEXQ minimal UI: venue list -> race list -> racecard (mark / number in frame colour / name / popularity / win probability / top-3 probability). */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{background:#ffffff;color:#222222;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;font-size:16px;line-height:1.5}
@@ -19,6 +19,19 @@ table.racecard{width:100%;border-collapse:collapse}
 table.racecard th,table.racecard td{border-bottom:1px solid #dddddd;padding:8px 6px;text-align:left;font-weight:400}
 table.racecard th{font-size:13px;color:#666666;border-bottom:2px solid #222222}
 table.racecard td.mark,table.racecard th.mark{text-align:center;width:40px;font-weight:700}
-table.racecard td.frame,table.racecard th.frame{text-align:center;width:40px}
 table.racecard td.number,table.racecard th.number{text-align:center;width:48px}
+table.racecard td.popularity,table.racecard th.popularity{text-align:center;width:44px}
+table.racecard td.winprob,table.racecard th.winprob{text-align:right;width:60px}
+table.racecard td.top3prob,table.racecard th.top3prob{text-align:right;width:68px}
 table.racecard td.name{font-weight:600}
+/* Divider at each frame boundary: rows are grouped by frame. */
+table.racecard tr.frame-first td{border-top:2px solid #888888}
+/* Frame (waku) colours, netkeiba standard: applied to the number cell. */
+table.racecard td.waku1{background:#ffffff;color:#000000;box-shadow:inset 0 0 0 1px #bbbbbb}
+table.racecard td.waku2{background:#222222;color:#ffffff}
+table.racecard td.waku3{background:#e60012;color:#ffffff}
+table.racecard td.waku4{background:#0055c8;color:#ffffff}
+table.racecard td.waku5{background:#ffd800;color:#000000}
+table.racecard td.waku6{background:#009944;color:#ffffff}
+table.racecard td.waku7{background:#f39800;color:#000000}
+table.racecard td.waku8{background:#f5a3b7;color:#000000}
