@@ -54,7 +54,7 @@ class PrePostMarkConsistency(unittest.TestCase):
   # Shin devig on the nk base and on the market alike, then the
   # stage-4 popularity-band calibration behind the blend gate.
   cf=(root/'rewrite/analysis/clean_forecast.py').read_text(encoding='utf-8')
-  self.assertIn('CLEAN_FORECAST_VERSION = "clean-forecast-v3"',cf)
+  self.assertIn('CLEAN_FORECAST_VERSION = "clean-forecast-v4"',cf)
   self.assertIn('def nk_foundation_vector(',cf)
   self.assertIn('def apply_nk_foundation(',cf)
   # v3 devig: Shin feeds both the base vector and the market vector

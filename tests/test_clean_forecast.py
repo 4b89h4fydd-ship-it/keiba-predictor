@@ -1,5 +1,6 @@
 """Netkeiba-foundation path (2026-11-28 rebuild stage 2,
-v3 corrections): the v3 probability path's contract tests.
+v3 corrections, v4 circuit split): the probability path's
+contract tests.
 
 Covered:
   * determinism — same inputs, byte-identical probabilities;
@@ -29,12 +30,24 @@ Covered:
   * the calibration runs in the measured direction — it
     raises the market favourite's probability and lowers
     a 6th-favourite-or-lower runner's, relative to the
-    blended vector.
+    blended vector;
+  * v4 circuit split — the JRA circuit keeps the v3
+    configuration exactly (temperature 1.1, the arrow
+    fade, the pooled calibration biases, no scenario
+    stage); the NAR circuit runs the measured winning
+    configuration (temperature 1.25, the pace scenario
+    mixture instead of the arrow fade, the per-circuit
+    NAR calibration biases), the mixture fires only at
+    >=60% start-percentile coverage, and it moves a
+    front-runner's probability up when the field has few
+    front-runners (slow scenario likely) and down when
+    it has many (high scenario likely).
 """
 
 from rewrite.analysis.clean_forecast import (
     CLEAN_FORECAST_VERSION, POPULARITY_BAND_BIASES,
-    apply_nk_foundation, shin_devig, z_lean)
+    POPULARITY_BAND_BIASES_NAR, apply_nk_foundation,
+    shin_devig, z_lean)
 from rewrite.analysis.forecast import RaceForecast, RunnerForecast
 from rewrite.analysis.tickets import generate_tickets
 
@@ -46,7 +59,7 @@ NK_ODDS = {1: 2.4, 2: 3.2, 3: 4.6, 4: 7.5, 5: 13.0, 6: 18.0,
            7: 34.0, 8: 44.0}
 
 
-def _forecast():
+def _forecast(race_id="test-race"):
     runners = tuple(
         RunnerForecast(
             number=n, name=f"horse-{n}", ability_score=50.0,
@@ -54,7 +67,7 @@ def _forecast():
             pace_reasons=(), p_win=STRENGTHS[n], p_top2=None,
             p_top3=None, mark="", status="ok")
         for n in sorted(STRENGTHS))
-    return RaceForecast("test-race", 3.0, "uncalibrated",
+    return RaceForecast(race_id, 3.0, "uncalibrated",
                         runners, "ok")
 
 
@@ -105,7 +118,7 @@ def test_determinism():
     assert _win(first) == _win(second)
     assert info1["stages"] == info2["stages"]
     assert info1["version"] == CLEAN_FORECAST_VERSION == \
-        "clean-forecast-v3"
+        "clean-forecast-v4"
 
 
 def test_base_is_netkeiba_not_the_lane():
@@ -258,3 +271,108 @@ def test_band_calibration_direction():
     calibrated = info["stages"]["calibrated"]
     assert calibrated[1] > blended[1]
     assert calibrated[8] < blended[8]
+
+
+def test_jra_circuit_keeps_the_v3_configuration():
+    # The v4 split is NAR-only: a JRA race runs the v3
+    # configuration exactly — temperature 1.1, the arrow
+    # fade among the leans, the pooled calibration biases,
+    # no scenario stage — and the explicit segment the
+    # publisher passes ("jra_flat") resolves to the same
+    # circuit as the race id prefix.
+    entry = _full_entry()
+    derived, info = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry, ODDS)
+    assert info["segment"] == "jra"
+    assert info["temperature"] == 1.1
+    assert info["leans"]["pace_arrow"]["fired"] is True
+    assert info["scenarioMix"]["applied"] is False
+    assert set(info["stages"]) == {"nkBase", "corrected",
+                                   "blended", "calibrated",
+                                   "final"}
+    assert info["calibration"]["biases"] == \
+        list(POPULARITY_BAND_BIASES)
+    assert info["calibration"]["fit"] == "pooled-fit"
+    explicit, info2 = apply_nk_foundation(
+        _forecast("jra-2026-11-28-東京-04"), entry, ODDS,
+        segment="jra_flat")
+    assert info2["segment"] == "jra"
+    assert _win(explicit) == _win(derived)
+    assert info2["stages"] == info["stages"]
+
+
+def test_nar_circuit_runs_the_winning_configuration():
+    # The measured winner, NAR only: temperature 1.25, the
+    # pace scenario mixture replaces the arrow fade (the
+    # other three leans unchanged), and the calibration
+    # takes the per-circuit NAR biases. The full entry's
+    # start percentiles are 0.1..0.8, so L = 2 runners are
+    # at <= 0.25.
+    final, info = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"), _full_entry(),
+        ODDS)
+    assert info["segment"] == "nar"
+    assert info["temperature"] == 1.25
+    assert "pace_arrow" not in info["leans"]
+    assert set(info["leans"]) == {"nk_best", "course_jockey",
+                                  "press_cp"}
+    assert all(lean["fired"] for lean in info["leans"].values())
+    assert info["scenarioMix"]["applied"] is True
+    assert info["scenarioMix"]["leaders"] == 2
+    assert set(info["stages"]) == {"nkBase", "corrected",
+                                   "scenario", "blended",
+                                   "calibrated", "final"}
+    assert info["stages"]["final"] == info["stages"]["calibrated"]
+    assert info["calibration"]["biases"] == \
+        list(POPULARITY_BAND_BIASES_NAR)
+    # The constants themselves are the measurement's
+    # published per-circuit fit (shrunk x0.5) — pinned
+    # literally so a silent change to the pooled values
+    # fails here.
+    assert POPULARITY_BAND_BIASES_NAR == \
+        (0.180, 0.009, -0.165, -0.024)
+    assert info["calibration"]["fit"] == "nar-fit"
+    assert info["calibration"]["segment"] == "nar"
+    for n, p in info["stages"]["final"].items():
+        assert abs(_win(final)[n] - round(p, 4)) < 2e-4
+
+
+def test_nar_scenario_mix_direction():
+    # Few front-runners (L=1): the slow scenario dominates,
+    # so the lone front-runner gains and a back-marker
+    # loses at the scenario stage. Many front-runners
+    # (L=4): the high scenario dominates and the same
+    # front-runner loses instead.
+    slow = {n: (0.90, 0.5) for n in STRENGTHS}
+    slow[1] = (0.10, 0.5)
+    _, info = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"),
+        _full_entry(pace=slow), ODDS)
+    assert info["scenarioMix"]["leaders"] == 1
+    assert info["stages"]["scenario"][1] > \
+        info["stages"]["corrected"][1]
+    assert info["stages"]["scenario"][8] < \
+        info["stages"]["corrected"][8]
+    high = {n: (0.90, 0.5) for n in STRENGTHS}
+    for n in (1, 2, 3, 4):
+        high[n] = (0.10, 0.5)
+    _, info = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"),
+        _full_entry(pace=high), ODDS)
+    assert info["scenarioMix"]["leaders"] == 4
+    assert info["stages"]["scenario"][1] < \
+        info["stages"]["corrected"][1]
+
+
+def test_nar_scenario_mix_coverage_gate():
+    # Start percentiles for only 3 of 8 runners (37.5%):
+    # the mixture must not fire and the scenario stage is
+    # the corrected vector untouched.
+    sparse = {n: (0.10, 0.5) for n in (1, 2, 3)}
+    _, info = apply_nk_foundation(
+        _forecast("nar-2026-11-28-高知-12"),
+        _full_entry(pace=sparse), ODDS)
+    assert info["scenarioMix"]["applied"] is False
+    assert info["scenarioMix"]["coverage"] == 3
+    assert info["stages"]["scenario"] == \
+        info["stages"]["corrected"]
