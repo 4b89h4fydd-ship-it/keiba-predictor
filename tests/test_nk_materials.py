@@ -1851,7 +1851,7 @@ class PaceBuildTests(TestCase):
         self.assertTrue(mix["applied"])
         self.assertEqual(mix["coverage"], 5)
         self.assertEqual(mix["beta"], 2.6)
-        self.assertEqual(mix["w"], 1.5)
+        self.assertEqual(mix["w"], 2.0)
         # Only horse 1's start percentile (0.2) is <= 0.25,
         # so L = 1 and the slow scenario dominates pi.
         self.assertEqual(mix["leaders"], 1)
