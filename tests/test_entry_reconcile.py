@@ -19,6 +19,7 @@ from arvexq.ingest.entry_reconcile import (
     identity_map,
     merge_rows_by_name,
     numbering_report,
+    reconcile_finisher_flags,
     reconcile_rosters,
 )
 
@@ -179,6 +180,95 @@ class NumberingReportTest(unittest.TestCase):
         rep = numbering_report(shifted)
         self.assertTrue(rep["clean"])
         self.assertLess(rep["frameMatches"], rep["frameKnown"])
+
+
+def tokyo9_detail():
+    """The 2026-11-28 Tokyo 9R shape: two horses the official result
+    records as 6th in a dead heat carry the morning collection's
+    wrong 除外 marking in the roster blocks."""
+    return {
+        "horses": [
+            {"name": "ローズマイスター", "horseNumber": 4,
+             "scratched": True, "status": "除外"},
+            {"name": "リラゲイル", "horseNumber": 12,
+             "scratched": True, "status": "除外"},
+            {"name": "ウィロークリーク", "horseNumber": 11,
+             "scratched": False, "status": ""},
+        ],
+        "raceCardView": [
+            {"name": "ローズマイスター", "horseNumber": 4,
+             "scratched": True},
+            {"name": "リラゲイル", "horseNumber": 12,
+             "scratched": True},
+            {"name": "ウィロークリーク", "horseNumber": 11,
+             "scratched": False},
+        ],
+        "result": {
+            "status": "確定",
+            "finishers": [
+                {"name": "ウィロークリーク", "horseNumber": 11,
+                 "finish": 1},
+                {"name": "ローズマイスター", "horseNumber": 4,
+                 "finish": 6},
+                {"name": "リラゲイル", "horseNumber": 12,
+                 "finish": 6},
+            ],
+        },
+    }
+
+
+class FinisherFlagTest(unittest.TestCase):
+    def test_finisher_markings_cleared_in_every_roster_block(self):
+        detail = tokyo9_detail()
+        entries = reconcile_finisher_flags(detail)
+        self.assertEqual(len(entries), 4)
+        for row in detail["horses"][:2] + detail["raceCardView"][:2]:
+            self.assertFalse(row["scratched"])
+        self.assertEqual(detail["horses"][0]["status"], "")
+        self.assertEqual(detail["horses"][1]["status"], "")
+
+    def test_genuine_scratch_keeps_its_marking(self):
+        # A finish=0 row labelled 取消 is the result's own scratch
+        # accounting: that horse did NOT run and its marking stands.
+        detail = tokyo9_detail()
+        detail["horses"].append(
+            {"name": "ネーロノワール", "horseNumber": 9,
+             "scratched": True, "status": "出走取消"})
+        detail["result"]["finishers"].append(
+            {"name": "ネーロノワール 牝2 川田 55.0 栗東・斉藤崇",
+             "horseNumber": 9, "finish": 0, "finishLabel": "取消"})
+        entries = reconcile_finisher_flags(detail)
+        row = detail["horses"][-1]
+        self.assertTrue(row["scratched"])
+        self.assertEqual(row["status"], "出走取消")
+        self.assertFalse(any(e["name"] == "ネーロノワール"
+                             for e in entries))
+
+    def test_no_result_no_change(self):
+        detail = tokyo9_detail()
+        del detail["result"]
+        self.assertEqual(reconcile_finisher_flags(detail), [])
+        self.assertTrue(detail["horses"][0]["scratched"])
+
+    def test_clearing_is_by_name_not_number(self):
+        # The Kyoto 11R garble shape: the roster row sits under a
+        # shifted number.  The marking must still be cleared — the
+        # name is the identity, the number is the corrupted reading.
+        detail = tokyo9_detail()
+        detail["horses"][0]["horseNumber"] = 9
+        entries = reconcile_finisher_flags(detail)
+        self.assertFalse(detail["horses"][0]["scratched"])
+        self.assertTrue(any(e["name"] == "ローズマイスター"
+                            and e["number"] == 9 for e in entries))
+
+    def test_clean_detail_untouched(self):
+        detail = tokyo9_detail()
+        for row in detail["horses"]:
+            row["scratched"] = False
+            row["status"] = ""
+        for row in detail["raceCardView"]:
+            row["scratched"] = False
+        self.assertEqual(reconcile_finisher_flags(detail), [])
 
 
 if __name__ == "__main__":
