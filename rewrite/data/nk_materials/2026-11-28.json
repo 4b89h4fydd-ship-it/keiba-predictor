@@ -2,7 +2,7 @@
  "version": "nk-materials-v14",
  "date": "2026-11-28",
  "source": "netkeiba-forward-collection",
- "generatedAt": "2026-11-28T07:36:52+09:00",
+ "generatedAt": "2026-11-28T09:15:16+09:00",
  "fieldCoverage": {
   "horses": 628,
   "speed": 500,
@@ -21,7 +21,7 @@
   "nkFormDev": 72,
   "nkAiScore": 0,
   "oddsDrift": 0,
-  "oddsWpGap": 0,
+  "oddsWpGap": 89,
   "oddsForecast": 589,
   "horseAnalysis": 0,
   "grade": 333,
@@ -43,7 +43,6 @@
   "babaIndex",
   "nkAiScore",
   "oddsDrift",
-  "oddsWpGap",
   "horseAnalysis",
   "pressRating"
  ],
@@ -54,7 +53,6 @@
   "sireCourse",
   "babaIndex",
   "oddsDrift",
-  "oddsWpGap",
   "horseAnalysis",
   "pressRating"
  ],
@@ -99,9 +97,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 81.2,
+      "placeLow": 6.7,
+      "placeHigh": 13.6,
       "forecastWin": 119.8
      },
      "press": {
@@ -174,9 +172,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 39.1,
+      "placeLow": 4.9,
+      "placeHigh": 9.6,
       "forecastWin": 23.5
      },
      "press": {
@@ -245,9 +243,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 5.9,
+      "placeLow": 1.4,
+      "placeHigh": 2.3,
       "forecastWin": 4.3
      },
      "press": {
@@ -319,9 +317,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 137.8,
+      "placeLow": 16.3,
+      "placeHigh": 33.7,
       "forecastWin": 69.6
      },
      "press": {
@@ -414,9 +412,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 17.3,
+      "placeLow": 2.4,
+      "placeHigh": 4.6,
       "forecastWin": 24.3
      },
      "grade": "B",
@@ -489,9 +487,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 5.4,
+      "placeLow": 1.6,
+      "placeHigh": 2.8,
       "forecastWin": 3.3
      },
      "grade": "C",
@@ -542,9 +540,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 19.8,
+      "placeLow": 2.4,
+      "placeHigh": 4.4,
       "forecastWin": 24.3
      },
      "press": {
@@ -637,9 +635,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 87.0,
+      "placeLow": 12.3,
+      "placeHigh": 25.2,
       "forecastWin": 46.8
      },
      "grade": "C",
@@ -717,9 +715,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 155.2,
+      "placeLow": 20.5,
+      "placeHigh": 42.4,
       "forecastWin": 83.2
      },
      "grade": "C",
@@ -770,9 +768,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 3.5,
+      "placeLow": 1.2,
+      "placeHigh": 1.8,
       "forecastWin": 4.7
      },
      "press": {
@@ -854,9 +852,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 173.0,
+      "placeLow": 16.3,
+      "placeHigh": 33.6,
       "forecastWin": 74.8
      },
      "press": {
@@ -958,9 +956,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 2.2,
+      "placeLow": 1.1,
+      "placeHigh": 1.3,
       "forecastWin": 3.1
      },
      "grade": "B",
@@ -1740,9 +1738,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 21.2,
+      "placeLow": 2.0,
+      "placeHigh": 12.8,
       "forecastWin": 15.7
      },
      "grade": "B",
@@ -1817,9 +1815,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 13.5,
+      "placeLow": 2.2,
+      "placeHigh": 14.0,
       "forecastWin": 14.0
      },
      "grade": "B",
@@ -1899,9 +1897,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 90.5,
+      "placeLow": 6.5,
+      "placeHigh": 49.3,
       "forecastWin": 57.4
      },
      "grade": "C",
@@ -1983,9 +1981,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 137.0,
+      "placeLow": 13.3,
+      "placeHigh": 103.9,
       "forecastWin": 93.0
      },
      "grade": "C",
@@ -2036,9 +2034,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 34.9,
+      "placeLow": 4.1,
+      "placeHigh": 29.5,
       "forecastWin": 35.5
      },
      "press": {
@@ -2143,9 +2141,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 17.1,
+      "placeLow": 2.4,
+      "placeHigh": 16.1,
       "forecastWin": 2.6
      },
      "horseAnalysis": null,
@@ -2196,9 +2194,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 28.3,
+      "placeLow": 2.8,
+      "placeHigh": 19.0,
       "forecastWin": 32.5
      },
      "press": {
@@ -2301,9 +2299,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 25.4,
+      "placeLow": 3.2,
+      "placeHigh": 22.5,
       "forecastWin": 29.6
      },
      "grade": "C",
@@ -2354,9 +2352,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 131.4,
+      "placeLow": 14.2,
+      "placeHigh": 111.4,
       "forecastWin": 63.0
      },
      "press": {
@@ -2443,9 +2441,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 143.6,
+      "placeLow": 16.5,
+      "placeHigh": 130.3,
       "forecastWin": 130.2
      },
      "horseAnalysis": null,
@@ -2514,9 +2512,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 70.9,
+      "placeLow": 6.2,
+      "placeHigh": 46.3,
       "forecastWin": 39.8
      },
      "grade": "D",
@@ -2605,9 +2603,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 6.4,
+      "placeLow": 1.6,
+      "placeHigh": 8.5,
       "forecastWin": 10.4
      },
      "grade": "D",
@@ -2658,9 +2656,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 1.3,
+      "placeLow": 1.0,
+      "placeHigh": 1.0,
       "forecastWin": 2.3
      },
      "press": {
@@ -2735,9 +2733,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 54.3,
+      "placeLow": 4.9,
+      "placeHigh": 36.3,
       "forecastWin": 26.7
      },
      "press": {
@@ -2824,9 +2822,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 150.9,
+      "placeLow": 9.4,
+      "placeHigh": 72.8,
       "forecastWin": 150.3
      },
      "grade": "B",
@@ -3588,9 +3586,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 181.8,
+      "placeLow": 34.2,
+      "placeHigh": 57.1,
       "forecastWin": 209.0
      },
      "grade": "D",
@@ -3668,9 +3666,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 148.9,
+      "placeLow": 23.0,
+      "placeHigh": 38.4,
       "forecastWin": 209.0
      },
      "grade": "C",
@@ -3749,9 +3747,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 26.8,
+      "placeLow": 8.9,
+      "placeHigh": 14.7,
       "forecastWin": 92.9
      },
      "grade": "C",
@@ -3818,9 +3816,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 107.8,
+      "placeLow": 20.0,
+      "placeHigh": 33.3,
       "forecastWin": 104.5
      },
      "grade": "C",
@@ -3898,9 +3896,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 74.6,
+      "placeLow": 14.7,
+      "placeHigh": 24.3,
       "forecastWin": 100.3
      },
      "grade": "C",
@@ -3983,9 +3981,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 2.9,
+      "placeLow": 1.6,
+      "placeHigh": 2.3,
       "forecastWin": 8.5
      },
      "grade": "B",
@@ -4054,9 +4052,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 75.7,
+      "placeLow": 13.1,
+      "placeHigh": 21.7,
       "forecastWin": 73.7
      },
      "grade": "B",
@@ -4125,9 +4123,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 97.1,
+      "placeLow": 12.1,
+      "placeHigh": 20.1,
       "forecastWin": 62.7
      },
      "grade": "B",
@@ -4202,9 +4200,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 7.7,
+      "placeLow": 1.2,
+      "placeHigh": 1.5,
       "forecastWin": 19.1
      },
      "grade": "C",
@@ -4276,9 +4274,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 13.7,
+      "placeLow": 3.3,
+      "placeHigh": 5.2,
       "forecastWin": 20.9
      },
      "grade": "B",
@@ -4358,9 +4356,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 46.0,
+      "placeLow": 5.6,
+      "placeHigh": 9.1,
       "forecastWin": 38.5
      },
      "grade": "C",
@@ -4432,9 +4430,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 19.5,
+      "placeLow": 4.7,
+      "placeHigh": 7.6,
       "forecastWin": 14.4
      },
      "grade": "C",
@@ -4516,9 +4514,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 5.6,
+      "placeLow": 2.2,
+      "placeHigh": 3.3,
       "forecastWin": 5.1
      },
      "grade": "B",
@@ -4600,9 +4598,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 6.3,
+      "placeLow": 2.0,
+      "placeHigh": 3.0,
       "forecastWin": 10.1
      },
      "grade": "B",
@@ -4674,9 +4672,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 16.0,
+      "placeLow": 3.8,
+      "placeHigh": 6.1,
       "forecastWin": 12.4
      },
      "grade": "B",
@@ -4756,9 +4754,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 8.3,
+      "placeLow": 1.8,
+      "placeHigh": 2.6,
       "forecastWin": 2.1
      },
      "grade": "B",
@@ -4827,9 +4825,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 122.1,
+      "placeLow": 24.0,
+      "placeHigh": 40.1,
       "forecastWin": 96.4
      },
      "grade": "C",
@@ -4907,9 +4905,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 49.7,
+      "placeLow": 12.3,
+      "placeHigh": 20.4,
       "forecastWin": 33.9
      },
      "grade": "C",
@@ -19981,9 +19979,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 12.1,
+      "placeLow": 2.3,
+      "placeHigh": 4.2,
       "forecastWin": 13.5
      },
      "grade": "B",
@@ -20070,9 +20068,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 47.3,
+      "placeLow": 5.1,
+      "placeHigh": 9.7,
       "forecastWin": 55.0
      },
      "grade": "C",
@@ -20158,9 +20156,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 171.6,
+      "placeLow": 25.9,
+      "placeHigh": 50.6,
       "forecastWin": 213.2
      },
      "grade": "C",
@@ -20239,9 +20237,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 23.7,
+      "placeLow": 5.2,
+      "placeHigh": 9.8,
       "forecastWin": 29.5
      },
      "grade": "B",
@@ -20322,9 +20320,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 20.1,
+      "placeLow": 3.1,
+      "placeHigh": 5.7,
       "forecastWin": 23.5
      },
      "grade": "C",
@@ -20397,9 +20395,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 27.3,
+      "placeLow": 3.6,
+      "placeHigh": 6.6,
       "forecastWin": 36.8
      },
      "grade": "B",
@@ -20470,9 +20468,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 18.8,
+      "placeLow": 4.4,
+      "placeHigh": 8.3,
       "forecastWin": 12.4
      },
      "grade": "B",
@@ -20556,9 +20554,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 95.7,
+      "placeLow": 13.4,
+      "placeHigh": 26.1,
       "forecastWin": 78.1
      },
      "grade": "B",
@@ -20629,9 +20627,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 66.5,
+      "placeLow": 8.6,
+      "placeHigh": 16.6,
       "forecastWin": 61.3
      },
      "grade": "B",
@@ -20706,9 +20704,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 2.7,
+      "placeLow": 1.1,
+      "placeHigh": 1.4,
       "forecastWin": 3.5
      },
      "grade": "B",
@@ -20790,9 +20788,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 22.5,
+      "placeLow": 5.2,
+      "placeHigh": 9.9,
       "forecastWin": 8.3
      },
      "grade": "B",
@@ -20843,9 +20841,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 6.8,
+      "placeLow": 1.7,
+      "placeHigh": 2.9,
       "forecastWin": 6.5
      },
      "press": {
@@ -20919,9 +20917,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 29.0,
+      "placeLow": 3.8,
+      "placeHigh": 7.0,
       "forecastWin": 36.1
      },
      "press": {
@@ -21019,9 +21017,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 65.0,
+      "placeLow": 6.4,
+      "placeHigh": 12.3,
       "forecastWin": 79.3
      },
      "grade": "B",
@@ -21096,9 +21094,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 3.1,
+      "placeLow": 1.2,
+      "placeHigh": 1.7,
       "forecastWin": 3.1
      },
      "grade": "B",
@@ -21184,9 +21182,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 90.0,
+      "placeLow": 12.5,
+      "placeHigh": 24.4,
       "forecastWin": 47.6
      },
      "grade": "B",
@@ -21935,9 +21933,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 9.2,
+      "placeLow": 2.3,
+      "placeHigh": 7.7,
       "forecastWin": 7.7
      },
      "grade": "B",
@@ -22008,9 +22006,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 57.1,
+      "placeLow": 4.8,
+      "placeHigh": 18.1,
       "forecastWin": 41.7
      },
      "grade": "C",
@@ -22061,9 +22059,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 22.2,
+      "placeLow": 3.0,
+      "placeHigh": 10.6,
       "forecastWin": 19.3
      },
      "press": {
@@ -22135,9 +22133,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 58.9,
+      "placeLow": 5.8,
+      "placeHigh": 22.1,
       "forecastWin": 42.7
      },
      "press": {
@@ -22238,9 +22236,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 1.7,
+      "placeLow": 1.1,
+      "placeHigh": 1.1,
       "forecastWin": 2.9
      },
      "grade": "B",
@@ -22291,9 +22289,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 71.8,
+      "placeLow": 7.3,
+      "placeHigh": 28.0,
       "forecastWin": 54.3
      },
      "press": {
@@ -22394,9 +22392,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 5.5,
+      "placeLow": 1.5,
+      "placeHigh": 4.1,
       "forecastWin": 2.6
      },
      "grade": "B",
@@ -22479,9 +22477,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 7.6,
+      "placeLow": 1.7,
+      "placeHigh": 5.3,
       "forecastWin": 9.2
      },
      "grade": "B",
@@ -22562,9 +22560,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 14.1,
+      "placeLow": 2.5,
+      "placeHigh": 8.6,
       "forecastWin": 16.2
      },
      "grade": "B",
@@ -22615,9 +22613,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 159.6,
+      "placeLow": 17.9,
+      "placeHigh": 70.1,
       "forecastWin": 128.1
      },
      "press": {
@@ -22717,9 +22715,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 29.1,
+      "placeLow": 3.5,
+      "placeHigh": 12.9,
       "forecastWin": 22.3
      },
      "grade": "C",
@@ -22792,9 +22790,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 15.3,
+      "placeLow": 2.5,
+      "placeHigh": 8.5,
       "forecastWin": 14.3
      },
      "grade": "B",
@@ -23521,9 +23519,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 4.8,
+      "placeLow": 2.3,
+      "placeHigh": 3.0,
       "forecastWin": 4.3
      },
      "grade": "B",
@@ -23605,9 +23603,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 7.9,
+      "placeLow": 2.8,
+      "placeHigh": 3.8,
       "forecastWin": 6.8
      },
      "grade": "B",
@@ -23678,9 +23676,9 @@
      "nkAiScore": null,
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 34.5,
+      "placeLow": 4.3,
+      "placeHigh": 6.0,
       "forecastWin": 38.6
      },
      "grade": "C",
@@ -23729,9 +23727,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 41.2,
+      "placeLow": 6.2,
+      "placeHigh": 8.7,
       "forecastWin": 52.0
      },
      "press": {
@@ -23829,9 +23827,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 28.7,
+      "placeLow": 5.4,
+      "placeHigh": 7.5,
       "forecastWin": 28.9
      },
      "grade": "B",
@@ -23902,9 +23900,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 14.5,
+      "placeLow": 3.3,
+      "placeHigh": 4.5,
       "forecastWin": 18.1
      },
      "grade": "B",
@@ -23993,9 +23991,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 7.3,
+      "placeLow": 2.3,
+      "placeHigh": 3.0,
       "forecastWin": 5.9
      },
      "grade": "B",
@@ -24075,9 +24073,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 32.5,
+      "placeLow": 4.7,
+      "placeHigh": 6.5,
       "forecastWin": 29.3
      },
      "grade": "B",
@@ -24155,9 +24153,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 84.2,
+      "placeLow": 11.3,
+      "placeHigh": 16.0,
       "forecastWin": 48.1
      },
      "grade": "B",
@@ -24240,9 +24238,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 8.8,
+      "placeLow": 3.2,
+      "placeHigh": 4.3,
       "forecastWin": 17.2
      },
      "grade": "B",
@@ -24315,9 +24313,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 17.4,
+      "placeLow": 3.4,
+      "placeHigh": 4.7,
       "forecastWin": 16.5
      },
      "grade": "C",
@@ -24395,9 +24393,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 108.3,
+      "placeLow": 15.6,
+      "placeHigh": 22.0,
       "forecastWin": 113.3
      },
      "grade": "C",
@@ -24448,9 +24446,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 68.9,
+      "placeLow": 12.0,
+      "placeHigh": 16.9,
       "forecastWin": 51.5
      },
      "press": {
@@ -24537,9 +24535,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 33.2,
+      "placeLow": 3.5,
+      "placeHigh": 4.7,
       "forecastWin": 91.0
      },
      "grade": "B",
@@ -24613,9 +24611,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 3.2,
+      "placeLow": 1.5,
+      "placeHigh": 1.7,
       "forecastWin": 3.1
      },
      "grade": "B",
@@ -24666,9 +24664,9 @@
      },
      "odds": {
       "publishWin": null,
-      "finalWin": null,
-      "placeLow": null,
-      "placeHigh": null,
+      "finalWin": 20.5,
+      "placeLow": 4.7,
+      "placeHigh": 6.6,
       "forecastWin": 24.1
      },
      "press": {
