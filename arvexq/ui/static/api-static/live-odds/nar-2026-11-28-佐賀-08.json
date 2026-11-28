@@ -4,7 +4,7 @@
  "odds": [
   {
    "horse_no": 1,
-   "win_odds": 11.2,
+   "win_odds": 11.6,
    "popularity": 4,
    "scratched": false,
    "horse_status": "",
@@ -12,56 +12,72 @@
   },
   {
    "horse_no": 4,
-   "win_odds": 5.6,
-   "popularity": 3,
-   "scratched": false,
-   "horse_status": "",
-   "oddsSource": "NAR公式"
-  },
-  {
-   "horse_no": 6,
-   "win_odds": 3.7,
+   "win_odds": 2.9,
    "popularity": 2,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
+   "horse_no": 5,
+   "win_odds": 11.6,
+   "popularity": 4,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 11.6,
+   "popularity": 4,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
    "horse_no": 7,
-   "win_odds": 2.2,
+   "win_odds": 2.6,
    "popularity": 1,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
+   "horse_no": 8,
+   "win_odds": 58.4,
+   "popularity": 9,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
    "horse_no": 9,
-   "win_odds": 11.2,
-   "popularity": 4,
+   "win_odds": 7.3,
+   "popularity": 3,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 10,
-   "win_odds": 11.2,
-   "popularity": 4,
+   "win_odds": 14.6,
+   "popularity": 7,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   },
   {
    "horse_no": 11,
-   "win_odds": 11.2,
-   "popularity": 4,
+   "win_odds": 19.4,
+   "popularity": 8,
    "scratched": false,
    "horse_status": "",
    "oddsSource": "NAR公式"
   }
  ],
  "oddsSource": "NAR公式",
- "oddsUpdatedAt": "2026-11-28T03:50:21.965Z",
- "sourcePublishedAt": "2026-11-28T12:50:00+09:00",
+ "oddsUpdatedAt": "2026-11-28T05:55:04.020Z",
+ "sourcePublishedAt": "2026-11-28T14:54:00+09:00",
  "popularitySource": "NAR公式単勝オッズ順位",
  "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=32&k_raceDate=2026%2F11%2F28&k_raceNo=8"
 }

@@ -4,73 +4,73 @@
  "odds": [
   {
    "horse_no": 10,
-   "win_odds": 61.2,
-   "popularity": 15,
+   "win_odds": 61,
+   "popularity": 10,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 11,
-   "win_odds": 130.6,
+   "win_odds": 303.4,
    "popularity": 18,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 12,
-   "win_odds": 130.4,
-   "popularity": 17,
+   "win_odds": 206.7,
+   "popularity": 16,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 13,
-   "win_odds": 29.8,
-   "popularity": 10,
+   "win_odds": 46.2,
+   "popularity": 9,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 14,
-   "win_odds": 5.8,
+   "win_odds": 4.8,
    "popularity": 2,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 15,
-   "win_odds": 52.3,
-   "popularity": 13,
+   "win_odds": 100.3,
+   "popularity": 15,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 16,
-   "win_odds": 32.5,
-   "popularity": 12,
+   "win_odds": 69.2,
+   "popularity": 13,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 17,
-   "win_odds": 52.5,
+   "win_odds": 93.6,
    "popularity": 14,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 18,
-   "win_odds": 23.5,
-   "popularity": 9,
+   "win_odds": 67.8,
+   "popularity": 12,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 1,
-   "win_odds": 20.9,
+   "win_odds": 20.4,
    "popularity": 8,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 2,
-   "win_odds": 15.2,
+   "win_odds": 15,
    "popularity": 6,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 3,
-   "win_odds": 17.4,
+   "win_odds": 19.9,
    "popularity": 7,
    "oddsSource": "netkeiba実オッズ"
   },
@@ -82,38 +82,38 @@
   },
   {
    "horse_no": 5,
-   "win_odds": 9.3,
-   "popularity": 4,
+   "win_odds": 7.8,
+   "popularity": 3,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 6,
-   "win_odds": 30.3,
+   "win_odds": 67.7,
    "popularity": 11,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 7,
-   "win_odds": 77,
-   "popularity": 16,
+   "win_odds": 288.3,
+   "popularity": 17,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 8,
-   "win_odds": 12.1,
-   "popularity": 5,
+   "win_odds": 8.2,
+   "popularity": 4,
    "oddsSource": "netkeiba実オッズ"
   },
   {
    "horse_no": 9,
-   "win_odds": 9.2,
-   "popularity": 3,
+   "win_odds": 8.4,
+   "popularity": 5,
    "oddsSource": "netkeiba実オッズ"
   }
  ],
  "oddsSource": "netkeiba実オッズ",
- "oddsUpdatedAt": "2026-11-28T03:50:20.539Z",
- "sourcePublishedAt": "2026-11-28T12:21:17+09:00",
+ "oddsUpdatedAt": "2026-11-28T05:55:02.445Z",
+ "sourcePublishedAt": "2026-11-28T13:31:42+09:00",
  "popularitySource": "供給元の人気",
  "sourceUrl": "https://race.netkeiba.com/api/api_get_jra_odds.html?pid=api_get_jra_odds&race_id=202608050707&type=1&sort=odds&compress=0&output=json&action=init"
 }
