@@ -158,7 +158,7 @@ MANIFEST = r'''{
   "theme_color":"#f6f2e8",
   "lang":"ja"
 }'''
-SW = r'''const RESET_TAG="arvexq-reset-v331";
+SW = r'''const RESET_TAG="arvexq-reset-v332";
 self.addEventListener("install",function(event){event.waitUntil(self.skipWaiting())});
 self.addEventListener("activate",function(event){
   event.waitUntil(caches.keys().then(function(keys){
