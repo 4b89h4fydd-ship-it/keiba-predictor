@@ -20,19 +20,33 @@ for(const [id,kind,combos] of [['nar-2026-10-10-高知-01','馬単',[[5,8]]],['n
  assert.equal(w.ARVEXQSavedTicketReceipt.recover({...r,preRaceBet:{...r.preRaceBet,axisNo:8}},selection),null);
  assert.equal(w.ARVEXQSavedTicketReceipt.recover(r,{...selection,ticketKinds:['3連単']}),null);
 }
-// A timestamp on a FAILED capture is not an immutable bet. The very same
-// verifier runs in both the browser and the server-side JS capture bridge.
-const app=fs.readFileSync('arvexq/ui/static/app.js','utf8');
-const from=app.indexOf('function verifiedSavedAiBet('),to=app.indexOf('function frozenAiBetForRace(',from);
-assert.ok(from>=0&&to>from);
-const verify=new Function(app.slice(from,to)+';return verifiedSavedAiBet;')();
+// A timestamp on a FAILED capture is not an immutable bet. This gate used
+// to be exercised through a copy embedded in the old app.js
+// (verifiedSavedAiBet), but that app is gone: the UI was rebuilt as an
+// entry-table-only app with no betting logic, and the capture bridge
+// that minted new receipts (scripts/arvexq_capture_prerace_bet.js) is
+// retired. The gate's surviving home is ARVEXQMorningEvidence.capture /
+// verify — the very functions recover() above runs against the stored
+// originals — so the same cases are asserted against them directly.
+const ev=w.ARVEXQMorningEvidence;
 const race={id:'nar-2026-10-12-高知-04',date:'2026-10-12',startTime:'18:00'};
-const valid={raceId:race.id,raceDate:race.date,fixedAt:'2026-10-12T17:35:00+09:00',
- decision:'通常買い',items:[{kind:'馬連',combos:[[1,2]]}]};
-assert.deepEqual(verify(race,valid),valid,'genuine original must survive');
-assert.equal(verify(race,{...valid,captureStatus:'failed',decision:'未取得',items:[]}),null);
-assert.equal(verify(race,{...valid,captureStatus:'engine-missing',decision:'見送り',items:[]}),null);
-assert.equal(verify(race,{...valid,decision:'データ不足',items:[]}),null);
-assert.equal(verify(race,{...valid,betInputGate:{ready:false},items:[]}),null);
-assert.equal(verify(race,{...valid,fixedAt:'2026-10-12T18:01:00+09:00'}),null);
+const prediction={rows:[
+ {horse:{horseNumber:1},predMark:'◎',singleWinSuitable:true},
+ {horse:{horseNumber:2},predMark:'○',singleWinSuitable:false},
+ {horse:{horseNumber:3},predMark:'▲',singleWinSuitable:false},
+ {horse:{horseNumber:4},predMark:'',singleWinSuitable:false},
+ {horse:{horseNumber:5},predMark:'',singleWinSuitable:false}]};
+const plan={decision:'通常買い',betInputGate:{ready:true},engineVersion:'smoke',
+ items:[{level:'本線',kind:'馬連',combos:[[1,2]],reason:'smoke'}]};
+const sel={selected:true,primaryType:'勝ち馬明確型',ticketKinds:['馬連']};
+const minted=ev.capture(race,prediction,plan,sel);
+assert(minted&&minted.axisHorseNumber===1,'genuine original must mint evidence');
+const sealed={...minted,fixedAt:'2026-10-12T17:35:00+09:00'};
+assert.equal(ev.verify(race,sealed),true,'genuine original must survive');
+assert(ev.sealedPlan(race,sealed),'genuine original must seal');
+assert.equal(ev.capture(race,prediction,{...plan,decision:'未取得'},sel),null);
+assert.equal(ev.capture(race,prediction,{...plan,decision:'見送り'},sel),null);
+assert.equal(ev.capture(race,prediction,{...plan,decision:'データ不足'},sel),null);
+assert.equal(ev.capture(race,prediction,{...plan,betInputGate:{ready:false}},sel),null);
+assert.equal(ev.verify(race,{...sealed,fixedAt:'2026-10-12T18:01:00+09:00'}),false);
 console.log('SAVED_PREOFF_TICKETS_EXACT_COMBINATIONS_TIMESTAMPS_MARKS_OLDER_ORIGINALS_PASS');
