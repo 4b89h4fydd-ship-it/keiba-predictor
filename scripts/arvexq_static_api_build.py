@@ -51,6 +51,22 @@ restored it.  ``carry_over_day_statuses`` heals an empty incoming
 status from the race's own existing day pack; a non-empty incoming
 status always wins.
 
+Result carry-over + phantom-roster guard: a full build of an
+already-run day regenerates details from stored pre-race facts, so
+it also wiped the final results the result lane had published and
+restored whatever roster the morning collection had stored —
+including phantom duplicates (the same horse under two numbers),
+which the result lane could never heal because its merge protects
+the stored roster verbatim (2026-11-28 Kyoto 9R: the cleaned
+13-row pack was overwritten at 19:06 by a 16-row phantom rebuild,
+and finisher_completeness then failed the race on every ingest
+run).  ``carry_over_results`` restores a published final result
+onto an incoming detail that carries no result content at all,
+and ``reconcile_phantom_rosters`` drops phantom duplicate rows
+from every roster block, keyed by horse name with the official
+result as the identity authority (the same reconciliation the
+result-repair lane applies).  Clean details are untouched.
+
 Research evidence carry-over guard: the observed mineta/margin
 evidence (``horses[].researchEvidence``, attached by the prefetch
 analyze stage) reaches a lane payload only when that stage decorated
@@ -736,6 +752,122 @@ def carry_over_day_statuses(model: DayModel, out_dir: Path) -> list[str]:
 EVIDENCE_RESIDUAL_VERSION = "arvexq-evidence-residual-v1"
 _PAST_RUN_KEYS = ("recentRaces", "allPastRuns", "pastRaces", "history", "runs")
 
+_TERMINAL_RESULT_STATUSES = ("中止", "取止", "取消", "不成立")
+
+
+def _result_is_final(result: Any) -> bool:
+    """True when a result block is an observed final accounting:
+    a 確定 with at least one finisher row, or a terminal race
+    status (中止・取止・取消・不成立)."""
+    if not isinstance(result, dict):
+        return False
+    status = str(result.get("status") or "")
+    if status in _TERMINAL_RESULT_STATUSES:
+        return True
+    if status != "確定":
+        return False
+    return any(isinstance(f, dict) for f in (result.get("finishers") or []))
+
+
+def _result_has_content(result: Any) -> bool:
+    """True when a result block carries any observed content at all
+    (a status, finishers or payouts).  A facts rebuild carries none."""
+    if not isinstance(result, dict):
+        return False
+    if str(result.get("status") or ""):
+        return True
+    return bool(result.get("finishers")) or bool(result.get("payouts"))
+
+
+def carry_over_results(model: DayModel, out_dir: Path) -> list[str]:
+    """Preserve a published final result when the incoming detail
+    carries no result content at all.
+
+    Lane payloads are built from stored pre-race facts, so a full
+    build of a day whose races have already run regenerates those
+    races' details in their pre-race state — no result block, and
+    the morning collection's roster, phantoms included (2026-11-28:
+    the 19:06 full build wiped Kyoto 9R's final result and restored
+    the 16-row phantom roster over the cleaned 13-row pack; the
+    result lane then re-merged the result but could never heal the
+    roster, and its verify failed the race forever).  A published
+    final result is an observed fact, not a forecast: when the
+    incoming detail has no result content and the race's own
+    existing pack carries a final one, the published result (and
+    its result token) is carried over.  An incoming detail that
+    carries any result content — a flash report, a correction, a
+    fresher final — always wins; nothing is downgraded or merged
+    here.  Returns the healed race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, detail in model.details.items():
+        if not isinstance(detail, dict):
+            continue
+        if _result_has_content(detail.get("result")):
+            continue
+        prior = existing.details.get(rid)
+        if not isinstance(prior, dict):
+            continue
+        if not _result_is_final(prior.get("result")):
+            continue
+        detail["result"] = copy.deepcopy(prior["result"])
+        if not detail.get("resultCname") and prior.get("resultCname"):
+            detail["resultCname"] = prior["resultCname"]
+        healed.append(rid)
+    if healed:
+        print("STATIC_API_RESULT_CARRYOVER", model.date,
+              len(healed), sorted(healed))
+    return healed
+
+
+def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
+    """Drop phantom duplicate roster rows from incoming details.
+
+    A phantom is the same horse name twice in one roster block
+    under two numbers (a garbled racecard reading, stored once and
+    then rebuilt forever).  The reconciliation is keyed by horse
+    NAME with the official result as the identity authority — the
+    detail's own result (after carry_over_results), else the
+    published pack's — and mirrors the result-repair lane's
+    reconciliation (arvexq.ingest.entry_reconcile), so a rebuild
+    from stored facts cannot resurrect a phantom roster that the
+    result lane has already accounted for.  A block without
+    duplicate names is untouched, so clean days build byte-identical
+    packs.  Returns the healed race ids.
+    """
+    if not DATE_RE.match(model.date or ""):
+        return []
+    try:
+        root = Path(__file__).resolve().parent.parent
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from arvexq.ingest.entry_reconcile import (
+            reconcile_detail_roster, result_identity_map)
+    except Exception:
+        return []
+    existing = model_from_existing_packs(out_dir, model.date)
+    healed: list[str] = []
+    for rid, detail in model.details.items():
+        if not isinstance(detail, dict):
+            continue
+        truth = result_identity_map(detail.get("result"))
+        if not truth:
+            prior = existing.details.get(rid)
+            if isinstance(prior, dict):
+                truth = result_identity_map(prior.get("result"))
+        entries = reconcile_detail_roster(detail, truth or None)
+        if entries:
+            healed.append(rid)
+            print("STATIC_API_ROSTER_RECONCILE", model.date, rid,
+                  json.dumps(entries, ensure_ascii=False))
+    if healed:
+        print("STATIC_API_ROSTER_RECONCILED", model.date,
+              len(healed), sorted(healed))
+    return healed
+
 
 def _block_available_count(block: Any) -> int:
     """Available-item count of one evidence block; -1 when it is not
@@ -1203,6 +1335,17 @@ def main() -> int:
         # the sealed forecast blocks of races published by earlier
         # runs: carry them over from the existing packs first.
         carry_over_forecast_blocks(model, Path(args.out_dir))
+        # Same rule for the observed final results: a facts rebuild
+        # carries no result at all, so without this carry-over a
+        # full build of an already-run day rewrites resulted races
+        # back to their pre-race state (result wiped, phantom
+        # roster restored — 2026-11-28 Kyoto 9R).
+        carry_over_results(model, Path(args.out_dir))
+        # And for the roster itself: phantom duplicate rows (the
+        # same horse under two numbers) are dropped by name, with
+        # the official result as the identity authority, before any
+        # name-keyed graft below reads the roster.
+        reconcile_phantom_rosters(model, Path(args.out_dir))
         # Same rule for the observed research evidence: lane payloads
         # carry it only when the analyze stage decorated the race in
         # that run, so without this graft the first undecorated build
