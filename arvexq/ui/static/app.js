@@ -1,10 +1,13 @@
 /* ARVEXQ minimal UI.
    Venue list (JRA / NAR) -> race list -> racecard table only.
-   Columns: mark (unifiedForecast.marks, by horse number), number
-   (coloured by frame, netkeiba waku colours), name, popularity,
-   win probability and top-3 probability (unifiedForecast.diagnosis,
+   The racecard follows the netkeiba entry-table layout with the
+   ARVEXQ mark in the position of netkeiba's check column:
+   number (coloured by frame, netkeiba waku colours) / mark
+   (unifiedForecast.marks, by horse number) / name (one line, with
+   sex+age, jockey and carried weight in a small grey sub-line) /
+   win probability / top-3 probability (unifiedForecast.diagnosis,
    by horse number, shown as percentages).
-   Rows are grouped by frame with a divider at each frame boundary.
+   Fixed column widths and one uniform row height for every row.
    Data sources are unchanged: api-static/day/<date>.json and
    api-static/race/<raceId>.json ({detail, summary} wrapper). */
 (function () {
@@ -67,6 +70,28 @@
     return 8;
   }
 
+  /* Per-horse detail for the name sub-line, keyed by horse name:
+     sex+age, jockey and carried weight. These live on horses[] in
+     both circuits (raceCardView.sexAge is blank in the packs and
+     raceCardView itself is empty for NAR), so horses[] is the single
+     source; items that are absent stay absent. */
+  function horseDetailByName(detail) {
+    var map = {};
+    (Array.isArray(detail.horses) ? detail.horses : []).forEach(function (h) {
+      if (!h || !h.name) return;
+      var sexAge = '';
+      if (h.sex) sexAge += String(h.sex);
+      if (h.age != null && h.age !== '') sexAge += String(h.age);
+      var cw = Number(h.carriedWeight);
+      map[String(h.name)] = {
+        sexAge: sexAge,
+        jockey: h.jockey ? String(h.jockey) : '',
+        carriedWeight: isFinite(cw) && cw > 0 ? cw.toFixed(1) : ''
+      };
+    });
+    return map;
+  }
+
   function raceRows(detail) {
     var horses = Array.isArray(detail.horses) ? detail.horses : [];
     var frameByName = {};
@@ -90,20 +115,12 @@
     rows.forEach(function (row, idx) {
       if (!(row.frame >= 1)) row.frame = frameFor(idx + 1, field);
     });
-    var odds = oddsByNumber(detail);
+    var details = horseDetailByName(detail);
     rows.forEach(function (row) {
-      var o = odds[row.number] || { win: 0, pop: 0 };
-      row.win = o.win > 0 ? o.win : null;
-      row.pop = o.pop >= 1 ? o.pop : null;
-    });
-    rows.forEach(function (row) {
-      if (row.pop == null && row.win != null) {
-        var rank = 1;
-        rows.forEach(function (other) {
-          if (other.win != null && other.win < row.win) rank++;
-        });
-        row.pop = rank;
-      }
+      var d = details[row.name] || { sexAge: '', jockey: '', carriedWeight: '' };
+      row.sexAge = d.sexAge;
+      row.jockey = d.jockey;
+      row.carriedWeight = d.carriedWeight;
     });
     var probs = probabilitiesByNumber(detail);
     rows.forEach(function (row) {
@@ -134,28 +151,6 @@
 
   function formatProb(p) {
     return p != null ? (p * 100).toFixed(1) + '%' : '';
-  }
-
-  /* Win odds / popularity per horse number.
-     Primary: the pack's top-level odds rows (win_odds / popularity).
-     Fallback: raceCardView odds / popularity. When odds exist but the
-     pack carries no popularity rank, the rank is derived from the
-     ascending win odds. No odds anywhere -> both stay blank. */
-  function oddsByNumber(detail) {
-    var map = {};
-    (Array.isArray(detail.packOdds) ? detail.packOdds : []).forEach(function (o) {
-      if (o && o.horse_no != null) {
-        map[Number(o.horse_no)] = { win: Number(o.win_odds) || 0, pop: Number(o.popularity) || 0 };
-      }
-    });
-    (Array.isArray(detail.raceCardView) ? detail.raceCardView : []).forEach(function (r) {
-      if (!r || r.number == null) return;
-      var n = Number(r.number);
-      if (!map[n]) map[n] = { win: 0, pop: 0 };
-      if (!(map[n].win > 0) && Number(r.odds) > 0) map[n].win = Number(r.odds);
-      if (!(map[n].pop >= 1) && Number(r.popularity) >= 1) map[n].pop = Number(r.popularity);
-    });
-    return map;
   }
 
   function marksByNumber(detail) {
@@ -263,26 +258,34 @@
         String(detail.track || '') + ' ' + String(detail.raceNumber) + 'R ' + String(detail.title || '')));
       var marks = marksByNumber(detail);
       var table = el('table', 'racecard');
+      var colgroup = document.createElement('colgroup');
+      ['col-number', 'col-mark', 'col-name', 'col-winprob', 'col-top3prob'].forEach(function (c) {
+        var col = document.createElement('col');
+        col.className = c;
+        colgroup.appendChild(col);
+      });
+      table.appendChild(colgroup);
       var thead = el('thead');
       var htr = el('tr');
-      htr.appendChild(el('th', 'mark', '印'));
       htr.appendChild(el('th', 'number', '馬番'));
+      htr.appendChild(el('th', 'mark', '印'));
       htr.appendChild(el('th', 'name', '馬名'));
-      htr.appendChild(el('th', 'popularity', '人気'));
       htr.appendChild(el('th', 'winprob', '勝率'));
       htr.appendChild(el('th', 'top3prob', '3着内率'));
       thead.appendChild(htr);
       table.appendChild(thead);
       var tbody = el('tbody');
       var rows = raceRows(detail);
-      rows.forEach(function (row, idx) {
+      rows.forEach(function (row) {
         var tr = el('tr');
-        if (idx === 0 || row.frame !== rows[idx - 1].frame) tr.className = 'frame-first';
         var waku = row.frame >= 1 && row.frame <= 8 ? ' waku' + row.frame : '';
-        tr.appendChild(el('td', 'mark', marks[row.number] || ''));
         tr.appendChild(el('td', 'number' + waku, row.number));
-        tr.appendChild(el('td', 'name', row.name));
-        tr.appendChild(el('td', 'popularity', row.pop != null ? row.pop : ''));
+        tr.appendChild(el('td', 'mark', marks[row.number] || ''));
+        var nameTd = el('td', 'name');
+        nameTd.appendChild(el('div', 'hname', row.name));
+        var sub = [row.sexAge, row.jockey, row.carriedWeight].filter(function (s) { return s; }).join(' ');
+        nameTd.appendChild(el('div', 'hsub', sub));
+        tr.appendChild(nameTd);
         tr.appendChild(el('td', 'winprob', formatProb(row.winProb)));
         tr.appendChild(el('td', 'top3prob', formatProb(row.top3Prob)));
         tbody.appendChild(tr);
@@ -293,7 +296,6 @@
     if (raceCache[id]) { done(raceCache[id]); return; }
     fetchJson(staticRaceUrl(id)).then(function (body) {
       var detail = (body && body.detail) || {};
-      detail.packOdds = (body && body.odds) || [];
       raceCache[id] = detail;
       done(detail);
     }).catch(function () {

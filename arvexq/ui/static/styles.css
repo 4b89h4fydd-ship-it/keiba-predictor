@@ -1,4 +1,8 @@
-/* ARVEXQ minimal UI: venue list -> race list -> racecard (mark / number in frame colour / name / popularity / win probability / top-3 probability). */
+/* ARVEXQ minimal UI: venue list -> race list -> racecard in the
+   netkeiba entry-table layout (number in frame colour / mark where
+   netkeiba puts its check box / name with a sex-age, jockey and
+   carried-weight sub-line / win probability / top-3 probability).
+   Fixed column widths and one uniform row height for every row. */
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{background:#ffffff;color:#222222;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;font-size:16px;line-height:1.5}
@@ -15,17 +19,21 @@ ul.pick-list a{display:flex;justify-content:space-between;align-items:baseline;g
 ul.pick-list a:active{background:#f5f5f5}
 .pick-main{font-weight:600}
 .pick-sub{color:#666666;font-size:13px;white-space:nowrap}
-table.racecard{width:100%;border-collapse:collapse}
-table.racecard th,table.racecard td{border-bottom:1px solid #dddddd;padding:8px 6px;text-align:left;font-weight:400}
-table.racecard th{font-size:13px;color:#666666;border-bottom:2px solid #222222}
-table.racecard td.mark,table.racecard th.mark{text-align:center;width:40px;font-weight:700}
-table.racecard td.number,table.racecard th.number{text-align:center;width:48px}
-table.racecard td.popularity,table.racecard th.popularity{text-align:center;width:44px}
-table.racecard td.winprob,table.racecard th.winprob{text-align:right;width:60px}
-table.racecard td.top3prob,table.racecard th.top3prob{text-align:right;width:68px}
-table.racecard td.name{font-weight:600}
-/* Divider at each frame boundary: rows are grouped by frame. */
-table.racecard tr.frame-first td{border-top:2px solid #888888}
+table.racecard{width:100%;border-collapse:collapse;table-layout:fixed}
+table.racecard col.col-number{width:42px}
+table.racecard col.col-mark{width:42px}
+table.racecard col.col-winprob{width:74px}
+table.racecard col.col-top3prob{width:84px}
+table.racecard th,table.racecard td{border-bottom:1px solid #dddddd;padding:6px;text-align:left;font-weight:400;vertical-align:middle}
+table.racecard th:not(:first-child),table.racecard td:not(:first-child){border-left:1px solid #eeeeee}
+table.racecard th{background:#f7f7f7;font-size:12px;color:#555555;border-bottom:1px solid #cccccc;text-align:center}
+table.racecard th.name{text-align:left}
+table.racecard tbody td{height:60px}
+table.racecard td.number{text-align:center;font-weight:700}
+table.racecard td.mark{text-align:center;font-weight:700;font-size:17px}
+table.racecard td.winprob,table.racecard td.top3prob{text-align:center;font-weight:600;white-space:nowrap}
+table.racecard td.name .hname{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+table.racecard td.name .hsub{font-size:12px;color:#888888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35;min-height:16px}
 /* Frame (waku) colours, netkeiba standard: applied to the number cell. */
 table.racecard td.waku1{background:#ffffff;color:#000000;box-shadow:inset 0 0 0 1px #bbbbbb}
 table.racecard td.waku2{background:#222222;color:#ffffff}
