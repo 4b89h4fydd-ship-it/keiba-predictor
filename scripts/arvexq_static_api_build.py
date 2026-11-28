@@ -431,10 +431,36 @@ def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
         return []
     existing = model_from_existing_packs(out_dir, model.date)
     healed: list[str] = []
+    identity_guarded: list[str] = []
     for rid, detail in model.details.items():
-        if _has_forecast(detail):
-            continue
         prior = existing.details.get(rid)
+        if _has_forecast(detail):
+            # Identity guard: an incoming forecast whose roster
+            # identity (name -> number) disagrees with the sealed
+            # pack's was computed from a differently-numbered roster
+            # — one of the two readings is scrambled, and a rebuild
+            # must not let it overwrite the sealed publication
+            # (2026-11-28: rebuilds from the garbled persisted facts
+            # repeatedly replaced surgically repaired packs).  The
+            # sealed blocks win; the disagreement is printed, never
+            # silently mixed.  A genuine re-issue by the publish lane
+            # is exempt: it carries a strictly newer rewritePublish
+            # marker than the sealed pack it replaces.
+            if _has_forecast(prior) and prior.get(
+                    "predictionStatus") in FORECAST_CARRYOVER_SOURCE_STATUSES \
+                    and not _is_fresher_reissue(detail, prior) \
+                    and _identity_disagrees(_identity_map(detail),
+                                            _identity_map(prior)):
+                for key in FORECAST_CARRYOVER_KEYS:
+                    if key in prior:
+                        detail[key] = copy.deepcopy(prior[key])
+                detail["predictionStatus"] = "ready"
+                marker = (prior.get("preparedMeta") or {}).get("rewritePublish")
+                if marker is not None:
+                    detail.setdefault("preparedMeta", {})[
+                        "rewritePublish"] = copy.deepcopy(marker)
+                identity_guarded.append(rid)
+            continue
         if not _has_forecast(prior):
             continue
         if prior.get("predictionStatus") not in FORECAST_CARRYOVER_SOURCE_STATUSES:
@@ -451,6 +477,9 @@ def carry_over_forecast_blocks(model: DayModel, out_dir: Path) -> list[str]:
     if healed:
         print("STATIC_API_FORECAST_CARRYOVER", model.date,
               len(healed), sorted(healed))
+    if identity_guarded:
+        print("STATIC_API_FORECAST_IDENTITY_GUARD", model.date,
+              len(identity_guarded), sorted(identity_guarded))
     return healed
 
 
@@ -468,6 +497,63 @@ def _horse_number(horse: Any) -> int:
         return int(horse.get("horseNumber") or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _horse_name(horse: Any) -> str:
+    if not isinstance(horse, dict):
+        return ""
+    return str(horse.get("name") or "").strip()
+
+
+def _identity_map(detail: Any) -> dict[str, int]:
+    """name -> horseNumber for a detail's roster.
+
+    Uses the canonical reconciliation module when the package is
+    importable (same sys.path pattern as _decoration_impl); the local
+    fallback is the same three lines, so the carry-over guards behave
+    identically in lanes that cannot import the package.
+    """
+    horses = (detail or {}).get("horses") or []
+    try:
+        root = Path(__file__).resolve().parent.parent
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from arvexq.ingest.entry_reconcile import identity_map
+        return identity_map(horses)
+    except Exception:
+        out: dict[str, int] = {}
+        for h in horses:
+            name = _horse_name(h)
+            if name and name not in out:
+                out[name] = _horse_number(h)
+        return out
+
+
+def _identity_disagrees(a: dict[str, int], b: dict[str, int]) -> bool:
+    """True when two name->number maps put a shared horse on
+    different numbers: one side's identity is scrambled."""
+    for name, no in a.items():
+        other = b.get(name)
+        if other is not None and no > 0 and other > 0 and no != other:
+            return True
+    return False
+
+
+def _published_at(detail: Any) -> str:
+    marker = ((detail or {}).get("preparedMeta") or {}).get(
+        "rewritePublish") or {}
+    return str(marker.get("publishedAt") or "")
+
+
+def _is_fresher_reissue(incoming: Any, prior: Any) -> bool:
+    """True when the incoming detail is a publish-lane re-issue made
+    after the sealed pack's publication (its rewritePublish marker
+    is strictly newer).  Pass-through payloads — result-ingest
+    details, rebuilds from stored facts — carry the sealed pack's
+    own marker or none, so they never qualify."""
+    new_stamp = _published_at(incoming)
+    old_stamp = _published_at(prior)
+    return bool(new_stamp) and bool(old_stamp) and new_stamp > old_stamp
 
 
 def carry_over_research_evidence(model: DayModel, out_dir: Path) -> list[str]:
@@ -500,29 +586,37 @@ def carry_over_research_evidence(model: DayModel, out_dir: Path) -> list[str]:
         prior = existing.details.get(rid)
         if not isinstance(prior, dict):
             continue
-        prior_horses = {_horse_number(h): h for h in (prior.get("horses") or [])
-                        if _horse_number(h) > 0
+        # Graft by horse NAME, never by number: the evidence was
+        # computed from a horse's own past runs, and the number-keyed
+        # graft put one horse's evidence on another whenever the two
+        # builds numbered the roster differently (2026-11-28).  When
+        # the two sides disagree on a horse's number, that horse is
+        # skipped — its identity must be reconciled first.
+        prior_horses = {_horse_name(h): h for h in (prior.get("horses") or [])
+                        if _horse_name(h)
                         and isinstance(h.get("researchEvidence"), dict)}
         if not prior_horses:
             continue
         grafted = False
         for horse in detail.get("horses") or []:
-            no = _horse_number(horse)
-            if no <= 0 or isinstance(horse.get("researchEvidence"), dict):
+            if isinstance(horse.get("researchEvidence"), dict):
                 continue
-            source = prior_horses.get(no)
-            if source is not None:
-                horse["researchEvidence"] = copy.deepcopy(
-                    source["researchEvidence"])
-                grafted = True
+            source = prior_horses.get(_horse_name(horse))
+            if source is None:
+                continue
+            if _horse_number(horse) > 0 and _horse_number(source) > 0 \
+                    and _horse_number(horse) != _horse_number(source):
+                continue
+            horse["researchEvidence"] = copy.deepcopy(
+                source["researchEvidence"])
+            grafted = True
         if not grafted:
             continue
         for key in EVIDENCE_CARRYOVER_KEYS:
             if key not in detail and key in prior:
                 detail[key] = copy.deepcopy(prior[key])
         count = sum(1 for h in (detail.get("horses") or [])
-                    if _horse_number(h) > 0
-                    and isinstance(h.get("researchEvidence"), dict))
+                    if isinstance(h.get("researchEvidence"), dict))
         if count:
             detail["researchEvidenceHorses"] = count
         healed.append(rid)
@@ -563,17 +657,21 @@ def carry_over_career_history(model: DayModel, out_dir: Path) -> list[str]:
         prior = existing.details.get(rid)
         if not isinstance(prior, dict):
             continue
-        prior_horses = {_horse_number(h): h for h in (prior.get("horses") or [])
-                        if _horse_number(h) > 0}
+        # Graft by horse NAME with the same number-agreement rule
+        # as the evidence carry-over: a career belongs to the horse,
+        # and a number-keyed graft hands it to whichever horse
+        # carries the number in the other build's numbering.
+        prior_horses = {_horse_name(h): h for h in (prior.get("horses") or [])
+                        if _horse_name(h)}
         if not prior_horses:
             continue
         grafted = False
         for horse in detail.get("horses") or []:
-            no = _horse_number(horse)
-            if no <= 0:
-                continue
-            source = prior_horses.get(no)
+            source = prior_horses.get(_horse_name(horse))
             if source is None:
+                continue
+            if _horse_number(horse) > 0 and _horse_number(source) > 0 \
+                    and _horse_number(horse) != _horse_number(source):
                 continue
             for key in _PAST_RUN_KEYS:
                 old_runs = source.get(key)
