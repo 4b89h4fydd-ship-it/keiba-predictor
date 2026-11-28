@@ -621,3 +621,101 @@ def reconcile_detail_roster(detail: Any,
                                 phantom_numbers.get(no, ""), 0),
                         })
     return entries
+
+
+# ---------------------------------------------------------------------
+# Scratch-flag reconciliation.
+#
+# A roster row can carry a scratch marking (``scratched: True`` and/or
+# a scratch-family ``status`` such as 除外 / 出走取消） that the
+# morning collection recorded wrongly and a hand-clean of the
+# published pack cannot permanently remove: every rebuild from the
+# stored facts carries the row verbatim (the result lane's merge
+# protects the roster; the build's carry-overs never look at the
+# flag), so the marking resurrects on the next full build while the
+# official result — refreshed independently — records the same horse
+# as a finisher (2026-11-28: Tokyo 9R ローズマイスター and
+# リラゲイル finished 6th in a dead heat yet were republished as
+# 除外； the same shape in Tokyo 7R/12R and Kyoto 11R).  The official
+# result is the authority on who ran: a horse it records with an
+# actual finish position ran, so its scratch marking is a reading
+# error and is cleared — by horse NAME, like every identity decision
+# in this module, so a numbering disagreement elsewhere in the block
+# cannot clear the wrong row.  A horse the result records WITHOUT a
+# finish position (a finish=0 row labelled 取消/除外 is the result's
+# own scratch accounting) is never touched, and neither is a race
+# with no result yet.
+
+_SCRATCH_STATUSES = ("除外", "取消", "出走取消", "競走除外", "取消し")
+
+
+def finisher_names(result: Any) -> set[str]:
+    """Name keys of the horses an official result records with an
+    actual finish position (finish >= 1).  Rows without a position
+    (finish 0 — the result's own scratch/exclusion accounting) are
+    NOT finishers."""
+    out: set[str] = set()
+    if not isinstance(result, dict):
+        return out
+    for row in result.get("finishers") or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            finish = int(row.get("finish") or 0)
+        except (TypeError, ValueError):
+            finish = 0
+        if finish <= 0:
+            continue
+        name = horse_name_key(row)
+        if name:
+            out.add(name)
+    return out
+
+
+def reconcile_finisher_flags(detail: Any,
+                             result: Any = None,
+                             ) -> list[dict[str, Any]]:
+    """Clear scratch markings on horses the official result records
+    as finishers, in place, across the detail's roster blocks.
+
+    ``result`` defaults to the detail's own result block; a caller
+    holding a fresher/authoritative result for the same race (e.g.
+    the published pack's, when the incoming detail carries none) may
+    pass it as the authority — it is only read, never written into
+    the detail.  Only rows that actually carry a scratch marking are
+    changed: ``scratched`` True -> False and a scratch-family
+    ``status`` -> "".  Returns one report entry per cleared row:
+    {block, name, number, cleared}."""
+    if not isinstance(detail, dict):
+        return []
+    if result is None:
+        result = detail.get("result")
+    ran = finisher_names(result)
+    if not ran:
+        return []
+    entries: list[dict[str, Any]] = []
+    for path in _ROSTER_BLOCK_PATHS:
+        rows = _block_at(detail, path)
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            name = horse_name_key(row)
+            if not name or name not in ran:
+                continue
+            cleared: list[str] = []
+            if row.get("scratched") is True:
+                row["scratched"] = False
+                cleared.append("scratched")
+            if str(row.get("status") or "") in _SCRATCH_STATUSES:
+                row["status"] = ""
+                cleared.append("status")
+            if cleared:
+                entries.append({
+                    "block": ".".join(path),
+                    "name": name,
+                    "number": _any_no(row),
+                    "cleared": cleared,
+                })
+    return entries
