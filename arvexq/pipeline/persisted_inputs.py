@@ -8,18 +8,35 @@ from __future__ import annotations
 from typing import Any
 
 
-def _runners(detail: dict[str, Any]) -> dict[int, dict[str, Any]]:
-    out: dict[int, dict[str, Any]] = {}
+def _runners(detail: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Runners keyed by horse NAME.
+
+    The number-keyed map this replaces could not see a permuted
+    roster as an identity change when both sides carried the same
+    permutation, and it compared careers for whichever horse happened
+    to hold a number.  A horse's identity is its name; the number and
+    frame are attributes that must agree for that name.
+    """
+    out: dict[str, dict[str, Any]] = {}
     for h in detail.get("horses") or []:
         if not isinstance(h, dict):
             continue
-        try:
-            number = int(h.get("horseNumber") or 0)
-        except (ValueError, TypeError):
-            continue
-        if number > 0 and str(h.get("name") or "").strip():
-            out[number] = h
+        name = str(h.get("name") or "").strip()
+        if name and name not in out:
+            out[name] = h
     return out
+
+
+def _identity(horse: dict[str, Any]) -> tuple[int, int]:
+    try:
+        number = int(horse.get("horseNumber") or 0)
+    except (ValueError, TypeError):
+        number = 0
+    try:
+        frame = int(horse.get("frameNumber") or 0)
+    except (ValueError, TypeError):
+        frame = 0
+    return (number, frame)
 
 
 
@@ -132,14 +149,18 @@ def verify_persisted_facts(source: dict[str, Any], saved: dict[str, Any],
         if str(new.get("date") or "") != str(old.get("date") or ""):
             errors.append(f"{rid}:date-mismatch")
         a, b = _runners(old), _runners(new)
-        if set(a) != set(b) or any(str(a[n].get("name")) != str(b[n].get("name")) for n in a.keys() & b.keys()):
+        if set(a) != set(b) or any(_identity(a[n]) != _identity(b[n]) for n in a.keys() & b.keys()):
             errors.append(f"{rid}:horse-identities-changed")
-        for number in a.keys() & b.keys():
+        for name in a.keys() & b.keys():
+            # The label keeps the source number when there is one, so
+            # existing log/report consumers keep their shape; the
+            # comparison itself is by name.
+            number = _identity(a[name])[0] or name
             # Recover the same canonical full-career transport used by the
             # existing prefetch. Five visible runs are not a complete career.
             try:
-                original = _canonical_career_rows(a[number], str(old.get("date") or ""))
-                retained = _canonical_career_rows(b[number], str(new.get("date") or ""))
+                original = _canonical_career_rows(a[name], str(old.get("date") or ""))
+                retained = _canonical_career_rows(b[name], str(new.get("date") or ""))
             except (ValueError, KeyError, TypeError, RuntimeError) as exc:
                 errors.append(f"{rid}:horse-{number}:career-archive-invalid:{type(exc).__name__}")
                 continue
