@@ -23,6 +23,7 @@ Callers keep their own transports; identity is owned here.
 from __future__ import annotations
 
 import copy
+import re
 from typing import Any, Callable
 
 IDENTITY_FIELDS = ("horseNumber", "frameNumber")
@@ -336,3 +337,287 @@ def dedupe_roster_by_name(rows: Any, *,
         out.append(merged)
     out.sort(key=lambda r: (_no(r) <= 0, _no(r), _name(r)))
     return out
+
+
+# ---------------------------------------------------------------------
+# Phantom-duplicate reconciliation against an official result.
+#
+# The 2026-11-28 Kyoto 9R failure: a garbled morning racecard reading
+# stored three horses twice — once under their real number and once
+# under a phantom number (14/16/18 for a 13-horse race).  The result
+# lanes merge only result fields into the stored detail (the roster
+# is protected verbatim), and the pack lanes rebuild details from the
+# stored facts, so the phantom rows outlived every repair: the
+# official result accounted for 13 runners while the roster kept
+# claiming 16, and finisher_completeness failed the race forever.
+#
+# The official result is the authority on which horses ran under
+# which numbers.  The helpers below drop phantom duplicate rows from
+# a detail's roster-shaped blocks, keyed by horse NAME, keeping the
+# row whose number the official result records for that name.
+# ---------------------------------------------------------------------
+
+_NUMBER_KEYS = ("horseNumber", "number")
+_FRAME_KEYS = ("frameNumber", "frame")
+_IDENTITY_KEYS = _NUMBER_KEYS + _FRAME_KEYS
+_NAME_SPLIT_RE = re.compile(r"\s+")
+
+
+def _any_no(row: Any) -> int:
+    if not isinstance(row, dict):
+        return 0
+    for key in _NUMBER_KEYS:
+        try:
+            no = int(row.get(key) or 0)
+        except (TypeError, ValueError):
+            no = 0
+        if no > 0:
+            return no
+    return 0
+
+
+def _any_frame(row: Any) -> int:
+    if not isinstance(row, dict):
+        return 0
+    for key in _FRAME_KEYS:
+        try:
+            frame = int(row.get(key) or 0)
+        except (TypeError, ValueError):
+            frame = 0
+        if frame > 0:
+            return frame
+    return 0
+
+
+def horse_name_key(row: Any) -> str:
+    """Grouping key for one horse row: the first whitespace-delimited
+    token of its name.  Official result rows carry composite name
+    strings (name + sex/age + weight + jockey + stable); card rows
+    carry the bare name.  Both reduce to the horse's name."""
+    name = _name(row)
+    if not name:
+        return ""
+    return _NAME_SPLIT_RE.split(name)[0]
+
+
+def result_identity_map(result: Any) -> dict[str, int]:
+    """name-key -> horseNumber from an official result block.
+
+    Finishers and the non-finisher lists are the authoritative
+    accounting of who actually ran; the first row per name wins.
+    """
+    out: dict[str, int] = {}
+    if not isinstance(result, dict):
+        return out
+    rows: list[Any] = []
+    for key in ("finishers", "nonFinishers", "non_finishers",
+                "didNotFinish"):
+        value = result.get(key)
+        if isinstance(value, list):
+            rows.extend(value)
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = horse_name_key(row)
+        no = _any_no(row)
+        if name and no > 0 and name not in out:
+            out[name] = no
+    return out
+
+
+def dedupe_rows_by_name(rows: Any, truth: dict[str, int] | None = None,
+                        *, report: list | None = None,
+                        ) -> list[dict[str, Any]]:
+    """Collapse phantom duplicates in any roster-shaped block.
+
+    The generalised form of dedupe_roster_by_name: rows may carry
+    their number under "number" instead of "horseNumber" (the
+    display views do), and when an official-truth map (name-key ->
+    number, e.g. from result_identity_map) is supplied, the row
+    whose number matches the official record survives — the
+    official result is the authority on which number a horse
+    actually ran under.  Without a truth entry for the name, the
+    frame witness decides, then the first row, exactly as in
+    dedupe_roster_by_name.  Materials from dropped rows are merged
+    into the survivor fill-missing only (identity fields excluded),
+    so no stored value is ever overwritten.
+    """
+    rows = [r for r in (rows or []) if isinstance(r, dict)]
+    total = len(rows)
+    groups: dict[str, list[dict[str, Any]]] = {}
+    order: list[str] = []
+    for r in rows:
+        key = horse_name_key(r) or f"\0id{id(r)}"
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(r)
+    out: list[dict[str, Any]] = []
+    for key in order:
+        group = groups[key]
+        if len(group) == 1:
+            out.append(copy.deepcopy(group[0]))
+            continue
+        keeper = None
+        want = (truth or {}).get(key) or 0
+        if want > 0:
+            for r in group:
+                if _any_no(r) == want:
+                    keeper = r
+                    break
+        if keeper is None:
+            for r in group:
+                frame = _any_frame(r)
+                if frame > 0 and frame == frame_for_number(
+                        _any_no(r), total):
+                    keeper = r
+                    break
+        if keeper is None:
+            keeper = group[0]
+        merged = copy.deepcopy(keeper)
+        for r in group:
+            if r is keeper:
+                continue
+            for k, value in r.items():
+                if k in _IDENTITY_KEYS:
+                    continue
+                if _meaningful(value) and not _meaningful(merged.get(k)):
+                    merged[k] = copy.deepcopy(value)
+        if report is not None:
+            report.append({
+                "name": key,
+                "keptNumber": _any_no(keeper),
+                "droppedNumbers": [_any_no(r) for r in group
+                                   if r is not keeper],
+                "truthNumber": want,
+            })
+        out.append(merged)
+    out.sort(key=lambda r: (_any_no(r) <= 0, _any_no(r),
+                            horse_name_key(r)))
+    return out
+
+
+# Roster-shaped blocks inside a race detail: lists of per-horse rows
+# carrying a name and a number.  Only these paths are swept — the
+# walker never descends into a horse row's own nested lists (past
+# runs repeat the horse's own name legitimately).
+_ROSTER_BLOCK_PATHS = (
+    ("horses",),
+    ("raceCardView",),
+    ("oddsView",),
+    ("horseDetailView",),
+    ("diagnosisView",),
+    ("pacePredictionView", "runners"),
+    ("careerReadiness", "blockedHorses"),
+    ("unifiedForecast", "roster"),
+    ("unifiedForecast", "diagnosis"),
+    ("masterAnalysis", "runners"),
+)
+
+# Per-horse blocks whose rows carry a number but no name (feature
+# tables).  They cannot be keyed by name directly; their phantom
+# rows are identified by the phantom numbers the name-keyed sweep
+# proved on the same detail (see reconcile_detail_roster).
+_NUMBER_ONLY_BLOCK_PATHS = (
+    ("horseFeatures",),
+)
+
+
+def _block_at(detail: dict[str, Any], path: tuple[str, ...]) -> Any:
+    node: Any = detail
+    for key in path:
+        if not isinstance(node, dict):
+            return None
+        node = node.get(key)
+    return node
+
+
+def _set_block_at(detail: dict[str, Any], path: tuple[str, ...],
+                  value: Any) -> None:
+    node: Any = detail
+    for key in path[:-1]:
+        if not isinstance(node, dict):
+            return
+        node = node.get(key)
+    if isinstance(node, dict):
+        node[path[-1]] = value
+
+
+def reconcile_detail_roster(detail: Any,
+                            truth: dict[str, int] | None = None,
+                            ) -> list[dict[str, Any]]:
+    """Drop phantom duplicate rows from a race detail's roster
+    blocks, keyed by horse NAME, in place.
+
+    ``truth`` defaults to the detail's own official result
+    (result_identity_map).  A block is rewritten only when it
+    actually contains the same horse name twice and every row
+    carries a name and a number; a clean detail is returned
+    untouched.  Returns one report entry per dropped row:
+    {block, name, keptNumber, droppedNumber, truthNumber}.
+    """
+    if not isinstance(detail, dict):
+        return []
+    if truth is None:
+        truth = result_identity_map(detail.get("result"))
+    entries: list[dict[str, Any]] = []
+    phantom_numbers: dict[int, str] = {}
+    for path in _ROSTER_BLOCK_PATHS:
+        rows = _block_at(detail, path)
+        if not isinstance(rows, list) or len(rows) < 2:
+            continue
+        if any(not isinstance(r, dict) or not horse_name_key(r)
+               or _any_no(r) <= 0 for r in rows):
+            continue
+        names = [horse_name_key(r) for r in rows]
+        if len(set(names)) == len(names):
+            continue
+        block_report: list[dict[str, Any]] = []
+        deduped = dedupe_rows_by_name(rows, truth, report=block_report)
+        if len(deduped) == len(rows):
+            continue
+        _set_block_at(detail, path, deduped)
+        for item in block_report:
+            for dropped in item["droppedNumbers"]:
+                phantom_numbers.setdefault(dropped, item["name"])
+                entries.append({
+                    "block": ".".join(path),
+                    "name": item["name"],
+                    "keptNumber": item["keptNumber"],
+                    "droppedNumber": dropped,
+                    "truthNumber": item["truthNumber"],
+                })
+    # Number-only blocks inherit the identification: a row whose
+    # number the name-keyed sweep proved phantom on this detail —
+    # and which no surviving roster row carries — is a phantom row
+    # there too.  Without a proven phantom number, nothing is
+    # dropped from these blocks.
+    if phantom_numbers:
+        roster_numbers = {_any_no(h) for h in detail.get("horses") or []
+                          if isinstance(h, dict)}
+        droppable = {no for no in phantom_numbers
+                     if no not in roster_numbers}
+        if droppable:
+            for path in _NUMBER_ONLY_BLOCK_PATHS:
+                rows = _block_at(detail, path)
+                if not isinstance(rows, list) or len(rows) < 2:
+                    continue
+                if any(not isinstance(r, dict) or _any_no(r) <= 0
+                       for r in rows):
+                    continue
+                kept = [r for r in rows if _any_no(r) not in droppable]
+                if len(kept) == len(rows):
+                    continue
+                _set_block_at(detail, path, kept)
+                for no in sorted(droppable):
+                    if any(_any_no(r) == no for r in rows):
+                        entries.append({
+                            "block": ".".join(path),
+                            "name": phantom_numbers.get(no, ""),
+                            "keptNumber": (truth or {}).get(
+                                phantom_numbers.get(no, ""), 0),
+                            "droppedNumber": no,
+                            "truthNumber": (truth or {}).get(
+                                phantom_numbers.get(no, ""), 0),
+                        })
+    return entries
