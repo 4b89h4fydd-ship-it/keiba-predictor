@@ -1,0 +1,91 @@
+{
+ "ok": true,
+ "race_id": "nar-2026-11-28-帯広ば-05",
+ "odds": [
+  {
+   "horse_no": 1,
+   "win_odds": 5.1,
+   "popularity": 2,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 2,
+   "win_odds": 7.2,
+   "popularity": 3,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 3,
+   "win_odds": 18,
+   "popularity": 7,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 4,
+   "win_odds": 2.4,
+   "popularity": 1,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 7.2,
+   "popularity": 3,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 12,
+   "popularity": 6,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 7,
+   "win_odds": 36,
+   "popularity": 9,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 8,
+   "win_odds": 36,
+   "popularity": 9,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 18,
+   "popularity": 7,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  },
+  {
+   "horse_no": 10,
+   "win_odds": 9,
+   "popularity": 5,
+   "scratched": false,
+   "horse_status": "",
+   "oddsSource": "NAR公式"
+  }
+ ],
+ "oddsSource": "NAR公式",
+ "oddsUpdatedAt": "2026-11-28T03:50:22.310Z",
+ "sourcePublishedAt": "2026-11-28T12:50:00+09:00",
+ "popularitySource": "NAR公式単勝オッズ順位",
+ "sourceUrl": "https://www.keiba.go.jp/KeibaWeb/TodayRaceInfo/OddsTanFuku?k_babaCode=03&k_raceDate=2026%2F11%2F28&k_raceNo=5"
+}

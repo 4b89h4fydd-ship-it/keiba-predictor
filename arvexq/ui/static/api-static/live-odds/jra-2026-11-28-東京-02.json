@@ -1,8 +1,101 @@
 {
- "ok": false,
+ "ok": true,
  "race_id": "jra-2026-11-28-東京-02",
- "odds": [],
- "oddsStatus": "unavailable",
- "refreshFailed": true,
- "error": "official odds unavailable"
+ "odds": [
+  {
+   "horse_no": 10,
+   "win_odds": 544.1,
+   "popularity": 15,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 11,
+   "win_odds": 179.8,
+   "popularity": 11,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 12,
+   "win_odds": 6.2,
+   "popularity": 2,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 13,
+   "win_odds": 1.2,
+   "popularity": 1,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 14,
+   "win_odds": 125,
+   "popularity": 9,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 15,
+   "win_odds": 265.4,
+   "popularity": 12,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 1,
+   "win_odds": 12.5,
+   "popularity": 3,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 2,
+   "win_odds": 12.9,
+   "popularity": 4,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 3,
+   "win_odds": 177.6,
+   "popularity": 10,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 4,
+   "win_odds": 532.9,
+   "popularity": 14,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 39.8,
+   "popularity": 8,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 24.8,
+   "popularity": 6,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 7,
+   "win_odds": 38.9,
+   "popularity": 7,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 8,
+   "win_odds": 22.5,
+   "popularity": 5,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 357,
+   "popularity": 13,
+   "oddsSource": "netkeiba実オッズ"
+  }
+ ],
+ "oddsSource": "netkeiba実オッズ",
+ "oddsUpdatedAt": "2026-11-28T03:50:20.605Z",
+ "sourcePublishedAt": "2026-11-28T10:32:34+09:00",
+ "popularitySource": "供給元の人気",
+ "sourceUrl": "https://race.netkeiba.com/api/api_get_jra_odds.html?pid=api_get_jra_odds&race_id=202605050702&type=1&sort=odds&compress=0&output=json&action=init"
 }

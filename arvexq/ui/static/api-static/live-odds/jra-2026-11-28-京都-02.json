@@ -1,8 +1,83 @@
 {
- "ok": false,
+ "ok": true,
  "race_id": "jra-2026-11-28-京都-02",
- "odds": [],
- "oddsStatus": "unavailable",
- "refreshFailed": true,
- "error": "official odds unavailable"
+ "odds": [
+  {
+   "horse_no": 10,
+   "win_odds": 446.8,
+   "popularity": 12,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 11,
+   "win_odds": 40.6,
+   "popularity": 8,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 12,
+   "win_odds": 18.2,
+   "popularity": 4,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 1,
+   "win_odds": 26.5,
+   "popularity": 7,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 2,
+   "win_odds": 49.6,
+   "popularity": 9,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 3,
+   "win_odds": 19,
+   "popularity": 5,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 4,
+   "win_odds": 213.6,
+   "popularity": 11,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 5,
+   "win_odds": 1.5,
+   "popularity": 1,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 6,
+   "win_odds": 118.5,
+   "popularity": 10,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 7,
+   "win_odds": 4.2,
+   "popularity": 2,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 8,
+   "win_odds": 7.9,
+   "popularity": 3,
+   "oddsSource": "netkeiba実オッズ"
+  },
+  {
+   "horse_no": 9,
+   "win_odds": 26.2,
+   "popularity": 6,
+   "oddsSource": "netkeiba実オッズ"
+  }
+ ],
+ "oddsSource": "netkeiba実オッズ",
+ "oddsUpdatedAt": "2026-11-28T03:50:20.381Z",
+ "sourcePublishedAt": "2026-11-28T10:43:17+09:00",
+ "popularitySource": "供給元の人気",
+ "sourceUrl": "https://race.netkeiba.com/api/api_get_jra_odds.html?pid=api_get_jra_odds&race_id=202608050702&type=1&sort=odds&compress=0&output=json&action=init"
 }
