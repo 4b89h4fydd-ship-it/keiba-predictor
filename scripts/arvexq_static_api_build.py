@@ -65,7 +65,13 @@ onto an incoming detail that carries no result content at all,
 and ``reconcile_phantom_rosters`` drops phantom duplicate rows
 from every roster block, keyed by horse name with the official
 result as the identity authority (the same reconciliation the
-result-repair lane applies).  Clean details are untouched.
+result-repair lane applies).  The same pass also clears scratch
+markings the stored facts recorded wrongly: a horse the official
+result records with a finish position ran, so a ``scratched`` /
+除外 marking on its roster rows is a reading error that a rebuild
+must not resurrect over a hand-cleaned pack (2026-11-28 Tokyo 9R:
+officially 6th in a dead heat, republished as 除外）.  Clean
+details are untouched.
 
 Research evidence carry-over guard: the observed mineta/margin
 evidence (``horses[].researchEvidence``, attached by the prefetch
@@ -824,7 +830,8 @@ def carry_over_results(model: DayModel, out_dir: Path) -> list[str]:
 
 
 def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
-    """Drop phantom duplicate roster rows from incoming details.
+    """Drop phantom duplicate roster rows from incoming details,
+    and clear scratch markings the official result disproves.
 
     A phantom is the same horse name twice in one roster block
     under two numbers (a garbled racecard reading, stored once and
@@ -837,6 +844,14 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
     result lane has already accounted for.  A block without
     duplicate names is untouched, so clean days build byte-identical
     packs.  Returns the healed race ids.
+
+    The flag pass applies the same authority to scratch markings:
+    a horse the resolved result records with a finish position ran,
+    so any ``scratched`` / scratch-status marking on its roster
+    rows (stored wrongly by the morning collection and carried
+    verbatim ever since) is cleared by name.  A horse the result
+    records without a position — its own scratch accounting —
+    keeps its marking.
     """
     if not DATE_RE.match(model.date or ""):
         return []
@@ -845,7 +860,8 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
         if str(root) not in sys.path:
             sys.path.insert(0, str(root))
         from arvexq.ingest.entry_reconcile import (
-            reconcile_detail_roster, result_identity_map)
+            finisher_names, reconcile_detail_roster,
+            reconcile_finisher_flags, result_identity_map)
     except Exception:
         return []
     existing = model_from_existing_packs(out_dir, model.date)
@@ -863,6 +879,17 @@ def reconcile_phantom_rosters(model: DayModel, out_dir: Path) -> list[str]:
             healed.append(rid)
             print("STATIC_API_ROSTER_RECONCILE", model.date, rid,
                   json.dumps(entries, ensure_ascii=False))
+        flag_result = detail.get("result")
+        if not finisher_names(flag_result):
+            prior = existing.details.get(rid)
+            if isinstance(prior, dict):
+                flag_result = prior.get("result")
+        flag_entries = reconcile_finisher_flags(detail, flag_result)
+        if flag_entries:
+            if rid not in healed:
+                healed.append(rid)
+            print("STATIC_API_FLAG_RECONCILE", model.date, rid,
+                  json.dumps(flag_entries, ensure_ascii=False))
     if healed:
         print("STATIC_API_ROSTER_RECONCILED", model.date,
               len(healed), sorted(healed))
